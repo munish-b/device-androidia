@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" href="/artifactory/cactus-absp/config/manifest.xsl"?>
+<manifest>
+  <remote fetch="ssh://vpg-git.iind.intel.com" name="vpg-hwcval" review="https://vpg-git.iind.intel.com"/>
+
+
+  <project name="hwcval" path="vendor/intel/validation/hwc" remote="vpg-hwcval" revision="master">
+  </project>
+</manifest>

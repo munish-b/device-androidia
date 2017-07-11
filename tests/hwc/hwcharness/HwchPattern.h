@@ -1,0 +1,210 @@
+/****************************************************************************
+*
+* Copyright (c) Intel Corporation (2014).
+*
+* DISCLAIMER OF WARRANTY
+* NEITHER INTEL NOR ITS SUPPLIERS MAKE ANY REPRESENTATION OR WARRANTY OR
+* CONDITION OF ANY KIND WHETHER EXPRESS OR IMPLIED (EITHER IN FACT OR BY
+* OPERATION OF LAW) WITH RESPECT TO THE SOURCE CODE.  INTEL AND ITS SUPPLIERS
+* EXPRESSLY DISCLAIM ALL WARRANTIES OR CONDITIONS OF MERCHANTABILITY OR
+* FITNESS FOR A PARTICULAR PURPOSE.  INTEL AND ITS SUPPLIERS DO NOT WARRANT
+* THAT THE SOURCE CODE IS ERROR-FREE OR THAT OPERATION OF THE SOURCE CODE WILL
+* BE SECURE OR UNINTERRUPTED AND HEREBY DISCLAIM ANY AND ALL LIABILITY ON
+* ACCOUNT THEREOF.  THERE IS ALSO NO IMPLIED WARRANTY OF NON-INFRINGEMENT.
+* SOURCE CODE IS LICENSED TO LICENSEE ON AN "AS IS" BASIS AND NEITHER INTEL
+* NOR ITS SUPPLIERS WILL PROVIDE ANY SUPPORT, ASSISTANCE, INSTALLATION,
+* TRAINING OR OTHER SERVICES.  INTEL AND ITS SUPPLIERS WILL NOT PROVIDE ANY
+* UPDATES, ENHANCEMENTS OR EXTENSIONS.
+*
+* File Name:            Pattern.h
+*
+* Description:          Fill pattern classes definition
+*
+* Environment:
+*
+* Notes:
+*
+*****************************************************************************/
+#ifndef __HwchPattern_h__
+#define __HwchPattern_h__
+
+#include <utils/Vector.h>
+#include <utils/RefBase.h>
+#include "GrallocClient.h"
+#include <ui/GraphicBuffer.h>
+#include <hardware/hwcomposer.h>
+
+#include "HwchDefs.h"
+
+
+
+
+namespace Hwch
+{
+    class PngImage;
+
+    struct SNV12Chroma
+    {
+        uint8_t u;
+        uint8_t v;
+    };
+
+
+    // This structure holds 1, 2 or 4 pixels depending on the pixel size.
+    class SPixelWord
+    {
+    public:
+        uint32_t mBytesPerPixel;
+        uint32_t mPixelsPerWord32;
+
+        union
+        {
+            char mBytes[4];
+            uint16_t mWord16[2];
+            uint32_t mWord32;
+        };
+
+        union
+        {
+            SNV12Chroma mChroma[2];
+            uint32_t mNv12ChromaWord32;
+        };
+
+        union
+        {
+            char mVBytes[4];
+            uint32_t mYv12VWord32;
+        };
+
+        union
+        {
+            char mUBytes[4];
+            uint32_t mYv12UWord32;
+        };
+
+        // Constructor
+        SPixelWord();
+        SPixelWord(uint32_t colour, uint32_t format);
+
+        uint32_t GetPixelBytes(uint32_t colour, uint32_t format);
+    };
+
+    class Pattern : public android::RefBase
+    {
+        public:
+            Pattern(float mUpdateFreq = 0);
+            virtual ~Pattern();
+
+            // Will be called by the framework shortly after construction
+            virtual void Init();
+
+            // Called each frame when FrameNeedsUpdate() returns true
+            virtual int Fill(android::sp<android::GraphicBuffer> buf, const hwc_rect_t& rect, uint32_t& bufferParam) = 0;
+
+            // Can be overriden to give non-uniform update period
+            virtual bool FrameNeedsUpdate();
+            virtual void ForceUpdate();
+
+            // Called at the end of each frame to update internal variables
+            virtual void Advance();
+
+            // Called at the end of each frame to update internal variables
+            void SetUpdateFreq(float updateFreq);
+            float GetUpdateFreq();
+            uint64_t GetUpdatePeriodNs();
+            void SetUpdatedSinceLastFBComp();
+            bool IsUpdatedSinceLastFBComp();
+            void ClearUpdatedSinceLastFBComp();
+
+            // Is this an empty transparent pattern i.e. all 0s?
+            virtual bool IsAllTransparent();
+
+        protected:
+            float mUpdateFreq;
+            int64_t mUpdatePeriodNs;
+            int64_t mNextUpdateTime;
+            bool mUpdatedSinceFBComp;   // Updated since last FB composition
+
+            // Alternate method of working out how often to update, using frame counting for 100% predictability.
+            // Use milliframes to cope with update rates not a factor of 60.
+            int32_t mUpdatePeriodMilliFrames;
+            int32_t mMilliFramesToUpdate;
+    };
+
+    class SolidColourPtn : public Pattern
+    {
+        public:
+            SolidColourPtn(uint32_t colour);
+            virtual ~SolidColourPtn();
+
+            virtual int Fill(android::sp<android::GraphicBuffer> buf, const hwc_rect_t& rect, uint32_t& bufferParam);
+            virtual bool IsAllTransparent();
+
+        private:
+            uint32_t mColour;
+            SPixelWord mPixel;
+    };
+
+    class FramebufferTargetPtn : public SolidColourPtn
+    {
+        public:
+            FramebufferTargetPtn();
+            virtual ~FramebufferTargetPtn();
+
+            virtual bool FrameNeedsUpdate();
+    };
+
+    class HorizontalLinePtn : public Pattern
+    {
+        public:
+            HorizontalLinePtn(){};
+            HorizontalLinePtn(float updateFreq, uint32_t fgColour, uint32_t bgColour);
+            virtual ~HorizontalLinePtn();
+
+            virtual int Fill(android::sp<android::GraphicBuffer> buf, const hwc_rect_t& rect, uint32_t& bufferParam);
+            virtual void Advance();
+
+        protected:
+            void FillLumaLine(unsigned char* data, uint32_t row, uint32_t stride, uint32_t left, uint32_t width, SPixelWord pixel);
+            void FillChromaLineNV12(unsigned char* chromaData, uint32_t row, uint32_t stride, uint32_t left, uint32_t width, SPixelWord pixel);
+            void FillChromaVLineYV12(unsigned char* chromaData, uint32_t row, uint32_t stride, uint32_t left, uint32_t width, SPixelWord pixel);
+            void FillChromaULineYV12(unsigned char* chromaData, uint32_t row, uint32_t stride, uint32_t left, uint32_t width, SPixelWord pixel);
+
+            uint32_t mFgColour;
+            uint32_t mBgColour;
+
+            SPixelWord mFgPixel;
+            SPixelWord mBgPixel;
+
+            uint32_t mLine;
+    };
+
+    class PngPtn : public HorizontalLinePtn
+    {
+        public:
+            PngPtn(float updateFreq, uint32_t lineColour);
+
+            // Connect to an image, ownership of the image stays with the caller
+            void Set(Hwch::PngImage& image);
+
+            // Connect to an image, we get ownership
+            void Set(android::sp<Hwch::PngImage> spImage);
+            virtual ~PngPtn();
+
+            virtual int Fill(android::sp<android::GraphicBuffer> buf, const hwc_rect_t& rect, uint32_t& bufferParam);
+
+        private:
+            void FillLineFromImage(unsigned char* data, uint32_t row, uint32_t stride, uint32_t left, uint32_t width);
+
+            Hwch::PngImage* mpImage;
+
+            // Only for ownership
+            android::sp<Hwch::PngImage> mspImage;
+
+            // Pointers to the actual image data
+            uint8_t** mRowPointers;
+    };
+
+};
+
+#endif // __HwchPattern_h__

@@ -1,0 +1,159 @@
+/*
+ * INTEL CONFIDENTIAL
+ *
+ * Copyright 2014-2014
+ * Intel Corporation All Rights Reserved.
+ *
+ * The source code contained or described herein and all documents related to the
+ * source code ("Material") are owned by Intel Corporation or its suppliers or
+ * licensors. Title to the Material remains with Intel Corporation or its suppliers
+ * and licensors. The Material contains trade secrets and proprietary and confidential
+ * information of Intel or its suppliers and licensors. The Material is protected by
+ * worldwide copyright and trade secret laws and treaty provisions. No part of the
+ * Material may be used, copied, reproduced, modified, published, uploaded, posted,
+ * transmitted, distributed, or disclosed in any way without Intels prior express
+ * written permission.
+ *
+ * No license under any patent, copyright, trade secret or other intellectual
+ * property right is granted to or conferred upon you by disclosure or delivery
+ * of the Materials, either expressly, by implication, inducement, estoppel
+ * or otherwise. Any license under such intellectual property rights must be
+ * express and approved by Intel in writing.
+ *
+ */
+
+#ifndef __EventThread_h__
+#define __EventThread_h__
+
+#include "EventQueue.h"
+#include <utils/Thread.h>
+#include "HwcTestUtil.h"
+
+
+//*****************************************************************************
+//
+// EventQueue class - responsible for capturing and forwarding
+// page flip and VBlank events
+//
+//*****************************************************************************
+
+template<class C, int SIZE>
+class EventThread : public EventQueue<C, SIZE>, public android::Thread
+{
+public:
+    EventThread(const char* name="Unknown");
+    virtual ~EventThread();
+
+    // Push an entry on to the queue, overwriting one if it is full
+    void Push(const C& entry);
+
+    // Pop next entry from the queue, waiting for one if there is none
+    bool ReadWait(C& entry);
+
+    // Ensure the thread is running
+    void EnsureRunning();
+
+    // Abort
+    void Stop();
+
+    // Overrideable join
+    void JoinThread();
+
+    virtual void onFirstRef();
+
+
+protected:
+    Hwcval::Condition mCondition;
+    Hwcval::Mutex mMutex;
+
+    bool mThreadRunning;
+
+    volatile int32_t mContinueHandleEvent;
+
+};
+
+template<class C, int SIZE>
+EventThread<C, SIZE>::EventThread(const char* name)
+  : EventQueue<C, SIZE>(name),
+    mThreadRunning(false)
+{
+}
+
+template<class C, int SIZE>
+EventThread<C, SIZE>::~EventThread()
+{
+}
+
+template<class C, int SIZE>
+bool EventThread<C, SIZE>::ReadWait(C& entry)
+{
+    HWCLOGV_COND(eLogEventHandler, "EventThread %s::ReadWait entry", this->Name());
+    mContinueHandleEvent = true;
+    uint32_t count=0;
+
+    while (mContinueHandleEvent && !this->Pop(entry) )
+    {
+        //HWCLOGV_COND(eLogEventHandler,"EventThread %s: Nothing to pop", this->Name());
+
+        // For this wait, we could use mEvMutex, but then we need to place a lock on that for the whole of
+        // this function and provide a PopNoLock function for us to call.
+        Hwcval::Mutex::Autolock lock(mMutex);
+        if (mCondition.waitRelative(mMutex, 1000000) && (((++count) % 100) == 0))
+        {
+            HWCLOGV_COND(eLogEventHandler, "EventThread %s: No event within %dms", this->Name(), count);
+        }
+        if (exitPending())
+        {
+            HWCLOGD_COND(eLogEventHandler, "EventThread %s::ReadWait exiting because exitPending()", this->Name());
+            return false;
+        }
+    }
+
+    HWCLOGV_COND(eLogEventHandler, "EventThread %s::ReadWait exit %s", this->Name(), mContinueHandleEvent ? "true" : "false");
+    return mContinueHandleEvent;
+}
+
+
+template<class C, int SIZE>
+void EventThread<C, SIZE>::Push(const C& entry)
+{
+    EventQueue<C,SIZE>::Push(entry);
+
+    mCondition.signal();
+}
+
+template<class C, int SIZE>
+void EventThread<C, SIZE>::onFirstRef()
+{
+}
+
+template<class C, int SIZE>
+void EventThread<C, SIZE>::EnsureRunning()
+{
+    if (!isRunning())
+    {
+        HWCLOGD_COND(eLogEventHandler, "EventThread %s::EnsureRunning",this->Name());
+
+        // Set up event context
+        run(this->Name(), android::PRIORITY_URGENT_DISPLAY + android::PRIORITY_MORE_FAVORABLE);
+        mThreadRunning = true;
+    }
+}
+
+template<class C, int SIZE>
+void EventThread<C, SIZE>::Stop()
+{
+    HWCLOGD("EventThread %s::Stop()", this->Name());
+    mContinueHandleEvent = false;
+    mCondition.signal();
+    requestExit();
+}
+
+template<class C, int SIZE>
+void EventThread<C, SIZE>::JoinThread()
+{
+    join();
+}
+
+
+#endif // __EventThread_h__

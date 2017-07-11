@@ -1,0 +1,538 @@
+/****************************************************************************
+ *
+ * Copyright (c) Intel Corporation (2015).
+ *
+ * DISCLAIMER OF WARRANTY
+ * NEITHER INTEL NOR ITS SUPPLIERS MAKE ANY REPRESENTATION OR WARRANTY OR
+ * CONDITION OF ANY KIND WHETHER EXPRESS OR IMPLIED (EITHER IN FACT OR BY
+ * OPERATION OF LAW) WITH RESPECT TO THE SOURCE CODE.  INTEL AND ITS SUPPLIERS
+ * EXPRESSLY DISCLAIM ALL WARRANTIES OR CONDITIONS OF MERCHANTABILITY OR
+ * FITNESS FOR A PARTICULAR PURPOSE.  INTEL AND ITS SUPPLIERS DO NOT WARRANT
+ * THAT THE SOURCE CODE IS ERROR-FREE OR THAT OPERATION OF THE SOURCE CODE WILL
+ * BE SECURE OR UNINTERRUPTED AND HEREBY DISCLAIM ANY AND ALL LIABILITY ON
+ * ACCOUNT THEREOF.  THERE IS ALSO NO IMPLIED WARRANTY OF NON-INFRINGEMENT.
+ * SOURCE CODE IS LICENSED TO LICENSEE ON AN "AS IS" BASIS AND NEITHER INTEL
+ * NOR ITS SUPPLIERS WILL PROVIDE ANY SUPPORT, ASSISTANCE, INSTALLATION,
+ * TRAINING OR OTHER SERVICES.  INTEL AND ITS SUPPLIERS WILL NOT PROVIDE ANY
+ * UPDATES, ENHANCEMENTS OR EXTENSIONS.
+ *
+ * @file    WidiTests.cpp
+ * @author  James Pascoe (james.pascoe@intel.com)
+ * @date    22nd April 2015
+ * @brief   Implementation of the harness Widi tests
+ *
+ * @details This file implements the Widi harness tests. Note that these tests
+ * have to be run with Widi enabled on the command line (and optionally the
+ * Widi visualisation window). For example:
+ *
+ *   -widi 1920x1200 1920x1200 60 -widi_window 600x300
+ *
+ * If Widi is not enabled and the tests are run, then the effect is harmless.
+ *
+ *****************************************************************************/
+
+#include "HwcTestState.h"
+#include "HwchLayers.h"
+#include "HwchWidiTests.h"
+#include "HwchWidi.h"
+#include "HwchDefs.h"
+
+/*
+ * Widi directed tests. Each test in this file has been designed to cover one
+ * (or more) aspects of the Widi functionality. The intention being to maximise
+ * functional coverage. In effect, each tests represents a class of tests that
+ * can be expanded upon as necessary.
+ */
+
+// Helper function to check that the number of Widi frames, FrameTypeChange
+// messages and BufferInfo message received by the Widi shim are as expected.
+void CheckWidiShimStatistics(uint32_t frames_expected,
+    uint32_t frame_type_change_messages_expected,
+    uint32_t buffer_info_messages_expected)
+{
+    HwcTestState *test_state = HwcTestState::getInstance();
+    if (!test_state)
+    {
+        HWCERROR(eCheckInternalError, "%s: could not retrieve HwcTestState pointer!", __func__);
+    }
+
+    uint32_t frame_count = test_state->GetWirelessFrameCount();
+    uint32_t frame_type_change_count = test_state->GetWirelessFrameTypeChangeCount();
+    uint32_t buffer_info_count = test_state->GetWirelessBufferInfoCount();
+
+    if (frame_count != frames_expected)
+    {
+        HWCERROR(eCheckWidiUnexpectedFrameCount,
+            "Unexpected number of frames received %d (expected %d)",
+            frame_count, frames_expected);
+    }
+
+    if (frame_type_change_count != frame_type_change_messages_expected)
+    {
+        HWCERROR(eCheckWidiUnexpectedFrameTypeChangeCount,
+            "Unexpected number of frame type change messages received %d (expected %d)",
+            frame_type_change_count, frame_type_change_messages_expected);
+    }
+
+    if (buffer_info_count != buffer_info_messages_expected)
+    {
+        HWCERROR(eCheckWidiUnexpectedBufferInfoCount,
+            "Unexpected number of buffer info messages received %d (expected %d)",
+            buffer_info_count, buffer_info_messages_expected);
+    }
+}
+
+// This test is designed to rapidly establish whether the Widi paths in the HWC
+// are operating as we expect. In particular, this test verifies that the verification
+// infrastructure is working.
+REGISTER_TEST(WidiSmoke)
+Hwch::WidiSmokeTest::WidiSmokeTest(Hwch::Interface& interface)
+  : Hwch::WidiTest(interface)
+{
+}
+
+int32_t Hwch::WidiSmokeTest::RunScenario()
+{
+    android::status_t ret = UNKNOWN_ERROR;
+    Widi& widi = Hwch::Widi::getInstance();
+
+    // Note: the Widi connection is done in HwcHarness.cpp. However, if multiple Widi
+    // tests are chained together (e.g. with 'valhwch -all'), then we may need to reconnect.
+    if (!widi.WidiIsConnected())
+    {
+        ret = widi.WidiConnect();
+        if (ret != android::NO_ERROR)
+        {
+            HWCERROR(eCheckWidiConnect, "%s: WidiConnect returned error!", __func__);
+            return 1;
+        }
+    }
+
+    Hwch::Frame frame(mInterface);
+
+    Hwch::WallpaperLayer wallpaper_layer;
+    Hwch::DialogBoxLayer dialog_box_layer;
+
+    frame.Add(wallpaper_layer);
+    frame.Add(dialog_box_layer);
+
+    uint32_t frames_to_send = GetIntParam("num_frames", 200);
+    frame.Send(frames_to_send);
+
+    // Check the following:
+    //   i) that the number of frames we have sent have been received by the Widi shim
+    //  ii) that exactly one frame type change message has been generated by the HWC
+    // iii) that exatly one buffer info message has been generated by the HWC
+    CheckWidiShimStatistics(frames_to_send, 1, 1);
+
+    ret = widi.WidiDisconnect();
+    if (ret != android::NO_ERROR)
+    {
+        HWCERROR(eCheckWidiConnect, "%s: WidiDisconnect returned error!", __func__);
+        return 1;
+    }
+
+    return 0;
+}
+
+// Diagnose Widi disconnection problems. These manifest in the shims as
+// onFrameReady errors (eCheckWidiOnFrameReadyError). Use the default Frame
+// Processing Policy that is provided on the command line for reconnects.
+REGISTER_TEST(WidiDisconnect)
+Hwch::WidiDisconnectTest::WidiDisconnectTest(Hwch::Interface& interface)
+  : Hwch::WidiTest(interface)
+{
+}
+
+int32_t Hwch::WidiDisconnectTest::RunScenario()
+{
+    android::status_t ret = UNKNOWN_ERROR;
+    Widi& widi = Hwch::Widi::getInstance();
+
+    // Note: the Widi connection is done in HwcHarness.cpp. However, if multiple Widi
+    // tests are chained together (e.g. with 'valhwch -all'), then we may need to reconnect.
+    if (!widi.WidiIsConnected())
+    {
+        ret = widi.WidiConnect();
+        if (ret != android::NO_ERROR)
+        {
+            HWCERROR(eCheckWidiConnect, "%s: WidiConnect returned error!", __func__);
+            return 1;
+        }
+    }
+
+    Hwch::Frame frame(mInterface);
+
+    Hwch::WallpaperLayer wallpaper_layer;
+    Hwch::NV12VideoLayer nv12_video_layer;
+    Hwch::StatusBarLayer status_bar_layer;
+    Hwch::NavigationBarLayer navigation_bar_layer;
+
+    frame.Add(wallpaper_layer);
+    frame.Add(nv12_video_layer);
+    frame.Add(status_bar_layer);
+    frame.Add(navigation_bar_layer);
+
+    int32_t disconnects = GetIntParam("disconnects", 10);
+    int32_t num_frames = GetIntParam("num_frames", 100);
+    int32_t num_overrun = GetIntParam("num_overrun", 0);
+
+    for (int32_t i=0; i<disconnects; ++i)
+    {
+        frame.Send(num_frames);
+
+        ret = widi.WidiDisconnect();
+        if (ret != android::NO_ERROR)
+        {
+            HWCERROR(eCheckWidiConnect, "%s: WidiDisconnect returned error!", __func__);
+            return 1;
+        }
+
+        // Perform a rotation to give some visual indication that a
+        // disconnection has been performed.
+        frame.RotateBy(eRotate90);
+
+        // Optional - send an 'overrun'. This should result in frames being dropped and
+        // errors being generated. This is useful for verifying that the test is actually
+        // disconnecting and connecting from hwc.widi. Override on the command-line.
+        frame.Send(num_overrun);
+
+        // Reconnect for next iteration
+        ret = widi.WidiConnect();
+        if (ret != android::NO_ERROR)
+        {
+            HWCERROR(eCheckWidiConnect, "%s: WidiConnect returned error!", __func__);
+            return 1;
+        }
+
+        // Check the following:
+        //   i) that the number of frames we have sent have been received by the Widi shim
+        //  ii) that exactly one frame type change message has been generated by the HWC
+        // iii) that exatly one buffer info message has been generated by the HWC
+        CheckWidiShimStatistics(num_frames + num_overrun, 1, 1);
+    }
+
+    ret = widi.WidiDisconnect();
+    if (ret != android::NO_ERROR)
+    {
+        HWCERROR(eCheckWidiConnect, "%s: WidiDisconnect returned error!", __func__);
+        return 1;
+    }
+
+    return 0;
+}
+
+// Perform Widi disconnections and reconnections with valid (and invalid)
+// frame processing policies.
+REGISTER_TEST(WidiProcessingPolicy)
+Hwch::WidiProcessingPolicyTest::WidiProcessingPolicyTest(Hwch::Interface& interface)
+  : Hwch::WidiTest(interface)
+{
+}
+
+int32_t Hwch::WidiProcessingPolicyTest::RunScenario()
+{
+    android::status_t ret = UNKNOWN_ERROR;
+    Widi& widi = Hwch::Widi::getInstance();
+
+    // Note: the Widi connection is done in HwcHarness.cpp. However, if multiple Widi
+    // tests are chained together (e.g. with 'valhwch -all'), then we may need to reconnect.
+    if (!widi.WidiIsConnected())
+    {
+        ret = widi.WidiConnect();
+        if (ret != android::NO_ERROR)
+        {
+            HWCERROR(eCheckWidiConnect, "%s: WidiConnect returned error!", __func__);
+            return 1;
+        }
+    }
+
+    // Initialise a reference to the default frame processing policy
+    struct FrameProcessingPolicy& original_policy =
+        mSystem.GetWirelessDisplayFrameProcessingPolicy();
+    int32_t original_scaled_width = original_policy.scaledWidth;
+    int32_t original_scaled_height = original_policy.scaledHeight;
+    int32_t original_refresh = original_policy.refresh;
+
+    Hwch::Frame frame(mInterface);
+    Hwch::GameFullScreenLayer game_fullscreen_layer;
+    frame.Add(game_fullscreen_layer);
+
+    // Note: the Widi connection is done in HwcHarness.cpp
+
+    int32_t disconnects = GetIntParam("disconnects", 4);
+    int32_t num_frames = GetIntParam("num_frames", 200);
+
+    for (int32_t i=1; i<=disconnects; ++i)
+    {
+        frame.Send(num_frames);
+
+        // Check the following:
+        //   i) that the number of frames we have sent have been received by the Widi shim
+        //  ii) that exactly one frame type change message has been generated by the HWC
+        // iii) that exatly one buffer info message has been generated by the HWC
+        CheckWidiShimStatistics(num_frames, 1, 1);
+
+        ret = widi.WidiDisconnect();
+        if (ret != android::NO_ERROR)
+        {
+            HWCERROR(eCheckWidiConnect, "%s: WidiDisconnect returned error!", __func__);
+            return 1;
+        }
+
+        mSystem.SetWirelessDisplayFrameProcessingPolicy(
+            ((i+1) % 2) ? original_scaled_width * i : original_scaled_width / i,
+            ((i+1) % 2) ? original_scaled_height * i : original_scaled_height / i,
+            ((i+1) % 2) ? original_refresh * i : original_refresh / i
+        );
+
+        ret = widi.WidiConnect();
+        if (ret != android::NO_ERROR)
+        {
+            HWCERROR(eCheckWidiConnect, "%s: WidiConnect returned error!", __func__);
+            return 1;
+        }
+    }
+
+    // Reinstate the original frame processing policy
+    mSystem.SetWirelessDisplayFrameProcessingPolicy(
+        original_scaled_width,
+        original_scaled_height,
+        original_refresh
+    );
+
+    ret = widi.WidiDisconnect();
+    if (ret != android::NO_ERROR)
+    {
+        HWCERROR(eCheckWidiConnect, "%s: WidiDisconnect returned error!", __func__);
+        return 1;
+    }
+
+    return 0;
+}
+
+// This test exercises the Widi 'FrameTypeChange' mechanism. This is performed by
+// sending frames of varying types - i.e. NV12 to enter 'video' mode and RGBA to
+// simulate 'framebuffer' mode. Each transition should generate a FrameTypeChange message.
+REGISTER_TEST(WidiFrameTypeChange)
+Hwch::WidiFrameTypeChangeTest::WidiFrameTypeChangeTest(Hwch::Interface& interface)
+  : Hwch::WidiTest(interface)
+{
+}
+
+int32_t Hwch::WidiFrameTypeChangeTest::RunScenario()
+{
+    android::status_t ret = UNKNOWN_ERROR;
+    Widi& widi = Hwch::Widi::getInstance();
+
+    int32_t screen_width = mSystem.GetDisplay(0).GetWidth();
+    int32_t screen_height = mSystem.GetDisplay(0).GetHeight();
+
+    // Note: the Widi connection is done in HwcHarness.cpp. However, if multiple Widi
+    // tests are chained together (e.g. with 'valhwch -all'), then we may need to reconnect.
+    if (!widi.WidiIsConnected())
+    {
+        ret = widi.WidiConnect();
+        if (ret != android::NO_ERROR)
+        {
+            HWCERROR(eCheckWidiConnect, "%s: WidiConnect returned error!", __func__);
+            return 1;
+        }
+    }
+
+    // Setup a frame
+    Hwch::Frame frame(mInterface);
+    Hwch::NV12VideoLayer nv12_layer(screen_width, screen_height);
+    Hwch::RGBALayer rgba_layer(screen_width, screen_height);
+
+    int32_t iterations = GetIntParam("iterations", 1000);
+
+    // Tell the Widi Shim to expect a high number of setResolutions
+    HwcTestState *test_state = HwcTestState::getInstance();
+    if (!test_state)
+    {
+        HWCERROR(eCheckInternalError, "%s: could not retrieve HwcTestState pointer!", __func__);
+    }
+    test_state->SetMaxSetResolutions(iterations);
+
+    for (int32_t i = 1; i<=iterations; ++i)
+    {
+        if (i & 1)
+        {
+            frame.Add(nv12_layer);
+            frame.Send(1);
+            frame.Remove(nv12_layer);
+        }
+        else
+        {
+            frame.Add(rgba_layer);
+            frame.Send(1);
+            frame.Remove(rgba_layer);
+        }
+    }
+
+    // Check the following:
+    //   i) that the number of frames we have sent have been received by the Widi shim
+    //  ii) that the number of frame type change message (generated by the HWC) is 'iterations'
+    // iii) that the number of buffer info message (generated by the HWC) is 'iterations'
+    CheckWidiShimStatistics(iterations, iterations, iterations);
+
+    ret = widi.WidiDisconnect();
+    if (ret != android::NO_ERROR)
+    {
+        HWCERROR(eCheckWidiConnect, "%s: WidiDisconnect returned error!", __func__);
+        return 1;
+    }
+
+    return 0;
+}
+
+// This test exercises the Widi 'Direct' mechanism. This is triggered
+// by sending a frame with a single NV12 layer (with the dimensions
+// specified in the Frame Processing Policy). The intended behaviour
+// is for the HWC to pass the buffer directly to the WidiDisplay without
+// any intermediate compositions.
+REGISTER_TEST(WidiDirect)
+Hwch::WidiDirectTest::WidiDirectTest(Hwch::Interface& interface)
+  : Hwch::WidiTest(interface)
+{
+}
+
+int32_t Hwch::WidiDirectTest::RunScenario()
+{
+    // Disable these checks to prevent spurious test failures. Code
+    // has recently been added to the HWC Widi subsystem to drop frames
+    // that have the same handle and are being sent through Widi direct
+    // mode. This manifests in the test as 'too many dropped' frames
+    // or 'too many consecutively dropped frames' errors. We should fix
+    // this by detecting the same set of conditions (in the shims) and
+    // not counting these frames as dropped.
+    SetCheck(eCheckTooManyConsecutiveDroppedFrames, false);
+    SetCheck(eCheckTooManyDroppedFrames, false);
+    SetCheck(eCheckWidiUnexpectedFrameCount, false);
+
+    android::status_t ret = UNKNOWN_ERROR;
+    Widi& widi = Hwch::Widi::getInstance();
+
+    // Note: the Widi connection is done in HwcHarness.cpp. However, if multiple Widi
+    // tests are chained together (e.g. with 'valhwch -all'), then we may need to reconnect.
+    if (!widi.WidiIsConnected())
+    {
+        ret = widi.WidiConnect();
+        if (ret != android::NO_ERROR)
+        {
+            HWCERROR(eCheckWidiConnect, "%s: WidiConnect returned error!", __func__);
+            return 1;
+        }
+    }
+
+    int32_t widi_width = mSystem.GetVirtualDisplayWidth();
+    int32_t widi_height = mSystem.GetVirtualDisplayHeight();
+
+    // Create a frame
+    Hwch::Frame frame(mInterface);
+    Hwch::NV12VideoLayer video_layer(widi_width, widi_height);
+    frame.Add(video_layer);
+
+    // Simulate playing landscape video (if we are running on a portrait device).
+    int32_t panel_width = Hwch::System::getInstance().GetDisplay(0).GetWidth();
+    int32_t panel_height = Hwch::System::getInstance().GetDisplay(0).GetHeight();
+    if (panel_width < panel_height)
+    {
+        frame.RotateTo(eRotate90);
+    }
+
+    // Note: the Widi connection is done in HwcHarness.cpp
+
+    // The HWC forces a number of compositions to occur at start-of-day for frames that
+    // would otherwise be sent via the Widi direct path. This primes some state in the HWC.
+    // Flush these frames through before beginning the test.
+    frame.Send(HWCVAL_WIDI_NUM_FRAMES_TO_FLUSH_DIRECT_COMPOSITIONS);
+
+    // Zero the counters and tell the shims to expect Widi direct mode
+    HwcTestState *test_state = HwcTestState::getInstance();
+    if (!test_state)
+    {
+        HWCERROR(eCheckInternalError, "%s: could not retrieve HwcTestState pointer!", __func__);
+    }
+    test_state->SetWirelessFrameCount(0);
+    test_state->SetWirelessFrameTypeChangeCount(0);
+    test_state->SetWirelessBufferInfoCount(0);
+    test_state->SetWidiDirectModeExpected(true);
+
+    // Run the test. Send some frames (should now go direct)
+    int32_t num_frames = GetIntParam("num_frames", 200);
+    frame.Send(num_frames);
+
+    // Check the following:
+    //   i) that the number of frames we have sent have been received by the Widi shim
+    //  ii) that exactly no frame type change messages have been generated by the HWC
+    // iii) that exatly no buffer info messages have been generated by the HWC
+    CheckWidiShimStatistics(num_frames, 0, 0);
+
+    // Remove the expectation of Widi direct mode for subsequent tests
+    test_state->SetWidiDirectModeExpected(false);
+
+    ret = widi.WidiDisconnect();
+    if (ret != android::NO_ERROR)
+    {
+        HWCERROR(eCheckWidiConnect, "%s: WidiDisconnect returned error!", __func__);
+        return 1;
+    }
+
+    return 0;
+}
+
+REGISTER_TEST(WirelessDocking)
+Hwch::WirelessDockingTest::WirelessDockingTest(Hwch::Interface& interface)
+  : Hwch::OptionalTest(interface)
+{
+}
+
+int Hwch::WirelessDockingTest::RunScenario()
+{
+    uint32_t iterations = GetIntParam("iterations", 10);
+    uint32_t framesToSend = GetIntParam("num_frames_to_send", 50);
+    uint32_t delay = GetIntParam("async_delay_us", 0);
+    android::status_t ret = UNKNOWN_ERROR;
+
+    Widi& widi = Hwch::Widi::getInstance();
+
+    // Note: the Widi connection is done in HwcHarness.cpp. However, if multiple Widi
+    // tests are chained together (e.g. with 'valhwch -all'), then we may need to reconnect.
+    if (!widi.WidiIsConnected())
+    {
+        ret = widi.WidiConnect();
+        if (ret != android::NO_ERROR)
+        {
+            HWCERROR(eCheckWidiConnect, "%s: WidiConnect returned error!", __func__);
+            return 1;
+        }
+    }
+
+    // Widi is connected - generate some traffic and enter/exit Wireless docking mode.
+    Hwch::Frame frame(mInterface);
+
+    Hwch::WallpaperLayer wallpaper;
+    Hwch::CameraLayer camera;
+    frame.Add(wallpaper);
+    frame.Add(camera);
+
+    for (uint32_t i=0; i<iterations; ++i)
+    {
+        frame.Send(framesToSend/2);
+        WirelessDocking(true, delay);
+        frame.Send(framesToSend/2);
+        WirelessDocking(false, delay);
+    }
+
+    ret = widi.WidiDisconnect();
+    if (ret != android::NO_ERROR)
+    {
+        HWCERROR(eCheckWidiConnect, "%s: WidiDisconnect returned error!", __func__);
+        return 1;
+    }
+
+    return 0;
+}
+

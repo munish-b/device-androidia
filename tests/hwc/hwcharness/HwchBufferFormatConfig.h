@@ -1,0 +1,106 @@
+/****************************************************************************
+*
+* Copyright (c) Intel Corporation (2015).
+*
+* DISCLAIMER OF WARRANTY
+* NEITHER INTEL NOR ITS SUPPLIERS MAKE ANY REPRESENTATION OR WARRANTY OR
+* CONDITION OF ANY KIND WHETHER EXPRESS OR IMPLIED (EITHER IN FACT OR BY
+* OPERATION OF LAW) WITH RESPECT TO THE SOURCE CODE.  INTEL AND ITS SUPPLIERS
+* EXPRESSLY DISCLAIM ALL WARRANTIES OR CONDITIONS OF MERCHANTABILITY OR
+* FITNESS FOR A PARTICULAR PURPOSE.  INTEL AND ITS SUPPLIERS DO NOT WARRANT
+* THAT THE SOURCE CODE IS ERROR-FREE OR THAT OPERATION OF THE SOURCE CODE WILL
+* BE SECURE OR UNINTERRUPTED AND HEREBY DISCLAIM ANY AND ALL LIABILITY ON
+* ACCOUNT THEREOF.  THERE IS ALSO NO IMPLIED WARRANTY OF NON-INFRINGEMENT.
+* SOURCE CODE IS LICENSED TO LICENSEE ON AN "AS IS" BASIS AND NEITHER INTEL
+* NOR ITS SUPPLIERS WILL PROVIDE ANY SUPPORT, ASSISTANCE, INSTALLATION,
+* TRAINING OR OTHER SERVICES.  INTEL AND ITS SUPPLIERS WILL NOT PROVIDE ANY
+* UPDATES, ENHANCEMENTS OR EXTENSIONS.
+*
+* File Name:            HwchBufferFormatConfig.h
+*
+* Description:          Manage per-buffer format configuration
+*
+* Environment:
+*
+* Notes:
+*
+*****************************************************************************/
+#ifndef __HwchBufferFormatConfig_h__
+#define __HwchBufferFormatConfig_h__
+
+#include "HwcTestState.h"
+#include <utils/KeyedVector.h>
+
+namespace Hwch
+{
+    class Rect;
+
+    class BufferFormatConfig
+    {
+    private:
+        // Display frame minimum size
+        uint32_t mMinDisplayFrameWidth;
+        uint32_t mMinDisplayFrameHeight;
+
+        // Display frame alignment mask
+        uint32_t mDfXMask;
+        uint32_t mDfYMask;
+
+        uint32_t mMinBufferWidth;
+        uint32_t mMinBufferHeight;
+
+        // DONT allow buffers to have a size where
+        // (size & mask) != 0
+        // Round up to avoid this.
+        uint32_t mBufferWidthAlignment;
+        uint32_t mBufferHeightAlignment;
+
+        // Crop alignment
+        float mCropAlignment;
+        float mMinCropWidth;
+        float mMinCropHeight;
+
+    public:
+        BufferFormatConfig (uint32_t minDfWidth=0, uint32_t minDfHeight=0,
+                            uint32_t minBufferWidth=0, uint32_t minBufferHeight=0,
+                            uint32_t bufferWidthAlignment=1, uint32_t bufferHeightAlignment=1,
+                            float cropAlignment=0.0, float minCropWidth=0.0, float minCropHeight=0.0,
+                            uint32_t dfXMask = 0xffffffff, uint32_t dfYMask = 0xffffffff);
+
+        // Adjust display frame to comply with the min width & height
+        void AdjustDisplayFrame(Rect& r, uint32_t displayWidth, uint32_t displayHeight) const;
+
+        // Adjust buffer size to comply with the buffer size and alignment restrictions
+        void AdjustBufferSize(uint32_t& w, uint32_t& h) const;
+
+        // Adjust crop rectangle to comply with crop size and alignment restrictions
+        void AdjustCropSize(uint32_t bw, uint32_t bh, float& w, float& h) const;
+        void AdjustCrop(uint32_t bw, uint32_t bh, float& l, float& t, float& w, float& h) const;
+    };
+
+    // Key: Buffer format
+    class BufferFormatConfigManager : public android::KeyedVector<uint32_t, BufferFormatConfig>
+    {
+    public:
+        // Constructor
+        BufferFormatConfigManager();
+
+        // Adjust display frame to comply with the min width & height
+        void AdjustDisplayFrame(uint32_t format, Rect& r, uint32_t displayWidth, uint32_t displayHeight);
+
+        // Adjust buffer size to comply with the
+        void AdjustBufferSize(uint32_t format, uint32_t& w, uint32_t& h);
+
+        // Adjust crop rectangle to comply with crop size and alignment restrictions
+        void AdjustCropSize(uint32_t format, uint32_t bw, uint32_t bh, float& w, float& h);
+        void AdjustCrop(uint32_t format, uint32_t bw, uint32_t bh, float& l, float& t, float& w, float& h);
+
+        // Define parameters to be used when no configuration is present for the selected format.
+        void SetDefault(const BufferFormatConfig& cfg);
+
+    private:
+        BufferFormatConfig mDeflt;
+    };
+}
+
+#endif // __HwchBufferFormatConfig_h__

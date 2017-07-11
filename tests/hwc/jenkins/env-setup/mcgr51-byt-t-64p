@@ -1,0 +1,33 @@
+export HWCVAL_LOG_DEFAULT_PRIORITY="V"
+export HWCVAL_LOG_DESTINATION=HWC_ANDROID
+export INTEL_WIDI_BAYTRAIL=true
+
+PREFIX=/usr2/jenkins/jobs/Hardware_Composer_Builder_BYT/workspace/build
+
+export TOP=$PREFIX/android_mcgr51_250915
+export P4_ROOT=$PREFIX/ufo_1533_200915/gfx_Development
+#export TOP=$PREFIX/android_mcgr51_211215
+#export P4_ROOT=$PREFIX/ufo_1533_221215/gfx_Development
+export PRODUCT=byt_t_64p
+export ANDROID_SERIAL=BaytrailF4BB5686
+
+cd $TOP
+source build/envsetup.sh
+lunch $PRODUCT-eng
+cd -
+
+cd $PREFIX/hwcval/tests/hwc/
+source init.sh
+
+alias make-android='time make -C $P4_ROOT/Tools/Linux/ BUILD_TYPE=release ANDROID_SRC=$TOP TARGET_PRODUCT=$PRODUCT TARGET_BUILD_VARIANT=eng JOBS=32 UFO_OCL=n UFO_RS=n PATCH=nopatch FORCE_FLASHFILE_NO_OTA=true android'
+alias make-ufo='time make -C $P4_ROOT/Tools/Linux/ BUILD_TYPE=release ANDROID_SRC=$TOP TARGET_PRODUCT=$PRODUCT JOBS=32 TARGET_BUILD_VARIANT=eng UFO_OCL=n UFO_RS=n ufo'
+
+alias cd-hwc='cd $P4_ROOT/Source/Android/hwc'
+alias cd-hwch='cd $PREFIX/hwcval/tests/hwc/'
+
+cd $PREFIX/hwcval/tests/hwc/
+source init.sh
+cd -
+
+PS1="(jenkins: hwc) $PS1"
+export PS1

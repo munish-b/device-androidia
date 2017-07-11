@@ -1,0 +1,411 @@
+/****************************************************************************
+
+ Copyright (c) Intel Corporation (2015).
+
+ DISCLAIMER OF WARRANTY
+ NEITHER INTEL NOR ITS SUPPLIERS MAKE ANY REPRESENTATION OR WARRANTY OR
+ CONDITION OF ANY KIND WHETHER EXPRESS OR IMPLIED (EITHER IN FACT OR BY
+ OPERATION OF LAW) WITH RESPECT TO THE SOURCE CODE.  INTEL AND ITS SUPPLIERS
+ EXPRESSLY DISCLAIM ALL WARRANTIES OR CONDITIONS OF MERCHANTABILITY OR
+ FITNESS FOR A PARTICULAR PURPOSE.  INTEL AND ITS SUPPLIERS DO NOT WARRANT
+ THAT THE SOURCE CODE IS ERROR-FREE OR THAT OPERATION OF THE SOURCE CODE WILL
+ BE SECURE OR UNINTERRUPTED AND HEREBY DISCLAIM ANY AND ALL LIABILITY ON
+ ACCOUNT THEREOF.  THERE IS ALSO NO IMPLIED WARRANTY OF NON-INFRINGEMENT.
+ SOURCE CODE IS LICENSED TO LICENSEE ON AN "AS IS" BASIS AND NEITHER INTEL
+ NOR ITS SUPPLIERS WILL PROVIDE ANY SUPPORT, ASSISTANCE, INSTALLATION,
+ TRAINING OR OTHER SERVICES.  INTEL AND ITS SUPPLIERS WILL NOT PROVIDE ANY
+ UPDATES, ENHANCEMENTS OR EXTENSIONS.
+
+ File Name:     runOnDevice
+
+ Description:   This is a command line utility which can be used as an
+                alternative to the AutoUI GUI to launch tests only.
+                Compilation is not yet implemented.
+                To compile tests, AutoUI is needed.
+
+ Environment:
+
+ Notes:
+
+ ****************************************************************************/
+#!/bin/bash
+
+source $HWCVAL_ROOT/host_scripts/valcommon
+
+ETM_TEST_OUTPUT=/tmp/etm_testresults
+HWCVAL_TEST_OUTPUT=/tmp/etm_valresults
+ETM_RESULTS_LOG=~/client_logs/etm_results.log
+ANDROID_COMPONENT_DIR=/user/rbpinske/autoui
+
+adb wait-for-device
+adb root
+adb remount
+adb wait-for-device
+
+
+function install_gfxbench()
+{
+    printf "valetm - Installing GFXBench"
+    (adb shell 'pm list packages -f | grep -c net.kishonti.gfxbench.gl') | grep -q "1"
+    if [[ $? == 0 ]]
+    then
+        printf "...Skipping install, already installed\n"
+    else
+        printf "...\n"
+        adb install $ANDROID_COMPONENT_DIR/apks/net_kishonti_gfxbench_gl-3_1.apk &
+        sleep 10
+        adb shell am instrument -w -c com.intel.hwcval.androidDialogs#checkActivity
+    fi
+}
+
+
+function install_mxplayer()
+{
+    printf "valetm - Installing MX Player"
+    (adb shell 'pm list packages -f | grep -c com.mxtech.videoplayer.ad') | grep -q "1"
+    if [[ $? == 0 ]]
+    then
+        printf "...Skipping install, already installed\n"
+    else
+        printf "...\n"
+        adb install $ANDROID_COMPONENT_DIR/apks/com.mxtech.videoplayer.ad-1.7.38-APK4Fun.com.apk &
+        sleep 10
+        adb shell am instrument -w -c com.intel.hwcval.androidDialogs#checkActivity
+    fi
+}
+
+
+function install_rescan_sd()
+{
+    printf "valetm - Installing Rescan SD"
+    (adb shell 'pm list packages -f | grep -c com.uberullu.rescansd') | grep -q "1"
+    if [[ $? == 0 ]]
+    then
+        printf "...Skipping install, already installed\n"
+    else
+        printf "...\n"
+        adb install $ANDROID_COMPONENT_DIR/apks//com.uberullu.rescansd_1.4_free-www.apkhere.com.apk &
+        sleep 10
+        adb shell am instrument -w -c com.intel.hwcval.androidDialogs#checkActivity
+    fi
+    printf "valetm - Starting Rescan SD"
+    adb shell monkey -p com.uberullu.rescansd -c android.intent.category.LAUNCHER 1
+    sleep 10
+}
+
+
+function install_amazon_video()
+{
+    printf "valetm - Installing Amazon video"
+    (adb shell 'if [ -s  /sdcard/Download/Amazon_1080.wmv ]; then echo 1; else echo 0; fi') | grep -q "1"
+    if [[ $? == 0 ]]
+    then
+        printf "...Skipping push, already installed\n"
+    else
+        printf "...\n"
+       adb push $ANDROID_COMPONENT_DIR/Videos/Amazon_1080.wmv /sdcard/download/
+       sdcard_updated=1
+    fi
+}
+
+
+function install_avc_sub_video()
+{
+    printf "valetm - Installing 6.avc_sub video"
+    (adb shell 'if [ -s  /sdcard/Download/6.avc_sub.mp4 ]; then echo 1; else echo 0; fi') | grep -q "1"
+    if [[ $? == 0 ]]
+    then
+        printf "...Skipping push, already installed\n"
+    else
+        printf "...\n"
+       adb push $ANDROID_COMPONENT_DIR/Videos/6.avc_sub.mp4 /sdcard/download/
+       sdcard_updated=1
+    fi
+}
+
+
+function install_portrait_video()
+{
+    printf "valetm - Installing Amazon video"
+    (adb shell 'if [ -s  /sdcard/Download/Video_Camera_Portrait_Mode.mp4 ]; then echo 1; else echo 0; fi') | grep -q "1"
+    if [[ $? == 0 ]]
+    then
+        printf "...Skipping push, already installed\n"
+    else
+        printf "...\n"
+       adb push $ANDROID_COMPONENT_DIR/Videos/Video_Camera_Portrait_Mode.mp4 /sdcard/download/
+       sdcard_updated=1
+    fi
+}
+
+
+function install_panoramas_photo()
+{
+    printf "valetm - Installing panoramas photo"
+    (adb shell 'if [ -s  /sdcard/Download/panoramas_4af80603e03ed_hires.jpg ]; then echo 1; else echo 0; fi') | grep -q "1"
+    if [[ $? == 0 ]]
+    then
+        printf "...Skipping push, already installed\n"
+    else
+        printf "...\n"
+       adb push $ANDROID_COMPONENT_DIR/Photos/panoramas_4af80603e03ed_hires.jpg /sdcard/download/
+       sdcard_updated=1
+    fi
+}
+
+
+# This function runs all the tests, unless a single test is specified
+function run_test()
+{
+    printf "valetm - Running test(class=$HWCVAL_ETM_CLASS, method=$HWCVAL_ETM_METHOD)\n"
+    install_gfxbench=0
+    install_mxplayer=0
+    install_amazon_video=0
+    install_avc_sub_video=0
+    install_portrait_video=0
+    install_panoramas_photo=0
+    sdcard_updated=0
+    if [[ "$HWCVAL_ETM_CLASS" == "" || "$HWCVAL_ETM_CLASS" == "gfxbench" ]]
+    then
+        install_gfxbench=1
+    fi
+    if [[ "$HWCVAL_ETM_CLASS" == "" || "$HWCVAL_ETM_CLASS" == "mxPlayerApp" ]]
+    then
+        install_mxplayer=1
+        install_amazon_video=1
+        install_avc_sub_video=1
+        install_portrait_video=1
+    fi
+    if [[ "$HWCVAL_ETM_CLASS" == "" || "$HWCVAL_ETM_CLASS" == "photos" ]]
+    then
+        install_panoramas_photo=1
+    fi
+
+    if [[ $install_gfxbench == 1 ]]
+    then
+        install_gfxbench
+    fi
+
+    if [[ $install_mxplayer == 1 ]]
+    then
+        install_mxplayer
+    fi
+
+    if [[ $install_amazon_video == 1 ]]
+    then
+        install_amazon_video
+    fi
+
+    if [[ $install_avc_sub_video == 1 ]]
+    then
+        install_avc_sub_video
+    fi
+
+    if [[ install_portrait_video == 1 ]]
+    then
+        install_portrait_video
+    fi
+
+    if [[ $install_panoramas_photo == 1 ]]
+    then
+        install_panoramas_photo
+    fi
+
+    if [[ $sdcard_updated == 1 ]]
+    then
+        install_rescan_sd
+    fi
+
+    valstart $COMMAND_LINE_ARGS
+    shellcmd='am instrument -w'
+    if [[ "$HWCVAL_ETM_CLASS" != "" ]]
+    then
+        if [[ "$HWCVAL_ETM_METHOD" != "" ]]
+        then
+            shellcmd=$shellcmd' -e class com.intel.hwcval.autoui.'$HWCVAL_ETM_CLASS'#'$HWCVAL_ETM_METHOD
+            printf "calling class#method '$shellcmd ${!HWCVAL_ETM_ARGS}'...\n"
+        else
+            shellcmd=$shellcmd' -e class com.intel.hwcval.autoui.'$HWCVAL_ETM_CLASS
+            printf "valetm - calling class '$shellcmd ${!HWCVAL_ETM_ARGS}'...\n"
+        fi
+    fi
+    shellcmd=$shellcmd' com.intel.hwcval.autoui.test/android.support.test.runner.AndroidJUnitRunner'
+    printf "shell command {$shellcmd}\n"
+    (adb shell $shellcmd ${!HWCVAL_ETM_ARGS}) | tee $ETM_TEST_OUTPUT
+
+     valstop | tee $HWCVAL_TEST_OUTPUT
+     printf "valetm - Test completed\n\n"
+}
+
+
+# This function processes the output, looking for strings
+function process_results()
+{
+    printf "valetm - processing test results to {$ETM_RESULTS_LOG}...\n"
+    echo " "  >> $ETM_RESULTS_LOG
+
+    test_string='ETM Test('$HWCVAL_ETM_METHOD')'
+
+    # get the UiAutomator results...
+    #
+    printf "valetm - grepping for 'not run'\n"
+    test_not_run=0
+    grep "$test_string" $ETM_TEST_OUTPUT | grep -q "not run"
+    if [[ $? == 0 ]]
+    then
+        test_not_run=1
+    fi
+    printf "valetm - grepping for 'completed successfully'\n"
+    test_ran_ok=0
+    grep "$test_string" $ETM_TEST_OUTPUT | grep -q "completed successfully"
+    if [[ $? == 0 ]]
+    then
+        test_ran_ok=1
+    fi
+
+    if [[ $test_ran_ok == 1 ]]
+    then
+        printf "valetm - test ran successfully\n"
+        grep -o "$test_string" $ETM_TEST_OUTPUT >> $ETM_RESULTS_LOG
+    elif [[ $test_not_run == 1 ]]
+    then
+        printf "valetm - test didn't run\n"
+        grep -o "$test_string" $ETM_TEST_OUTPUT >> $ETM_RESULTS_LOG
+        echo "   ===== ETM test not run ====="  >> $ETM_RESULTS_LOG
+    else
+        printf "valetm - test failed to run to completion\n"
+        grep -o "$test_string" $ETM_TEST_OUTPUT >> $ETM_RESULTS_LOG
+        if [[ $? == 1 ]]
+        then
+            # the test name wasn't logged - understandable if the test crashed
+            echo $test_string' - appears to have crashed' >> $ETM_RESULTS_LOG
+        fi
+        echo " "  >> $ETM_RESULTS_LOG
+        echo "   ===== ETM Test failed ====="  >> $ETM_RESULTS_LOG
+        while read line
+        do
+            echo "    " $line >> $ETM_RESULTS_LOG
+        done<$ETM_TEST_OUTPUT
+    fi
+    if [[ $test_ran_ok == 1 ]]
+    then
+        echo " "  >> $ETM_RESULTS_LOG
+        echo "   ===== HWCVAL results =====" >> $ETM_RESULTS_LOG
+        in_preamble=1
+        while read line
+        do
+            if [[ $line =~ .*SHIMS\ NOT\ INSTALLED ]]
+            then
+                echo "    " $line >> $ETM_RESULTS_LOG
+                break;
+            fi
+            if [[ $in_preamble == 1 ]]
+            then
+                if [[ $line =~ .*Stopping\ checks ]]
+                then
+                    in_preamble=0
+                fi
+            else
+                if [[ $line =~ .*Test\ hwc_util ]]
+                then
+                    break
+                elif [[ $line =~ .*Restarting\ checks ]]
+                then
+                    : # ignore it, it's an extra line of preamble
+                else
+                    echo "    " $line >> $ETM_RESULTS_LOG
+                fi
+            fi
+        done<$HWCVAL_TEST_OUTPUT
+    fi
+    echo " "  >> $ETM_RESULTS_LOG
+}
+
+
+# if I just say class=notificationShade, it automatically lists all the methods of the class
+test_classes="notificationShade \
+              mxPlayerApp \
+              camera \
+              rotation \
+              photos \
+              gfxbench \
+             "
+notificationShade_methods="testNotification \
+                           testNotificationMultiRes \
+                          "
+mxPlayerApp_methods="testMXPlayer \
+                     testMXPlayerMultiRes \
+                     testMXPlayerLock \
+                     testMXPlayerLockMultiRes \
+                     testVideoPortraitLandscape \
+                     testVideoPortraitLandscapeMultiRes \
+                     testVideoRotation \
+                     testVideoRotationMultiRes \
+                    "
+camera_methods="testBasicCamera \
+                testBasicCameraMultiRes \
+                testCameraBasicPreview \
+                testCameraBasicPreviewMultiRes \
+                testVideoPreview1080p \
+                testCameraPlaybackPicVideo \
+                testCameraPlaybackPicVideoMultiRes \
+                testVideoPortraitLandscape \
+                testVideoPortraitLandscapeMultiRes \
+                testCameraPreviewRotate \
+                testCameraPreviewRotateMultiRes \
+                testCameraVideoRotate \
+                testCameraVideoRotateMultiRes \
+               "
+rotation_methods="testRotation \
+                  testRotationMultiRes \
+                 "
+photos_methods="testPhotos \
+               "
+gfxbench_methods="testManhattan \
+                  testManhattanMultiRes \
+               "
+
+
+function main()
+{
+    adb install -rt $HWCVAL_ROOT/autoui/app/build/outputs/apk/app-debug.apk
+    adb install -rt $HWCVAL_ROOT/autoui/app/build/outputs/apk/app-debug-androidTest-unaligned.apk
+    rm -f $ETM_RESULTS_LOG
+
+    # Execute tests in the specified class
+    if [[ "$HWCVAL_ETM_CLASS" != "" ]]
+    then
+        HWCVAL_ETM_ARGS=${HWCVAL_ETM_CLASS}_arguments
+        if [[ "$HWCVAL_ETM_METHOD" != "" ]]
+        then
+            run_test
+            process_results
+        else
+            m_list=${HWCVAL_ETM_CLASS}_methods
+            for HWCVAL_ETM_METHOD in ${!m_list}
+            do
+                run_test
+                process_results
+            done
+        fi
+    else
+        # Execute all the tests in all classes
+        for HWCVAL_ETM_CLASS in $test_classes
+        do
+            HWCVAL_ETM_ARGS=${HWCVAL_ETM_CLASS}_arguments
+            m_list=${HWCVAL_ETM_CLASS}_methods
+            for HWCVAL_ETM_METHOD in ${!m_list}
+            do
+                run_test
+                process_results
+            done
+        done
+    fi
+    printf "valetm - uninstalling application and test\n"
+    adb uninstall com.intel.hwcval.autoui.test
+    adb uninstall com.intel.hwcval.autoui
+    printf "valetm - exiting\n"
+}
+
+COMMAND_LINE_ARGS=$@
+main

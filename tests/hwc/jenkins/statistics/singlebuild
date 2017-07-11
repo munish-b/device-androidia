@@ -1,0 +1,12 @@
+#!/bin/bash
+# $1: statistic name (e.g. partitioned_compositions)
+# $2: Builder (CHT|BXT|BYT|VCHT|VBYT|VBXT
+# $3: Build number
+if [[ ${2:0:1} == "V" ]]
+then
+    BUILDER="Hardware_Composer_Validation_Builder_${2:1}"
+else
+    BUILDER="Hardware_Composer_Builder_$2"
+fi
+echo "test,$1"
+grep $1 /usr2/jenkins/jobs/$BUILDER/workspace/$3/statistics_*.csv | awk -f /usr2/jenkins/bin/statistics/extract_test_value.awk | sort

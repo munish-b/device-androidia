@@ -1,0 +1,28 @@
+export INTEL_HWC_ALWAYS_BUILD=
+
+PREFIX=/usr2/jenkins/jobs/Hardware_Composer_Builder_CHT/workspace/build
+
+#export TOP=$PREFIX/android_1andr_m_231015
+#export P4_ROOT=$PREFIX/ufo_main_021115/gfx_Development
+export TOP=$PREFIX/android_1andr_m_010416
+export P4_ROOT=$PREFIX/ufo_main_040416/gfx_Development
+export PRODUCT=r2_cht_rvp
+export ANDROID_SERIAL=SPC342400077
+
+cd $TOP
+source build/envsetup.sh
+lunch $PRODUCT-userdebug
+cd -
+
+alias make-android='time make -C $P4_ROOT/Tools/Linux/ BUILD_TYPE=release ANDROID_SRC=$TOP TARGET_PRODUCT=$PRODUCT JOBS=32 TARGET_BUILD_VARIANT=userdebug UFO_OCL=n UFO_RS=n PATCH=nopatch GFXGEN=8 android'
+alias make-ufo='time make -C $P4_ROOT/Tools/Linux/ BUILD_TYPE=release ANDROID_SRC=$TOP TARGET_PRODUCT=$PRODUCT JOBS=32 TARGET_BUILD_VARIANT=eng UFO_OCL=n UFO_RS=n ufo'
+
+alias cd-hwc='cd $P4_ROOT/Source/Android/hwc'
+alias cd-hwch='cd $PREFIX/hwcval/tests/hwc/'
+
+cd $PREFIX/hwcval/tests/hwc/
+source init.sh
+cd -
+
+PS1="(jenkins: 1andr main cht hwc) $PS1"
+export PS1
