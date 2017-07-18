@@ -33,7 +33,7 @@
 #ifdef HWCVAL_TARGET_HAS_MULTIPLE_DISPLAY
 #include "MultiDisplayShim.h"
 #endif
-#include "IService.h"
+#include "iservice.h"
 #ifdef HWCVAL_MDSEXTMODECONTROL
 #include "IMDSExtModeControl.h"
 #endif
@@ -42,8 +42,7 @@
 #include "HwcServiceApi.h"
 #endif
 
-using namespace ::intel::ufo::hwc::services;
-
+using namespace hwcomposer;
 
 // TestParams class
 // Encapsulates command-line options
@@ -280,11 +279,13 @@ bool Hwch::Test::CheckMDSAndSetup(bool report)
     if (HwcTestState::getInstance()->IsOptionEnabled(eOptNewMds))
     {
         // Find and connect to HWC service
-        sp<IBinder> hwcBinder = defaultServiceManager()->getService(String16(INTEL_HWC_SERVICE_NAME));
+      sp<IBinder> hwcBinder =
+          defaultServiceManager()->getService(String16(IA_HWC_SERVICE_NAME));
         sp<IService> hwcService = interface_cast<IService>(hwcBinder);
         if(hwcService == NULL)
         {
-            HWCERROR(eCheckSessionFail, "Could not connect to service %s", INTEL_HWC_SERVICE_NAME);
+          HWCERROR(eCheckSessionFail, "Could not connect to service %s",
+                   IA_HWC_SERVICE_NAME);
             return false;
         }
 
@@ -488,16 +489,18 @@ bool Hwch::Test::GetVideoControl()
     if (mVideoControl.get() == 0)
     {
         // Find and connect to HWC service
-        sp<android::IBinder> hwcBinder = defaultServiceManager()->getService(String16(INTEL_HWC_SERVICE_NAME));
+      sp<android::IBinder> hwcBinder =
+          defaultServiceManager()->getService(String16(IA_HWC_SERVICE_NAME));
         sp<IService> hwcService = interface_cast<IService>(hwcBinder);
         if(hwcService == NULL)
         {
-            HWCERROR(eCheckSessionFail, "Could not connect to service %s", INTEL_HWC_SERVICE_NAME);
+          HWCERROR(eCheckSessionFail, "Could not connect to service %s",
+                   IA_HWC_SERVICE_NAME);
             return false;
         }
 
         // Get MDSExtModeControl interface.
-        mVideoControl = hwcService->getVideoControl();
+        // mVideoControl = hwcService->getVideoControl();
         if (mVideoControl == NULL)
         {
             HWCERROR(eCheckSessionFail, "Cannot obtain IVideoControl");

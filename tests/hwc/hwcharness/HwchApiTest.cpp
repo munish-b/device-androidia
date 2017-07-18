@@ -33,7 +33,7 @@
 #include "HwcTestLog.h"
 #include "HwcTestState.h"
 #include "HwcTestUtil.h"
-#include "ufo/graphics.h"
+#include "graphics.h"
 
 #include <math.h>
 

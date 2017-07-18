@@ -2,23 +2,19 @@
 # This is a very top level make file to build the HWC test framework and tests.
 # This is intended to operate from the Android build.
 
-ifneq (,$(filter $(UFO_HWC_VAL_TEST), Y y YES yes))
+HWC_VAL_TEST:= y
+
+ifneq (,$(filter $(HWC_VAL_TEST), Y y YES yes))
 
     VAL_HWC_TOP:= $(call my-dir)
     HWCVAL_ROOT:=$(VAL_HWC_TOP)/tests/hwc
-    VAL_HWC_UFO_PATH:=$(ANDROID_BUILD_TOP)/hardware/intel/ufo/ufo/
-    VAL_HWC_UFO_ANDROID_PATH:=$(VAL_HWC_UFO_PATH)/Source/Android
-    VAL_HWC_HARDWARE_COMPOSER_PATH:=$(ANDROID_BUILD_TOP)/hardware/intel/hwc
+    VAL_HWC_HARDWARE_COMPOSER_PATH:=$(ANDROID_BUILD_TOP)/vendor/intel/external/android_ia/hwcomposer
     VAL_HWC_TESTS_PATH:=$(VAL_HWC_HARDWARE_COMPOSER_PATH)/tests
     LOCAL_MODULE:=val_hwc
 
     VAL_HWC_EXTERNAL_BUILD = true
     VAL_HWC_TARGET_TEST_PATH := $(ANDROID_PRODUCT_OUT)/$(TARGET_COPY_OUT_VENDOR)/intel/validation/val_hwc
-    VAL_HWC_QB_OUT_PATH := $(VAL_HWC_UFO_PATH)/builds/igfx/Release/android
     $(info VAL_HWC_TARGET_TEST_PATH $(VAL_HWC_TARGET_TEST_PATH))
-
-    # libhwcservice
-    include $(VAL_HWC_HARDWARE_COMPOSER_PATH)/libhwcservice/Android.mk
 
     # hwclogviewer
     include $(CLEAR_VARS)
@@ -50,7 +46,6 @@ ifneq (,$(filter $(UFO_HWC_VAL_TEST), Y y YES yes))
 	libvalhwccommon \
 	libvalhwc_drmshim \
 	valhwc_composershim \
-	libvalhwc_ivpshim \
 	valhwcharness \
 	hwclogviewer
 

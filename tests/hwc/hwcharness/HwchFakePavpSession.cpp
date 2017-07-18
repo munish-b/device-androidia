@@ -29,9 +29,9 @@
 #include "HwcTestState.h"
 
 #ifndef HWCVAL_BUILD_HWCSERVICE_API
-#include "IService.h"
+#include "iservice.h"
 #include "IVideoControl.h"
-using namespace intel::ufo::hwc::services;
+using namespace hwcomposer;
 #endif
 
 Hwch::FakePavpSession::FakePavpSession()
@@ -79,16 +79,18 @@ int32_t Hwch::FakePavpSession::StartPavpSession()
     if (mVideoControl.get() == 0)
     {
         // Find and connect to HWC service
-        sp<IBinder> hwcBinder = defaultServiceManager()->getService(String16(INTEL_HWC_SERVICE_NAME));
+      sp<IBinder> hwcBinder =
+          defaultServiceManager()->getService(String16(IA_HWC_SERVICE_NAME));
         sp<IService> hwcService = interface_cast<IService>(hwcBinder);
         if(hwcService == NULL)
         {
-            HWCERROR(eCheckSessionFail, "Could not connect to service %s", INTEL_HWC_SERVICE_NAME);
+          HWCERROR(eCheckSessionFail, "Could not connect to service %s",
+                   IA_HWC_SERVICE_NAME);
             ALOG_ASSERT(0);
         }
 
         // Get MDSExtModeControl interface.
-        mVideoControl = hwcService->getVideoControl();
+        // mVideoControl = hwcService->getVideoControl();
         if (mVideoControl == NULL)
         {
             HWCERROR(eCheckSessionFail, "Cannot obtain IVideoControl");

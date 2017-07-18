@@ -46,7 +46,7 @@
 #include "libpavp.h"
 #endif
 
-using namespace intel::ufo::hwc::services;
+using namespace hwcomposer;
 
 Hwch::System::System()
   : mQuiet(false)
@@ -650,12 +650,13 @@ void Hwch::System::SetHwcOption(android::String8& option, android::String8& valu
 {
     if (mHwcService.get() == 0)
     {
-        sp<android::IBinder> hwcBinder = defaultServiceManager()->getService(String16(INTEL_HWC_SERVICE_NAME));
+      sp<android::IBinder> hwcBinder =
+          defaultServiceManager()->getService(String16(IA_HWC_SERVICE_NAME));
         mHwcService = interface_cast<IService>(hwcBinder);
         ALOG_ASSERT(mHwcService.get());
     }
 
-    mHwcService->setOption(option, value);
+    // mHwcService->setOption(option, value);
 }
 
 Hwch::System::HwcOptionState::HwcOptionState(const char* name, Hwch::System& system)

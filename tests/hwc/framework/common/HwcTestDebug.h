@@ -29,7 +29,6 @@ Notes:
 #ifndef __HwcTestDebug_h__
 #define __HwcTestDebug_h__
 
-#include "GrallocClient.h"
 #include "HwcTestDefs.h"
 #include "HwcTestState.h"
 #include "DrmShimBuffer.h"

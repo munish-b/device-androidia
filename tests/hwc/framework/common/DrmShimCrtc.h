@@ -30,7 +30,6 @@ Notes:
 
 #include "HwcTestCrtc.h"
 #include <ui/GraphicBuffer.h>
-#include "GrallocClient.h"
 
 class DrmShimPlane;
 class HwcTestKernel;
@@ -93,8 +92,10 @@ public:
                                         uint32_t offsets[4],
                                         uint32_t *buf_id, uint32_t flags);
 
-
-    uint32_t GetBlankingFb(::intel::ufo::gralloc::GrallocClient& gralloc, DrmModeAddFB2Func addFb2Func, int fd);
+    uint32_t GetBlankingFb(
+        /*::intel::ufo::gralloc::GrallocClient& gralloc,*/ DrmModeAddFB2Func
+            addFb2Func,
+        int fd);
 
 private:
     // DRM checks

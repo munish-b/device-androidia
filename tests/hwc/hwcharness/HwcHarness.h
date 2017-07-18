@@ -39,7 +39,7 @@
 #include "HwcvalStatistics.h"
 
 #include <dirent.h>
-#include "ufo/graphics.h"
+#include "graphics.h"
 
 class HwcTestRunner : public Hwch::TestParams
 {

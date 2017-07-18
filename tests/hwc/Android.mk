@@ -25,21 +25,9 @@ endif
 include $(HWCVAL_TOP_SRC_PATH)/framework/common/Android.mk
 include $(HWCVAL_TOP_SRC_PATH)/framework/drm_shim/Android.mk
 include $(HWCVAL_TOP_SRC_PATH)/framework/hwc_shim/Android.mk
-include $(HWCVAL_TOP_SRC_PATH)/framework/iVP_shim/Android.mk
-
-# Compile in the MCG Multi display components if needed
-ifeq ($(strip $(TARGET_HAS_MULTIPLE_DISPLAY)),true)
-    include $(HWCVAL_TOP_SRC_PATH)/framework/mds_shim/Android.mk
-endif
-
-# Compile in the widi components if needed
-ifneq ($(filter true, $(INTEL_WIDI_BAYTRAIL) $(INTEL_WIDI_GEN)),)
-    include $(HWCVAL_TOP_SRC_PATH)/framework/widi_shim/Android.mk
-endif
 
 include $(HWCVAL_TOP_SRC_PATH)/tests/Android.mk
 
 include $(HWCVAL_TOP_SRC_PATH)/hwcharness/Android.mk
 include $(HWCVAL_TOP_SRC_PATH)/surfaceflingershim/Android.mk
-include $(HWCVAL_TOP_SRC_PATH)/tools/gttmem/Android.mk
 include $(HWCVAL_TOP_SRC_PATH)/tools/kmsgReader/Android.mk

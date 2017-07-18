@@ -34,9 +34,7 @@
 #include <utils/StrongPointer.h>
 #include <unistd.h>
 
-#include <hardware/hwcomposer.h>
-
-#include "GrallocClient.h"
+#include <hardware/hwcomposer2.h>
 
 #include "HwcTestConfig.h"
 
@@ -215,7 +213,7 @@ namespace Hwch
 
 #ifdef HWCVAL_MDSEXTMODECONTROL
             // New multi-display service support
-            android::sp<::intel::ufo::hwc::services::IMDSExtModeControl> mMdsExtModeControl;
+            android::sp<hwcomposer::IMDSExtModeControl> mMdsExtModeControl;
 #endif
 
 #ifdef HWCVAL_BUILD_HWCSERVICE_API
@@ -224,7 +222,7 @@ namespace Hwch
 #endif
 
             // Video control for setting camera optimization mode
-            android::sp<::intel::ufo::hwc::services::IVideoControl> mVideoControl;
+            android::sp<hwcomposer::IVideoControl> mVideoControl;
 
 #ifdef TARGET_HAS_MCG_WIDI
             // Widi related member variables
@@ -325,8 +323,8 @@ namespace Hwch
 
 }
 
-#define REGISTER_TEST(T) \
-static Hwch::TestReg<Hwch::T##Test> reg##T(#T);
+#define REGISTER_TEST(T)
+// static Hwch::TestReg<Hwch::T##Test> reg##T(#T);
 
 #endif // __HwchTest_h__
 

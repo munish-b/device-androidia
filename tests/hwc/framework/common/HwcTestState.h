@@ -40,7 +40,7 @@ Notes:
 extern "C"
 {
 #include "hardware/hardware.h"
-#include "hardware/hwcomposer.h"
+#include "hardware/hwcomposer2.h"
 #include <hardware/gralloc.h>
 }
 

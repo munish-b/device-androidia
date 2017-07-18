@@ -29,7 +29,7 @@ Notes:
 #ifndef __HwcvalContent_h__
 #define __HwcvalContent_h__
 
-#include "hardware/hwcomposer.h"
+#include "hardware/hwcomposer2.h"
 #include <utils/RefBase.h>
 #include <vector>
 #include "HwcvalEnums.h"

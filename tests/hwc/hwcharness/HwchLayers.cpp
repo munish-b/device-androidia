@@ -28,7 +28,6 @@
 #include "HwchLayers.h"
 #include "HwchDisplay.h"
 #include "HwchSystem.h"
-#include "ufo/graphics.h"
 #include "HwchPngImage.h"
 
 Hwch::RGBALayer::RGBALayer(Coord<int32_t> w, Coord<int32_t> h, float  updateFreq, uint32_t fg, uint32_t bg, uint32_t matrix)
@@ -167,11 +166,8 @@ Hwch::NotificationLayer::NotificationLayer()
 }
 
 Hwch::NV12VideoLayer::NV12VideoLayer(uint32_t w, uint32_t h)
-  : Hwch::Layer("NV12Video",
-    (w != 0) ? Coord<int32_t>(w) : MaxRel(0),
-    (h != 0) ? Coord<int32_t>(h) : MaxRel(0),
-    HAL_PIXEL_FORMAT_NV12_Y_TILED_INTEL)
-{
+    : Hwch::Layer("NV12Video", (w != 0) ? Coord<int32_t>(w) : MaxRel(0),
+                  (h != 0) ? Coord<int32_t>(h) : MaxRel(0)) {
     SetPattern(GetPatternMgr().CreateHorizontalLinePtn(mFormat, 24.0, eRed, eDarkBlue));
     SetHwcAcquireDelay(0);
 }
@@ -196,13 +192,9 @@ Hwch::TransparentFullScreenLayer::TransparentFullScreenLayer()
 }
 
 Hwch::ProtectedVideoLayer::ProtectedVideoLayer(uint32_t encryption)
-  : Hwch::Layer("ProtectedVideo",
-    MaxRel(0),
-    MaxRel(0),
-    HAL_PIXEL_FORMAT_NV12_Y_TILED_INTEL,
-    -1,
-    GRALLOC_USAGE_HW_COMPOSER | GRALLOC_USAGE_HW_TEXTURE | GRALLOC_USAGE_HW_RENDER)
-{
+    : Hwch::Layer("ProtectedVideo", MaxRel(0), MaxRel(0), 0, -1,
+                  GRALLOC_USAGE_HW_COMPOSER | GRALLOC_USAGE_HW_TEXTURE |
+                      GRALLOC_USAGE_HW_RENDER) {
     SetPattern(GetPatternMgr().CreateHorizontalLinePtn(mFormat, 60.0, eRed, eDarkBlue));
     SetEncrypted(encryption);
     SetHwcAcquireDelay(0);

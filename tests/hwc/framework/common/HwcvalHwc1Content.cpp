@@ -31,7 +31,7 @@ Notes:
 #include "DrmShimBuffer.h"
 #include "HwcTestState.h"
 
-#include <hardware/hwcomposer.h>
+#include <hardware/hwcomposer2.h>
 
 Hwcval::CompositionType Hwcval::Hwc1CompositionTypeToHwcval(uint32_t compositionType)
 {
@@ -63,9 +63,8 @@ Hwcval::BlendingType Hwcval::Hwc1BlendingTypeToHwcval(uint32_t blendingType)
     }
 }
 
-
-Hwcval::Hwc1Layer::Hwc1Layer(const hwc_layer_1_t* sfLayer, android::sp<DrmShimBuffer>& buf)
-{
+Hwcval::Hwc1Layer::Hwc1Layer(const hwcval_layer_t *sfLayer,
+                             android::sp<DrmShimBuffer> &buf) {
     mCompositionType = Hwc1CompositionTypeToHwcval(sfLayer->compositionType);
     mHints = sfLayer->hints;
     mFlags = sfLayer->flags;
@@ -86,15 +85,15 @@ Hwcval::Hwc1Layer::Hwc1Layer(const hwc_layer_1_t* sfLayer, android::sp<DrmShimBu
     }
 }
 
-Hwcval::Hwc1LayerList::Hwc1LayerList(const hwc_display_contents_1_t* sfDisplay)
-{
+Hwcval::Hwc1LayerList::Hwc1LayerList(
+    const hwcval_display_contents_t *sfDisplay) {
     mRetireFenceFd = 0; // Correct value won't be known until exit of OnSet
 
     if (sfDisplay)
     {
         mOutbuf = sfDisplay->outbuf;                // This will change when we do virtual displays
-        mOutbufAcquireFenceFd = sfDisplay->outbufAcquireFenceFd;
-        mFlags = sfDisplay->flags;
+        // mOutbufAcquireFenceFd = sfDisplay->outbufAcquireFenceFd;
+        // mFlags = sfDisplay->flags;
         mNumLayers = sfDisplay->numHwLayers;
     }
     else
@@ -120,9 +119,10 @@ uint32_t Hwcval::HwcvalBlendingTypeToHwc1(Hwcval::BlendingType blendingType)
     }
 }
 
-// Convert internal layer format back to hwc_layer_1_t.
-void Hwcval::HwcvalLayerToHwc1(const char* str, uint32_t ix, hwc_layer_1_t& out, Hwcval::ValLayer& in, hwc_rect_t* pRect, uint32_t& rectsRemaining)
-{
+// Convert internal layer format back to hwcval_layer_t.
+void Hwcval::HwcvalLayerToHwc1(const char *str, uint32_t ix,
+                               hwcval_layer_t &out, Hwcval::ValLayer &in,
+                               hwc_rect_t *pRect, uint32_t &rectsRemaining) {
     const hwc_frect_t& sourceCropf = in.GetSourceCrop();
     const hwc_rect_t displayFrame = in.GetDisplayFrame();
 

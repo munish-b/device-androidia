@@ -43,8 +43,9 @@ HwcTestProtectionChecker::HwcTestProtectionChecker(HwcTestKernel* testKernel)
 {
 }
 
-Hwcval::ValidityType HwcTestProtectionChecker::IsValid(const intel_ufo_buffer_media_details_t& details, uint32_t hwcFrame)
-{
+Hwcval::ValidityType
+HwcTestProtectionChecker::IsValid(const hwc_buffer_media_details_t &details,
+                                  uint32_t hwcFrame) {
     ssize_t ix = mSessionInstances.indexOfKey(details.pavp_session_id);
     if (ix >= 0)
     {

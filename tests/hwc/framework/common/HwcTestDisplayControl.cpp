@@ -31,7 +31,7 @@ Environment:
 #include "DrmShimChecks.h"
 
 using namespace android;
-using namespace ::intel::ufo::hwc::services;
+using namespace hwcomposer;
 
 #ifdef HWCVAL_BUILD_SHIM_HWCSERVICE
 
@@ -68,7 +68,8 @@ sp<IDisplayModeControl> HwcTestDisplayControl::getModeControl()
     if (mDisplayModeControl == 0)
     {
         sp<IDisplayModeControl> realDispModeCtrl = mReal->getModeControl();
-        mDisplayModeControl = new HwcTestDisplayModeControl(mDisplayIx, realDispModeCtrl, mTestKernel);
+        // mDisplayModeControl = new HwcTestDisplayModeControl(mDisplayIx,
+        // realDispModeCtrl, mTestKernel);
     }
 
     return mDisplayModeControl;
@@ -116,9 +117,9 @@ status_t HwcTestDisplayModeControl::restorePreferredMode()
     return mReal->restorePreferredMode();
 }
 
-Vector<IDisplayModeControl::Info> HwcTestDisplayModeControl::getAvailableModes()
-{
-    return mReal->getAvailableModes();
+Vector<int> HwcTestDisplayModeControl::getAvailableModes() {
+  Vector<int> a;
+  return a; // mReal->getAvailableModes();
 }
 
 status_t HwcTestDisplayModeControl::getMode(uint32_t *width, uint32_t *height, uint32_t *refresh, uint32_t *flags, uint32_t *ratio)

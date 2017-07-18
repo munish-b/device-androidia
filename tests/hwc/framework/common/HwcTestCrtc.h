@@ -90,7 +90,7 @@ public:
     typedef HwcsDisplayModeInfo Mode;
     #define HWCVAL_MODE_FLAG_PREFERRED HWCS_MODE_FLAG_PREFERRED
 #else
-    typedef ::intel::ufo::hwc::services::IDisplayModeControl::Info Mode;
+    typedef hwcomposer::IDisplayModeControl::Info Mode;
     #define HWCVAL_MODE_FLAG_PREFERRED HwcTestCrtc::Mode::FLAG_PREFERRED
 #endif
     typedef android::Vector<Mode> ModeVec;

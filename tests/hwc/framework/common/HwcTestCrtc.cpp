@@ -26,7 +26,6 @@ Notes:
 
 ****************************************************************************/
 
-#include "ufo/graphics.h"
 #include <cutils/properties.h>
 
 #include "HwcTestDefs.h"
@@ -438,15 +437,6 @@ HwcTestCrtc* HwcTestCrtc::SetDPMSEnabled(bool enable)
 
 void HwcTestCrtc::SetPanelFitter(uint32_t mode)
 {
-#ifdef DRM_PFIT_OFF
-    mPanelFitterMode = mode;
-#else
-    HWCVAL_UNUSED(mode);
-#endif
-    if ((mode != DRM_PFIT_OFF) && (mPanelFitterSourceWidth > 0) && (mPanelFitterSourceHeight > 0))
-    {
-        CalculatePanelFitterTransform();
-    }
 }
 
 void HwcTestCrtc::SetDimensions(uint32_t width, uint32_t height, uint32_t clock, uint32_t vrefresh)
@@ -526,10 +516,7 @@ bool HwcTestCrtc::SetPanelFitterSourceSize(uint32_t sourceWidth, uint32_t source
     bool isOK = true;
     mPanelFitterSourceWidth = sourceWidth;
     mPanelFitterSourceHeight = sourceHeight;
-    const char* modeStr = (mPanelFitterMode == DRM_PFIT_OFF) ? "OFF" :
-        (mPanelFitterMode == DRM_AUTOSCALE) ? "AUTO" :
-        (mPanelFitterMode == DRM_LETTERBOX) ? "LETTERBOX" :
-        (mPanelFitterMode == DRM_PILLARBOX) ? "PILLARBOX" : "INVALID";
+    const char *modeStr = "OFF";
     HWCLOGV_COND(eLogDrm, "Crtc %d: Panel Fitter source size set to %dx%d, mode=%s", mCrtcId, sourceWidth, sourceHeight, modeStr);
 
     if (HwcTestState::getInstance()->GetDeviceType() == HwcTestState::eDeviceTypeBXT)
@@ -558,57 +545,7 @@ bool HwcTestCrtc::SetPanelFitterSourceSize(uint32_t sourceWidth, uint32_t source
             HWCERROR(eCheckPanelFitterConstantAspectRatio, "Screen %dx%d Panel fitter %dx%d",
                     mWidth, mHeight, sourceWidth, sourceHeight);
         }
-
-        HWCCHECK(eCheckPanelFitterMode);
-        if (mPanelFitterMode == DRM_AUTOSCALE)
-        {
-            // Check that source w/h scale precisely to the screen
-            // (w1/h1 = w2/h2) => w1h2 = w2h1
-
-            if (swdh != shdw)
-            {
-                HWCERROR(eCheckPanelFitterMode, "Auto mode not suitable for source %dx%d dest %dx%d because EXACT scaling required",
-                    sourceWidth, sourceHeight, mWidth, mHeight);
-                isOK = false;
-            }
-        }
-        else
-        {
-            if (mPanelFitterMode == DRM_LETTERBOX)
-            {
-                if (swdh <= shdw)
-                {
-                    HWCERROR(eCheckPanelFitterMode, "Letterbox not suitable for source %dx%d dest %dx%d",
-                        sourceWidth, sourceHeight, mWidth, mHeight);
-                    isOK = false;
-                }
-
-                // Letterbox mode does not work on BYT!
-                isOK = false;
-            }
-            else if (mPanelFitterMode == DRM_PILLARBOX)
-            {
-                if (swdh >= shdw)
-                {
-                    HWCERROR(eCheckPanelFitterMode, "Pillarbox not suitable for source %dx%d dest %dx%d",
-                        sourceWidth, sourceHeight, mWidth, mHeight);
-                    isOK = false;
-                }
-            }
-
-            HWCCHECK(eCheckPanelFitterUnnecessary);
-            if ((sourceWidth == mWidth) && (sourceHeight == mHeight))
-            {
-                HWCERROR(eCheckPanelFitterUnnecessary, "Panel fitter used where no scaling is required %dx%d", sourceWidth, sourceHeight);
-            }
-        }
     }
-
-    if (mPanelFitterMode != DRM_PFIT_OFF)
-    {
-        HWCLOGD_COND(eOptBlockInvalidSetDisplay, "%s %s mode", (isOK ? "Using" : "Skipping"), modeStr);
-    }
-
     CalculatePanelFitterTransform();
     return isOK;
 }
@@ -621,28 +558,13 @@ void HwcTestCrtc::CalculatePanelFitterTransform()
     float destWidth;
     float destHeight;
 
-    if (mPanelFitterMode == DRM_AUTOSCALE)
-    {
-        destWidth = mWidth;
-        destHeight = mHeight;
-    }
-    else if (mPanelFitterMode == DRM_PILLARBOX)
-    {
-        destWidth = mHeight * desiredAspectRatio;
-        destHeight = mHeight;
-    }
-    else
-    {
-        destWidth = mWidth;
-        destHeight = mWidth / desiredAspectRatio;
-    }
+    destWidth = mWidth;
+    destHeight = mWidth / desiredAspectRatio;
 
-
-    HWCLOGV("HwcTestCrtc::CalculatePanelFitterTransform: mode=%s sw=%f sh=%f mWidth=%d mHeight=%d destWidth=%f destHeight=%f",
-        (mPanelFitterMode == DRM_AUTOSCALE) ? "auto" :
-        (mPanelFitterMode == DRM_PILLARBOX) ? "pillarbox" :
-        (mPanelFitterMode == DRM_LETTERBOX) ? "letterbox" : "unknown",
-        (double) sw, (double) sh, mWidth, mHeight, (double) destWidth, (double) destHeight);
+    HWCLOGV("HwcTestCrtc::CalculatePanelFitterTransform: mode=%s sw=%f sh=%f "
+            "mWidth=%d mHeight=%d destWidth=%f destHeight=%f",
+            "unknown", (double)sw, (double)sh, mWidth, mHeight,
+            (double)destWidth, (double)destHeight);
     mPanelFitterTransform = DrmShimTransform(sw, sh, destWidth, destHeight);
 }
 
@@ -1599,14 +1521,7 @@ void HwcTestCrtc::WidiVideoConsistencyChecks(Hwcval::LayerList* ll)
 
 void HwcTestCrtc::ReportPanelFitterStatistics(FILE* f)
 {
-    ALOG_ASSERT(DRM_PFIT_OFF  < (sizeof(mPanelFitterModeCount) / sizeof(uint32_t)));
-    ALOG_ASSERT(DRM_AUTOSCALE < (sizeof(mPanelFitterModeCount) / sizeof(uint32_t)));
-    ALOG_ASSERT(DRM_LETTERBOX < (sizeof(mPanelFitterModeCount) / sizeof(uint32_t)));
-    ALOG_ASSERT(DRM_PILLARBOX < (sizeof(mPanelFitterModeCount) / sizeof(uint32_t)));
-
-    fprintf(f, "Crtc %2d Panel Fitter OFF: %d AUTO: %d LETTER: %d PILLAR: %d\n",
-        mCrtcId, mPanelFitterModeCount[DRM_PFIT_OFF], mPanelFitterModeCount[DRM_AUTOSCALE],
-        mPanelFitterModeCount[DRM_LETTERBOX], mPanelFitterModeCount[DRM_PILLARBOX]);
+  fprintf(f, "Crtc %2d \n", mCrtcId);
 }
 
 void HwcTestCrtc::LogTransforms(int priority, uint32_t hwcFrame)

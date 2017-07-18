@@ -34,7 +34,7 @@
 #include "PavpEscape.h"
 #endif
 
-#define MAX_DISPLAYS 3
+#define MAX_DISPLAYS 1
 #define MAX_VISIBLE_REGIONS 1024
 #define HWCH_DEFAULT_NUM_BUFFERS 3
 #define HWCH_FBT_NUM_BUFFERS 3          // Number of buffers for FRAMEBUFFER_TARGET

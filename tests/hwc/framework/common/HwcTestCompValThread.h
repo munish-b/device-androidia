@@ -55,7 +55,9 @@ public:
 
     // Non-threaded
     void TakeCopy(android::sp<DrmShimBuffer> buf);
-    void TakeTransformedCopy(const hwc_layer_1_t* layer, android::sp<DrmShimBuffer> buf, uint32_t width, uint32_t height);
+    void TakeTransformedCopy(const hwcval_layer_t *layer,
+                             android::sp<DrmShimBuffer> buf, uint32_t width,
+                             uint32_t height);
     android::sp<android::GraphicBuffer> CopyBuf(android::sp<DrmShimBuffer> buf);
 
 
@@ -73,7 +75,7 @@ private:
     void QueueFenceForClosure(int fence);
 
     // Composition data
-    hwc_layer_1_t mDest;
+    hwcval_layer_t mDest;
 
     // Buffer we will, are, or just have composed
     android::sp<DrmShimBuffer> mBuf;

@@ -158,7 +158,8 @@ void dumpFence(const char *label, const char *surfaceName, int fence)
 {
     if(fence != -1)
     {
-        sync_fence_info_data *pf = sync_fence_info(fence);
+#if 0  
+      sync_fence_info_data *pf = sync_fence_info(fence);
         struct sync_pt_info *ps;
         int i = 0;
 
@@ -179,6 +180,7 @@ void dumpFence(const char *label, const char *surfaceName, int fence)
             sync_fence_info_free(pf);
         }
         else
+#endif
         {
             // if we've got a fence fd, we should be able to get its info???
             HWCLOGW("%s - frame fence %d: can't get more info", label, fence);

@@ -28,7 +28,7 @@
 
 #include <iomanip>
 
-#include "ufo/graphics.h"
+#include "graphics.h"
 
 #include "re2/re2.h"
 #include "re2/stringpiece.h"

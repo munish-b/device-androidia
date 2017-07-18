@@ -27,8 +27,8 @@ Environment:
 #include "HwcTestUtil.h"
 #include "HwcTestState.h"
 #include <stdlib.h>
-#include "hardware/hwcomposer.h"
-#include "ufo/graphics.h"
+#include "hardware/hwcomposer2.h"
+#include "graphics.h"
 
 void CloseFence(int fence)
 {

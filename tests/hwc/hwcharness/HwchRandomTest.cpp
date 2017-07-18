@@ -29,7 +29,6 @@
 #include "HwchDefs.h"
 #include "HwcTestState.h"
 #include "HwcTestUtil.h"
-#include "ufo/graphics.h"
 #include "IVideoControl.h"
 
 #include "HwchPngImage.h"
@@ -38,7 +37,7 @@
 
 #include <math.h>
 
-using namespace ::intel::ufo::hwc::services;
+using namespace hwcomposer;
 
 Hwch::RandomTest::RandomTest(Hwch::Interface& interface)
   : Hwch::Test(interface),

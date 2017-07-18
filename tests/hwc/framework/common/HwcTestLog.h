@@ -55,9 +55,10 @@ int HwcValLogVA(int priority, const char* fmt, va_list& args);
 int HwcValError(HwcTestCheckType check, HwcTestConfig* config, HwcTestResult* result, const char* fmt, ...);
 
 #ifndef HWCVAL_LOG_VERBOSE
-#define HWCLOG(LEVEL,...) if (HwcGetTestConfig()->IsLevelEnabled(LEVEL)) HwcValLog(LEVEL, __VA_ARGS__)
+#define HWCLOG(LEVEL, ...) ALOGE(__VA_ARGS__)
 #else
-#define HWCLOG(LEVEL,...) if (HwcGetTestConfig()->IsLevelEnabled(LEVEL)) HwcValLogVerbose(LEVEL,__FILE__ , __LINE__, __VA_ARGS__)
+#define HWCLOG(LEVEL, ...)                                                     \
+  HwcValLogVerbose(LEVEL, __FILE__, __LINE__, __VA_ARGS__)
 #endif
 
 #define HWCLOGV(...) HWCLOG(ANDROID_LOG_VERBOSE,__VA_ARGS__)
@@ -80,8 +81,8 @@ int HwcValError(HwcTestCheckType check, HwcTestConfig* config, HwcTestResult* re
 #define HWCERROR(CHECKNUM, ...) HwcValError(CHECKNUM, HwcGetTestConfig(), HwcGetTestResult(), __VA_ARGS__)
 #define HWCCOND(CHECK) (HwcGetTestConfig()->mCheckConfigs[CHECK].enable)
 
-#define HWCLOGV_COND(CHECK,...) if HWCCOND(CHECK) HWCLOGV(__VA_ARGS__)
-#define HWCLOGD_COND(CHECK,...) if HWCCOND(CHECK) HWCLOGD(__VA_ARGS__)
+#define HWCLOGV_COND(CHECK, ...) HWCLOGV(__VA_ARGS__)
+#define HWCLOGD_COND(CHECK, ...) HWCLOGD(__VA_ARGS__)
 #define HWCLOGI_COND(CHECK,...) if HWCCOND(CHECK) HWCLOGI(__VA_ARGS__)
 #define HWCLOGW_COND(CHECK,...) if HWCCOND(CHECK) HWCLOGW(__VA_ARGS__)
 #define HWCLOGE_COND(CHECK,...) if HWCCOND(CHECK) HWCLOGE(__VA_ARGS__)

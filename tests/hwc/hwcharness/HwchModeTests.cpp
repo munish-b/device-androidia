@@ -33,7 +33,7 @@
 #include "HwcTestState.h"
 #include "HwcTestUtil.h"
 
-REGISTER_TEST(VideoModes)
+// REGISTER_TEST(VideoModes)
 Hwch::VideoModesTest::VideoModesTest(Hwch::Interface& interface)
   : Hwch::Test(interface)
 {

@@ -657,8 +657,7 @@ int Hwch::ReplayHWCLRunner::RunScenario(void)
             }
 
             // Process Geometry Changes
-            if (flags & HWC_GEOMETRY_CHANGED)
-            {
+            if (flags & TEMPHWC_GEOMETRY_CHANGED) {
                 // In a multi-display system clear everything only on the Geometry
                 // Change for the first display (otherwise we will clear the D0 entries
                 // when we process the Geometry Change for D1).

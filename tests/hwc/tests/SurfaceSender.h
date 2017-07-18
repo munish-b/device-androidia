@@ -57,7 +57,7 @@
 
 #include "display_info.h"
 
-#include "ufo/graphics.h"
+#include "graphics.h"
 
 using namespace android;
 

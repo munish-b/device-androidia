@@ -32,7 +32,6 @@ Notes:
 #include "HwcvalContent.h"
 
 #include <limits.h>
-#include <ufo/graphics.h>
 #include <drm_fourcc.h>
 
 DrmShimCrtc::DrmShimCrtc(uint32_t crtcId, uint32_t width, uint32_t height, uint32_t clock, uint32_t vrefresh)
@@ -227,8 +226,10 @@ void DrmShimCrtc::StopSetDisplayWatchdog()
 // This is not a requirement for nuclear DRM. Hence in our translation layer we must allocate one ourselves.
 //
 // Here we allocate it and give it an FbId, just as HWC does when it uses SetDisplay.
-uint32_t DrmShimCrtc::GetBlankingFb(::intel::ufo::gralloc::GrallocClient& gralloc, DrmModeAddFB2Func addFb2Func, int fd)
-{
+uint32_t DrmShimCrtc::GetBlankingFb(
+    /*::intel::ufo::gralloc::GrallocClient& gralloc,*/ DrmModeAddFB2Func
+        addFb2Func,
+    int fd) {
     if (mBlankingFb == 0)
     {
         // Allocate a blanking buffer
@@ -245,9 +246,10 @@ uint32_t DrmShimCrtc::GetBlankingFb(::intel::ufo::gralloc::GrallocClient& grallo
         }
 
         uint32_t boHandle;
+#if 0
         gralloc.getBufferObject(mBlankingBuffer->handle, &boHandle);
         HWCLOGD("DrmShimCrtc::GetBlankingFb: Blanking buffer has boHandle 0x%x", boHandle);
-
+#endif
         uint32_t stride = mBlankingBuffer->stride * 4;
         uint32_t handles[4], pitches[4], offsets[4] = { 0 };
         handles[0] = boHandle;

@@ -24,10 +24,10 @@
 #ifndef __BxService_h__
 #define __BxService_h__
 
-#include "IService.h"
+#include "iservice.h"
 #include "HwcvalAbstractHwcServiceSubset.h"
 
-#define INTEL_HWCREAL_SERVICE_NAME "hwc.info.real"
+#define IA_HWCREAL_SERVICE_NAME "hwc.info.real"
 
 // BxService forwards most messages straight on
 // to the real service.
@@ -40,7 +40,7 @@ public:
 
     virtual android::status_t onTransact(uint32_t, const android::Parcel&, android::Parcel*, uint32_t);
 
-    android::sp<intel::ufo::hwc::services::IService> Real();
+    android::sp<hwcomposer::IService> Real();
 
 private:
     enum {
@@ -67,7 +67,7 @@ private:
 
     void GetRealService();
     android::sp<android::IBinder> mRealBinder;
-    android::sp<intel::ufo::hwc::services::IService> mRealService;
+    android::sp<hwcomposer::IService> mRealService;
 };
 
 

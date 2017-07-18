@@ -34,6 +34,7 @@
 #include "HwcTestUtil.h"
 
 REGISTER_TEST(Basic)
+static Hwch::TestReg<Hwch::BasicTest> regiBasic("Basic");
 Hwch::BasicTest::BasicTest(Hwch::Interface& interface)
   : Hwch::Test(interface)
 {

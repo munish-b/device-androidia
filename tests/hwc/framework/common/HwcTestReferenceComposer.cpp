@@ -29,8 +29,7 @@
 #include "HwcTestReferenceComposer.h"
 #include "HwcTestKernel.h"
 
-#include "GrallocClient.h"
-#include <ufo/graphics.h>
+#include <graphics.h>
 #include <utils/String8.h>
 
 #include <GLES/gl.h>
@@ -1133,16 +1132,10 @@ bool HwcTestReferenceComposer::attachToFBO(GLuint textureId)
 }
 
 void HwcTestReferenceComposer::setTexture(
-    const hwc_layer_1_t* layer,
-    uint32_t texturingUnit,
-    bool *pEGLImageCreated,
-    bool *pTextureCreated,
-    bool *pTextureSet,
-    android::sp<android::GraphicBuffer> *pGraphicBuffer,
-    EGLImageKHR *pEGLImage,
-    GLuint *pTextureId,
-    int filter)
-{
+    const hwcval_layer_t *layer, uint32_t texturingUnit, bool *pEGLImageCreated,
+    bool *pTextureCreated, bool *pTextureSet,
+    android::sp<android::GraphicBuffer> *pGraphicBuffer, EGLImageKHR *pEGLImage,
+    GLuint *pTextureId, int filter) {
     // Nothing is successfull, unless something different is later stated
     *pEGLImageCreated = false;
     *pTextureCreated = false;
@@ -1266,13 +1259,8 @@ status_t HwcTestReferenceComposer::bindTexture(
  - Texture coordinates in [0,1] range, one pair per layer
 */
 
-static void setupVBOData(
-    GLfloat* vboData,
-    uint32_t stride,
-    uint32_t destWidth,
-    uint32_t destHeight,
-    const hwc_layer_1_t* layer)
-{
+static void setupVBOData(GLfloat *vboData, uint32_t stride, uint32_t destWidth,
+                         uint32_t destHeight, const hwcval_layer_t *layer) {
     // First get input buffer size
     Hwcval::buffer_details_t bi;
 
@@ -1417,8 +1405,9 @@ static void setupVBOData(
     vboData[3*stride+2+1] = texCoords[7];
 }
 
-status_t HwcTestReferenceComposer::beginFrame(uint32_t numSources, const hwc_layer_1_t* source, const hwc_layer_1_t* target)
-{
+status_t HwcTestReferenceComposer::beginFrame(uint32_t numSources,
+                                              const hwcval_layer_t *source,
+                                              const hwcval_layer_t *target) {
 #if CREATEDESTROY_ONCE
     static bool firstTime = true;
 #endif
@@ -1575,8 +1564,8 @@ status_t HwcTestReferenceComposer::beginFrame(uint32_t numSources, const hwc_lay
     return result;
 }
 
-status_t HwcTestReferenceComposer::draw(const hwc_layer_1_t* layer, uint32_t index)
-{
+status_t HwcTestReferenceComposer::draw(const hwcval_layer_t *layer,
+                                        uint32_t index) {
     // Check that the destination texture is attached to the FBO
     if (!m_destTextureAttachedToFBO)
     {
@@ -1697,8 +1686,10 @@ status_t HwcTestReferenceComposer::endFrame()
     return result;
 }
 
-status_t HwcTestReferenceComposer::Compose(uint32_t numSources, hwc_layer_1_t* source, hwc_layer_1_t* target, bool waitForFences)
-{
+status_t HwcTestReferenceComposer::Compose(uint32_t numSources,
+                                           hwcval_layer_t *source,
+                                           hwcval_layer_t *target,
+                                           bool waitForFences) {
     status_t result;
 
     HWCVAL_LOCK(_l, mComposeMutex);
@@ -1735,7 +1726,7 @@ status_t HwcTestReferenceComposer::Compose(uint32_t numSources, hwc_layer_1_t* s
     uint32_t screenIndex = 0;
     for (index = 0; index < numSources && result == OK; ++index)
     {
-        hwc_layer_1_t& srcLayer = source[index];
+      hwcval_layer_t &srcLayer = source[index];
 
         if ((srcLayer.compositionType == HWC_FRAMEBUFFER) &&
             (srcLayer.handle != 0))
@@ -1836,7 +1827,7 @@ android::sp<android::GraphicBuffer> HwcTestReferenceComposer::CopyBuf(buffer_han
     android::sp<android::GraphicBuffer> spDestBuffer = new android::GraphicBuffer(bi.width, bi.height, bi.format,
             bi.usage | GRALLOC_USAGE_SW_READ_OFTEN); // Encourage use of linear buffers - it will speed the comparison
 
-    hwc_layer_1_t srcLayer;
+    hwcval_layer_t srcLayer;
     srcLayer.handle = handle;
     srcLayer.compositionType = HWC_FRAMEBUFFER;
     srcLayer.hints = 0;
@@ -1857,7 +1848,7 @@ android::sp<android::GraphicBuffer> HwcTestReferenceComposer::CopyBuf(buffer_han
     srcLayer.releaseFenceFd = -1;
     srcLayer.planeAlpha=255;
 
-    hwc_layer_1_t tgtLayer = srcLayer;
+    hwcval_layer_t tgtLayer = srcLayer;
     tgtLayer.handle = spDestBuffer->handle;
 
     if (Compose(1, &srcLayer, &tgtLayer, false) == OK)
@@ -1871,9 +1862,7 @@ android::sp<android::GraphicBuffer> HwcTestReferenceComposer::CopyBuf(buffer_han
     }
 }
 
-
-bool HwcTestReferenceComposer::IsLayerNV12(const hwc_layer_1_t* pDest)
-{
+bool HwcTestReferenceComposer::IsLayerNV12(const hwcval_layer_t *pDest) {
     Hwcval::buffer_details_t bi;
 
     if (pDest->handle)
@@ -1894,8 +1883,7 @@ bool HwcTestReferenceComposer::IsLayerNV12(const hwc_layer_1_t* pDest)
     return ( IsNV12(bi.format) );
 }
 
-bool HwcTestReferenceComposer::HasAlpha(const hwc_layer_1_t* pSrc)
-{
+bool HwcTestReferenceComposer::HasAlpha(const hwcval_layer_t *pSrc) {
     Hwcval::buffer_details_t bi;
 
     if (pSrc->handle)

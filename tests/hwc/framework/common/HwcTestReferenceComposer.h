@@ -41,6 +41,7 @@
 #include <utils/StrongPointer.h>
 #include <ui/GraphicBuffer.h>
 
+#include "Hwcval.h"
 #include <hardware/hwcomposer_defs.h>
 
 #include "DrmShimBuffer.h"
@@ -55,7 +56,10 @@ public:
     HwcTestReferenceComposer();
     virtual ~HwcTestReferenceComposer();
 
-    virtual android::status_t Compose(uint32_t numSources, hwc_layer_1_t* source, hwc_layer_1_t* target, bool waitForFences);
+    virtual android::status_t Compose(uint32_t numSources,
+                                      hwcval_layer_t *source,
+                                      hwcval_layer_t *target,
+                                      bool waitForFences);
 
     // Make a duplicate of a gralloc buffer
     android::sp<android::GraphicBuffer> CopyBuf(buffer_handle_t handle);
@@ -77,24 +81,21 @@ private:
     inline bool isCreated() const;
     void destroy();
 
-    android::status_t beginFrame(uint32_t numSources, const hwc_layer_1_t* source, const hwc_layer_1_t* target);
-    android::status_t draw(const hwc_layer_1_t* layer, uint32_t index);
+    android::status_t beginFrame(uint32_t numSources,
+                                 const hwcval_layer_t *source,
+                                 const hwcval_layer_t *target);
+    android::status_t draw(const hwcval_layer_t *layer, uint32_t index);
     android::status_t endFrame();
 
     bool isFormatSupportedAsOutput(int32_t format);
 
     bool attachToFBO(GLuint textureId);
 
-    void setTexture(
-        const hwc_layer_1_t* layer,
-        uint32_t texturingUnit,
-        bool *pEGLImageCreated,
-        bool *pTextureCreated,
-        bool *pTextureSet,
-        android::sp<android::GraphicBuffer> *pGraphicBuffer,
-        EGLImageKHR *pEGLImage,
-        GLuint *pTextureId,
-        int filter);
+    void setTexture(const hwcval_layer_t *layer, uint32_t texturingUnit,
+                    bool *pEGLImageCreated, bool *pTextureCreated,
+                    bool *pTextureSet,
+                    android::sp<android::GraphicBuffer> *pGraphicBuffer,
+                    EGLImageKHR *pEGLImage, GLuint *pTextureId, int filter);
 
     android::status_t bindTexture(GLuint texturingUnit, GLuint textureId);
 
@@ -321,8 +322,8 @@ private:
 
     bool verifyContextCreated();
 
-    bool IsLayerNV12(const hwc_layer_1_t* pDest);
-    bool HasAlpha(const hwc_layer_1_t* pSrc);
+    bool IsLayerNV12(const hwcval_layer_t *pDest);
+    bool HasAlpha(const hwcval_layer_t *pSrc);
 };
 
 #endif // __HwcTestReferenceComposer_h__

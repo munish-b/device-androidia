@@ -3,9 +3,8 @@
 #include <utils/String8.h>
 #include <unistd.h>
 
-#include <hardware/hwcomposer.h>
+#include <hardware/hwcomposer2.h>
 
-#include "GrallocClient.h"
 #include "HwchDefs.h"
 #include "HwcTestState.h"
 #include "HwcTestUtil.h"

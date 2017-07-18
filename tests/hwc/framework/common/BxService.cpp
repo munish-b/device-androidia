@@ -31,7 +31,7 @@
 #include "HwcTestDefs.h"
 #include "HwcTestState.h"
 
-using namespace intel::ufo::hwc::services;
+using namespace hwcomposer;
 
 BxService::BxService()
   : mRealBinder(0),
@@ -51,7 +51,9 @@ void BxService::GetRealService()
     uint32_t tries=0;
     while ((mRealService.get() == 0) && (++tries < 50))
     {
-        mRealService = android::interface_cast<IService>(realServiceManager()->getService(android::String16(INTEL_HWCREAL_SERVICE_NAME)));
+      mRealService =
+          android::interface_cast<IService>(realServiceManager()->getService(
+              android::String16(IA_HWCREAL_SERVICE_NAME)));
         if (mRealService.get())
         {
 #if ANDROID_VERSION >= 600
@@ -64,8 +66,8 @@ void BxService::GetRealService()
 
         if ((tries % 10) == 1)
         {
-            HWCLOGI("BxService: retrying after attempt %d to get service %s.",
-                tries, INTEL_HWCREAL_SERVICE_NAME);
+          HWCLOGI("BxService: retrying after attempt %d to get service %s.",
+                  tries, IA_HWCREAL_SERVICE_NAME);
         }
 
         usleep(HWCVAL_USLEEP_100MS);
@@ -90,7 +92,9 @@ android::status_t BxService::onTransact(uint32_t code,
         {
             if (mRealService.get() == 0)
             {
-                mRealService = android::interface_cast<IService>(realServiceManager()->getService(android::String16(INTEL_HWCREAL_SERVICE_NAME)));
+              mRealService = android::interface_cast<IService>(
+                  realServiceManager()->getService(
+                      android::String16(IA_HWCREAL_SERVICE_NAME)));
             }
 
             if (mRealService.get() == 0)
@@ -115,7 +119,8 @@ android::status_t BxService::onTransact(uint32_t code,
             GetRealService();
             uint32_t display = data.readInt32();
 #if ANDROID_VERSION >= 600
-            android::sp<IBinder> b = this->IInterface::asBinder(getDisplayControl(display));
+            android::sp<IBinder> b =
+                NULL; // this->IInterface::asBinder(getDisplayControl(display));
 #else
             android::sp<IBinder> b = this->getDisplayControl(display)->asBinder();
 #endif

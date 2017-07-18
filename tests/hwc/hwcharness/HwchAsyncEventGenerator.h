@@ -138,24 +138,26 @@ namespace Hwch
         class ModeChangeEventData : public Data
         {
         public:
-            ModeChangeEventData(uint32_t displayIx,
-                                android::sp<::intel::ufo::hwc::services::IDisplayModeControl> dispModeControl,
-                                const Display::Mode& mode);
+          ModeChangeEventData(
+              uint32_t displayIx,
+              android::sp<hwcomposer::IDisplayModeControl> dispModeControl,
+              const Display::Mode &mode);
             virtual ~ModeChangeEventData();
 
             uint32_t mDisplayIx;
-            android::sp<::intel::ufo::hwc::services::IDisplayModeControl> mDispModeControl;
+            android::sp<hwcomposer::IDisplayModeControl> mDispModeControl;
             Display::Mode mMode;
         };
 
         class VideoOptimizationModeData : public Data
         {
         public:
-            VideoOptimizationModeData(android::sp<::intel::ufo::hwc::services::IVideoControl> videoControl,
-                                const Display::VideoOptimizationMode videoOptimizationMode);
+          VideoOptimizationModeData(
+              android::sp<hwcomposer::IVideoControl> videoControl,
+              const Display::VideoOptimizationMode videoOptimizationMode);
             virtual ~VideoOptimizationModeData();
 
-            android::sp<::intel::ufo::hwc::services::IVideoControl> mVideoControl;
+            android::sp<hwcomposer::IVideoControl> mVideoControl;
             Display::VideoOptimizationMode mVideoOptimizationMode;
         };
 

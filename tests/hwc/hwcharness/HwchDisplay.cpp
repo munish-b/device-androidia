@@ -40,13 +40,13 @@
 #include "HwcServiceApi.h"
 #else
 
-#include "IService.h"
+#include "iservice.h"
 #include "IDisplayModeControl.h"
 #include "IDisplayControl.h"
 
 #endif
 
-using namespace ::intel::ufo::hwc::services;
+using namespace hwcomposer;
 
 Hwch::Display::Display()
   : mFramebufferTarget(0),
@@ -447,16 +447,18 @@ bool Hwch::Display::GetModeControl()
     if (mDisplayModeControl.get() == 0)
     {
         // Find and connect to HWC service
-        sp<android::IBinder> hwcBinder = defaultServiceManager()->getService(String16(INTEL_HWC_SERVICE_NAME));
+      sp<android::IBinder> hwcBinder =
+          defaultServiceManager()->getService(String16(IA_HWC_SERVICE_NAME));
         sp<IService> hwcService = interface_cast<IService>(hwcBinder);
         if(hwcService == NULL)
         {
-            HWCERROR(eCheckSessionFail, "Could not connect to service %s", INTEL_HWC_SERVICE_NAME);
+          HWCERROR(eCheckSessionFail, "Could not connect to service %s",
+                   IA_HWC_SERVICE_NAME);
             return false;
         }
 
         // Get MDSExtModeControl interface.
-        mDisplayControl = hwcService->getDisplayControl(mDisplayIx);
+        // mDisplayControl = hwcService->getDisplayControl(mDisplayIx);
         if (mDisplayControl == NULL)
         {
             HWCERROR(eCheckSessionFail, "Cannot obtain IDisplayControl");

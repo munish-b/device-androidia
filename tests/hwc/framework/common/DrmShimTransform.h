@@ -31,6 +31,8 @@ Notes:
 #define __DrmShimTransform_h__
 
 #include <stdint.h>
+
+#include "Hwcval.h"
 #include "HwcTestState.h"
 #include "HwcvalEnums.h"
 #include <utils/RefBase.h>
@@ -117,7 +119,8 @@ public:
     DrmShimTransform();
     DrmShimTransform(android::sp<DrmShimBuffer>& buf, double width = 0.0, double height = 0.0);
     DrmShimTransform(double sw, double sh, double dw, double dh);
-    DrmShimTransform(android::sp<DrmShimBuffer>& buf, uint32_t layerIx, const hwc_layer_1_t* layer);
+    DrmShimTransform(android::sp<DrmShimBuffer> &buf, uint32_t layerIx,
+                     const hwcval_layer_t *layer);
     DrmShimTransform(android::sp<DrmShimBuffer>& buf, uint32_t layerIx, const Hwcval::ValLayer& layer);
     DrmShimTransform(android::sp<DrmShimBuffer>& buf, uint32_t layerIx, const iVP_layer_t* layer);
     ~DrmShimTransform();

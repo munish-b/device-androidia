@@ -32,8 +32,7 @@
 #include "HwcvalStatistics.h"
 
 #include <dirent.h>
-#include "ufo/graphics.h"
-#include "IService.h"
+#include "iservice.h"
 
 #ifdef HWCVAL_TARGET_HAS_MULTIPLE_DISPLAY
 #include "MultiDisplayShim.h"
@@ -53,7 +52,7 @@
 #define COMPARE_DRM_OUTPUT 0
 
 using namespace android;
-using namespace ::intel::ufo::hwc::services;
+using namespace hwcomposer;
 
 void Wake(bool wake, int backlight)
 {
@@ -1707,16 +1706,19 @@ void HwcTestRunner::ReportVersion()
     hwcBinVersion.setTo(HwcService_GetHwcVersion(hwcs));
     HwcService_Disconnect(hwcs);
 #else
-    sp<android::IBinder> hwcBinder = defaultServiceManager()->getService(String16(INTEL_HWC_SERVICE_NAME));
-    sp<IService> hwcService = interface_cast<IService>(hwcBinder);
+    sp<android::IBinder> hwcBinder =
+        defaultServiceManager()->getService(String16(IA_HWC_SERVICE_NAME));
+    sp<hwcomposer::IService> hwcService =
+        interface_cast<hwcomposer::IService>(hwcBinder);
     if(hwcService == NULL)
     {
-        HWCERROR(eCheckSessionFail, "Could not connect to service %s", INTEL_HWC_SERVICE_NAME);
+      HWCERROR(eCheckSessionFail, "Could not connect to service %s",
+               IA_HWC_SERVICE_NAME);
         ALOG_ASSERT(0);
         return;
     }
 
-    hwcBinVersion = hwcService->getHwcVersion();
+    hwcBinVersion = hwcService->GetHwcVersion();
 #endif
 
     android::String8 strbuf(hwcBinVersion);

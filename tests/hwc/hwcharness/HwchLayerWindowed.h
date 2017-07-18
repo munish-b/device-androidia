@@ -56,7 +56,8 @@ class HwchLayerWindowed :
         return mHandle;
     }
 
-    void Send(hwc_layer_1_t& hwLayer, hwc_rect_t* visibleRegions, uint32_t& visibleRegionCount) override;
+    void Send(hwc2_layer_t &hwLayer, hwc_rect_t *visibleRegions,
+              uint32_t &visibleRegionCount) override;
     void CalculateRects(Hwch::Display& display) override;
 };
 

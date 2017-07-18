@@ -161,12 +161,13 @@ namespace Hwch
 #ifdef HWCVAL_BUILD_HWCSERVICE_API
         typedef HwcsDisplayModeInfo Mode;
 #else
-        typedef ::intel::ufo::hwc::services::IDisplayModeControl::Info Mode;
+      typedef hwcomposer::IDisplayModeControl::Info Mode;
 #endif
 
         // Video optimization mode
 #ifdef HWCVAL_VIDEOCONTROL_OPTIMIZATIONMODE
-        typedef intel::ufo::hwc::services::IVideoControl::EOptimizationMode VideoOptimizationMode;
+      typedef hwcomposer::IVideoControl::EOptimizationMode
+          VideoOptimizationMode;
 #else
         // Make everything build without too many ifdefs
         typedef int VideoOptimizationMode;
@@ -213,8 +214,8 @@ namespace Hwch
 
         BufferFormatConfigManager* mFmtCfgMgr;
 
-        android::sp<::intel::ufo::hwc::services::IDisplayControl> mDisplayControl;
-        android::sp<::intel::ufo::hwc::services::IDisplayModeControl> mDisplayModeControl;
+        android::sp<::hwcomposer::IDisplayControl> mDisplayControl;
+        android::sp<hwcomposer::IDisplayModeControl> mDisplayModeControl;
         android::Vector<Mode> mModes;
 
     };

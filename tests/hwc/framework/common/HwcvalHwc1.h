@@ -72,18 +72,20 @@ namespace Hwcval
         EXPORT_API void SetHwcServiceShim(android::sp<HwcServiceShim> serviceShim);
     #endif // HWCVAL_BUILD_SHIM_HWCSERVICE
 
-
-        EXPORT_API void CheckOnPrepareEntry(size_t numDisplays, hwc_display_contents_1_t** displays);
-        EXPORT_API void CheckOnPrepareExit(size_t numDisplays, hwc_display_contents_1_t** displays);
-
+        EXPORT_API void
+        CheckOnPrepareEntry(size_t numDisplays,
+                            hwcval_display_contents_t **displays);
+        EXPORT_API void
+        CheckOnPrepareExit(size_t numDisplays,
+                           hwcval_display_contents_t **displays);
 
         /// Notify entry to onSet from HWC Shim
-        void EXPORT_API CheckSetEnter(size_t numDisplays, hwc_display_contents_1_t** displays);
+        void EXPORT_API CheckSetEnter(size_t numDisplays,
+                                      hwcval_display_contents_t **displays);
 
         /// Notify exit from OnSet from HWC Shim, and perform checks
         EXPORT_API void CheckSetExit(size_t numDisplays,
-                                        hwc_display_contents_1_t** displays);
-
+                                     hwcval_display_contents_t **displays);
 
         /// Checks before HWC is requested to blank the display
         EXPORT_API void CheckBlankEnter(int disp, int blank);

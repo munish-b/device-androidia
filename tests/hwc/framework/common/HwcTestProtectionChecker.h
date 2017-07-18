@@ -34,7 +34,6 @@ Notes:
 #include "HwcTestDefs.h"
 #include "HwcTestState.h"
 #include "DrmShimBuffer.h"
-#include "GrallocClient.h"
 
 #include <utils/KeyedVector.h>
 
@@ -45,7 +44,8 @@ class HwcTestProtectionChecker
 public:
     HwcTestProtectionChecker(HwcTestKernel* testKernel);
 
-    Hwcval::ValidityType IsValid(const intel_ufo_buffer_media_details_t& details, uint32_t hwcFrame);
+    Hwcval::ValidityType IsValid(const hwc_buffer_media_details_t &details,
+                                 uint32_t hwcFrame);
 
     // Called from the intercepted IVideoControl implementation
     void EnableEncryptedSession( uint32_t sessionID, uint32_t instanceID );

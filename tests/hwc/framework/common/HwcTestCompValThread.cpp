@@ -89,7 +89,7 @@ bool HwcTestCompValThread::Compose(android::sp<DrmShimBuffer> buf, Hwcval::Layer
 
     HWCLOGD("HwcTestCompValThread::Compose buf@%p handle %p %s", mBuf.get(), dest.GetHandle(), mBuf->GetHwcFrameStr(strbuf));
     uint32_t numSources = sources.GetNumLayers();
-    hwc_layer_1_t valSources[numSources];
+    hwcval_layer_t valSources[numSources];
 
     // Allocate a big buffer for
     uint32_t maxRects = 1024;
@@ -395,8 +395,10 @@ void HwcTestCompValThread::TakeCopy(android::sp<DrmShimBuffer> buf)
     }
 }
 
-void HwcTestCompValThread::TakeTransformedCopy(const hwc_layer_1_t* layer, android::sp<DrmShimBuffer> buf, uint32_t width, uint32_t height)
-{
+void HwcTestCompValThread::TakeTransformedCopy(const hwcval_layer_t *layer,
+                                               android::sp<DrmShimBuffer> buf,
+                                               uint32_t width,
+                                               uint32_t height) {
     char strbuf[HWCVAL_DEFAULT_STRLEN];
     ATRACE_CALL();
 
@@ -405,12 +407,11 @@ void HwcTestCompValThread::TakeTransformedCopy(const hwc_layer_1_t* layer, andro
             buf->GetUsage() | GRALLOC_USAGE_SW_READ_OFTEN); // Encourage use of linear buffers - it will speed the comparison
 
     HWCLOGD("TakeTransformedCopy: %s",buf->IdStr(strbuf));
-    hwc_layer_1_t srcLayer = *layer;
+    hwcval_layer_t srcLayer = *layer;
     srcLayer.compositionType = HWC_FRAMEBUFFER;
     srcLayer.blending = HWC_BLENDING_NONE;
 
-
-    hwc_layer_1_t tgtLayer;
+    hwcval_layer_t tgtLayer;
     tgtLayer.handle = spDestBuffer->handle;
     tgtLayer.compositionType = HWC_FRAMEBUFFER;
     tgtLayer.hints = 0;

@@ -38,7 +38,7 @@ Notes:
 extern "C"
 {
     #include "hardware/hardware.h"
-    #include "hardware/hwcomposer.h"
+#include "hardware/hwcomposer2.h"
     #include <hardware/gralloc.h>
 }
 
@@ -70,13 +70,12 @@ class CHwcFrameControl;
 
 struct ShimHwcProcs
 {
-    hwc_procs_t procs; // must be first member of structure
-    hwc_procs_t const *orig_procs;
+  hwcval_procs_t procs; // must be first member of structure
+  hwcval_procs_t const *orig_procs;
     HwcShim *shim;
 };
 
-class HwcShim : hwc_composer_device_1, public HwcShimInitializer
-{
+class HwcShim : hwc2_device, public HwcShimInitializer {
     public:
         /// TODO set this form test
         /// Max call time
@@ -99,7 +98,7 @@ class HwcShim : hwc_composer_device_1, public HwcShimInitializer
         void *mLibHwcHandle;
 
         /// Pointer to hwc device struct
-        hwc_composer_device_1 * hwc_composer_device;
+        hwc2_device *hwc_composer_device;
         /// pointer to hw_dev handle to hwc
         hw_device_t * hw_dev;
 
@@ -107,8 +106,7 @@ class HwcShim : hwc_composer_device_1, public HwcShimInitializer
         Hwcval::Hwc1* mHwc1;
 
         /// Cast pointer to device struct to HwcShim class
-        static HwcShim* GetComposerShim(hwc_composer_device_1 *dev)
-        {
+        static HwcShim *GetComposerShim(hwc2_device *dev) {
             // ALOG_ASSERT(dev);
             return static_cast<HwcShim*>(dev);
         }
@@ -145,6 +143,39 @@ class HwcShim : hwc_composer_device_1, public HwcShimInitializer
         virtual void HwcShimInitDrm(void);
 
     private:
+      template <typename PFN, typename T>
+      static hwc2_function_pointer_t ToHook(T function) {
+        static_assert(std::is_same<PFN, T>::value, "Incompatible fn pointer");
+        return reinterpret_cast<hwc2_function_pointer_t>(function);
+      }
+
+      template <typename T, int Y, typename... Args>
+      static int32_t func_hook(hwc2_device_t *dev, Args... args) {
+        HwcShim *temp1 = static_cast<HwcShim *>(dev);
+        hwc2_device_t *hwc2_dvc =
+            reinterpret_cast<hwc2_device_t *>(temp1->hwc_composer_device);
+        T temp = reinterpret_cast<T>(hwc2_dvc->getFunction(hwc2_dvc, Y));
+        return temp(hwc2_dvc, std::forward<Args>(args)...);
+      }
+      template <typename T, int Y, typename... Args>
+      static void func_hookv(hwc2_device_t *dev, Args... args) {
+        HwcShim *temp1 = static_cast<HwcShim *>(dev);
+        hwc2_device_t *hwc2_dvc =
+            reinterpret_cast<hwc2_device_t *>(temp1->hwc_composer_device);
+        T temp = reinterpret_cast<T>(hwc2_dvc->getFunction(hwc2_dvc, Y));
+        return temp(hwc2_dvc, std::forward<Args>(args)...);
+      }
+      template <typename T, int Y, typename... Args>
+      static uint32_t func_hooku(hwc2_device_t *dev, Args... args) {
+        HwcShim *temp1 = static_cast<HwcShim *>(dev);
+        hwc2_device_t *hwc2_dvc =
+            reinterpret_cast<hwc2_device_t *>(temp1->hwc_composer_device);
+        T temp = reinterpret_cast<T>(hwc2_dvc->getFunction(hwc2_dvc, Y));
+        return temp(hwc2_dvc, std::forward<Args>(args)...);
+      }
+      static hwc2_function_pointer_t HookDevGetFunction(struct hwc2_device *dev,
+                                                        int32_t descriptor);
+
         /// Get pointer to functions in Real drm
         int GetFunctionPointer(void * LibHandle, const char * Symbol,
                                     void **FunctionHandle, uint32_t debug);
@@ -152,55 +183,48 @@ class HwcShim : hwc_composer_device_1, public HwcShimInitializer
         // Shim versions of HWC functions
         // function pointers for hwc functions
         /// Implementation of Real HWC - HookPreapre
-        static int HookPrepare(struct hwc_composer_device_1 *dev,
-                                size_t numDisplays,
-                                hwc_display_contents_1_t** displays);
+        static int HookPrepare(struct hwc2_device *dev, size_t numDisplays,
+                               hwcval_display_contents_t **displays);
 
         /// Implementation of Real HWC - HookSet
-        static int HookSet(struct hwc_composer_device_1 *dev,
-                            size_t numDisplays,
-                            hwc_display_contents_1_t** displays);
+        static int HookSet(struct hwc2_device *dev, size_t numDisplays,
+                           hwcval_display_contents_t **displays);
 
         /// Implementation of Real HWC - HooEventControl
-        static int HookEventControl(struct hwc_composer_device_1 *dev, int disp,
+        static int HookEventControl(struct hwc2_device *dev, int disp,
                                     int event, int enabled);
         /// Implementation of Real HWC - HookBlank
-        static int HookBlank(struct hwc_composer_device_1 *dev, int disp,
-                                        int blank);
+        static int HookBlank(struct hwc2_device *dev, int disp, int blank);
 
         /// Implementation of Real HWC - HookQuery
-        static int HookQuery(struct hwc_composer_device_1 *dev, int what,
-                                int* value);
+        static int HookQuery(struct hwc2_device *dev, int what, int *value);
 
         /// Implementation of Real HWC - HookRegisterProcs
-        static void HookRegisterProcs(struct hwc_composer_device_1 *dev,
-                                        hwc_procs_t const* procs);
+        static void HookRegisterProcs(struct hwc2_device *dev,
+                                      hwcval_procs_t const *procs);
 
         /// Implementation of Real HWC - HookDump
-        static void HookDump(struct hwc_composer_device_1 *dev, char *buff,
-                                int buff_len);
+        static void HookDump(struct hwc2_device *dev, char *buff, int buff_len);
 
         /// Implementation of Real HWC - HookGetDisplayConfigs
-        static int HookGetDisplayConfigs(struct hwc_composer_device_1 *dev,
-                                            int disp, uint32_t* configs,
-                                            size_t* numConfigs);
+        static int HookGetDisplayConfigs(struct hwc2_device *dev, int disp,
+                                         uint32_t *configs, size_t *numConfigs);
 
         /// Implementation of Real HWC - HookGetActiveConfig
-        static int HookGetActiveConfig(struct hwc_composer_device_1 *dev,
-                                            int disp);
+        static int HookGetActiveConfig(struct hwc2_device *dev, int disp);
 
         /// Implementation of Real HWC - HookGetDisplayAtrtributes
-        static int HookGetDisplayAttributes(struct hwc_composer_device_1 *dev,
-                                            int disp, uint32_t config,
-                                            const uint32_t* attributes,
-                                            int32_t* values);
+        static int HookGetDisplayAttributes(struct hwc2_device *dev, int disp,
+                                            uint32_t config,
+                                            const uint32_t *attributes,
+                                            int32_t *values);
 
         // function pointers to real HWC composer
         /// Implementation of Real HWC - OnPrepare
-        int OnPrepare(size_t numDisplays, hwc_display_contents_1_t** displays);
+        int OnPrepare(size_t numDisplays, hwcval_display_contents_t **displays);
 
         /// Implementation of Real HWC - OnSet
-        int OnSet(size_t numDisplays, hwc_display_contents_1_t** displays);
+        int OnSet(size_t numDisplays, hwcval_display_contents_t **displays);
 
         /// Implementation of Real HWC - OnBlank
         int OnBlank(int disp, int blank);
@@ -209,7 +233,7 @@ class HwcShim : hwc_composer_device_1, public HwcShimInitializer
         int OnQuery(int what, int* value);
 
         /// Implementation of Real HWC - OnRegisterProcs
-        void OnRegisterProcs(hwc_procs_t const* procs);
+        void OnRegisterProcs(hwcval_procs_t const *procs);
 
         /// Implementation of Real HWC - OnDump
         void OnDump(char *buff, int buff_len);

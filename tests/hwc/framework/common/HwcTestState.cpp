@@ -37,7 +37,6 @@ Notes:
 #include "HwcTestDefs.h"
 
 #include "hardware/hwcomposer_defs.h"
-#include "GrallocClient.h"
 
 #include "HwcTestState.h"
 #include "hwc_shim_binder.h"
@@ -122,7 +121,7 @@ void HwcTestState::rundown()
     }
 }
 #ifdef HWCVAL_ABSTRACTLOG_EXISTS
-extern Hwcval::SetLogValPtr pfHwcLogSetLogVal;
+Hwcval::SetLogValPtr pfHwcLogSetLogVal = 0;
 #else
 #ifdef HWCVAL_ABSTRACTCOMPOSITIONCHECKER_EXISTS
 typedef uint32_t (*HwcLogSetCompositionCheckPtr) (intel::ufo::hwc::validation::AbstractCompositionChecker* compositionChecker);
@@ -240,11 +239,14 @@ void HwcTestState::RegisterWithHwc()
 
         if (mTestKernel)
         {
-            compositionChecker = static_cast<intel::ufo::hwc::validation::AbstractCompositionChecker*> (mTestKernel);
+          // compositionChecker =
+          // static_cast<intel::ufo::hwc::validation::AbstractCompositionChecker*>
+          // (mTestKernel);
             logChecker = mTestKernel->GetParser();
         }
 
-        gLogIntercept.Register(logChecker, compositionChecker, ABSTRACTCOMPOSITIONCHECKER_VAL_VERSIONS_SUPPORTED);
+        // gLogIntercept.Register(logChecker, compositionChecker,
+        // ABSTRACTCOMPOSITIONCHECKER_VAL_VERSIONS_SUPPORTED);
     }
     else
     {
@@ -500,56 +502,7 @@ void HwcTestState::StopThreads()
 
 bool HwcTestState::IsFenceValid(int fence, uint32_t disp, uint32_t hwcFrame, bool checkSignalled, bool checkUnsignalled)
 {
-    if (mLive)
-    {
-        if (fence < 0)
-        {
-            HWCLOGD_COND(eLogFence, "IsFenceValid: fence=-1, and we are looking for %s",
-                checkSignalled ? "signalled so this is valid" : "not signalled so this is invalid");
-            return checkSignalled;
-        }
-        else if (fence == 0)
-        {
-            return false;
-        }
-
-        struct sync_fence_info_data * fenceData = sync_fence_info(fence);
-
-        if (fenceData == 0)
-        {
-            HWCERROR(eCheckFenceQueryFail, "Display %d frame:%d failed to query fence %d",
-                disp, hwcFrame, fence);
-
-            // We've already logged the error, so pretend everything is OK
-            return true;
-        }
-        else if (fenceData->status < 0)
-        {
-            HWCERROR(eCheckInternalError, "Display %d frame:%d ERRONEOUS fence %d %s",
-                disp, hwcFrame, fence, fenceData->name);
-            sync_fence_info_free(fenceData);
-
-            // We've already logged the error, so pretend everything is OK
-            return true;
-        }
-        else if (fenceData->status == 0)
-        {
-            // not signalled
-            sync_fence_info_free(fenceData);
-            return !checkSignalled;
-        }
-        else
-        {
-            // signalled
-            sync_fence_info_free(fenceData);
-            return !checkUnsignalled;
-        }
-    }
-    else
-    {
-        // We are not live, so we have to assume the fence is in the state we want it to be.
-        return true;
-    }
+  return false;
 }
 
 bool HwcTestState::IsFenceSignalled(int fence, uint32_t disp, uint32_t hwcFrame)

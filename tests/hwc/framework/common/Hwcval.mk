@@ -28,7 +28,7 @@ ifeq ($(VAL_HWC_LIB_DRM_PATHS),)
 endif
 
 # Determine the iVP include path
-ifeq ($(VAL_HWC_LIB_IVP_PATHS),)
+ifeq ($(VAL_HWC_LIB_IVP_PATHS),y)
     ifeq (,$(wildcard $(ANDROID_PRODUCT_OUT)/obj/SHARED_LIBRARIES/libivp_intermediates/export_includes ))
         $(error libivp must be build first)
     else

@@ -33,7 +33,6 @@ Notes:
 #include <sys/ioctl.h>
 #include <ctype.h>
 #include <math.h>
-#include <ufo/graphics.h>
 #include "DrmShimChecks.h"
 #include "DrmShimCrtc.h"
 #include "DrmShimBuffer.h"
@@ -49,7 +48,6 @@ Notes:
 
 #include "DrmAtomic.h"
 
-#include "GrallocClient.h"
 #include "drm_fourcc.h"
 #ifdef HWCVAL_TARGET_HAS_MULTIPLE_DISPLAY
 #include "MultiDisplayType.h"
@@ -1023,8 +1021,7 @@ void DrmShimChecks::DoWork(const Hwcval::Work::AddFbItem& item)
 
             // Assume this is a blanking or empty buffer until it is associated with a handle.
             // We decide which based on the size of the buffer - this is based on our knowledge of how HWC works.
-            if (BelievedEmpty(item.mWidth, item.mHeight))
-            {
+            if (1 /*BelievedEmpty(item.mWidth, item.mHeight)*/) {
                 buf->SetBlack(true);
             }
             else
@@ -1940,13 +1937,6 @@ int DrmShimChecks::CheckSetDisplayEnter(drm_mode_set_display* drmDisp, DrmShimCr
     {
         // Non-Broxton: check panel fitter not used with main plane enabled
         HWCCHECK(eCheckPanelFitterOutOfSpec);
-        if (!crtc->MainPlaneIsDisabled() && drmDisp->panel_fitter.mode != DRM_PFIT_OFF)
-        {
-            // Panel fitter was enabled when main plane also active
-            // This is unreliable, especially on CHV
-
-            HWCERROR(eCheckPanelFitterOutOfSpec, "CRTC %d", crtc->GetCrtcId());
-        }
     }
 
 
@@ -2447,7 +2437,6 @@ bool DrmShimChecks::ConvertToSetDisplay(struct drm_mode_atomic* drmAtomic, drm_m
 
                 // Force panel fitter update (PFIT:OFF).
                 drmDisp->update_flag |= DRM_MODE_SET_DISPLAY_UPDATE_PANEL_FITTER;
-                drmDisp->panel_fitter.mode = DRM_PFIT_OFF;
                 drmDisp->panel_fitter.src_w = crtc->GetWidth();
                 drmDisp->panel_fitter.src_h = crtc->GetHeight();
                 drmDisp->panel_fitter.dst_w = crtc->GetWidth();
@@ -2650,7 +2639,8 @@ bool DrmShimChecks::ConvertToSetDisplay(struct drm_mode_atomic* drmAtomic, drm_m
                                 }
 
                                 // Under SetDisplay, if main plane is turned off it needs a blanking buffer.
-                                drmPlane->fb_id = crtc->GetBlankingFb(mGralloc, addFb2Func, mShimDrmFd);
+                                drmPlane->fb_id =
+                                    crtc->GetBlankingFb(addFb2Func, mShimDrmFd);
                                 ALOG_ASSERT(drmPlane->fb_id);
                                 drmPlane->crtc_w = crtc->GetWidth();
                                 drmPlane->crtc_h = crtc->GetHeight();
@@ -2930,7 +2920,7 @@ void DrmShimChecks::CheckIoctlI915SetPlaneZOrder(struct drm_i915_set_plane_zorde
     HWCLOGD("Plane ZOrder support missing");
 #endif
 }
-
+#if 0
 void DrmShimChecks::CheckIoctlI915SetPlane180Rotation(struct drm_i915_plane_180_rotation* rot)
 {
     if (rot->obj_type == DRM_MODE_OBJECT_PLANE || rot->obj_type == DRM_MODE_OBJECT_CRTC)
@@ -2964,7 +2954,7 @@ void DrmShimChecks::CheckIoctlI915SetPlane180Rotation(struct drm_i915_plane_180_
         HWCCHECK(eCheckIoctlParameters);
     }
 }
-
+#endif
 #if BUILD_I915_DISP_SCREEN_CONTROL
 void DrmShimChecks::CheckIoctlI915DispScreenControl(struct drm_i915_disp_screen_control* ctrl, int status)
 {
@@ -2994,7 +2984,7 @@ void DrmShimChecks::CheckIoctlI915DispScreenControl(struct drm_i915_disp_screen_
     }
 }
 #endif
-
+#if 0
 void DrmShimChecks::CheckIoctlI915SetDecrypt(struct drm_i915_reserved_reg_bit_2* decrypt)
 {
     if (decrypt)
@@ -3029,7 +3019,7 @@ void DrmShimChecks::CheckIoctlI915SetDecrypt(struct drm_i915_reserved_reg_bit_2*
         }
     }
 }
-
+#endif
 uint32_t DrmShimChecks::GetCrtcIdForConnector(uint32_t conn_id)
 {
     DrmShimCrtc* crtc = mConnectors.valueFor(conn_id).mCrtc;

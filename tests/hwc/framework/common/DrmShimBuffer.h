@@ -33,10 +33,11 @@ Notes:
 #include <utils/Vector.h>
 #include <utils/SortedVector.h>
 #include <utils/KeyedVector.h>
-#include "ufo/gralloc.h"
 
 // NOTE: HwcTestDefs.h sets defines which are used in the HWC and DRM stack.
 // -> to be included before any other HWC or DRM header file.
+#include <hardware/gralloc1.h>
+#include <hardware/gralloc.h>
 #include "HwcTestDefs.h"
 #include <ui/GraphicBuffer.h>
 #include "hardware/hwcomposer_defs.h"
@@ -51,15 +52,41 @@ Notes:
 #define BUFIDSTR "name"
 #endif
 
-#include "GrallocClient.h"
+#define GRALLOC_DRM_GET_FORMAT 1
+#define GRALLOC_DRM_GET_DIMENSIONS 2
+
+typedef struct hwc_buffer_details {
+  hw_module_t *gralloc;
+  uint16_t gralloc_version;
+  gralloc1_device_t *gralloc1_dvc;
+  GRALLOC1_PFN_LOCK_FLEX pfn_lockflex;
+  GRALLOC1_PFN_GET_FORMAT pfn_getFormat;
+  int width;
+  int height;
+  int format;
+  int usage;
+  int size;
+  unsigned int magic;
+  int pitch;
+  int pavp_instance_id;
+  int pavp_session_id;
+  int is_encrypted;
+  int name;
+  int fb;
+  int fb_format;
+  int allocWidth;
+  int allocHeight;
+  int allocOffsetX;
+  int allocOffsetY;
+  void GetGralloc();
+  int getBufferInfo(buffer_handle_t handle);
+} hwc_buffer_details_t;
+
+typedef hwc_buffer_details_t hwc_buffer_media_details_t;
+
 namespace Hwcval
 {
-#if INTEL_UFO_GRALLOC_HAVE_BUFFER_DETAILS_1 && (INTEL_UFO_GRALLOC_BUFFER_DETAILS_LEVEL < 1)
-    typedef intel_ufo_buffer_details_1_t buffer_details_t;
-#define HWCVAL_BUFFER_DETAILS_HAVE_RC
-#else
-    typedef intel_ufo_buffer_details_t buffer_details_t;
-#endif
+typedef hwc_buffer_details_t buffer_details_t;
 }
 
 
@@ -104,10 +131,10 @@ protected:
     bool mBlack;                            // Content is (believed to be) all black
     int32_t mFbtDisplay;                    // -1 if not a FRAMEBUFFERTARGET; display index if it is
     Hwcval::buffer_details_t mDetails;      // gralloc usage etc
-    intel_ufo_buffer_media_details_t mMediaDetails;
+    hwc_buffer_media_details_t mMediaDetails;
 
 #ifdef HWCVAL_ENABLE_RENDER_COMPRESSION
-    intel_ufo_buffer_resolve_details_t mResolveDetails;
+    hwc_buffer_resolve_details_t mResolveDetails;
 #endif
 
     char mStrFormat[5];                     // Buffer format as a string
@@ -222,9 +249,9 @@ public:
 
     DrmShimBuffer* UpdateMediaDetails();
     DrmShimBuffer* UpdateResolveDetails();
-    const intel_ufo_buffer_media_details_t& GetMediaDetails() const;
+    const hwc_buffer_media_details_t &GetMediaDetails() const;
 #ifdef HWCVAL_ENABLE_RENDER_COMPRESSION
-    const intel_ufo_buffer_resolve_details_t& GetResolveDetails() const;
+    const hwc_buffer_resolve_details_t &GetResolveDetails() const;
 #endif
     uint32_t GetWidth();
     uint32_t GetHeight();

@@ -33,7 +33,6 @@
 #include "HwcTestState.h"
 #include "HwcTestUtil.h"
 
-#include "GrallocClient.h"
 
 extern "C" { // shame
     #include <intel_bufmgr.h>
@@ -199,16 +198,15 @@ android::sp<android::GraphicBuffer> Hwch::BufferSet::Get()
 {
     return mFencedB->mBuf;
 }
-
 void Hwch::BufferSet::AdvanceTimestamp(uint64_t delta)
 {
-    intel::ufo::gralloc::GrallocClient& gralloc = intel::ufo::gralloc::GrallocClient::getInstance();
+  // intel::ufo::gralloc::GrallocClient& gralloc =
+  // intel::ufo::gralloc::GrallocClient::getInstance();
     mLastTimestamp += delta;
 #ifdef HWCVAL_GRALLOC_HAS_MEDIA_TIMESTAMPS
     gralloc.setBufferTimestamp(GetHandle(), mLastTimestamp);
 #endif
 }
-
 void Hwch::BufferSet::PostFrame(int fenceFd)
 {
     // Don't allow rotation of buffers if only one buffer was allocated
@@ -304,7 +302,7 @@ void Hwch::BufferSet::SetProtectionState(bool encrypted)
     Hwch::System& system = Hwch::System::getInstance();
     SetProtectionState(encrypted, system.GetPavpSessionId(), system.GetPavpInstance());
 }
-
+#if 0
 void Hwch::BufferSet::SetProtectionState(bool encrypted, uint32_t sessionId, uint32_t instance)
 {
     mEncrypted = encrypted;
@@ -321,6 +319,7 @@ void Hwch::BufferSet::SetProtectionState(bool encrypted, uint32_t sessionId, uin
     mSessionId = sessionId;
     mInstance = instance;
 }
+#endif
 #endif
 
 Hwch::BufferSetPtr::~BufferSetPtr()

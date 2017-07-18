@@ -32,7 +32,6 @@
 
 #include <ui/GraphicBuffer.h>
 
-#include "ufo/graphics.h"
 #include "HwcTestState.h"
 #include "HwcTestUtil.h"
 

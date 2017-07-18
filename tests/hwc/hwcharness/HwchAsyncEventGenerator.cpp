@@ -36,7 +36,7 @@
 #include "HwcServiceApi.h"
 #endif
 
-using namespace intel::ufo::hwc::services;
+using namespace hwcomposer;
 
 const uint32_t Hwch::AsyncEvent::cFixedDisplay = HwcTestState::eFixed;
 const uint32_t Hwch::AsyncEvent::cRemovableDisplay = HwcTestState::eRemovable;
@@ -163,12 +163,11 @@ Hwch::AsyncEvent::ModeChangeEventData::~ModeChangeEventData()
 {
 }
 
-Hwch::AsyncEvent::VideoOptimizationModeData::VideoOptimizationModeData(android::sp<::intel::ufo::hwc::services::IVideoControl> videoControl,
-                                const Display::VideoOptimizationMode videoOptimizationMode)
-  : mVideoControl(videoControl),
-    mVideoOptimizationMode(videoOptimizationMode)
-{
-}
+Hwch::AsyncEvent::VideoOptimizationModeData::VideoOptimizationModeData(
+    android::sp<hwcomposer::IVideoControl> videoControl,
+    const Display::VideoOptimizationMode videoOptimizationMode)
+    : mVideoControl(videoControl),
+      mVideoOptimizationMode(videoOptimizationMode) {}
 
 Hwch::AsyncEvent::VideoOptimizationModeData::~VideoOptimizationModeData()
 {

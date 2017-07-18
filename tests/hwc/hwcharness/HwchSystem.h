@@ -47,7 +47,7 @@
 #include "HwchRange.h"
 #include "HwchInputGenerator.h"
 
-#include "IService.h"
+#include "iservice.h"
 
 #ifdef TARGET_HAS_MCG_WIDI
 #include "HwchWidi.h"
@@ -296,7 +296,7 @@ namespace Hwch
             // Do we test HDMI if it is connected?
             bool mHDMIToBeTested;
 
-            android::sp<intel::ufo::hwc::services::IService> mHwcService;
+            android::sp<hwcomposer::IService> mHwcService;
 
             // Tiling options in HWC
             HwcOptionState mLinearOption;

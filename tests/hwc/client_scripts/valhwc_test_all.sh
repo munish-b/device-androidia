@@ -8,17 +8,6 @@ source ${0%/*}/valhwc_common
 rm logcat_val*
 rm hwclog_val*
 
-checksf(){
-    ps | grep -q surfaceflinger
-    if [ $? != 0 ]
-    then
-        echo "WARNING: SurfaceFlinger crashed. Restarted."
-        surfaceflinger&
-        sleep 2
-    fi
-    killproc bootanimation
-}
-
 if [ "$HWCVAL_SLEEP" = "" ]
 then
     HWCVAL_SLEEP=0

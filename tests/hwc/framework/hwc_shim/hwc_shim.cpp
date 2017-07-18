@@ -76,8 +76,7 @@ extern "C"
     #include "intel_bufmgr.h"
 }
 
-#include "hardware/hwcomposer.h"
-#include "GrallocClient.h"
+#include "hardware/hwcomposer2.h"
 
 #include "hwc_shim.h"
 #include "hwc_shim_binder.h"
@@ -102,23 +101,20 @@ extern "C"
 #undef LOG_TAG
 #define LOG_TAG "HWC_SHIM"
 
-const char * cLibiVPPath = HWCVAL_LIBPATH "/libivp.so";
-const char * cLibiVPVendorPath = HWCVAL_VENDOR_LIBPATH "/libivp.so";
+// const char * cLibiVPPath = HWCVAL_LIBPATH "/libivp.so";
+// const char * cLibiVPVendorPath = HWCVAL_VENDOR_LIBPATH "/libivp.so";
 
-static void hook_invalidate(const hwc_procs *procs)
-{
+static void hook_invalidate(const hwcval_procs *procs) {
     const ShimHwcProcs *p = (const ShimHwcProcs *)procs;
     p->orig_procs->invalidate(p->orig_procs);
 }
 
-static void hook_vsync(const hwc_procs *procs, int disp, int64_t timestamp)
-{
+static void hook_vsync(const hwcval_procs *procs, int disp, int64_t timestamp) {
     const ShimHwcProcs *p = (const ShimHwcProcs *)procs;
     p->orig_procs->vsync(p->orig_procs, disp, timestamp);
 }
 
-static void hook_hotplug(const hwc_procs *procs, int disp, int connected)
-{
+static void hook_hotplug(const hwcval_procs *procs, int disp, int connected) {
     const ShimHwcProcs *p = (const ShimHwcProcs *)procs;
     p->orig_procs->hotplug(p->orig_procs, disp, connected);
 }
@@ -130,21 +126,7 @@ HwcShim::HwcShim(const hw_module_t* module)
     common.version              = HWC_SHIM_HWC_DEVICE_API_VERSION;
     common.module               = const_cast<hw_module_t*>(module);
     common.close                = HookClose;
-
-    prepare                     = HookPrepare;
-    set                         = HookSet;
-    eventControl                = HookEventControl;
-    blank                       = HookBlank;
-    query                       = HookQuery;
-    registerProcs               = HookRegisterProcs;
-    hwc_composer_device_1::dump = HookDump;
-    getDisplayConfigs           = HookGetDisplayConfigs;
-    getDisplayAttributes        = HookGetDisplayAttributes;
-    getActiveConfig             = HookGetActiveConfig;
-    reserved_proc[0]            = NULL;
-    reserved_proc[1]            = NULL;
-    reserved_proc[2]            = NULL;
-    reserved_proc[3]            = NULL;
+    getFunction = HookDevGetFunction;
 
     // load real HWC
     HWCLOGI("HwcShim::HwcShim - loading real HWC");
@@ -209,7 +191,7 @@ int HwcShim::HwcShimInit(void)
     void *libiVPHandle;
 
     HWCLOGI("Open libiVPHandle");
-
+#if 0
     // Open iVP library
     libiVPHandle = dll_open(cLibiVPPath, RTLD_NOW);
     if (!libiVPHandle)
@@ -249,8 +231,8 @@ int HwcShim::HwcShimInit(void)
         HWCERROR(eCheckIvpShimBind, "Error loading iVPShimCleanup");
         ret = -1;
     }
-
     HWCLOGI("fpiVPShimInit %p", iVPShimFunctions.fpiVPShimInit);
+#endif
 
     // Load HWC and get a pointer to logger function
     dlerror();
@@ -286,7 +268,7 @@ int HwcShim::HwcShimInit(void)
 
     state->LoggingInit(mLibHwcHandle);
 
-    ret = HwcShimInitDrivers(state);
+    // ret = HwcShimInitDrivers(state);
 
     dlerror();
     const char *sym = HAL_MODULE_INFO_SYM_AS_STR;
@@ -302,18 +284,18 @@ int HwcShim::HwcShimInit(void)
     pHwcModule->common.dso = mLibHwcHandle;
 
     hw_dev = new hw_device_t;
-    hwc_composer_device = new hwc_composer_device_1;
+    hwc_composer_device = new hwc2_device;
 
     // Check libraries are compatible
     mDrmShimCallback.CheckVersion();
-
+#if 0
     // load iVP shim
     if(iVPShimFunctions.fpiVPShimInit)
     {
         HWCLOGI("Load iVP shim");
         iVPShimFunctions.fpiVPShimInit();
     }
-
+#endif
     rc = pHwcModule->common.methods->open(
                 (const hw_module_t*)&pHwcModule->common,
                 HWC_HARDWARE_COMPOSER, &hw_dev);
@@ -323,7 +305,7 @@ int HwcShim::HwcShimInit(void)
         HWCLOGI("Bad return code from real hwc hook_open %d", rc);
     }
 
-    hwc_composer_device = (hwc_composer_device_1 *)hw_dev;
+    hwc_composer_device = (hwc2_device *)hw_dev;
     common.version = hwc_composer_device->common.version;
 
     return ret;
@@ -433,6 +415,206 @@ void HwcShim::HwcShimInitDrm()
     {
         drmShimFunctions.fpDrmShimRegisterCallback((void*) &mDrmShimCallback);
     }
+}
+
+hwc2_function_pointer_t HwcShim::HookDevGetFunction(struct hwc2_device *dev,
+                                                    int32_t descriptor) {
+  switch (descriptor) {
+  case HWC2_FUNCTION_CREATE_VIRTUAL_DISPLAY:
+    return ToHook<HWC2_PFN_CREATE_VIRTUAL_DISPLAY>(
+        &func_hook<HWC2_PFN_CREATE_VIRTUAL_DISPLAY,
+                   HWC2_FUNCTION_CREATE_VIRTUAL_DISPLAY, uint32_t, uint32_t,
+                   int32_t *, hwc2_display_t *>);
+  case HWC2_FUNCTION_DESTROY_VIRTUAL_DISPLAY:
+    return ToHook<HWC2_PFN_DESTROY_VIRTUAL_DISPLAY>(
+        &func_hook<HWC2_PFN_DESTROY_VIRTUAL_DISPLAY,
+                   HWC2_FUNCTION_DESTROY_VIRTUAL_DISPLAY, hwc2_display_t>);
+  case HWC2_FUNCTION_DUMP:
+    return ToHook<HWC2_PFN_DUMP>(
+        &func_hookv<HWC2_PFN_DUMP, HWC2_FUNCTION_DUMP, uint32_t *, char *>);
+  case HWC2_FUNCTION_GET_MAX_VIRTUAL_DISPLAY_COUNT:
+    return ToHook<HWC2_PFN_GET_MAX_VIRTUAL_DISPLAY_COUNT>(
+        &func_hooku<HWC2_PFN_GET_MAX_VIRTUAL_DISPLAY_COUNT,
+                    HWC2_FUNCTION_GET_MAX_VIRTUAL_DISPLAY_COUNT>);
+  case HWC2_FUNCTION_REGISTER_CALLBACK:
+    return ToHook<HWC2_PFN_REGISTER_CALLBACK>(
+        &func_hook<HWC2_PFN_REGISTER_CALLBACK, HWC2_FUNCTION_REGISTER_CALLBACK,
+                   int32_t, hwc2_callback_data_t, hwc2_function_pointer_t>);
+
+  case HWC2_FUNCTION_CREATE_LAYER:
+    return ToHook<HWC2_PFN_CREATE_LAYER>(
+        &func_hook<HWC2_PFN_CREATE_LAYER, HWC2_FUNCTION_CREATE_LAYER,
+                   hwc2_display_t, hwc2_layer_t *>);
+
+  case HWC2_FUNCTION_DESTROY_LAYER:
+    return ToHook<HWC2_PFN_DESTROY_LAYER>(
+        &func_hook<HWC2_PFN_DESTROY_LAYER, HWC2_FUNCTION_DESTROY_LAYER,
+                   hwc2_display_t, hwc2_layer_t>);
+
+  case HWC2_FUNCTION_GET_ACTIVE_CONFIG:
+    return ToHook<HWC2_PFN_GET_ACTIVE_CONFIG>(
+        &func_hook<HWC2_PFN_GET_ACTIVE_CONFIG, HWC2_FUNCTION_GET_ACTIVE_CONFIG,
+                   hwc2_display_t, hwc2_config_t *>);
+  case HWC2_FUNCTION_GET_CHANGED_COMPOSITION_TYPES:
+    return ToHook<HWC2_PFN_GET_CHANGED_COMPOSITION_TYPES>(
+        &func_hook<HWC2_PFN_GET_CHANGED_COMPOSITION_TYPES,
+                   HWC2_FUNCTION_GET_CHANGED_COMPOSITION_TYPES, hwc2_display_t,
+                   uint32_t *, hwc2_layer_t *, int32_t *>);
+  case HWC2_FUNCTION_GET_CLIENT_TARGET_SUPPORT:
+    return ToHook<HWC2_PFN_GET_CLIENT_TARGET_SUPPORT>(
+        &func_hook<HWC2_PFN_GET_CLIENT_TARGET_SUPPORT,
+                   HWC2_FUNCTION_GET_CLIENT_TARGET_SUPPORT, hwc2_display_t,
+                   uint32_t, uint32_t, int32_t, int32_t>);
+  case HWC2_FUNCTION_GET_COLOR_MODES:
+    return ToHook<HWC2_PFN_GET_COLOR_MODES>(
+        &func_hook<HWC2_PFN_GET_COLOR_MODES, HWC2_FUNCTION_GET_COLOR_MODES,
+                   hwc2_display_t, uint32_t *, int32_t *>);
+  case HWC2_FUNCTION_GET_DISPLAY_ATTRIBUTE:
+    return ToHook<HWC2_PFN_GET_DISPLAY_ATTRIBUTE>(
+        &func_hook<HWC2_PFN_GET_DISPLAY_ATTRIBUTE,
+                   HWC2_FUNCTION_GET_DISPLAY_ATTRIBUTE, hwc2_display_t,
+                   hwc2_config_t, int32_t, int32_t *>);
+  case HWC2_FUNCTION_GET_DISPLAY_CONFIGS:
+    return ToHook<HWC2_PFN_GET_DISPLAY_CONFIGS>(
+        &func_hook<HWC2_PFN_GET_DISPLAY_CONFIGS,
+                   HWC2_FUNCTION_GET_DISPLAY_CONFIGS, hwc2_display_t,
+                   uint32_t *, hwc2_config_t *>);
+  case HWC2_FUNCTION_GET_DISPLAY_NAME:
+    return ToHook<HWC2_PFN_GET_DISPLAY_NAME>(
+        &func_hook<HWC2_PFN_GET_DISPLAY_NAME, HWC2_FUNCTION_GET_DISPLAY_NAME,
+                   hwc2_display_t, uint32_t *, char *>);
+  case HWC2_FUNCTION_GET_DISPLAY_REQUESTS:
+    return ToHook<HWC2_PFN_GET_DISPLAY_REQUESTS>(
+        &func_hook<HWC2_PFN_GET_DISPLAY_REQUESTS,
+                   HWC2_FUNCTION_GET_DISPLAY_REQUESTS, hwc2_display_t,
+                   int32_t *, uint32_t *, hwc2_layer_t *, int32_t *>);
+  case HWC2_FUNCTION_GET_DISPLAY_TYPE:
+    return ToHook<HWC2_PFN_GET_DISPLAY_TYPE>(
+        &func_hook<HWC2_PFN_GET_DISPLAY_TYPE, HWC2_FUNCTION_GET_DISPLAY_TYPE,
+                   hwc2_display_t, int32_t *>);
+  case HWC2_FUNCTION_GET_DOZE_SUPPORT:
+    return ToHook<HWC2_PFN_GET_DOZE_SUPPORT>(
+        &func_hook<HWC2_PFN_GET_DOZE_SUPPORT, HWC2_FUNCTION_GET_DOZE_SUPPORT,
+                   hwc2_display_t, int32_t *>);
+  case HWC2_FUNCTION_GET_HDR_CAPABILITIES:
+    return ToHook<HWC2_PFN_GET_HDR_CAPABILITIES>(
+        &func_hook<HWC2_PFN_GET_HDR_CAPABILITIES,
+                   HWC2_FUNCTION_GET_HDR_CAPABILITIES, hwc2_display_t,
+                   uint32_t *, int32_t *, float *, float *, float *>);
+  case HWC2_FUNCTION_GET_RELEASE_FENCES:
+    return ToHook<HWC2_PFN_GET_RELEASE_FENCES>(
+        &func_hook<HWC2_PFN_GET_RELEASE_FENCES,
+                   HWC2_FUNCTION_GET_RELEASE_FENCES, hwc2_display_t, uint32_t *,
+                   hwc2_layer_t *, int32_t *>);
+  case HWC2_FUNCTION_PRESENT_DISPLAY:
+    return ToHook<HWC2_PFN_PRESENT_DISPLAY>(
+        &func_hook<HWC2_PFN_PRESENT_DISPLAY, HWC2_FUNCTION_PRESENT_DISPLAY,
+                   hwc2_display_t, int32_t *>);
+  case HWC2_FUNCTION_SET_ACTIVE_CONFIG:
+    return ToHook<HWC2_PFN_SET_ACTIVE_CONFIG>(
+        &func_hook<HWC2_PFN_SET_ACTIVE_CONFIG, HWC2_FUNCTION_SET_ACTIVE_CONFIG,
+                   hwc2_display_t, hwc2_config_t>);
+  case HWC2_FUNCTION_SET_CLIENT_TARGET:
+    return ToHook<HWC2_PFN_SET_CLIENT_TARGET>(
+        &func_hook<HWC2_PFN_SET_CLIENT_TARGET, HWC2_FUNCTION_SET_CLIENT_TARGET,
+                   hwc2_display_t, buffer_handle_t, int32_t, int32_t,
+                   hwc_region_t>);
+  case HWC2_FUNCTION_SET_COLOR_MODE:
+    return ToHook<HWC2_PFN_SET_COLOR_MODE>(
+        &func_hook<HWC2_PFN_SET_COLOR_MODE, HWC2_FUNCTION_SET_COLOR_MODE,
+                   hwc2_display_t, int32_t>);
+  case HWC2_FUNCTION_SET_COLOR_TRANSFORM:
+    return ToHook<HWC2_PFN_SET_COLOR_TRANSFORM>(
+        &func_hook<HWC2_PFN_SET_COLOR_TRANSFORM,
+                   HWC2_FUNCTION_SET_COLOR_TRANSFORM, hwc2_display_t,
+                   const float *, int32_t>);
+  case HWC2_FUNCTION_SET_OUTPUT_BUFFER:
+    return ToHook<HWC2_PFN_SET_OUTPUT_BUFFER>(
+        &func_hook<HWC2_PFN_SET_OUTPUT_BUFFER, HWC2_FUNCTION_SET_OUTPUT_BUFFER,
+                   hwc2_display_t, buffer_handle_t, int32_t>);
+  case HWC2_FUNCTION_SET_POWER_MODE:
+    return ToHook<HWC2_PFN_SET_POWER_MODE>(
+        &func_hook<HWC2_PFN_SET_POWER_MODE, HWC2_FUNCTION_SET_POWER_MODE,
+                   hwc2_display_t, int32_t>);
+  case HWC2_FUNCTION_SET_VSYNC_ENABLED:
+    return ToHook<HWC2_PFN_SET_VSYNC_ENABLED>(
+        &func_hook<HWC2_PFN_SET_VSYNC_ENABLED, HWC2_FUNCTION_SET_VSYNC_ENABLED,
+                   hwc2_display_t, int32_t>);
+  case HWC2_FUNCTION_VALIDATE_DISPLAY:
+    return ToHook<HWC2_PFN_VALIDATE_DISPLAY>(
+        &func_hook<HWC2_PFN_VALIDATE_DISPLAY, HWC2_FUNCTION_VALIDATE_DISPLAY,
+                   hwc2_display_t, uint32_t *, uint32_t *>);
+  case HWC2_FUNCTION_SET_CURSOR_POSITION:
+    return ToHook<HWC2_PFN_SET_CURSOR_POSITION>(
+        &func_hook<HWC2_PFN_SET_CURSOR_POSITION,
+                   HWC2_FUNCTION_SET_CURSOR_POSITION, hwc2_display_t,
+                   hwc2_layer_t, int32_t, int32_t>);
+  case HWC2_FUNCTION_SET_LAYER_BUFFER:
+    return ToHook<HWC2_PFN_SET_LAYER_BUFFER>(
+        &func_hook<HWC2_PFN_SET_LAYER_BUFFER, HWC2_FUNCTION_SET_LAYER_BUFFER,
+                   hwc2_display_t, hwc2_layer_t, buffer_handle_t, int32_t>);
+  case HWC2_FUNCTION_SET_LAYER_SURFACE_DAMAGE:
+    return ToHook<HWC2_PFN_SET_LAYER_SURFACE_DAMAGE>(
+        &func_hook<HWC2_PFN_SET_LAYER_SURFACE_DAMAGE,
+                   HWC2_FUNCTION_SET_LAYER_SURFACE_DAMAGE, hwc2_display_t,
+                   hwc2_layer_t, hwc_region_t>);
+  case HWC2_FUNCTION_SET_LAYER_BLEND_MODE:
+    return ToHook<HWC2_PFN_SET_LAYER_BLEND_MODE>(
+        &func_hook<HWC2_PFN_SET_LAYER_BLEND_MODE,
+                   HWC2_FUNCTION_SET_LAYER_BLEND_MODE, hwc2_display_t,
+                   hwc2_layer_t, int32_t>);
+  case HWC2_FUNCTION_SET_LAYER_COLOR:
+    return ToHook<HWC2_PFN_SET_LAYER_COLOR>(
+        &func_hook<HWC2_PFN_SET_LAYER_COLOR, HWC2_FUNCTION_SET_LAYER_COLOR,
+                   hwc2_display_t, hwc2_layer_t, hwc_color_t>);
+  case HWC2_FUNCTION_SET_LAYER_COMPOSITION_TYPE:
+    return ToHook<HWC2_PFN_SET_LAYER_COMPOSITION_TYPE>(
+        &func_hook<HWC2_PFN_SET_LAYER_COMPOSITION_TYPE,
+                   HWC2_FUNCTION_SET_LAYER_COMPOSITION_TYPE, hwc2_display_t,
+                   hwc2_layer_t, int32_t>);
+  case HWC2_FUNCTION_SET_LAYER_DATASPACE:
+    return ToHook<HWC2_PFN_SET_LAYER_DATASPACE>(
+        &func_hook<HWC2_PFN_SET_LAYER_DATASPACE,
+                   HWC2_FUNCTION_SET_LAYER_DATASPACE, hwc2_display_t,
+                   hwc2_layer_t, int32_t>);
+  case HWC2_FUNCTION_SET_LAYER_DISPLAY_FRAME:
+    return ToHook<HWC2_PFN_SET_LAYER_DISPLAY_FRAME>(
+        &func_hook<HWC2_PFN_SET_LAYER_DISPLAY_FRAME,
+                   HWC2_FUNCTION_SET_LAYER_DISPLAY_FRAME, hwc2_display_t,
+                   hwc2_layer_t, hwc_rect_t>);
+  case HWC2_FUNCTION_SET_LAYER_PLANE_ALPHA:
+    return ToHook<HWC2_PFN_SET_LAYER_PLANE_ALPHA>(
+        &func_hook<HWC2_PFN_SET_LAYER_PLANE_ALPHA,
+                   HWC2_FUNCTION_SET_LAYER_PLANE_ALPHA, hwc2_display_t,
+                   hwc2_layer_t, float>);
+  case HWC2_FUNCTION_SET_LAYER_SIDEBAND_STREAM:
+    return ToHook<HWC2_PFN_SET_LAYER_SIDEBAND_STREAM>(
+        &func_hook<HWC2_PFN_SET_LAYER_SIDEBAND_STREAM,
+                   HWC2_FUNCTION_SET_LAYER_SIDEBAND_STREAM, hwc2_display_t,
+                   hwc2_layer_t, const native_handle_t *>);
+  case HWC2_FUNCTION_SET_LAYER_SOURCE_CROP:
+    return ToHook<HWC2_PFN_SET_LAYER_SOURCE_CROP>(
+        &func_hook<HWC2_PFN_SET_LAYER_SOURCE_CROP,
+                   HWC2_FUNCTION_SET_LAYER_SOURCE_CROP, hwc2_display_t,
+                   hwc2_layer_t, hwc_frect_t>);
+  case HWC2_FUNCTION_SET_LAYER_TRANSFORM:
+    return ToHook<HWC2_PFN_SET_LAYER_TRANSFORM>(
+        &func_hook<HWC2_PFN_SET_LAYER_TRANSFORM,
+                   HWC2_FUNCTION_SET_LAYER_TRANSFORM, hwc2_display_t,
+                   hwc2_layer_t, int32_t>);
+  case HWC2_FUNCTION_SET_LAYER_VISIBLE_REGION:
+    return ToHook<HWC2_PFN_SET_LAYER_VISIBLE_REGION>(
+        &func_hook<HWC2_PFN_SET_LAYER_VISIBLE_REGION,
+                   HWC2_FUNCTION_SET_LAYER_VISIBLE_REGION, hwc2_display_t,
+                   hwc2_layer_t, hwc_region_t>);
+  case HWC2_FUNCTION_SET_LAYER_Z_ORDER:
+    return ToHook<HWC2_PFN_SET_LAYER_Z_ORDER>(
+        &func_hook<HWC2_PFN_SET_LAYER_Z_ORDER, HWC2_FUNCTION_SET_LAYER_Z_ORDER,
+                   hwc2_display_t, hwc2_layer_t, uint32_t>);
+  default:
+    return NULL;
+  }
+  return NULL;
 }
 
 // TODO What DRM info to we real need?
@@ -666,9 +848,8 @@ int HwcShim::HookClose(struct hw_device_t* device)
     return device ? 0 : -ENOENT;
 }
 
-int HwcShim::HookPrepare(struct hwc_composer_device_1 *dev, size_t numDisplays,
-                            hwc_display_contents_1_t** displays)
-{
+int HwcShim::HookPrepare(struct hwc2_device *dev, size_t numDisplays,
+                         hwcval_display_contents_t **displays) {
     ATRACE_CALL();
     HWCLOGV("HwcShim::HookPrepare");
 
@@ -683,9 +864,8 @@ int HwcShim::HookPrepare(struct hwc_composer_device_1 *dev, size_t numDisplays,
 // This way the gralloc handles are known to be good which may not be the case
 // (I think) if composition in done when HWC calls drm to pass the fb to the
 // display
-int HwcShim::HookSet(struct hwc_composer_device_1 *dev, size_t numDisplays,
-                        hwc_display_contents_1_t** displays)
-{
+int HwcShim::HookSet(struct hwc2_device *dev, size_t numDisplays,
+                     hwcval_display_contents_t **displays) {
     ATRACE_CALL();
     HWCLOGV("HwcShim::HookSet");
     int ret;
@@ -699,62 +879,55 @@ int HwcShim::HookSet(struct hwc_composer_device_1 *dev, size_t numDisplays,
     return ret;
 }
 
-int HwcShim::HookEventControl(struct hwc_composer_device_1 *dev,int disp,
-                                int event, int enabled)
-{
+int HwcShim::HookEventControl(struct hwc2_device *dev, int disp, int event,
+                              int enabled) {
     ATRACE_CALL();
     HWCLOGV("HwcShim::HookEventControl");
     int ret = GetComposerShim(dev)->OnEventControl(disp, event, enabled);
     return ret;
 }
 
-int HwcShim::HookBlank(struct hwc_composer_device_1 *dev,int disp, int blank)
-{
+int HwcShim::HookBlank(struct hwc2_device *dev, int disp, int blank) {
     ATRACE_CALL();
     HWCLOGV("HwcShim::HookBlank");
     int ret = GetComposerShim(dev)->OnBlank(disp, blank);
     return ret;
 }
 
-int HwcShim::HookQuery(struct hwc_composer_device_1 *dev,int what, int* value)
-{
+int HwcShim::HookQuery(struct hwc2_device *dev, int what, int *value) {
     HWCLOGV("HwcShim::HookQuery");
     int ret = GetComposerShim(dev)->OnQuery(what, value);
     return ret;
 }
 
-void HwcShim::HookRegisterProcs(struct hwc_composer_device_1 *dev, hwc_procs_t const* procs)
-{
-    HWCLOGV("HwcShim::HookProcs %p", dev);
+void HwcShim::HookRegisterProcs(struct hwc2_device *dev,
+                                hwcval_procs_t const *procs) {
+  ALOGE("HwcShim::HookProcs %p", dev);
     GetComposerShim(dev)->OnRegisterProcs(procs);
 }
 
-void HwcShim::HookDump(struct hwc_composer_device_1 *dev,char *buff, int buff_len)
-{
+void HwcShim::HookDump(struct hwc2_device *dev, char *buff, int buff_len) {
     HWCLOGV("HwcShim::HookDump");
     GetComposerShim(dev)->OnDump(buff, buff_len);
 }
 
-int HwcShim::HookGetDisplayConfigs(struct hwc_composer_device_1 *dev,int disp,
-                                   uint32_t* configs, size_t* numConfigs)
-{
+int HwcShim::HookGetDisplayConfigs(struct hwc2_device *dev, int disp,
+                                   uint32_t *configs, size_t *numConfigs) {
     HWCLOGV_COND(eLogHarness, "HwcShim::HookGetDisplayConfigs");
     int ret = GetComposerShim(dev)->OnGetDisplayConfigs(disp, configs, numConfigs);
     return ret;
 }
 
-int HwcShim::HookGetActiveConfig(struct hwc_composer_device_1 *dev,int disp)
-{
+int HwcShim::HookGetActiveConfig(struct hwc2_device *dev, int disp) {
     HWCLOGV_COND(eLogHarness, "HwcShim::HookGetActiveConfig");
     int ret = GetComposerShim(dev)->OnGetActiveConfig(disp);
     return ret;
 }
 
-int HwcShim::HookGetDisplayAttributes(struct hwc_composer_device_1 *dev,
-                                        int disp, uint32_t config,
-                                        const uint32_t* attributes,
-                                        int32_t* values)
-{
+int HwcShim::HookGetDisplayAttributes(struct hwc2_device *dev, int disp,
+                                      uint32_t config,
+                                      const uint32_t *attributes,
+                                      int32_t *values) {
     HWCLOGV_COND(eLogHarness, "HwcShim::HookGetDisplayAttributes");
     int ret = GetComposerShim(dev)->OnGetDisplayAttributes(disp, config, attributes, values);
     return ret;
@@ -788,8 +961,8 @@ void HwcShim::EndCallTime(const char * function)
 //    HWCLOGI("Logged end time %d", (int) (callTimeDuration / 1000));
 }
 
-int HwcShim::OnPrepare(size_t numDisplays, hwc_display_contents_1_t** displays)
-{
+int HwcShim::OnPrepare(size_t numDisplays,
+                       hwcval_display_contents_t **displays) {
     HWCLOGV("HwcShim::OnPrepare");
     int ret;
 
@@ -799,7 +972,8 @@ int HwcShim::OnPrepare(size_t numDisplays, hwc_display_contents_1_t** displays)
 
     {
         Hwcval::PushThreadState ts("onPrepare");
-        ret = hwc_composer_device->prepare(hwc_composer_device, numDisplays, displays);
+        // ret = hwc_composer_device->prepare(hwc_composer_device, numDisplays,
+        // displays);
     }
 
     mHwc1->CheckOnPrepareExit(numDisplays, displays);
@@ -809,9 +983,7 @@ int HwcShim::OnPrepare(size_t numDisplays, hwc_display_contents_1_t** displays)
     return ret;
 }
 
-
-int HwcShim::OnSet(size_t numDisplays, hwc_display_contents_1_t** displays)
-{
+int HwcShim::OnSet(size_t numDisplays, hwcval_display_contents_t **displays) {
     HWCLOGI("HwcShim::OnSet - called");
 
     bool checkedOnEntry = false;
@@ -827,7 +999,8 @@ int HwcShim::OnSet(size_t numDisplays, hwc_display_contents_1_t** displays)
 
     {
         Hwcval::PushThreadState ts("onSet");
-        ret = hwc_composer_device->set(hwc_composer_device, numDisplays, displays);
+        // ret = hwc_composer_device->set(hwc_composer_device, numDisplays,
+        // displays);
     }
 
     EndCallTime("Set()");
@@ -852,7 +1025,8 @@ int HwcShim::OnEventControl(int disp, int event, int enabled)
     }
     else
     {
-        status = hwc_composer_device->eventControl(hwc_composer_device, disp, event, enabled);
+      // status = hwc_composer_device->eventControl(hwc_composer_device, disp,
+      // event, enabled);
     }
 
     HWCLOGV("HwcShim::OnEventControl returning status=%d", status);
@@ -862,7 +1036,8 @@ int HwcShim::OnEventControl(int disp, int event, int enabled)
 int HwcShim::EnableVSync(int disp, bool enable)
 {
     HWCLOGI("HwcShim::EnableVSync - HWC_EVENT_VSYNC: disp[%d] %s VSYNC event", disp, enable ? "enabling" : "disabling");
-    return hwc_composer_device->eventControl(hwc_composer_device, disp, HWC_EVENT_VSYNC, enable);
+    return -1; // hwc_composer_device->eventControl(hwc_composer_device, disp,
+               // HWC_EVENT_VSYNC, enable);
 }
 
 int HwcShim::OnBlank(int disp, int blank)
@@ -884,7 +1059,7 @@ int HwcShim::OnBlank(int disp, int blank)
 
     {
         Hwcval::PushThreadState ts("onBlank");
-        ret = hwc_composer_device->blank(hwc_composer_device, disp, blank);
+        // ret = hwc_composer_device->blank(hwc_composer_device, disp, blank);
     }
 
 #if defined(HWC_DEVICE_API_VERSION_1_4)
@@ -903,25 +1078,39 @@ int HwcShim::OnBlank(int disp, int blank)
 
 int HwcShim::OnQuery(int what, int* value)
 {
-    int ret = hwc_composer_device->query(hwc_composer_device, what, value);
+  int ret = -1; // hwc_composer_device->query(hwc_composer_device, what, value);
     return ret;
 }
 
-void HwcShim::OnRegisterProcs(hwc_procs_t const* procs)
-{
+void HwcShim::OnRegisterProcs(hwcval_procs_t const *procs) {
     mShimProcs.orig_procs = procs;
-    hwc_composer_device->registerProcs(hwc_composer_device, &mShimProcs.procs);
+    // hwc_composer_device->registerProcs(hwc_composer_device,
+    // &mShimProcs.procs);
 }
 
 void HwcShim::OnDump(char *buff, int buff_len)
 {
-    hwc_composer_device->dump(hwc_composer_device, buff, buff_len);
+  // hwc_composer_device->dump(hwc_composer_device, buff, buff_len);
 }
 
 int HwcShim::OnGetDisplayConfigs(int disp, uint32_t* configs, size_t* numConfigs)
 {
-    int ret = hwc_composer_device->getDisplayConfigs(hwc_composer_device, disp,
-                                                     configs, numConfigs);
+  int ret =
+      true; // hwc_composer_device->getDisplayConfigs(hwc_composer_device, disp,
+  //                                configs, numConfigs);
+
+  HWCLOGD("HwcShim::OnGetDisplayConfigs enter disp %d", disp);
+  if (disp != 0)
+    return false;
+  hwc2_device_t *hwc2_dvc =
+      reinterpret_cast<hwc2_device_t *>(hwc_composer_device);
+  HWC2_PFN_GET_DISPLAY_CONFIGS temp =
+      reinterpret_cast<HWC2_PFN_GET_DISPLAY_CONFIGS>(
+          hwc2_dvc->getFunction(hwc2_dvc, HWC2_FUNCTION_GET_DISPLAY_CONFIGS));
+  hwc2_config_t *numConfig2s;
+  temp(hwc2_dvc, disp, configs, numConfig2s);
+  numConfigs = numConfigs;
+
     HWCLOGD("HwcShim::OnGetDisplayConfigs D%d %d configs returned", disp, *numConfigs);
     mHwc1->GetDisplayConfigsExit(disp, configs, *numConfigs);
     return ret;
@@ -929,7 +1118,8 @@ int HwcShim::OnGetDisplayConfigs(int disp, uint32_t* configs, size_t* numConfigs
 
 int HwcShim::OnGetActiveConfig(int disp)
 {
-    int ret = hwc_composer_device->getActiveConfig(hwc_composer_device, disp);
+  int ret =
+      -1; // hwc_composer_device->getActiveConfig(hwc_composer_device, disp);
     mHwc1->GetActiveConfigExit(disp, ret);
     return ret;
 }
@@ -941,9 +1131,22 @@ int HwcShim::OnGetDisplayAttributes(int disp, uint32_t config,
     int ret;
     {
         Hwcval::PushThreadState ts("getDisplayAttributes");
-        ret = hwc_composer_device->getDisplayAttributes(hwc_composer_device, disp,
-                                                            config, attributes,
-                                                            values);
+        if (disp != 0)
+          return false;
+        hwc2_device_t *hwc2_dvc =
+            reinterpret_cast<hwc2_device_t *>(hwc_composer_device);
+        HWC2_PFN_GET_DISPLAY_ATTRIBUTE temp =
+            reinterpret_cast<HWC2_PFN_GET_DISPLAY_ATTRIBUTE>(
+                hwc2_dvc->getFunction(hwc2_dvc,
+                                      HWC2_FUNCTION_GET_DISPLAY_ATTRIBUTE));
+        //    hwc2_config_t *numConfig2s;
+        temp(hwc2_dvc, disp, config, *attributes, values);
+
+        /*        ret =
+           hwc_composer_device->getDisplayAttributes(hwc_composer_device, disp,
+                                                                    config,
+           attributes,
+                                                                    values);*/
     }
 
     mHwc1->GetDisplayAttributesExit(disp, config, attributes, values);

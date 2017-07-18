@@ -29,19 +29,13 @@ Notes:
 ****************************************************************************/
 
 #include "DrmShimTransform.h"
-#include "hardware/hwcomposer.h"
+#include "hardware/hwcomposer2.h"
 #include "HwcTestDefs.h"
 #include "HwcTestUtil.h"
 #include "HwcTestState.h"
 #include "DrmShimBuffer.h"
 #include "HwcTestCrtc.h"
 #include "HwcvalHwc1Content.h"
-
-#ifdef HWCVAL_USE_IVPAPI_H
-#include "iVP_api.h"
-#else
-#include "iVP.h"
-#endif
 
 #include <math.h>
 
@@ -150,21 +144,16 @@ DrmShimTransform::DrmShimTransform(double sw, double sh, double dw, double dh)
 }
 
 // Transform creation for SF composition
-DrmShimTransform::DrmShimTransform(android::sp<DrmShimBuffer>& buf, uint32_t layerIx, const hwc_layer_1_t* layer)
-  : mBuf(buf),
-    mZOrder(uint64_t (layerIx) << MOST_SIGNIFICANT_Z_ORDER_BITS),
-    mZOrderLevels(1),
-    mSourcecropf(layer->sourceCropf),
-    mXoffset(layer->displayFrame.left),
-    mYoffset(layer->displayFrame.top),
-    mTransform(layer->transform),
-    mLayerIndex(eNoLayer),
-    mDecrypt(false),
-    mBlending(Hwc1BlendingTypeToHwcval(layer->blending)),
-    mHasPixelAlpha(buf.get() ? buf->FormatHasPixelAlpha() : false),
-    mPlaneAlpha(float(layer->planeAlpha) / 255.0),
-    mSources(0)
-{
+DrmShimTransform::DrmShimTransform(android::sp<DrmShimBuffer> &buf,
+                                   uint32_t layerIx,
+                                   const hwcval_layer_t *layer)
+    : mBuf(buf), mZOrder(uint64_t(layerIx) << MOST_SIGNIFICANT_Z_ORDER_BITS),
+      mZOrderLevels(1), mSourcecropf(layer->sourceCropf),
+      mXoffset(layer->displayFrame.left), mYoffset(layer->displayFrame.top),
+      mTransform(layer->transform), mLayerIndex(eNoLayer), mDecrypt(false),
+      mBlending(Hwc1BlendingTypeToHwcval(layer->blending)),
+      mHasPixelAlpha(buf.get() ? buf->FormatHasPixelAlpha() : false),
+      mPlaneAlpha(float(layer->planeAlpha) / 255.0), mSources(0) {
     const hwc_frect_t& sourcecropf = layer->sourceCropf;
     const hwc_rect_t& displayframe = layer->displayFrame;
     uint32_t transform = layer->transform;
@@ -227,7 +216,7 @@ DrmShimTransform::DrmShimTransform(android::sp<DrmShimBuffer>& buf, uint32_t lay
 const int DrmShimTransform::ivpRotationTable[] = {eTransformNone, eTransformRot90, eTransformRot180, eTransformRot270};
 const int DrmShimTransform::ivpFlipTable[] = {eTransformNone, eTransformFlipH, eTransformFlipV};
 
-
+#if 0
 // Transform creation for iVP composition
 DrmShimTransform::DrmShimTransform(android::sp<DrmShimBuffer>& buf, uint32_t layerIx, const iVP_layer_t* layer)
   : mBuf(buf),
@@ -331,7 +320,7 @@ DrmShimTransform::DrmShimTransform(android::sp<DrmShimBuffer>& buf, uint32_t lay
     }
     HWCLOGD_COND(eLogBuffer, "DrmShimTransform::DrmShimTransform(&buf, int, ivp_layer) Created transform@%p", this);
 }
-
+#endif
 DrmShimTransform DrmShimTransform::Inverse()
 {
     DrmShimTransform result;
@@ -1052,7 +1041,7 @@ hwc_rect_t InverseTransformRect(hwc_rect_t& rect, const Hwcval::ValLayer& layer)
 
     // The subject rect in the dest frame of reference,
     // expressed as a transform so we can combine it.
-    hwc_layer_1_t videoDfLayer;
+    hwcval_layer_t videoDfLayer;
     videoDfLayer.sourceCropf = ToFRect(rect);
     videoDfLayer.displayFrame = rect;
     videoDfLayer.transform = 0;

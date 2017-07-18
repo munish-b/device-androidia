@@ -19,8 +19,6 @@ LOCAL_SRC_FILES := \
     DrmShimPropertyManager.cpp
 
 LOCAL_SHARED_LIBRARIES += \
-    libgrallocclient \
-    libivp \
     libdl \
     libcutils \
     libutils \
@@ -33,7 +31,11 @@ LOCAL_STATIC_LIBRARIES +=
 LOCAL_C_INCLUDES += \
     $(VAL_HWC_HWC_COMMON_INC_PATH) \
     $(LOCAL_PATH) \
-    $(LOCAL_PATH)/../hwc_shim/
+    $(LOCAL_PATH)/../hwc_shim/ \
+    $(VAL_HWC_TOP)/tests/hwc/hwcharness \
+    $(VAL_HWC_TOP)/../../../libdrm/intel/ \
+    $(VAL_HWC_TOP)/libhwcservice \
+    $(VAL_HWC_TOP)/../../common/utils/val
 
 LOCAL_LDLIBS += -ldl
 

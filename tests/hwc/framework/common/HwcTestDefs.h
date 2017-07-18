@@ -196,12 +196,6 @@ Notes:          This hwc_shim.h/c are used in both c and cpp if the drm shim
 // has been newly plugged or not.
 #define HWCVAL_HOTPLUG_DETECTION_WINDOW_NS (2 * HWCVAL_SEC_TO_NS)
 
-// Do we have media timestamps in gralloc?
-#include "ufo/gralloc.h"
-#ifdef INTEL_UFO_GRALLOC_API_LEVEL_MINOR
-#define HWCVAL_GRALLOC_HAS_MEDIA_TIMESTAMPS
-#endif
-
 // Enable Render Compression on BXT builds
 #ifdef HWCVAL_BROXTON
 #define HWCVAL_ENABLE_RENDER_COMPRESSION

@@ -35,7 +35,7 @@
 #include "HwcTestState.h"
 #include "HwcTestUtil.h"
 #include <ui/GraphicBuffer.h>
-#include <ufo/graphics.h>
+#include <graphics.h>
 #include <DrmShimBuffer.h>
 
 Hwch::Rect::Rect(uint32_t l, uint32_t t, uint32_t r, uint32_t b)
@@ -454,8 +454,8 @@ void Hwch::Layer::SetSkip(bool skip, bool needBuffer)
         mBufs = 0;
     }
 }
-
-void Hwch::Layer::AssignLayerProperties(hwc_layer_1_t& hwLayer, buffer_handle_t handle)
+#if 0
+void Hwch::Layer::AssignLayerProperties(hwc2_layer_t& hwLayer, buffer_handle_t handle)
 {
     hwLayer.handle          = handle;
     hwLayer.compositionType = mCurrentCompType;
@@ -477,9 +477,9 @@ void Hwch::Layer::AssignLayerProperties(hwc_layer_1_t& hwLayer, buffer_handle_t 
                                  // so we must wait until after Prepare to do this.
     hwLayer.releaseFenceFd = -1; // This will be returned by HWC.
 }
-
-void Hwch::Layer::AssignVisibleRegions(hwc_layer_1_t& hwLayer, hwc_rect_t* visibleRegions, uint32_t& visibleRegionCount)
-{
+#endif
+hwc_rect_t *Hwch::Layer::AssignVisibleRegions(hwc_rect_t *visibleRegions,
+                                              uint32_t &visibleRegionCount) {
     // Allocate space for visibleRegionScreen
     int numRects = mVisibleRegion.size();
 
@@ -493,27 +493,28 @@ void Hwch::Layer::AssignVisibleRegions(hwc_layer_1_t& hwLayer, hwc_rect_t* visib
 
     if (numRects == 0)
     {
-        hwLayer.visibleRegionScreen.numRects = 1;
-        hwLayer.visibleRegionScreen.rects = vr_rects;
-        *vr_rects = hwLayer.displayFrame;
+      vr_rects->left = mDisplayFrame.left;
+      vr_rects->top = mDisplayFrame.top;
+      vr_rects->right = mDisplayFrame.right;
+      vr_rects->bottom = mDisplayFrame.bottom;
         ++visibleRegionCount;
     }
     else
     {
-        hwLayer.visibleRegionScreen.numRects = numRects;
-        hwLayer.visibleRegionScreen.rects    = vr_rects;
-
         // Copy visibleRegionScreen to dc->hwLayers[i].visibleRegionScreen
         for (int r = 0; r < numRects; r++)
         {
-            vr_rects[r]   = mVisibleRegion[r];
+          vr_rects[r].left = mVisibleRegion[r].left;
+          vr_rects[r].top = mVisibleRegion[r].top;
+          vr_rects[r].right = mVisibleRegion[r].right;
+          vr_rects[r].bottom = mVisibleRegion[r].bottom;
         }
         visibleRegionCount += numRects;
     }
+    return vr_rects;
 }
 
-void Hwch::Layer::Send(hwc_layer_1_t& hwLayer, hwc_rect_t* visibleRegions, uint32_t& visibleRegionCount)
-{
+buffer_handle_t Hwch::Layer::Send() {
     // The handle from the record file is now the key
     buffer_handle_t handle;
     HWCLOGV_COND(eLogHarness, "Sending layer %s @%p", mName.string(), this);
@@ -571,14 +572,15 @@ void Hwch::Layer::Send(hwc_layer_1_t& hwLayer, hwc_rect_t* visibleRegions, uint3
     }
 
     // Setup the layer properties and the visible regions
-    AssignLayerProperties(hwLayer, handle);
-    AssignVisibleRegions(hwLayer, visibleRegions, visibleRegionCount);
+    // AssignLayerProperties(hwLayer, handle);
+    // AssignVisibleRegions(hwLayer, visibleRegions, visibleRegionCount);
 
     if (mPattern.get() && (mPattern->IsAllTransparent()))
     {
         HWCLOGV_COND(eLogHarness, "SetFutureTransparentLayer %p", handle);
         HwcTestState::getInstance()->SetFutureTransparentLayer(handle);
     }
+    return handle;
 }
 
 void Hwch::Layer::UpdateRCResolve()
@@ -663,8 +665,11 @@ void Hwch::Layer::UpdateRCResolve()
 #endif
 }
 
-void Hwch::Layer::SetAcquireFence(hwc_layer_1_t& hwLayer, android::sp<Hwch::TimelineThread>& timelineThread, int mergeFence)
-{
+void
+Hwch::Layer::SetAcquireFence(hwc2_layer_t &hwLayer,
+                             android::sp<Hwch::TimelineThread> &timelineThread,
+                             int mergeFence) {
+#if 0
     if (mHwcAcquireDelay > 0)
     {
         // Get time at which fence will signal, in timeline units (ms at time of writing, but could be changed in HwchTimelineThread).
@@ -691,6 +696,7 @@ void Hwch::Layer::SetAcquireFence(hwc_layer_1_t& hwLayer, android::sp<Hwch::Time
         HWCLOGD_COND(eLogTimeline, "Hwch::Layer::SetAcquireFence Applied merge fence %d to layer %s", mergeFence, mName.string());
         hwLayer.acquireFenceFd = mergeFence;
     }
+#endif
 }
 
 void Hwch::Layer::PostFrame(uint32_t compType, int releaseFenceFd)

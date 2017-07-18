@@ -61,7 +61,7 @@ namespace Hwch
 #ifdef HWCVAL_BUILD_HWCSERVICE_API
             HWCSHANDLE mHwcsHandle;
 #else
-            android::sp<intel::ufo::hwc::services::IVideoControl> mVideoControl;
+      android::sp<hwcomposer::IVideoControl> mVideoControl;
 #endif
             bool mProtectedContentStarted;
     };

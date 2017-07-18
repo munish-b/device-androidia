@@ -39,19 +39,13 @@ namespace android
     class String8;
 };
 
-namespace intel {
-namespace ufo {
-namespace hwc {
-namespace services {
+namespace hwcomposer {
 
     class IDiagnostic;
     class IDisplayControl;
     class IVideoControl;
 
 } // namespace services
-} // namespace hwc
-} // namespace ufo
-} // namespace intel
 
 namespace Hwcval
 {
@@ -61,10 +55,12 @@ namespace Hwcval
     class AbstractHwcServiceSubset : public android::IInterface
     {
     public:
-        virtual android::sp<intel::ufo::hwc::services::IDisplayControl> getDisplayControl(uint32_t display) = 0;
-        virtual android::sp<intel::ufo::hwc::services::IVideoControl>   getVideoControl() = 0;
+      virtual android::sp<hwcomposer::IDisplayControl>
+      getDisplayControl(uint32_t display) = 0;
+      virtual android::sp<hwcomposer::IVideoControl> getVideoControl() = 0;
 #ifdef HWCVAL_MDSEXTMODECONTROL
-        virtual android::sp<intel::ufo::hwc::services::IMDSExtModeControl> getMDSExtModeControl() = 0;
+      virtual android::sp<hwcomposer::IMDSExtModeControl>
+      getMDSExtModeControl() = 0;
 #endif
     };
 

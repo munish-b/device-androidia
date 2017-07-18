@@ -28,11 +28,13 @@ Notes:
 #ifndef __HwcTestKernel_h__
 #define __HwcTestKernel_h__
 
+#define HWCVAL_ABSTRACTLOG_EXISTS 1
+
 // NOTE: HwcTestDefs.h sets defines which are used in the HWC and DRM stack.
 // -> to be included before any other HWC or DRM header file.
 #include "HwcTestDefs.h"
 
-#include "hardware/hwcomposer.h"
+#include "hardware/hwcomposer2.h"
 #include <utils/SortedVector.h>
 #include <utils/KeyedVector.h>
 #include <utils/Mutex.h>
@@ -52,14 +54,6 @@ Notes:
 
 #include "HwcTestProtectionChecker.h"
 #include "HwcTestCompValThread.h"
-#include "GrallocClient.h"
-
-#ifdef HWCVAL_USE_IVPAPI_H
-#include "iVP_api.h"
-#else
-#include "iVP.h"
-#endif
-
 #ifdef HWCVAL_ABSTRACTCOMPOSITIONCHECKER_EXISTS
 #include "AbstractCompositionChecker.h"
 #endif
@@ -87,9 +81,9 @@ struct drm_mode_set_display;
 #define EXPORT_API __attribute__ ((visibility("default")))
 class EXPORT_API HwcTestKernel
 #ifdef HWCVAL_ABSTRACTCOMPOSITIONCHECKER_EXISTS
-  : public ::intel::ufo::hwc::validation::AbstractCompositionChecker
+    : public hwcomposer::hwc::validation::AbstractCompositionChecker
 #endif
-{
+      {
 public:
     struct BoKey
     {
@@ -212,7 +206,6 @@ protected:
     static const char* mComposerFilter;
 
     /// Gralloc
-    ::intel::ufo::gralloc::GrallocClient& mGralloc;
     struct gralloc_module_t* mGrallocModule;
 
     /// Target buffers for emulation of SF composition
@@ -331,18 +324,11 @@ public:
 
     // Complete Widi state transition to disabled (if started)
     EXPORT_API void CompleteWidiDisable();
-
-    // iVP call
-    // Returns true if the iVP call should be skipped
-    EXPORT_API bool NotifyIvpExecEntry(iVPCtxID *ctx, iVP_layer_t *primarySurf,
-            iVP_layer_t *subSurfs, unsigned int numOfSubs, iVP_layer_t  *outSurf, bool syncFlag);
-    EXPORT_API void NotifyIvpExecExit(iVPCtxID *ctx, iVP_layer_t *primarySurf,
-            iVP_layer_t *subSurfs, unsigned int numOfSubs, iVP_layer_t  *outSurf, bool syncFlag, int retval);
-
 #ifdef HWCVAL_ABSTRACTCOMPOSITIONCHECKER_EXISTS
     // Composition check
     // From AbstractCompositionChecker
-    typedef ::intel::ufo::hwc::validation::AbstractCompositionChecker::ValLayer HwcValLayer;
+    typedef hwcomposer::hwc::validation::AbstractCompositionChecker::ValLayer
+        HwcValLayer;
     virtual void* CreateContext(const char* composer);
     virtual void AddSource(void* ctx, const HwcValLayer& layer, const char* description);
     virtual void CheckComposition(void* ctx, const HwcValLayer& layer, const char* description);
@@ -422,9 +408,6 @@ public:
 
     void StopThreads();
 
-    // Return pointer to gralloc
-    ::intel::ufo::gralloc::GrallocClient& GetGralloc();
-
     /// Processing functions for Gem events
     void DoGem(const Hwcval::Work::GemOpenItem& item);
     void DoGem(const Hwcval::Work::GemCloseItem& item);
@@ -500,8 +483,10 @@ public:
     void DoStall(Hwcval::StallType ix, Hwcval::Mutex* mtx = 0);
 
     // Memory optimization mode
-    void CheckSetOptimizationModeEnter(::intel::ufo::hwc::services::IVideoControl::EOptimizationMode mode);
-    void CheckSetOptimizationModeExit(int status, ::intel::ufo::hwc::services::IVideoControl::EOptimizationMode mode );
+    void CheckSetOptimizationModeEnter(
+        hwcomposer::IVideoControl::EOptimizationMode mode);
+    void CheckSetOptimizationModeExit(
+        int status, hwcomposer::IVideoControl::EOptimizationMode mode);
 
     // Hwc options
     const char* GetHwcOptionStr(const char* optionName);
@@ -577,16 +562,17 @@ protected:
     bool BelievedEmpty(uint32_t width, uint32_t height);
 
 private:
-    /// Translate IVP blend to HWC
-    uint32_t GetBlending(iVP_blend_t blend);
 
     /// Look for excessive scale factors
     bool CheckIvpScaling(iVP_layer_t *ivpLayer);
 
     /// Check consistency of one set of coordinates input to IVP with SF layer
-    android::sp<DrmShimBuffer> IvpCoordinateCheck(DrmShimTransformVector& contributors,
-        android::Vector<hwc_layer_1_t>& sfLayers,
-        uint32_t layerIx, iVP_layer_t* ivpLayer, buffer_handle_t outHandle, bool& err, const char* description, int param);
+    android::sp<DrmShimBuffer>
+    IvpCoordinateCheck(DrmShimTransformVector &contributors,
+                       android::Vector<hwcval_layer_t> &sfLayers,
+                       uint32_t layerIx, iVP_layer_t *ivpLayer,
+                       buffer_handle_t outHandle, bool &err,
+                       const char *description, int param);
 
     /// Get DrmShimBuffer for the handle, and check encryption state has not changed
     android::sp<DrmShimBuffer> UpdateIvpBufferState(buffer_handle_t handle);
@@ -784,7 +770,5 @@ inline bool operator<(const HwcTestKernel::BoKey& lhs, const HwcTestKernel::BoKe
 
     return (lhscmp.i < rhscmp.i);
 }
-
-::intel::ufo::gralloc::GrallocClient& GetGralloc();
 
 #endif // __HwcTestKernel_h__

@@ -16,8 +16,8 @@ VAL_HWC_FEATURE := hwc
 
 LOCAL_SRC_FILES:=\
     hwc_shim.cpp \
-    HwcTimeline.cpp \
     HwcDrmShimCallback.cpp
+    #HwcTimeline.cpp \
 
 LOCAL_CFLAGS += -rdynamic -O0  -DHWCVAL_LOG_$(HWCVAL_LOG_VERBOSITY) \
     -DHWCVAL_LOG_$(HWCVAL_LOG_DESTINATION) \
@@ -27,7 +27,12 @@ LOCAL_C_INCLUDES += \
     $(LOCAL_PATH) \
     $(LOCAL_PATH)/../common/ \
     $(LOCAL_PATH)/../drm_shim/ \
-    $(LOCAL_PATH)/../mds_shim/
+    $(LOCAL_PATH)/../mds_shim/ \
+    $(VAL_HWC_TOP)/tests/hwc/hwcharness \
+    $(VAL_HWC_TOP)/../../../libdrm/intel/ \
+    $(VAL_HWC_TOP)/libhwcservice \
+    $(VAL_HWC_TOP)/../../common/utils/val
+
 
 # Compile in the widi components if needed
 ifneq ($(filter true, $(INTEL_WIDI_BAYTRAIL) $(INTEL_WIDI_GEN)),)
@@ -37,8 +42,6 @@ ifneq ($(filter true, $(INTEL_WIDI_BAYTRAIL) $(INTEL_WIDI_GEN)),)
 endif
 
 LOCAL_SHARED_LIBRARIES += \
-    libgrallocclient \
-    libivp \
     libdrm \
     libdrm_intel \
     libdl \

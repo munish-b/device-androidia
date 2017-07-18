@@ -29,6 +29,7 @@ Notes:
 #ifndef __HwcvalHwc1Content_h__
 #define __HwcvalHwc1Content_h__
 
+#include "Hwcval.h"
 #include "HwcvalContent.h"
 
 namespace Hwcval
@@ -37,12 +38,14 @@ namespace Hwcval
     Hwcval::CompositionType Hwc1CompositionTypeToHwcval(uint32_t compositionType);
     Hwcval::BlendingType Hwc1BlendingTypeToHwcval(uint32_t blendingType);
     uint32_t HwcvalBlendingTypeToHwc1(Hwcval::BlendingType blendingType);
-    void HwcvalLayerToHwc1(const char* str, uint32_t ix, hwc_layer_1_t& out, Hwcval::ValLayer& in, hwc_rect_t* pRect, uint32_t& rectsRemaining);
+    void HwcvalLayerToHwc1(const char *str, uint32_t ix, hwcval_layer_t &out,
+                           Hwcval::ValLayer &in, hwc_rect_t *pRect,
+                           uint32_t &rectsRemaining);
 
     class Hwc1Layer : public ValLayer
     {
     public:
-        Hwc1Layer(const hwc_layer_1_t* sfLayer, android::sp<DrmShimBuffer>& buf);
+      Hwc1Layer(const hwcval_layer_t *sfLayer, android::sp<DrmShimBuffer> &buf);
     };
 
     // Hwc1Layer should add only methods
@@ -60,7 +63,7 @@ namespace Hwcval
     public:
         // Constructor
         // Only copies the header, not the layers, these must be added separtely
-        Hwc1LayerList(const hwc_display_contents_1_t* sfDisplay);
+      Hwc1LayerList(const hwcval_display_contents_t *sfDisplay);
     };
 
 }

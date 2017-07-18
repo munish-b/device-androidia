@@ -5,10 +5,7 @@
 #include <unistd.h>
 
 #include <ui/GraphicBuffer.h>
-#include <hardware/hwcomposer.h>
-
-#include "GrallocClient.h"
-
+#include <hardware/hwcomposer2.h>
 
 #include <errno.h>
 #include <jni.h>

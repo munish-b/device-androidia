@@ -46,17 +46,19 @@ HwcServiceShim::~HwcServiceShim()
 
 bool HwcServiceShim::Start()
 {
-    ALOGD("Starting %s in shim", INTEL_HWC_SERVICE_NAME);
-    if (hwcvalServiceManager()->OverrideService(String16(INTEL_HWC_SERVICE_NAME), String16(INTEL_HWCREAL_SERVICE_NAME), this, false))
-    {
-        HWCERROR(eCheckHwcServiceBind, "Failed to start HWC Shim Service (%s)", INTEL_HWC_SERVICE_NAME);
+  ALOGD("Starting %s in shim", IA_HWC_SERVICE_NAME);
+  if (hwcvalServiceManager()->OverrideService(String16(IA_HWC_SERVICE_NAME),
+                                              String16(IA_HWCREAL_SERVICE_NAME),
+                                              this, false)) {
+    HWCERROR(eCheckHwcServiceBind, "Failed to start HWC Shim Service (%s)",
+             IA_HWC_SERVICE_NAME);
         return false;
     }
-    HWCLOGA("Started %s in shim", INTEL_HWC_SERVICE_NAME);
+    HWCLOGA("Started %s in shim", IA_HWC_SERVICE_NAME);
     return true;
 }
 
-const android::String16 HwcServiceShim::descriptor("intel.hwc.IService.Shim");
+const android::String16 HwcServiceShim::descriptor("IA.IService.Shim");
 const android::String16& HwcServiceShim::getInterfaceDescriptor() const
 {
     return descriptor;
@@ -67,13 +69,15 @@ sp<IDisplayControl> HwcServiceShim::getDisplayControl(uint32_t display)
     if (mDisplayControls[display] == 0)
     {
         HWCLOGD("HwcServiceShim::getDisplayControl(%d) creating display control", display);
-        sp<IDisplayControl> realDispControl = Real()->getDisplayControl(display);
+        sp<IDisplayControl> realDispControl =
+            NULL; // Real()->GetDisplayControl(display);
         HwcTestKernel* testKernel = HwcTestState::getInstance()->GetTestKernel();
 
         ALOG_ASSERT(realDispControl.get());
         ALOG_ASSERT(testKernel);
-        sp<IDisplayControl> dispControl = new HwcTestDisplayControl(display, realDispControl, testKernel);
-        mDisplayControls[display] = dispControl;
+        // sp<IDisplayControl> dispControl = new HwcTestDisplayControl(display,
+        // realDispControl, testKernel);
+        // imDisplayControls[display] = dispControl;
     }
 
     return mDisplayControls[display];
@@ -81,7 +85,7 @@ sp<IDisplayControl> HwcServiceShim::getDisplayControl(uint32_t display)
 
 sp<IVideoControl> HwcServiceShim::getVideoControl()
 {
-    sp<IVideoControl> video = Real()->getVideoControl();
+  sp<IVideoControl> video = NULL; // Real()->GetVideoControl();
     HwcTestKernel* testKernel = HwcTestState::getInstance()->GetTestKernel();
 
     if (testKernel)
@@ -89,7 +93,7 @@ sp<IVideoControl> HwcServiceShim::getVideoControl()
         // We are shimming the IVideoControl
         if (mVideoControl.get() == 0)
         {
-            mVideoControl = new HwcTestVideoControl(video, testKernel);
+          // mVideoControl = new HwcTestVideoControl(video, testKernel);
         }
 
         return mVideoControl;
@@ -130,7 +134,7 @@ sp<IMDSExtModeControl> HwcServiceShim::getMDSExtModeControl()
     }
 }
 #endif // HWCVAL_MDSEXTMODECONTROL
-
+#if 0
 HwcTestVideoControl::HwcTestVideoControl(sp<IVideoControl> real, HwcTestKernel* testKernel)
   : mReal(real),
     mTestKernel(testKernel),
@@ -142,7 +146,7 @@ HwcTestVideoControl::HwcTestVideoControl(sp<IVideoControl> real, HwcTestKernel* 
 HwcTestVideoControl::~HwcTestVideoControl()
 {
 }
-
+#endif
 status_t HwcTestVideoControl::enableEncryptedSession( uint32_t sessionID, uint32_t instanceID )
 {
     mProtChecker.EnableEncryptedSession(sessionID, instanceID);
@@ -188,7 +192,7 @@ bool HwcTestVideoControl::isEncryptedSessionEnabled( uint32_t sessionID, uint32_
 {
     return mReal->isEncryptedSessionEnabled(sessionID, instanceID);
 }
-
+#if 0
 status_t HwcTestVideoControl::registerVideoResolutionListener( const sp<IVideoResolutionListener> &vppServiceListener )
 {
     return mReal->registerVideoResolutionListener(vppServiceListener);
@@ -198,7 +202,7 @@ status_t HwcTestVideoControl::unregisterVideoResolutionListener( const sp<IVideo
 {
     return mReal->unregisterVideoResolutionListener(vppServiceListener);
 }
-
+#endif
 status_t HwcTestVideoControl::updateStatus( EDisplayId display, EDisplayStatus status )
 {
     return mReal->updateStatus(display, status);

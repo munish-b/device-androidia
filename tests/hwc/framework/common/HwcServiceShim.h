@@ -29,9 +29,9 @@
 
 #include "BxService.h"
 #include "IDisplayControl.h"
-#include "IDiagnostic.h"
+#include "idiagnostic.h"
 #include "IVideoControl.h"
-#include "IVideoResolutionListener.h"
+//#include "IVideoResolutionListener.h"
 #ifdef HWCVAL_MDSEXTMODECONTROL
 #include "IMDSExtModeControl.h"
 #endif
@@ -40,7 +40,7 @@
 #include "HwcTestUtil.h"
 #include "HwcTestState.h"
 
-using namespace intel::ufo::hwc::services;
+using namespace hwcomposer;
 
 class HwcTestProtectionChecker;
 
@@ -87,8 +87,10 @@ public:
     virtual status_t disableEncryptedSession( uint32_t sessionID );
     virtual status_t disableAllEncryptedSessions( );
     virtual bool     isEncryptedSessionEnabled( uint32_t sessionID, uint32_t instanceID );
-    virtual status_t registerVideoResolutionListener( const sp<IVideoResolutionListener> &vppServiceListener );
-    virtual status_t unregisterVideoResolutionListener( const sp<IVideoResolutionListener> &vppServiceListener );
+    // virtual status_t registerVideoResolutionListener( const
+    // sp<IVideoResolutionListener> &vppServiceListener );
+    // virtual status_t unregisterVideoResolutionListener( const
+    // sp<IVideoResolutionListener> &vppServiceListener );
     virtual status_t updateStatus( EDisplayId display, EDisplayStatus status );
 #ifdef HWCVAL_VIDEOCONTROL_OPTIMIZATIONMODE
     virtual status_t setOptimizationMode(EOptimizationMode mode);

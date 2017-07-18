@@ -33,7 +33,6 @@
 #include <ui/GraphicBuffer.h>
 
 
-#include "ufo/graphics.h"
 #include "HwcTestState.h"
 #include "HwcTestUtil.h"
 
@@ -70,12 +69,6 @@ Hwch::SPixelWord::SPixelWord(uint32_t colour, uint32_t format)
         mBytesPerPixel = 2;
         break;
     case HAL_PIXEL_FORMAT_YV12:
-    case HAL_PIXEL_FORMAT_NV12_X_TILED_INTEL:
-    case HAL_PIXEL_FORMAT_NV12_Y_TILED_INTEL:
-    case HAL_PIXEL_FORMAT_NV12_LINEAR_INTEL:
-    case HAL_PIXEL_FORMAT_NV12_LINEAR_PACKED_INTEL:
-    case HAL_PIXEL_FORMAT_NV12_LINEAR_CAMERA_INTEL:
-    case HAL_PIXEL_FORMAT_YUV420PackedSemiPlanar_Tiled_INTEL:
         // N.B. NV12 is a complicated format with a total memory usage of 1.5 bytes per pixel.
         // However, in the luma space, it uses exactly one byte per pixel, which is what this means.
         mBytesPerPixel = 1;
@@ -159,12 +152,6 @@ uint32_t Hwch::SPixelWord::GetPixelBytes(uint32_t colour, uint32_t format)
             break;
         }
         case HAL_PIXEL_FORMAT_YV12:
-        case HAL_PIXEL_FORMAT_NV12_X_TILED_INTEL:
-        case HAL_PIXEL_FORMAT_NV12_Y_TILED_INTEL:
-        case HAL_PIXEL_FORMAT_NV12_LINEAR_INTEL:
-        case HAL_PIXEL_FORMAT_NV12_LINEAR_PACKED_INTEL:
-        case HAL_PIXEL_FORMAT_NV12_LINEAR_CAMERA_INTEL:
-        case HAL_PIXEL_FORMAT_YUV420PackedSemiPlanar_Tiled_INTEL:
         {
             mBytes[0]   = y;
             mBytes[3]   = mBytes[2] = mBytes[1] = mBytes[0];
@@ -361,20 +348,8 @@ int Hwch::SolidColourPtn::Fill(android::sp<android::GraphicBuffer> buf, const hw
     uint32_t cstride = 0;
 
     // Fill gralloc buffer
-    if (format == HAL_PIXEL_FORMAT_NV12_Y_TILED_INTEL)
-    {
-        android_ycbcr ycbcr;
-        err = buf->lockYCbCr(GRALLOC_USAGE_SW_WRITE_OFTEN, &ycbcr);
-        data = ycbcr.y;
-        chromaStart = (unsigned char*) ycbcr.cb;
-        stride = ycbcr.ystride;
-        cstride = ycbcr.cstride;
-    }
-    else
-    {
-        err = buf->lock(GRALLOC_USAGE_SW_WRITE_OFTEN, &data);
-        stride = buf->getStride();
-    }
+    err = buf->lock(GRALLOC_USAGE_SW_WRITE_OFTEN, &data);
+    stride = buf->getStride();
 
     HWCLOGD_IF(BUFFER_DEBUG, "FillBuffer: stride=%d\n", stride);
     HWCLOGD_IF(BUFFER_DEBUG, "FillBuffer: height=%d\n", buf->getHeight());
@@ -410,24 +385,6 @@ int Hwch::SolidColourPtn::Fill(android::sp<android::GraphicBuffer> buf, const hw
             }
 
             lineStart += stride * mPixel.mBytesPerPixel;
-        }
-
-        if (format == HAL_PIXEL_FORMAT_NV12_Y_TILED_INTEL)
-        {
-            lineStart = chromaStart;
-            lineStart += (top/2) * cstride;
-
-            for (uint32_t row=0; row<buf->getHeight()-1; row+= 2)
-            {
-                uint32_t* ptr = (uint32_t*) (lineStart + (left & 0xfffffffe));
-
-                for (uint32_t px = 0; px < buf->getWidth()-3; px+=4)
-                {
-                    *ptr++ = mPixel.mNv12ChromaWord32;
-                }
-
-                lineStart += cstride;
-            }
         }
         buf->unlock();
     }
@@ -571,9 +528,7 @@ int Hwch::HorizontalLinePtn::Fill(android::sp<android::GraphicBuffer> buf, const
 
     // Fill gralloc buffer
     android::PixelFormat format = buf->getPixelFormat();
-    if ((format == HAL_PIXEL_FORMAT_NV12_Y_TILED_INTEL) ||
-        (format == HAL_PIXEL_FORMAT_YV12))
-    {
+    if ((format == HAL_PIXEL_FORMAT_YV12)) {
         err = buf->lockYCbCr(GRALLOC_USAGE_SW_WRITE_OFTEN, &ycbcr);
         data = ycbcr.y;
         chromaStart = (unsigned char*) ycbcr.cb;
@@ -650,24 +605,6 @@ int Hwch::HorizontalLinePtn::Fill(android::sp<android::GraphicBuffer> buf, const
                 FillChromaULineYV12(ustart, row, cstride, left, width, currentPixel);
             }
         }
-        else if (format == HAL_PIXEL_FORMAT_NV12_Y_TILED_INTEL)
-        {
-            SPixelWord currentPixel;
-
-            for (uint32_t row=0; row < (height-1); row+= 2)
-            {
-                if (row >= mLine && row < mLine+4)
-                {
-                    currentPixel = mFgPixel;
-                }
-                else
-                {
-                    currentPixel = mBgPixel;
-                }
-
-                FillChromaLineNV12(chromaStart, row, cstride, left, width, currentPixel);
-            }
-        }
     }
     else
     {
@@ -695,18 +632,6 @@ int Hwch::HorizontalLinePtn::Fill(android::sp<android::GraphicBuffer> buf, const
             {
                 FillChromaVLineYV12(vstart, row, cstride, left, width, mFgPixel);
                 FillChromaULineYV12(ustart, row, cstride, left, width, mFgPixel);
-            }
-        }
-        else if (format == HAL_PIXEL_FORMAT_NV12_Y_TILED_INTEL)
-        {
-            for (uint32_t row = oldLine; row < (oldLine+4); row += 2)
-            {
-                FillChromaLineNV12(chromaStart, row, cstride, left, width, mBgPixel);
-            }
-
-            for (uint32_t row = mLine; row < (mLine+4); row += 2)
-            {
-                FillChromaLineNV12(chromaStart, row, cstride, left, width, mFgPixel);
             }
         }
     }

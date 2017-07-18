@@ -54,8 +54,8 @@ HwchLayerWindowed::HwchLayerWindowed(uint32_t width, uint32_t height, buffer_han
     SetCrop(Hwch::LogCropRect(0, 0, panel_width, panel_height));
 };
 
-void HwchLayerWindowed::Send(hwc_layer_1_t& hwLayer, hwc_rect_t* visibleRegions, uint32_t& visibleRegionCount)
-{
+void HwchLayerWindowed::Send(hwc2_layer_t &hwLayer, hwc_rect_t *visibleRegions,
+                             uint32_t &visibleRegionCount) {
     // Setup the layer properties and the visible regions
     AssignLayerProperties(hwLayer, mHandle);
     AssignVisibleRegions(hwLayer, visibleRegions, visibleRegionCount);

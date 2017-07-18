@@ -59,7 +59,7 @@ namespace Hwcval
         uint32_t mSetModeRefresh = 0;
         uint32_t mSetModeFlags = 0;
         uint32_t mSetModeAspectRatio = 0;
-        ::intel::ufo::hwc::services::IVideoControl::EOptimizationMode mParsedOptimizationMode;
+        hwcomposer::IVideoControl::EOptimizationMode mParsedOptimizationMode;
 
         // Parser functionaity
         bool ParseHWCServiceApi(pid_t pid, int64_t timestamp, const char *str);

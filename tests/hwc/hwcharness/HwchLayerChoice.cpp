@@ -28,7 +28,6 @@
 #include "HwchLayerChoice.h"
 #include "HwcTestState.h"
 #include "HwcTestUtil.h"
-#include "ufo/graphics.h"
 
 static const float delta = 0.0001;
 

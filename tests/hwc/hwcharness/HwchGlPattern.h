@@ -30,9 +30,8 @@
 
 #include <utils/Vector.h>
 #include <utils/RefBase.h>
-#include "GrallocClient.h"
 #include <ui/GraphicBuffer.h>
-#include <hardware/hwcomposer.h>
+#include <hardware/hwcomposer2.h>
 
 #include "HwchDefs.h"
 #include "HwchPattern.h"

@@ -41,7 +41,7 @@ Notes:
 #include <xf86drmMode.h>    //< For structs and types.
 #include <i915_drm.h>       //< For PASASBCA/DRM_PFIT_PROP/DRM_PRIMARY_DISABLE (if available)
 
-#include "hardware/hwcomposer.h"
+#include "hardware/hwcomposer2.h"
 
 #include "HwcTestDefs.h"
 

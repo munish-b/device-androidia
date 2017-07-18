@@ -27,7 +27,7 @@
 
 #include <cutils/log.h>
 
-#include <hardware/hwcomposer.h>
+#include <hardware/hwcomposer2.h>
 #include <utils/String8.h>
 
 // Trace support

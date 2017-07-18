@@ -33,10 +33,9 @@ Notes:
 #include "HwcTestKernel.h"
 #include "DrmShimBuffer.h"
 
-#include "GrallocClient.h"
 #include "drm_fourcc.h"
 #include <utils/String8.h>
-#include <ufo/graphics.h>
+#include <graphics.h>
 #include <sys/stat.h>
 
 #if INTEL_UFO_GRALLOC_HAVE_BUFFER_DETAILS_1 && UFO_GRALLOC_ENABLE_AUX_ALLOCATIONS

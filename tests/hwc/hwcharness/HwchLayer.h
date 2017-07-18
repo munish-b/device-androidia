@@ -36,9 +36,8 @@
 
 #include <utils/Vector.h>
 #include <utils/RefBase.h>
-#include "GrallocClient.h"
 #include <ui/GraphicBuffer.h>
-#include <hardware/hwcomposer.h>
+#include <hardware/hwcomposer2.h>
 
 #include "HwchPattern.h"
 #include "HwchBufferSet.h"
@@ -112,20 +111,22 @@ namespace Hwch
     class Layer
     {
         public:
-            uint32_t mCompType;             // Composition type originally defined
-            uint32_t mCurrentCompType;      // Composition type now
+          int32_t mCompType;        // Composition type originally defined
+          int32_t mCurrentCompType; // Composition type now
+          int32_t compositionType;
             uint32_t mHints;
             uint32_t mFlags;
-            uint32_t mLogicalTransform;
-            uint32_t mPhysicalTransform;
-            uint32_t mBlending;
+            int32_t mLogicalTransform;
+            int32_t mPhysicalTransform;
+            int32_t mBlending;
             uint32_t mFormat;
             uint32_t mNumBuffers;
             uint32_t mPlaneAlpha;   // only used from Android 4.3
             Coord<int32_t> mWidth; // buffer width
             Coord<int32_t> mHeight; // buffer height
             uint32_t mUsage;
-
+            buffer_handle_t handle;
+            hwc2_layer_t hwc2_layer;
             // Forced tiling options
             enum
             {
@@ -285,9 +286,11 @@ namespace Hwch
             // Functions for framework usage only //
             ////////////////////////////////////////
 
-            void AssignLayerProperties(hwc_layer_1_t& hwLayer, buffer_handle_t handle);
-            void AssignVisibleRegions(hwc_layer_1_t& hwLayer, hwc_rect_t* visibleRegions, uint32_t& visibleRegionCount);
-            virtual void Send(hwc_layer_1_t& hwLayer, hwc_rect_t* visibleRegions, uint32_t& visibleRegionCount);
+            // void AssignLayerProperties(hwc2_layer_t& hwLayer, buffer_handle_t
+            // handle);
+            hwc_rect_t *AssignVisibleRegions(hwc_rect_t *visibleRegions,
+                                             uint32_t &visibleRegionCount);
+            virtual buffer_handle_t Send();
 
             void SetCompositionType(uint32_t compType);
             void PostFrame(uint32_t compType, int releaseFenceFd);
@@ -304,7 +307,9 @@ namespace Hwch
             Layer& SetForCloning(bool forCloning);
             Layer& SetFrame(Frame* frame);
             Hwch::Frame* GetFrame();
-            void SetAcquireFence(hwc_layer_1_t& hwLayer, android::sp<TimelineThread>& timelineThread, int mergeFence);
+            void SetAcquireFence(hwc2_layer_t &hwLayer,
+                                 android::sp<TimelineThread> &timelineThread,
+                                 int mergeFence);
 
             void CalculateSourceCrop(Display& display);
             void CalculateDisplayFrame(Display& display);

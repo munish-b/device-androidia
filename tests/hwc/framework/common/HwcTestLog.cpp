@@ -251,7 +251,7 @@ int HwcValLogVA(int priority, const char* fmt, va_list& args)
 #endif
 
             // Send the combined log string to Android
-            LOG_PRI(priority, "HWCVAL", formattedString.string());
+            LOG_PRI(priority, "HWCVAL", "%s", formattedString.string());
 #endif
             va_end(args);
 

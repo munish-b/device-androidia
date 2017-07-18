@@ -29,8 +29,8 @@
 #define __HWCHINTERFACE_H__
 
 #include <dlfcn.h>
-
-#include <hardware/hwcomposer.h>
+#include "Hwcval.h"
+#include <hardware/hwcomposer2.h>
 #include <utils/Condition.h>
 #include <utils/Mutex.h>
 #include <utils/StrongPointer.h>
@@ -58,16 +58,37 @@ namespace Hwch
             int RegisterProcs(void);
             int GetDisplayAttributes();
             int GetDisplayAttributes(uint32_t disp);
-            int Prepare(size_t numDisplays, hwc_display_contents_1_t** displays);
-            int Set(size_t numDisplays, hwc_display_contents_1_t** displays);
+            int Prepare(size_t numDisplays, hwc2_display_t **displays);
+            int Set(size_t numDisplays, hwc2_display_t **displays);
             int EventControl(uint32_t disp, uint32_t event, uint32_t enable);
             int Blank(int disp, int blank);
             int IsBlanked(int disp);
 
+            /*HWC2 functions*/
+            int ValidateDisplay(hwc2_display_t display, uint32_t *outNumTypes,
+                                uint32_t *outNumRequests);
+            int PresentDisplay(hwc2_display_t display,
+                               int32_t *outPresentFence);
+            int CreateLayer(hwc2_display_t disp, hwc2_layer_t *outLayer);
+            int setLayerCompositionType(hwc2_display_t disp, hwc2_layer_t layer,
+                                        int32_t type);
+            int setLayerBlendMode(hwc2_display_t disp, hwc2_layer_t layer,
+                                  int32_t mode);
+            int setLayerTransform(hwc2_display_t disp, hwc2_layer_t layer,
+                                  int32_t transform);
+            int setLayerSourceCrop(hwc2_display_t disp, hwc2_layer_t layer,
+                                   hwc_frect_t crop);
+            int setLayerDisplayFrame(hwc2_display_t disp, hwc2_layer_t layer,
+                                     hwc_rect_t frame);
+            int setLayerPlaneAlpha(hwc2_display_t disp, hwc2_layer_t layer,
+                                   float alpha);
+            int setLayerVisibleRegion(hwc2_display_t disp, hwc2_layer_t layer,
+                                      hwc_region_t visible);
+
             void UpdateDisplays(uint32_t hwcAcquireDelay);
             uint32_t NumDisplays();
 
-            hwc_composer_device_1 *GetDevice(void);
+            hwc2_device *GetDevice(void);
 
             bool IsRepaintNeeded();
             void ClearRepaintNeeded();
@@ -87,7 +108,7 @@ namespace Hwch
         private:
             struct cb_context;
 
-            hwc_composer_device_1 *hwc_composer_device;
+            hwc2_device *hwc_composer_device;
             cb_context*           mCBContext;
 
             uint32_t mDisplayNeedsUpdate;    // Hotplug received on this display and not processed yet
