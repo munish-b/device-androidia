@@ -1,35 +1,18 @@
-/****************************************************************************
+/*
+ * Copyright (C) 2016 The Android Open Source Project
  *
- * Copyright (c) Intel Corporation (2015).
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- * DISCLAIMER OF WARRANTY
- * NEITHER INTEL NOR ITS SUPPLIERS MAKE ANY REPRESENTATION OR WARRANTY OR
- * CONDITION OF ANY KIND WHETHER EXPRESS OR IMPLIED (EITHER IN FACT OR BY
- * OPERATION OF LAW) WITH RESPECT TO THE SOURCE CODE.  INTEL AND ITS SUPPLIERS
- * EXPRESSLY DISCLAIM ALL WARRANTIES OR CONDITIONS OF MERCHANTABILITY OR
- * FITNESS FOR A PARTICULAR PURPOSE.  INTEL AND ITS SUPPLIERS DO NOT WARRANT
- * THAT THE SOURCE CODE IS ERROR-FREE OR THAT OPERATION OF THE SOURCE CODE WILL
- * BE SECURE OR UNINTERRUPTED AND HEREBY DISCLAIM ANY AND ALL LIABILITY ON
- * ACCOUNT THEREOF.  THERE IS ALSO NO IMPLIED WARRANTY OF NON-INFRINGEMENT.
- * SOURCE CODE IS LICENSED TO LICENSEE ON AN "AS IS" BASIS AND NEITHER INTEL
- * NOR ITS SUPPLIERS WILL PROVIDE ANY SUPPORT, ASSISTANCE, INSTALLATION,
- * TRAINING OR OTHER SERVICES.  INTEL AND ITS SUPPLIERS WILL NOT PROVIDE ANY
- * UPDATES, ENHANCEMENTS OR EXTENSIONS.
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
- * @file    WidiTests.cpp
- * @author  James Pascoe (james.pascoe@intel.com)
- * @date    22nd April 2015
- * @brief   Implementation of the harness Widi tests
- *
- * @details This file implements the Widi harness tests. Note that these tests
- * have to be run with Widi enabled on the command line (and optionally the
- * Widi visualisation window). For example:
- *
- *   -widi 1920x1200 1920x1200 60 -widi_window 600x300
- *
- * If Widi is not enabled and the tests are run, then the effect is harmless.
- *
- *****************************************************************************/
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 #include "HwcTestState.h"
 #include "HwchLayers.h"
