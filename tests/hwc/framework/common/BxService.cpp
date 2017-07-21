@@ -15,8 +15,8 @@
  */
 
 #include "BxService.h"
-#include "IVideoControl.h"
-#include "IDisplayControl.h"
+#include "ivideocontrol.h"
+#include "idisplaycontrol.h"
 #ifdef HWCVAL_MDSEXTMODECONTROL
 #include "IMDSExtModeControl.h"
 #endif

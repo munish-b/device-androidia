@@ -1,22 +1,4 @@
 
-## Common ufo Android include. To manage software and hardware variants.
-include $(call my-dir)/DetermineAndroidVersion.mk
-
-# Do we have UFO available?
-ifneq (,$(wildcard hardware/intel/ufo/ufo ))
-    VAL_HWC_HAVE_UFO=1
-    VAL_HWC_INTEL_UFO_ANDROID=hardware/intel/ufo/ufo/Source/Android
-    ifneq ($(VAL_HWC_UFO_MESSAGE_DONE), 1)
-        $(info UFO Build: VAL_HWC_UFO_BASE $(VAL_HWC_INTEL_UFO_ANDROID))
-        VAL_HWC_UFO_MESSAGE_DONE=1
-    endif
-else
-    ifneq ($(VAL_HWC_UFO_MESSAGE_DONE), 1)
-        $(info No-UFO Build: Using prebuilts and previously saved PAVP include files)
-        VAL_HWC_UFO_MESSAGE_DONE=1
-    endif
-endif
-
 # Determine the DRM include path
 ifeq ($(VAL_HWC_LIB_DRM_PATHS),)
     ifeq (,$(wildcard $(ANDROID_PRODUCT_OUT)/obj/SHARED_LIBRARIES/libdrm_intermediates/export_includes ))

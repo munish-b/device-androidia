@@ -617,7 +617,7 @@ bool Hwcval::LogParser::ParseSetOptimizationModeEntry(pid_t pid, int64_t timesta
     if (MatchRegex("HwcService_Video_SetOptimizationMode (\\d+)", str, &num_fields_matched, &opt_mode))
     {
         mParsedOptimizationMode =
-            static_cast<intel::ufo::hwc::services::IVideoControl::EOptimizationMode>(opt_mode);
+            static_cast<hwcomposer::IVideoControl::EOptimizationMode>(opt_mode);
 
         mTestKernel->CheckSetOptimizationModeEnter(mParsedOptimizationMode);
 

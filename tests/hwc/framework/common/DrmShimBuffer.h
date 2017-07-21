@@ -48,8 +48,9 @@ typedef struct hwc_buffer_details {
   gralloc1_device_t *gralloc1_dvc;
   GRALLOC1_PFN_LOCK_FLEX pfn_lockflex;
   GRALLOC1_PFN_GET_FORMAT pfn_getFormat;
-  int width;
-  int height;
+  GRALLOC1_PFN_GET_DIMENSIONS pfn_getDimensions;
+  uint32_t width;
+  uint32_t height;
   int format;
   int usage;
   int size;

@@ -20,7 +20,7 @@
 #include "HwchInterface.h"
 
 #ifdef HWCVAL_BUILD_HWCSERVICE_API
-#include "HwcServiceApi.h"
+#include "hwcserviceapi.h"
 #endif
 
 using namespace hwcomposer;

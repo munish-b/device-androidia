@@ -96,7 +96,7 @@ void Hwcval::LogIntercept::log(char* endPtr)
 // Register our log interception with HWC.
 //
 void Hwcval::LogIntercept::Register(  Hwcval::LogChecker* logChecker,
-                                    intel::ufo::hwc::validation::AbstractCompositionChecker* compositionChecker,
+                                    hwcomposer::validation::AbstractCompositionChecker* compositionChecker,
                                     uint32_t compositionVersionsSupported)
 {
     if (pfHwcLogSetLogVal)

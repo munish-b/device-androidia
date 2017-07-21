@@ -112,6 +112,10 @@ void hwc_buffer_details::GetGralloc() {
 
       pfn_getFormat = (GRALLOC1_PFN_GET_FORMAT)gralloc1_dvc->getFunction(
           gralloc1_dvc, GRALLOC1_FUNCTION_GET_FORMAT);
+
+      pfn_getDimensions = (GRALLOC1_PFN_GET_DIMENSIONS)gralloc1_dvc->getFunction(
+          gralloc1_dvc, GRALLOC1_FUNCTION_GET_DIMENSIONS);
+
     }
   }
 }
@@ -122,6 +126,16 @@ int hwc_buffer_details::getBufferInfo(buffer_handle_t handle) {
   ALOGE("handle BufferInfo %llu", handle);
   int ret = -1;
   if (gralloc_version == HARDWARE_MODULE_API_VERSION(1, 0)) {
+
+    if (!pfn_getDimensions) {
+      ALOGE("Gralloc does not support getDimension");
+      return -1;
+    }
+    ret = pfn_getDimensions(gralloc1_dvc, handle, &width, &height);
+    if (ret) {
+      ALOGE("gralloc->getDimension failed: %d", ret);
+      return -1;
+    }
 
     if (!pfn_getFormat) {
       ALOGE("Gralloc does not support getFormat");

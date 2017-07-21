@@ -874,6 +874,7 @@ bool HwcTestReferenceComposer::lazyCreate()
 
     // Get a connection to the display
     m_display = eglGetDisplay( EGL_DEFAULT_DISPLAY );
+    ALOGE("m_displayi 3 = %p ",m_display);
     if (getEGLError("eglGetDisplay") || m_display == EGL_NO_DISPLAY)
     {
         HWCERROR(eCheckGlFail, "HwcTestReferenceComposer: Error on eglGetDisplay");
@@ -1090,6 +1091,7 @@ void HwcTestReferenceComposer::destroy()
     // Mark the display as invalid
     m_display = EGL_NO_DISPLAY;
 
+    ALOGE("m_displayi 5 = %p ",m_display);
     // Free the source layers array
     freeSourceLayers();
 }
@@ -1150,7 +1152,7 @@ void HwcTestReferenceComposer::setTexture(
     *pGraphicBuffer = new android::GraphicBuffer(bi.width, bi.height, bi.format,
             bi.usage, bi.pitch, const_cast<native_handle*>(layer->handle), false);
 #endif
-
+    ALOGE("buffer = %p  width = %u height = %u",(*pGraphicBuffer)->getNativeBuffer(), bi.width, bi.height, bi.format);
     *pEGLImage = eglCreateImageKHR(m_display, EGL_NO_CONTEXT, EGL_NATIVE_BUFFER_ANDROID, EGLClientBuffer((*pGraphicBuffer)->getNativeBuffer()), 0);
     if (getEGLError("eglCreateImageKHR"))
     {

@@ -20,8 +20,8 @@
 #ifdef HWCVAL_BUILD_SHIM_HWCSERVICE
 
 #include "BxService.h"
-#include "IDisplayControl.h"
-#include "IDisplayModeControl.h"
+#include "idisplaycontrol.h"
+#include "idisplaymodecontrol.h"
 
 class HwcTestKernel;
 class HwcTestCrtc;

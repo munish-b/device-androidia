@@ -69,7 +69,7 @@ struct drm_mode_set_display;
 #define EXPORT_API __attribute__ ((visibility("default")))
 class EXPORT_API HwcTestKernel
 #ifdef HWCVAL_ABSTRACTCOMPOSITIONCHECKER_EXISTS
-    : public hwcomposer::hwc::validation::AbstractCompositionChecker
+    : public hwcomposer::validation::AbstractCompositionChecker
 #endif
       {
 public:
@@ -315,7 +315,7 @@ public:
 #ifdef HWCVAL_ABSTRACTCOMPOSITIONCHECKER_EXISTS
     // Composition check
     // From AbstractCompositionChecker
-    typedef hwcomposer::hwc::validation::AbstractCompositionChecker::ValLayer
+    typedef hwcomposer::validation::AbstractCompositionChecker::ValLayer
         HwcValLayer;
     virtual void* CreateContext(const char* composer);
     virtual void AddSource(void* ctx, const HwcValLayer& layer, const char* description);

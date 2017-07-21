@@ -20,9 +20,9 @@
 #ifdef HWCVAL_BUILD_SHIM_HWCSERVICE
 
 #include "BxService.h"
-#include "IDisplayControl.h"
+#include "idisplaycontrol.h"
 #include "idiagnostic.h"
-#include "IVideoControl.h"
+#include "ivideocontrol.h"
 //#include "IVideoResolutionListener.h"
 #ifdef HWCVAL_MDSEXTMODECONTROL
 #include "IMDSExtModeControl.h"
