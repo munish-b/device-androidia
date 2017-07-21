@@ -18,7 +18,7 @@
 #include "HwchDefs.h"
 #include "HwcTestState.h"
 #include "HwcTestUtil.h"
-#include "IVideoControl.h"
+#include "ivideocontrol.h"
 
 #include "HwchPngImage.h"
 #include "HwchFrame.h"

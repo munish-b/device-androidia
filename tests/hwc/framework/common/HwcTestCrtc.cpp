@@ -23,7 +23,7 @@
 #include "HwcTestState.h"
 #include "HwcvalContent.h"
 #include "HwcTestProtectionChecker.h"
-#include "IDisplayModeControl.h"
+#include "idisplaymodecontrol.h"
 #include "HwcvalLogDisplay.h"
 
 using namespace Hwcval;

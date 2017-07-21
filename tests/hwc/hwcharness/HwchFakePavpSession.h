@@ -21,9 +21,9 @@
 
 // Encryption control
 #ifdef HWCVAL_BUILD_HWCSERVICE_API
-    #include "HwcServiceApi.h"
+    #include "hwcserviceapi.h"
 #else
-    #include "IVideoControl.h"
+    #include "ivideocontrol.h"
 #endif
 
 #include "utils/Thread.h"

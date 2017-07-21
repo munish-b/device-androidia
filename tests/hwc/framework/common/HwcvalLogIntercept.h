@@ -67,10 +67,10 @@ namespace Hwcval
 
     // Our implementation of HWC's abstract log class.
     // We supply this to HWC so that we can intercept (and parse) its log entries.
-    class LogIntercept : public ::intel::ufo::hwc::AbstractLogWrite
+    class LogIntercept : public ::hwcomposer::AbstractLogWrite
     {
     private:
-        ::intel::ufo::hwc::AbstractLogWrite* mRealLog;
+        ::hwcomposer::AbstractLogWrite* mRealLog;
         char* mInterceptedEntry;
         Hwcval::LogChecker *mChecker;
 
@@ -82,19 +82,19 @@ namespace Hwcval
 
         // Control functions
         void Register( Hwcval::LogChecker* logChecker,
-                       ::intel::ufo::hwc::validation::AbstractCompositionChecker* compositionChecker,
+                       ::hwcomposer::validation::AbstractCompositionChecker* compositionChecker,
                        uint32_t compositionVersionsSupported);
 
-        ::intel::ufo::hwc::AbstractLogWrite* GetRealLog();
+        ::hwcomposer::AbstractLogWrite* GetRealLog();
     };
 
-    inline ::intel::ufo::hwc::AbstractLogWrite* LogIntercept::GetRealLog()
+    inline ::hwcomposer::AbstractLogWrite* LogIntercept::GetRealLog()
     {
         return mRealLog;
     }
 
-    typedef ::intel::ufo::hwc::AbstractLogWrite* (*SetLogValPtr) (::intel::ufo::hwc::AbstractLogWrite* logVal,
-                                   ::intel::ufo::hwc::validation::AbstractCompositionChecker* checkComposition,
+    typedef ::hwcomposer::AbstractLogWrite* (*SetLogValPtr) (::hwcomposer::AbstractLogWrite* logVal,
+                                   ::hwcomposer::validation::AbstractCompositionChecker* checkComposition,
                                    uint32_t& versionSupportMask);
 }
 

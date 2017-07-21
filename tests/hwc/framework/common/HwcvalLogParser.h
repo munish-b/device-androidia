@@ -18,7 +18,7 @@
 #define __Hwcval_LogParser_h__
 
 #include "HwcvalLogIntercept.h"
-#include "IVideoControl.h"
+#include "ivideocontrol.h"
 
 #if defined(HWCVAL_BUILD_HWCSERVICE_API) && ANDROID_VERSION>=600
 #include <regex>

@@ -56,7 +56,7 @@
 #include "IFrameTypeChangeListener.h"
 #endif
 
-#include "IVideoControl.h"
+#include "ivideocontrol.h"
 
 class HwcTestState;
 class DrmShimBuffer;

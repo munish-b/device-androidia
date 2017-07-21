@@ -26,12 +26,12 @@
 
 // Display mode control
 #ifdef HWCVAL_BUILD_HWCSERVICE_API
-#include "HwcServiceApi.h"
+#include "hwcserviceapi.h"
 #else
 
 #include "iservice.h"
-#include "IDisplayModeControl.h"
-#include "IDisplayControl.h"
+#include "idisplaymodecontrol.h"
+#include "idisplaycontrol.h"
 
 #endif
 

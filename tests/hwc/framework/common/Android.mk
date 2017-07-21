@@ -116,7 +116,7 @@ LOCAL_C_INCLUDES += \
     $(VAL_HWC_TOP)/tests/hwc/intel \
     $(VAL_HWC_TOP)/tests/hwc/hwcharness \
     $(VAL_HWC_TOP)/../../common/utils/val \
-    $(VAL_HWC_TOP)/../../hwcomposer/common/utils/libhwcservice 
+    $(VAL_HWC_TOP)/../../common/utils/libhwcservice 
 
 LOCAL_EXPORT_C_INCLUDE_DIRS += $(LOCAL_PATH)
 LOCAL_MODULE_TAGS:= optional

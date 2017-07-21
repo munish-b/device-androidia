@@ -21,12 +21,12 @@
 #include <hardware/hwcomposer_defs.h>
 #include "HwchCoord.h"
 #include "HwchBufferSet.h"
-#include "IDisplayControl.h"
-#include "IDisplayModeControl.h"
-#include "IVideoControl.h"
+#include "idisplaycontrol.h"
+#include "idisplaymodecontrol.h"
+#include "ivideocontrol.h"
 
 #ifdef HWCVAL_BUILD_HWCSERVICE_API
-#include "HwcServiceApi.h"
+#include "hwcserviceapi.h"
 #endif
 
 #define HWCH_WIDI_VIRTUAL_NUM_BUFFERS 4

@@ -9,7 +9,7 @@ ifneq (,$(filter $(HWC_VAL_TEST), Y y YES yes))
     VAL_HWC_TOP:= $(call my-dir)
     HWCVAL_ROOT:=$(VAL_HWC_TOP)/tests/hwc
     VAL_HWC_HARDWARE_COMPOSER_PATH:=$(ANDROID_BUILD_TOP)/vendor/intel/external/android_ia/hwcomposer
-    VAL_HWC_TESTS_PATH:=$(VAL_HWC_HARDWARE_COMPOSER_PATH)/tests
+    VAL_HWC_TESTS_PATH:=$(VAL_HWC_HARDWARE_COMPOSER_PATH)/common/utils
     LOCAL_MODULE:=val_hwc
 
     VAL_HWC_EXTERNAL_BUILD = true

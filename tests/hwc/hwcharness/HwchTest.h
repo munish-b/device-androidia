@@ -44,10 +44,10 @@
 #include "IMDSExtModeControl.h"
 #endif
 #ifdef HWCVAL_BUILD_HWCSERVICE_API
-#include "HwcServiceApi.h"
+#include "hwcserviceapi.h"
 #endif
 
-#include "IVideoControl.h"
+#include "ivideocontrol.h"
 
 
 namespace Hwch

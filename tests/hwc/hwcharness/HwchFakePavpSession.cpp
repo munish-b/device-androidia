@@ -19,7 +19,7 @@
 
 #ifndef HWCVAL_BUILD_HWCSERVICE_API
 #include "iservice.h"
-#include "IVideoControl.h"
+#include "ivideocontrol.h"
 using namespace hwcomposer;
 #endif
 

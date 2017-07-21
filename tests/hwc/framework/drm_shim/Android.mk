@@ -34,7 +34,7 @@ LOCAL_C_INCLUDES += \
     $(LOCAL_PATH)/../hwc_shim/ \
     $(VAL_HWC_TOP)/tests/hwc/hwcharness \
     $(VAL_HWC_TOP)/../../../libdrm/intel/ \
-    $(VAL_HWC_TOP)/libhwcservice \
+    $(VAL_HWC_TOP)/../../os/android/libhwcservice \
     $(VAL_HWC_TOP)/../../common/utils/val
 
 LOCAL_LDLIBS += -ldl

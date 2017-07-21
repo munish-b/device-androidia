@@ -21,13 +21,13 @@
 #include <ui/GraphicBuffer.h>
 #include <utils/StrongPointer.h>
 #include "HwchDefs.h"
-#include "IDisplayModeControl.h"
-#include "IVideoControl.h"
+#include "idisplaymodecontrol.h"
+#include "ivideocontrol.h"
 #include "HwchDisplay.h"
 #include "HwcvalWatchdog.h"
 
 #ifdef HWCVAL_BUILD_HWCSERVICE_API
-#include "HwcServiceApi.h"
+#include "hwcserviceapi.h"
 #endif
 
 namespace Hwch

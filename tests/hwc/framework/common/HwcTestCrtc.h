@@ -28,9 +28,9 @@
 
 // Define display Info structure
 #ifdef HWCVAL_BUILD_HWCSERVICE_API
-#include "HwcServiceApi.h"
+#include "hwcserviceapi.h"
 #else
-#include "IDisplayModeControl.h"
+#include "idisplaymodecontrol.h"
 #endif
 
 class DrmShimPlane;
