@@ -7,7 +7,8 @@ VAL_HWC_HWC_COMMON_INC_PATH:=$(LOCAL_PATH)/../common
 include $(VAL_HWC_HWC_COMMON_INC_PATH)/Hwcval.mk
 
 ifndef VAL_HWC_TOP
-$(error VAL_HWC_TOP not defined)
+#$(error VAL_HWC_TOP not defined)
+VAL_HWC_TOP=$(LOCAL_PATH)/../../../..
 endif
 
 VAL_HWC_DOXYGEN_SRC_DIR := ""
@@ -28,10 +29,10 @@ LOCAL_C_INCLUDES += \
     $(LOCAL_PATH)/../common/ \
     $(LOCAL_PATH)/../drm_shim/ \
     $(LOCAL_PATH)/../mds_shim/ \
-    $(VAL_HWC_TOP)/tests/hwc/hwcharness \
-    $(VAL_HWC_TOP)/../../../libdrm/intel/ \
-    $(VAL_HWC_TOP)/../../os/android/libhwcservice \
-    $(VAL_HWC_TOP)/../../common/utils/val
+    $(VAL_HWC_TOP)/hwcharness \
+    $(VAL_HWC_HARDWARE_COMPOSER_PATH)/../libdrm/intel/ \
+    $(VAL_HWC_HARDWARE_COMPOSER_PATH)/os/android/libhwcservice \
+    $(VAL_HWC_HARDWARE_COMPOSER_PATH)/common/utils/val
 
 
 # Compile in the widi components if needed
@@ -63,7 +64,7 @@ LOCAL_STATIC_LIBRARIES +=
 
 LOCAL_MODULE_TAGS:= optional
 LOCAL_MODULE:= valhwc_composershim
-include $(VAL_HWC_TOP)/common/ModuleCommon.mk
+include $(VAL_HWC_TOP)/../../common/ModuleCommon.mk
 
 include $(BUILD_SHARED_LIBRARY)
 

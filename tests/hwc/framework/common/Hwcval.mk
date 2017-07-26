@@ -113,33 +113,10 @@ ifneq ($(wildcard $(VAL_HWC_HARDWARE_COMPOSER_PATH)/libhwcservice/IMDSExtModeCon
     BUILD_MDSEXTMODECONTROL := 1
 endif
 
-grep_command_1=grep enableEncryptedSession $(VAL_HWC_HARDWARE_COMPOSER_PATH)/libhwcservice/IVideoControl.h
-ifneq ($(shell $(grep_command_1)),)
 
-    ifeq ($(wildcard $(VAL_HWC_HARDWARE_COMPOSER_PATH)/libhwcservice/HwcServiceApi.cpp),)
-      BUILD_SHIM_HWCSERVICE := 1
-      LOCAL_CFLAGS += -DHWCVAL_BUILD_SHIM_HWCSERVICE
-
-      grep_command_2=grep setOptimizationMode $(VAL_HWC_HARDWARE_COMPOSER_PATH)/libhwcservice/IVideoControl.h
-      ifneq ($(shell $(grep_command_2)),)
-          LOCAL_CFLAGS += -DHWCVAL_VIDEOCONTROL_OPTIMIZATIONMODE
-      endif
-    else
-      BUILD_HWCSERVICE_API := 1
-      LOCAL_CFLAGS += -DHWCVAL_BUILD_HWCSERVICE_API -DHWCVAL_VIDEOCONTROL_OPTIMIZATIONMODE
-    endif
-
-    # Do we have PAVP library available?
-    ifeq ($(UFO_PAVP),n)
-        BUILD_PAVP := 1
-    else
-        BUILD_PAVP := 0
-    endif
-else
-    BUILD_SHIM_HWCSERVICE := 0
-    BUILD_HWCSERVICE_API := 0
-    BUILD_PAVP := 0
-endif
+BUILD_SHIM_HWCSERVICE := 0
+BUILD_HWCSERVICE_API := 1
+LOCAL_CFLAGS += -DHWCVAL_BUILD_HWCSERVICE_API 
 
 # In non-UFO builds we don't have a UFO_PAVP flag available
 # So if we want to decide which builds will support PAVP and which will not, we should choose this ourselves on some

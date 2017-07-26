@@ -20,8 +20,6 @@
 #ifdef HWCVAL_BUILD_SHIM_HWCSERVICE
 
 #include "BxService.h"
-#include "idisplaycontrol.h"
-#include "idisplaymodecontrol.h"
 
 class HwcTestKernel;
 class HwcTestCrtc;
@@ -36,12 +34,11 @@ public:
 
     /// restore default control (overscan, scale, ...)
     virtual status_t restoreAllDefaults();
-
+#if 0
     virtual sp<IDisplayOverscanControl> getOverscanControl();
     virtual sp<IDisplayScalingControl> getScalingControl();
     virtual sp<IDisplayModeControl> getModeControl();
     virtual sp<IDisplayBlankControl> getBlankControl();
-
 #ifdef EXPERIMENTAL
     ///
     virtual sp<IColorControl> getBrightnessControl() { return 0; }
@@ -62,10 +59,13 @@ public:
     virtual sp<IWidiControl> getWidiControl() { return 0; }
 #endif
 
+#endif
 private:
     uint32_t mDisplayIx;
+#if 0
     android::sp<::hwcomposer::IDisplayControl> mReal;
     android::sp<hwcomposer::IDisplayModeControl> mDisplayModeControl;
+#endif
     HwcTestKernel* mTestKernel;
 };
 

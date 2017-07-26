@@ -18,12 +18,11 @@
 #define __HwchDisplay_h__
 
 #include <sys/types.h>
+#include <vector>
 #include <hardware/hwcomposer_defs.h>
 #include "HwchCoord.h"
 #include "HwchBufferSet.h"
-#include "idisplaycontrol.h"
-#include "idisplaymodecontrol.h"
-#include "ivideocontrol.h"
+#define HWCVAL_BUILD_HWCSERVICE_API 0
 
 #ifdef HWCVAL_BUILD_HWCSERVICE_API
 #include "hwcserviceapi.h"
@@ -203,9 +202,7 @@ namespace Hwch
 
         BufferFormatConfigManager* mFmtCfgMgr;
 
-        android::sp<::hwcomposer::IDisplayControl> mDisplayControl;
-        android::sp<hwcomposer::IDisplayModeControl> mDisplayModeControl;
-        android::Vector<Mode> mModes;
+        std::vector<Mode> mModes;
 
     };
 

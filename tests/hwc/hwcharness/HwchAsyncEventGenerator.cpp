@@ -137,26 +137,8 @@ Hwch::AsyncEvent::HotPlugEventData::~HotPlugEventData()
 {
 }
 
-Hwch::AsyncEvent::ModeChangeEventData::ModeChangeEventData(uint32_t displayIx,
-                                                        android::sp<IDisplayModeControl> dispModeControl,
-                                                        const Hwch::Display::Mode& mode)
-  : mDisplayIx(displayIx),
-    mDispModeControl(dispModeControl),
-    mMode(mode)
-{
-}
 
 Hwch::AsyncEvent::ModeChangeEventData::~ModeChangeEventData()
-{
-}
-
-Hwch::AsyncEvent::VideoOptimizationModeData::VideoOptimizationModeData(
-    android::sp<hwcomposer::IVideoControl> videoControl,
-    const Display::VideoOptimizationMode videoOptimizationMode)
-    : mVideoControl(videoControl),
-      mVideoOptimizationMode(videoOptimizationMode) {}
-
-Hwch::AsyncEvent::VideoOptimizationModeData::~VideoOptimizationModeData()
 {
 }
 
@@ -413,78 +395,17 @@ bool Hwch::AsyncEventGenerator::WidiFencePolicy(AsyncEvent::WidiFencePolicyEvent
 
 bool Hwch::AsyncEventGenerator::ModeSet(Hwch::AsyncEvent::ModeChangeEventData* mc)
 {
-    HWCLOGA("D%d: Start mode change %dx%d@%d flags 0x%x ratio 0x%x",
-        mc->mDisplayIx, mc->mMode.width, mc->mMode.height, mc->mMode.refresh, mc->mMode.flags, mc->mMode.ratio);
-
-    int64_t startTime = systemTime(SYSTEM_TIME_MONOTONIC);
-#ifdef HWCVAL_BUILD_HWCSERVICE_API
-    if (!GetHwcsHandle())
-    {
-        HWCLOGD_COND(eLogHarness, "Could not get handle!");
-        return false;
-    }
-
-    status_t st = HwcService_DisplayMode_SetMode(mHwcsHandle, mc->mDisplayIx, &mc->mMode);
-#else
-    status_t st = mc->mDispModeControl->setMode(mc->mMode.width, mc->mMode.height, mc->mMode.refresh, mc->mMode.flags, mc->mMode.ratio);
-#endif
-    int64_t duration = systemTime(SYSTEM_TIME_MONOTONIC) - startTime;
-
-    HWCLOGA( "D%d: Finish mode change %dx%d@%d flags 0x%x ratio 0x%x in %fs",
-        mc->mDisplayIx, mc->mMode.width, mc->mMode.height, mc->mMode.refresh, mc->mMode.flags, mc->mMode.ratio,
-        double(duration) / HWCVAL_SEC_TO_NS);
-
-    return (st == 0);
+    return false;
 }
 
 bool Hwch::AsyncEventGenerator::ModeClear(Hwch::AsyncEvent::ModeChangeEventData* mc)
 {
-    HWCLOGD_COND(eLogHarness, "D%d: Reset preferred mode", mc->mDisplayIx);
-
-    int64_t startTime = systemTime(SYSTEM_TIME_MONOTONIC);
-    status_t st = mc->mDispModeControl->restorePreferredMode();
-    int64_t duration = systemTime(SYSTEM_TIME_MONOTONIC) - startTime;
-
-    HWCLOGD_COND(eLogHarness, "D%d: Finish reset preferred mode in %fs",
-        mc->mDisplayIx,
-        double(duration) / HWCVAL_SEC_TO_NS);
-
-    return (st == 0);
+    return false;
 }
 
 bool Hwch::AsyncEventGenerator::SetVideoOptimizationMode(AsyncEvent::VideoOptimizationModeData* eventData)
 {
-#ifdef HWCVAL_VIDEOCONTROL_OPTIMIZATIONMODE
-    HWCLOGD_COND(eLogHarness, "Set video optimization mode to %s",
-        (eventData->mVideoOptimizationMode == IVideoControl::eCamera) ? "Camera" :
-        (eventData->mVideoOptimizationMode == IVideoControl::eVideo) ? "Video" :
-        (eventData->mVideoOptimizationMode == IVideoControl::eNormal) ? "Normal" : "UNKNOWN");
-
-    int64_t startTime = systemTime(SYSTEM_TIME_MONOTONIC);
-#ifdef HWCVAL_BUILD_HWCSERVICE_API
-    if (!GetHwcsHandle())
-    {
-      HWCLOGE_COND(eLogHarness, "Handle to HWC Service is not setup!");
-      return false;
-    }
-
-    status_t st = HwcService_Video_SetOptimizationMode(mHwcsHandle,
-        (eventData->mVideoOptimizationMode == IVideoControl::eCamera) ? HWCS_OPTIMIZE_CAMERA :
-        (eventData->mVideoOptimizationMode == IVideoControl::eVideo) ? HWCS_OPTIMIZE_VIDEO :
-        HWCS_OPTIMIZE_NORMAL);
-#else
-    status_t st = eventData->mVideoControl->setOptimizationMode(eventData->mVideoOptimizationMode);
-#endif
-    int64_t duration = systemTime(SYSTEM_TIME_MONOTONIC) - startTime;
-
-    HWCLOGD_COND(eLogHarness, "Finish set video optimization mode in %fs",
-        double(duration) / HWCVAL_SEC_TO_NS);
-
-    return (st == 0);
-#else
-    HWCERROR(eCheckFacilityNotAvailable, "Video optimization mode not available on this build.");
     return false;
-#endif
 }
 
 #ifdef HWCVAL_BUILD_HWCSERVICE_API

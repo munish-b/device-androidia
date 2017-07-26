@@ -21,8 +21,6 @@
 #include <ui/GraphicBuffer.h>
 #include <utils/StrongPointer.h>
 #include "HwchDefs.h"
-#include "idisplaymodecontrol.h"
-#include "ivideocontrol.h"
 #include "HwchDisplay.h"
 #include "HwcvalWatchdog.h"
 
@@ -127,12 +125,10 @@ namespace Hwch
         public:
           ModeChangeEventData(
               uint32_t displayIx,
-              android::sp<hwcomposer::IDisplayModeControl> dispModeControl,
               const Display::Mode &mode);
             virtual ~ModeChangeEventData();
 
             uint32_t mDisplayIx;
-            android::sp<hwcomposer::IDisplayModeControl> mDispModeControl;
             Display::Mode mMode;
         };
 
@@ -140,11 +136,9 @@ namespace Hwch
         {
         public:
           VideoOptimizationModeData(
-              android::sp<hwcomposer::IVideoControl> videoControl,
               const Display::VideoOptimizationMode videoOptimizationMode);
             virtual ~VideoOptimizationModeData();
 
-            android::sp<hwcomposer::IVideoControl> mVideoControl;
             Display::VideoOptimizationMode mVideoOptimizationMode;
         };
 

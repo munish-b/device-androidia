@@ -20,11 +20,11 @@ ifneq (,$(filter $(HWC_VAL_TEST), Y y YES yes))
     include $(CLEAR_VARS)
     LOCAL_MODULE:= hwclogviewer
     LOCAL_PATH:=$(VAL_HWC_TESTS_PATH)
-    LOCAL_SRC_FILES:= LogView.cpp
+    LOCAL_SRC_FILES:= logview.cpp
     include $(VAL_HWC_HARDWARE_COMPOSER_PATH)/Android.common.mk
-    ifeq ($(strip $(INTEL_HWC_LOGVIEWER_BUILD)),true)
+    #ifeq ($(strip $(INTEL_HWC_LOGVIEWER_BUILD)),true)
 	include $(BUILD_EXECUTABLE)
-    endif
+    #endif
 
 
     include $(CLEAR_VARS)

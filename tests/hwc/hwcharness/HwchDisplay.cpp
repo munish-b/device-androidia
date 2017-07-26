@@ -25,15 +25,7 @@
 #include "HwchInterface.h"
 
 // Display mode control
-#ifdef HWCVAL_BUILD_HWCSERVICE_API
 #include "hwcserviceapi.h"
-#else
-
-#include "iservice.h"
-#include "idisplaymodecontrol.h"
-#include "idisplaycontrol.h"
-
-#endif
 
 using namespace hwcomposer;
 
@@ -475,16 +467,9 @@ uint32_t Hwch::Display::GetModes()
       return 0;
     }
 
-    // Get the number of available modes
-    status_t numModes = HwcService_DisplayMode_GetAvailableModes(mHwcsHandle, mDisplayIx, 0, NULL);
+    HwcService_DisplayMode_GetAvailableModes(mHwcsHandle, mDisplayIx, mModes);
 
-    if (numModes > 0)
-    {
-        mModes.resize(numModes);
-        HwcService_DisplayMode_GetAvailableModes(mHwcsHandle, mDisplayIx, numModes, mModes.editArray());
-    }
-
-    return numModes;
+    return mModes.size();
 #else
     if (GetModeControl())
     {
@@ -539,7 +524,7 @@ bool Hwch::Display::GetCurrentMode(uint32_t& ix)
 
         for (uint32_t i=0; i<mModes.size(); ++i)
         {
-            Hwch::Display::Mode testMode = mModes.itemAt(i);
+            Hwch::Display::Mode testMode = mModes[i];
             // workaround gcc 4.8 bug? This was not compiling using operator== once I declared additional templatized
             // operator== functions in HwchCoord.h. Hence change to a normal function.
             if (IsEqual(mode, testMode))
@@ -557,59 +542,25 @@ Hwch::Display::Mode Hwch::Display::GetMode(uint32_t ix)
 {
     ALOG_ASSERT(ix < mModes.size());
 
-    return mModes.itemAt(ix);
+    return mModes[ix];
 }
 
 bool Hwch::Display::SetMode(uint32_t ix, int32_t delayUs)
 {
     ALOG_ASSERT(ix < mModes.size());
-    const Mode& mode = mModes.itemAt(ix);
+    const Mode& mode = mModes[ix];
 
     return SetMode(mode, delayUs);
 }
 
 bool Hwch::Display::SetMode(const Hwch::Display::Mode& mode, int32_t delayUs)
 {
-#ifdef HWCVAL_BUILD_SHIM_HWCSERVICE
-    GetModeControl();
-
-    if (mDisplayModeControl.get() == 0)
-    {
-        return false;
-    }
-
-    android::sp<Hwch::AsyncEvent::ModeChangeEventData> mc = new Hwch::AsyncEvent::ModeChangeEventData
-        (mDisplayIx, mDisplayModeControl, mode);
-#else
-    android::sp<Hwch::AsyncEvent::ModeChangeEventData> mc = new Hwch::AsyncEvent::ModeChangeEventData
-        (mDisplayIx, nullptr, mode);
-#endif
-
-    Hwch::System::getInstance().AddEvent(Hwch::AsyncEvent::eModeSet, mc, delayUs);
-
-    HWCLOGD_COND(eLogHarness, "D%d: Set mode requested: %dx%d refresh %d flags 0x%x ratio 0x%x delay %fms",
-        mDisplayIx, mode.width, mode.height, mode.refresh, mode.flags, mode.ratio, double(delayUs) / HWCVAL_MS_TO_US);
 
     return true;
 }
 
 bool Hwch::Display::ClearMode()
 {
-    Hwch::Display::Mode mode;
-#ifdef HWCVAL_BUILD_SHIM_HWCSERVICE
-    GetModeControl();
-
-    android::sp<Hwch::AsyncEvent::ModeChangeEventData> mc = new Hwch::AsyncEvent::ModeChangeEventData
-        (mDisplayIx, mDisplayModeControl, mode);
-#else
-    android::sp<Hwch::AsyncEvent::ModeChangeEventData> mc = new Hwch::AsyncEvent::ModeChangeEventData
-        (mDisplayIx, nullptr, mode);
-#endif
-
-    Hwch::System::getInstance().AddEvent(Hwch::AsyncEvent::eModeClear, mc, 0);
-
-    HWCLOGD_COND(eLogHarness, "D%d: Clear mode requested",
-        mDisplayIx);
 
     return true;
 }

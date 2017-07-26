@@ -37,7 +37,7 @@
 #include "HwcvalThreadTable.h"
 
 #ifdef HWCVAL_ABSTRACTLOG_EXISTS
-#include "AbstractLog.h"
+#include "abstractlog.h"
 extern Hwcval::LogIntercept gLogIntercept;
 #endif
 
@@ -111,7 +111,7 @@ void HwcTestState::rundown()
 Hwcval::SetLogValPtr pfHwcLogSetLogVal = 0;
 #else
 #ifdef HWCVAL_ABSTRACTCOMPOSITIONCHECKER_EXISTS
-typedef uint32_t (*HwcLogSetCompositionCheckPtr) (hwcomposer::validation::AbstractCompositionChecker* compositionChecker);
+typedef uint32_t (*HwcLogSetCompositionCheckPtr) (hwcomposer::AbstractCompositionChecker* compositionChecker);
 static HwcLogSetCompositionCheckPtr pfHwcLogSetCompositionCheck = 0;
 #endif
 #endif
@@ -221,7 +221,7 @@ void HwcTestState::RegisterWithHwc()
     if (pfHwcLogSetLogVal)
     {
         HWCLOGD("HwcTestState: Registering for log validation");
-        hwcomposer::validation::AbstractCompositionChecker* compositionChecker = 0;
+        hwcomposer::AbstractCompositionChecker* compositionChecker = 0;
         Hwcval::LogChecker* logChecker = 0;
 
         if (mTestKernel)
@@ -245,8 +245,8 @@ void HwcTestState::RegisterWithHwc()
     if (pfHwcLogSetCompositionCheck)
     {
         HWCLOGD("HwcTestState: Registering for composition check callbacks");
-        hwcomposer::validation::AbstractCompositionChecker* compositionChecker =
-            static_cast<hwcomposer::validation::AbstractCompositionChecker*> (mTestKernel);
+        hwcomposer::AbstractCompositionChecker* compositionChecker =
+            static_cast<hwcomposer::AbstractCompositionChecker*> (mTestKernel);
         uint32_t hwcSupportedVersionMask = (pfHwcLogSetCompositionCheck)(compositionChecker);
 
         if ((hwcSupportedVersionMask & ABSTRACTCOMPOSITIONCHECKER_VAL_VERSIONS_SUPPORTED) == 0)

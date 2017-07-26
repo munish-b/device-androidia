@@ -473,6 +473,7 @@ bool Hwch::Test::SimulateHotPlug(bool connected, uint32_t displayTypes, uint32_t
     return SendEvent(connected ? AsyncEvent::eHotPlug : AsyncEvent::eHotUnplug, pData, delayUs);
 }
 
+#ifndef HWCVAL_BUILD_HWCSERVICE_API
 bool Hwch::Test::GetVideoControl()
 {
     if (mVideoControl.get() == 0)
@@ -499,7 +500,7 @@ bool Hwch::Test::GetVideoControl()
 
     return true;
 }
-
+#endif
 bool Hwch::Test::SetVideoOptimizationMode(Display::VideoOptimizationMode videoOptimizationMode, uint32_t delayUs)
 {
 #ifndef HWCVAL_BUILD_HWCSERVICE_API
@@ -507,12 +508,13 @@ bool Hwch::Test::SetVideoOptimizationMode(Display::VideoOptimizationMode videoOp
     {
         return false;
     }
-#endif
 
     android::sp<Hwch::AsyncEvent::VideoOptimizationModeData> params =
         new Hwch::AsyncEvent::VideoOptimizationModeData(mVideoControl, videoOptimizationMode);
 
     return Hwch::System::getInstance().AddEvent(Hwch::AsyncEvent::eSetVideoOptimizationMode, params, delayUs);
+#endif
+    return false;
 }
 
 void Hwch::Test::SetCheckPriority(HwcTestCheckType check, int priority)

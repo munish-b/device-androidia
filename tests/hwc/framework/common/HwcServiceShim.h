@@ -20,9 +20,7 @@
 #ifdef HWCVAL_BUILD_SHIM_HWCSERVICE
 
 #include "BxService.h"
-#include "idisplaycontrol.h"
 #include "idiagnostic.h"
-#include "ivideocontrol.h"
 //#include "IVideoResolutionListener.h"
 #ifdef HWCVAL_MDSEXTMODECONTROL
 #include "IMDSExtModeControl.h"
@@ -69,7 +67,7 @@ private:
     sp<IMDSExtModeControl> mMDSExtModeControl;
 #endif
 };
-
+#ifndef HWCVAL_BUILD_HWCSERVICE_API
 class HwcTestVideoControl : public BnVideoControl
 {
 public:
@@ -93,7 +91,7 @@ private:
     HwcTestKernel* mTestKernel;
     HwcTestProtectionChecker& mProtChecker;
 };
-
+#endif
 #endif // HWCVAL_BUILD_SHIM_HWCSERVICE
 
 #endif // __HwcServiceShim_h__

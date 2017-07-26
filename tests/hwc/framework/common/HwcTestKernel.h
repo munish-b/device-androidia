@@ -56,7 +56,6 @@
 #include "IFrameTypeChangeListener.h"
 #endif
 
-#include "ivideocontrol.h"
 
 class HwcTestState;
 class DrmShimBuffer;
@@ -469,13 +468,13 @@ public:
     // Configure/Use stalls
     void SetStall(Hwcval::StallType ix, const Hwcval::Stall& stall);
     void DoStall(Hwcval::StallType ix, Hwcval::Mutex* mtx = 0);
-
+#ifndef HWCVAL_BUILD_HWCSERVICE_API
     // Memory optimization mode
     void CheckSetOptimizationModeEnter(
         hwcomposer::IVideoControl::EOptimizationMode mode);
     void CheckSetOptimizationModeExit(
         int status, hwcomposer::IVideoControl::EOptimizationMode mode);
-
+#endif
     // Hwc options
     const char* GetHwcOptionStr(const char* optionName);
     int GetHwcOptionInt(const char* optionName);

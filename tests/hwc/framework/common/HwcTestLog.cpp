@@ -24,7 +24,7 @@
 #endif
 
 #ifdef HWCVAL_ABSTRACTLOG_EXISTS
-#include "AbstractLog.h"
+#include "abstractlog.h"
 #include "HwcvalLogIntercept.h"
 
 Hwcval::SetLogValPtr pfHwcLogSetLogVal = 0;

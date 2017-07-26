@@ -609,56 +609,11 @@ bool Hwcval::LogParser::ParseMDSUpdateInputStateExit(pid_t pid, int64_t timestam
 
 bool Hwcval::LogParser::ParseSetOptimizationModeEntry(pid_t pid, int64_t timestamp, const char* str)
 {
-    HWCVAL_UNUSED(pid);
-    HWCVAL_UNUSED(timestamp);
-
-    int32_t num_fields_matched = 0, opt_mode = 0;
-
-    if (MatchRegex("HwcService_Video_SetOptimizationMode (\\d+)", str, &num_fields_matched, &opt_mode))
-    {
-        mParsedOptimizationMode =
-            static_cast<hwcomposer::IVideoControl::EOptimizationMode>(opt_mode);
-
-        mTestKernel->CheckSetOptimizationModeEnter(mParsedOptimizationMode);
-
-        HWCLOGD_COND(eLogParse, "PARSED MATCHED %s - set video optimisation mode: %d ", str, mParsedOptimizationMode);
-        return true;
-    }
-
     return false;
 }
 
 bool Hwcval::LogParser::ParseSetOptimizationModeExit(pid_t pid, int64_t timestamp, const char* str)
 {
-    HWCVAL_UNUSED(pid);
-    HWCVAL_UNUSED(timestamp);
-
-    int32_t num_fields_matched = 0, ret_val = 0;
-
-    if (MatchRegex("HwcService_Video_SetOptimizationMode OK <--", str))
-    {
-        mTestKernel->CheckSetOptimizationModeExit(android::OK, mParsedOptimizationMode);
-
-        HWCLOGD_COND(eLogParse, "PARSED MATCHED %s - set video optimisation mode exit (OK)",
-            str);
-        return true;
-    }
-    else if (MatchRegex("HwcService_Video_SetOptimizationMode ERROR (\\d+) <--", str, &num_fields_matched, &ret_val))
-    {
-        if (num_fields_matched == 1)
-        {
-            mTestKernel->CheckSetOptimizationModeExit(ret_val, mParsedOptimizationMode);
-
-            HWCLOGD_COND(eLogParse, "PARSED MATCHED %s - set video optimisation mode exit (return code: %d)",
-                str, ret_val);
-            return true;
-        }
-        else
-        {
-            HWCERROR(eCheckLogParserError, "%s: Failed to extract return value", __func__);
-        }
-    }
-
     return false;
 }
 

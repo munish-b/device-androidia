@@ -71,8 +71,7 @@ ifdef HWCVAL_BUILD_GL_TESTS
 LOCAL_SRC_FILES += HwchGlTests.cpp
 endif
    
-LOCAL_C_INCLUDES += $(VAL_HWC_TOP)/tests/hwc/intel 
-#if 0
+LOCAL_C_INCLUDES += $(VAL_HWC_TOP)/intel 
 ifeq ($(BUILD_PAVP),1)
     ifeq ($(VAL_HWC_HAVE_UFO), 1)
         LOCAL_C_INCLUDES += hardware/intel/ufo/ufo/Source/Android/cp/libpavp/src \
@@ -88,7 +87,6 @@ ifeq ($(BUILD_PAVP),1)
     LOCAL_SHARED_LIBRARIES += libpavp
     LOCAL_SHARED_LIBRARIES += libcoreuinterface libcoreuservice
 endif
-#endif
 LOCAL_SHARED_LIBRARIES += \
     libbinder \
     libdrm \

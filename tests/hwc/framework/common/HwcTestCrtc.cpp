@@ -23,7 +23,6 @@
 #include "HwcTestState.h"
 #include "HwcvalContent.h"
 #include "HwcTestProtectionChecker.h"
-#include "idisplaymodecontrol.h"
 #include "HwcvalLogDisplay.h"
 
 using namespace Hwcval;
@@ -1726,8 +1725,6 @@ void HwcTestCrtc::SetUserModeFinish(android::status_t st, uint32_t width, uint32
         mUserMode.width = width;
         mUserMode.height = height;
         mUserMode.refresh = refresh;
-        mUserMode.flags = flags;
-        mUserMode.ratio = ratio;
         mUserModeState = eUserModeSet;
     }
     else
@@ -1741,18 +1738,6 @@ void HwcTestCrtc::SetAvailableModes(const HwcTestCrtc::ModeVec& modes)
     HWCLOGD_COND(eLogVideo, "D%d SetAvailableModes: %d modes", mDisplayIx, modes.size());
     mAvailableModes = modes;
     mPreferredModeCount = 0;
-
-    for (uint32_t i=0; i<mAvailableModes.size(); ++i)
-    {
-        const Mode& mode = mAvailableModes.itemAt(i);
-        if (mode.flags & HWCVAL_MODE_FLAG_PREFERRED)
-        {
-            HWCLOGD_COND(eLogVideo, "D%d SetAvailableModes found preferred mode %dx%d:%d",
-                mDisplayIx, mode.width, mode.height, mode.refresh);
-            mPreferredMode = mode;
-            ++mPreferredModeCount;
-        }
-    }
 
     // Don't generate any wrong mode errors until HWC has a chance to process this.
     // HWC issues drmModeGetConnector on the hotplug thread not the drm thread, so inherently it is racing the
@@ -1890,15 +1875,6 @@ void HwcTestCrtc::ValidateMode(HwcTestKernel* testKernel)
         mismatch = true;
     }
 
-    HWCLOGD_COND(eLogVideo, "D%d Using %dx%d:%d %x %s Requested %dx%d:%d %x %s Video Rate %d %s FramesSinceChange %d",
-                            mDisplayIx, mActualMode.width, mActualMode.height, mActualMode.refresh,
-                            mActualMode.ratio, DrmShimChecks::AspectStr(mActualMode.ratio),
-                            requiredMode.width, requiredMode.height, requiredMode.refresh,
-                            requiredMode.ratio, DrmShimChecks::AspectStr(requiredMode.ratio),
-                            extendedMode ? videoRate : 0,
-                            matchRefresh ? "Video matching required" : "",
-                            mFramesSinceRequiredModeChange);
-
     if (mismatch)
     {
         uint32_t minRefresh = UINT_MAX;
@@ -1908,11 +1884,8 @@ void HwcTestCrtc::ValidateMode(HwcTestKernel* testKernel)
         for (uint32_t i=0; i<mAvailableModes.size(); ++i)
         {
             const Mode& mode = mAvailableModes.itemAt(i);
-            HWCLOGV_COND(eLogVideo, "%dx%d:%d %x %s", mode.width, mode.height, mode.refresh,
-                mode.ratio, DrmShimChecks::AspectStr(mode.ratio));
             if ((mode.width == requiredMode.width) &&
-                (mode.height == requiredMode.height) &&
-                (mode.ratio == requiredMode.ratio))
+                (mode.height == requiredMode.height))
             {
                 bool err = false;
                 if (matchRefresh)
@@ -1943,26 +1916,11 @@ void HwcTestCrtc::ValidateMode(HwcTestKernel* testKernel)
                 }
                 if ( err )
                 {
-                    HWCERROR(eCheckDisplayMode, "D%d Using %dx%d:%d %s Requested %dx%d:%d %s Video Rate %d Available %dx%d:%d %s %s",
-                            mDisplayIx, mActualMode.width, mActualMode.height, mActualMode.refresh, DrmShimChecks::AspectStr(mActualMode.ratio),
-                            requiredMode.width, requiredMode.height, requiredMode.refresh, DrmShimChecks::AspectStr(requiredMode.ratio),
-                            extendedMode ? videoRate : 0,
-                            mode.width, mode.height, mode.refresh, DrmShimChecks::AspectStr(mode.ratio),
-                            matchRefresh ? "Video matching required" : "");
-
                     break;
                 }
             }
         }
 
-        if (drrs && (videoRate > minRefresh) && (videoRate < maxRefresh) && matchRefresh)
-        {
-            HWCERROR(eCheckDisplayMode, "D%d Using %dx%d:%d %s Requested %dx%d:%d %s Video Rate %d Available DRRS rates %d-%d",
-                            mDisplayIx, mActualMode.width, mActualMode.height, mActualMode.refresh, DrmShimChecks::AspectStr(mActualMode.ratio),
-                            requiredMode.width, requiredMode.height, requiredMode.refresh, DrmShimChecks::AspectStr(requiredMode.ratio),
-                            videoRate,
-                            minRefresh, maxRefresh);
-        }
     }
     else if (requiredMode.refresh != mActualMode.refresh)
     {

@@ -21,8 +21,8 @@
 #include <cstdarg>
 #include <utils/Log.h>
 
-#include "AbstractCompositionChecker.h"
-#include "AbstractLog.h"
+#include "abstractcompositionchecker.h"
+#include "abstractlog.h"
 
 namespace Hwcval
 {
@@ -82,7 +82,7 @@ namespace Hwcval
 
         // Control functions
         void Register( Hwcval::LogChecker* logChecker,
-                       ::hwcomposer::validation::AbstractCompositionChecker* compositionChecker,
+                       ::hwcomposer::AbstractCompositionChecker* compositionChecker,
                        uint32_t compositionVersionsSupported);
 
         ::hwcomposer::AbstractLogWrite* GetRealLog();
@@ -94,7 +94,7 @@ namespace Hwcval
     }
 
     typedef ::hwcomposer::AbstractLogWrite* (*SetLogValPtr) (::hwcomposer::AbstractLogWrite* logVal,
-                                   ::hwcomposer::validation::AbstractCompositionChecker* checkComposition,
+                                   ::hwcomposer::AbstractCompositionChecker* checkComposition,
                                    uint32_t& versionSupportMask);
 }
 

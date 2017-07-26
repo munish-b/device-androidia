@@ -21,7 +21,6 @@
 #ifdef HWCVAL_MDSEXTMODECONTROL
 
 #include "BxService.h"
-#include "IDisplayControl.h"
 #include "IDiagnostic.h"
 #include "IMDSExtModeControl.h"
 

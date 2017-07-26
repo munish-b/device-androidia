@@ -47,7 +47,6 @@
 #include "hwcserviceapi.h"
 #endif
 
-#include "ivideocontrol.h"
 
 
 namespace Hwch
@@ -209,8 +208,6 @@ namespace Hwch
             HWCSHANDLE mHwcsHandle = nullptr;
 #endif
 
-            // Video control for setting camera optimization mode
-            android::sp<hwcomposer::IVideoControl> mVideoControl;
 
 #ifdef TARGET_HAS_MCG_WIDI
             // Widi related member variables

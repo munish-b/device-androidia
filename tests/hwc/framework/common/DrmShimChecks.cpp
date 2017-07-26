@@ -323,13 +323,6 @@ void DrmShimChecks::CheckGetConnectorExit(int fd, uint32_t connId, drmModeConnec
         mode.width = pMode->hdisplay;
         mode.height = pMode->vdisplay;
         mode.refresh = pMode->vrefresh;
-        mode.ratio = pMode->HWCVAL_DRM_ASPECT;
-        mode.flags = 0;
-
-        if (pMode->type & DRM_MODE_TYPE_PREFERRED)
-        {
-            mode.flags = HWCVAL_MODE_FLAG_PREFERRED;
-        }
 
         modes.add(mode);
 
@@ -356,13 +349,6 @@ void DrmShimChecks::CheckGetConnectorExit(int fd, uint32_t connId, drmModeConnec
             mode.width = pMode->hdisplay;
             mode.height = pMode->vdisplay;
             mode.refresh = pMode->vrefresh;
-            mode.ratio = pMode->HWCVAL_DRM_ASPECT;
-            mode.flags = 0;
-
-            if (pMode->type & DRM_MODE_TYPE_PREFERRED)
-            {
-                mode.flags = HWCVAL_MODE_FLAG_PREFERRED;
-            }
 
             modes.add(mode);
         }
@@ -579,8 +565,6 @@ void DrmShimChecks::CheckSetCrtcEnter ( int fd, uint32_t crtcId,
     actualMode.width = mode->hdisplay;
     actualMode.height = mode->vdisplay;
     actualMode.refresh = mode->vrefresh;
-    actualMode.flags = mode->flags;
-    actualMode.ratio = mode->HWCVAL_DRM_ASPECT;
     crtc->SetActualMode(actualMode);
 
     ix = mPlanes.indexOfKey(crtcId);

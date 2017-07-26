@@ -22,7 +22,7 @@ VAL_HWC_HWC_TEST_LOCAL_C_INCLUDES := \
         $(VAL_HWC_HWC_COMMON_INC_PATH) \
         $(VAL_HWC_LIB_DRM_PATHS) \
         $(VAL_HWC_LIB_LOGGER) \
-        $(VAL_HWC_TOP)/tests/hwc/intel
+        $(VAL_HWC_TOP)/intel
 
 VAL_HWC_HWC_TEST_LOCAL_SHARED_LIBRARIES := \
         libc \
@@ -60,7 +60,7 @@ LOCAL_STATIC_LIBRARIES += libvalhwcstatic
 LOCAL_MODULE_TAGS:= optional
 LOCAL_MODULE:= libvalhwc_test
 
-include $(VAL_HWC_TOP)/common/ModuleCommon.mk
+include $(VAL_HWC_TOP)/../../common/ModuleCommon.mk
 include $(VAL_HWC_HWC_COMMON_INC_PATH)/Hwcval.mk
 include $(BUILD_STATIC_LIBRARY)
 

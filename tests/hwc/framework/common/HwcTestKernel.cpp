@@ -2932,27 +2932,6 @@ void HwcTestKernel::DoStall(Hwcval::StallType ix, Hwcval::Mutex* mtx)
     mState->GetStall(ix).Do(mtx);
 }
 
-void HwcTestKernel::CheckSetOptimizationModeEnter(
-    hwcomposer::IVideoControl::EOptimizationMode mode) {
-  bool bForceLowDDRMode = (mode != hwcomposer::IVideoControl::eNormal);
-    HWCLOGD("CheckSetOptimizationModeEnter: DDR Optimization mode setting to %s", bForceLowDDRMode ? "LOW" : "NORMAL");
-    mChangingDDRMode++;
-}
-
-void HwcTestKernel::CheckSetOptimizationModeExit(
-    int status, hwcomposer::IVideoControl::EOptimizationMode mode) {
-    if (status)
-    {
-        HWCLOGW("IVideoControl failed to set optimization mode");
-    }
-    else
-    {
-      mForceLowDDRMode = (mode != hwcomposer::IVideoControl::eNormal);
-        HWCLOGD("CheckSetOptimizationModeExit: DDR Optimization mode set to %s", mForceLowDDRMode ? "LOW" : "NORMAL");
-    }
-
-    mChangingDDRMode--;
-}
 
 void HwcTestKernel::ValidateOptimizationMode(Hwcval::LayerList* ll)
 {
