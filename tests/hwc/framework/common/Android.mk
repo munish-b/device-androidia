@@ -29,7 +29,7 @@ LOCAL_C_INCLUDES += \
 LOCAL_SHARED_LIBRARIES += libbinder
 LOCAL_MODULE_TAGS:= optional
 LOCAL_MODULE:= libvalhwcstatic
-include $(VAL_HWC_TOP)/common/ModuleCommon.mk
+include $(VAL_HWC_TOP)/../../common/ModuleCommon.mk
 
 include $(BUILD_STATIC_LIBRARY)
 
@@ -43,9 +43,9 @@ LOCAL_SRC_FILES:=\
     hwc_shim_binder.cpp \
     HwcTestConfig.cpp \
     HwcCrcReader.cpp \
+    HwcTestState.cpp \
     HwcTestCrtc.cpp \
     HwcTestLog.cpp \
-    HwcTestState.cpp \
     HwcvalContent.cpp \
     HwcvalHwc1Content.cpp \
     HwcvalHwc1.cpp \
@@ -66,12 +66,12 @@ LOCAL_SRC_FILES:=\
     HwcvalDrmParser.cpp \
     HwcvalLogDisplay.cpp \
     HwcvalLayerListQueue.cpp \
-    DrmShimChecks.cpp \
     DrmShimCrtc.cpp \
     DrmShimPlane.cpp \
     DrmShimBuffer.cpp \
-    BufferObject.cpp \
     DrmShimTransform.cpp \
+    DrmShimChecks.cpp \
+    BufferObject.cpp \
     DrmShimCallbackBase.cpp \
     DrmShimWork.cpp \
     SSIMUtils.cpp \
@@ -88,7 +88,7 @@ ifeq ($(BUILD_SHIM_HWCSERVICE),1)
         HwcTestDisplayControl.cpp
 endif
 
-LOCAL_SHARED_LIBRARIES += libgrallocclient \
+LOCAL_SHARED_LIBRARIES += \
     libdl \
     libhardware \
     libhwcservice \
@@ -110,13 +110,18 @@ LOCAL_C_INCLUDES += \
     $(LOCAL_PATH)/../mds_shim/ \
     $(VAL_HWC_LIB_DRM_PATHS) \
     $(VAL_HWC_LIB_IVP_PATHS) \
-    $(VAL_HWC_HARDWARE_COMPOSER_PATH)/libhwcservice \
-    $(VAL_HWC_MDS_PATH)
+    $(VAL_HWC_HARDWARE_COMPOSER_PATH)/os/android/libhwcservice \
+    $(VAL_HWC_MDS_PATH) \
+    $(VAL_HWC_HARDWARE_COMPOSER_PATH)/../libdrm/intel \
+    $(VAL_HWC_TOP)/intel \
+    $(VAL_HWC_TOP)/hwcharness \
+    $(VAL_HWC_HARDWARE_COMPOSER_PATH)/common/utils/val \
+    $(VAL_HWC_HARDWARE_COMPOSER_PATH)/os/android/libhwcservice 
 
 LOCAL_EXPORT_C_INCLUDE_DIRS += $(LOCAL_PATH)
 LOCAL_MODULE_TAGS:= optional
 LOCAL_MODULE:= libvalhwccommon
-include $(VAL_HWC_TOP)/common/ModuleCommon.mk
+include $(VAL_HWC_TOP)/../../common/ModuleCommon.mk
 
 include $(BUILD_SHARED_LIBRARY)
 

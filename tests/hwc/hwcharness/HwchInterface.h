@@ -1,36 +1,25 @@
-/****************************************************************************
-*
-* Copyright (c) Intel Corporation (2014).
-*
-* DISCLAIMER OF WARRANTY
-* NEITHER INTEL NOR ITS SUPPLIERS MAKE ANY REPRESENTATION OR WARRANTY OR
-* CONDITION OF ANY KIND WHETHER EXPRESS OR IMPLIED (EITHER IN FACT OR BY
-* OPERATION OF LAW) WITH RESPECT TO THE SOURCE CODE.  INTEL AND ITS SUPPLIERS
-* EXPRESSLY DISCLAIM ALL WARRANTIES OR CONDITIONS OF MERCHANTABILITY OR
-* FITNESS FOR A PARTICULAR PURPOSE.  INTEL AND ITS SUPPLIERS DO NOT WARRANT
-* THAT THE SOURCE CODE IS ERROR-FREE OR THAT OPERATION OF THE SOURCE CODE WILL
-* BE SECURE OR UNINTERRUPTED AND HEREBY DISCLAIM ANY AND ALL LIABILITY ON
-* ACCOUNT THEREOF.  THERE IS ALSO NO IMPLIED WARRANTY OF NON-INFRINGEMENT.
-* SOURCE CODE IS LICENSED TO LICENSEE ON AN "AS IS" BASIS AND NEITHER INTEL
-* NOR ITS SUPPLIERS WILL PROVIDE ANY SUPPORT, ASSISTANCE, INSTALLATION,
-* TRAINING OR OTHER SERVICES.  INTEL AND ITS SUPPLIERS WILL NOT PROVIDE ANY
-* UPDATES, ENHANCEMENTS OR EXTENSIONS.
-*
-* File Name:            Interface.h
-*
-* Description:          Hardware composer interface class definition
-*
-* Environment:
-*
-* Notes:
-*
-*****************************************************************************/
+/*
+ * Copyright (C) 2016 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 #ifndef __HWCHINTERFACE_H__
 #define __HWCHINTERFACE_H__
 
 #include <dlfcn.h>
-
-#include <hardware/hwcomposer.h>
+#include "Hwcval.h"
+#include <hardware/hwcomposer2.h>
 #include <utils/Condition.h>
 #include <utils/Mutex.h>
 #include <utils/StrongPointer.h>
@@ -58,16 +47,37 @@ namespace Hwch
             int RegisterProcs(void);
             int GetDisplayAttributes();
             int GetDisplayAttributes(uint32_t disp);
-            int Prepare(size_t numDisplays, hwc_display_contents_1_t** displays);
-            int Set(size_t numDisplays, hwc_display_contents_1_t** displays);
+            int Prepare(size_t numDisplays, hwc2_display_t **displays);
+            int Set(size_t numDisplays, hwc2_display_t **displays);
             int EventControl(uint32_t disp, uint32_t event, uint32_t enable);
             int Blank(int disp, int blank);
             int IsBlanked(int disp);
 
+            /*HWC2 functions*/
+            int ValidateDisplay(hwc2_display_t display, uint32_t *outNumTypes,
+                                uint32_t *outNumRequests);
+            int PresentDisplay(hwc2_display_t display,
+                               int32_t *outPresentFence);
+            int CreateLayer(hwc2_display_t disp, hwc2_layer_t *outLayer);
+            int setLayerCompositionType(hwc2_display_t disp, hwc2_layer_t layer,
+                                        int32_t type);
+            int setLayerBlendMode(hwc2_display_t disp, hwc2_layer_t layer,
+                                  int32_t mode);
+            int setLayerTransform(hwc2_display_t disp, hwc2_layer_t layer,
+                                  int32_t transform);
+            int setLayerSourceCrop(hwc2_display_t disp, hwc2_layer_t layer,
+                                   hwc_frect_t crop);
+            int setLayerDisplayFrame(hwc2_display_t disp, hwc2_layer_t layer,
+                                     hwc_rect_t frame);
+            int setLayerPlaneAlpha(hwc2_display_t disp, hwc2_layer_t layer,
+                                   float alpha);
+            int setLayerVisibleRegion(hwc2_display_t disp, hwc2_layer_t layer,
+                                      hwc_region_t visible);
+
             void UpdateDisplays(uint32_t hwcAcquireDelay);
             uint32_t NumDisplays();
 
-            hwc_composer_device_1 *GetDevice(void);
+            hwc2_device *GetDevice(void);
 
             bool IsRepaintNeeded();
             void ClearRepaintNeeded();
@@ -87,7 +97,7 @@ namespace Hwch
         private:
             struct cb_context;
 
-            hwc_composer_device_1 *hwc_composer_device;
+            hwc2_device *hwc_composer_device;
             cb_context*           mCBContext;
 
             uint32_t mDisplayNeedsUpdate;    // Hotplug received on this display and not processed yet

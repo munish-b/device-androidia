@@ -1,30 +1,19 @@
-/****************************************************************************
-*
-* Copyright (c) Intel Corporation (2014).
-*
-* DISCLAIMER OF WARRANTY
-* NEITHER INTEL NOR ITS SUPPLIERS MAKE ANY REPRESENTATION OR WARRANTY OR
-* CONDITION OF ANY KIND WHETHER EXPRESS OR IMPLIED (EITHER IN FACT OR BY
-* OPERATION OF LAW) WITH RESPECT TO THE SOURCE CODE.  INTEL AND ITS SUPPLIERS
-* EXPRESSLY DISCLAIM ALL WARRANTIES OR CONDITIONS OF MERCHANTABILITY OR
-* FITNESS FOR A PARTICULAR PURPOSE.  INTEL AND ITS SUPPLIERS DO NOT WARRANT
-* THAT THE SOURCE CODE IS ERROR-FREE OR THAT OPERATION OF THE SOURCE CODE WILL
-* BE SECURE OR UNINTERRUPTED AND HEREBY DISCLAIM ANY AND ALL LIABILITY ON
-* ACCOUNT THEREOF.  THERE IS ALSO NO IMPLIED WARRANTY OF NON-INFRINGEMENT.
-* SOURCE CODE IS LICENSED TO LICENSEE ON AN "AS IS" BASIS AND NEITHER INTEL
-* NOR ITS SUPPLIERS WILL PROVIDE ANY SUPPORT, ASSISTANCE, INSTALLATION,
-* TRAINING OR OTHER SERVICES.  INTEL AND ITS SUPPLIERS WILL NOT PROVIDE ANY
-* UPDATES, ENHANCEMENTS OR EXTENSIONS.
-*
-* File Name:            HwchLayer.h
-*
-* Description:          Layer class definition
-*
-* Environment:
-*
-* Notes:
-*
-*****************************************************************************/
+/*
+ * Copyright (C) 2016 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 #ifndef __HwchLayer_h__
 #define __HwchLayer_h__
 
@@ -36,9 +25,8 @@
 
 #include <utils/Vector.h>
 #include <utils/RefBase.h>
-#include "GrallocClient.h"
 #include <ui/GraphicBuffer.h>
-#include <hardware/hwcomposer.h>
+#include <hardware/hwcomposer2.h>
 
 #include "HwchPattern.h"
 #include "HwchBufferSet.h"
@@ -112,20 +100,22 @@ namespace Hwch
     class Layer
     {
         public:
-            uint32_t mCompType;             // Composition type originally defined
-            uint32_t mCurrentCompType;      // Composition type now
+          int32_t mCompType;        // Composition type originally defined
+          int32_t mCurrentCompType; // Composition type now
+          int32_t compositionType;
             uint32_t mHints;
             uint32_t mFlags;
-            uint32_t mLogicalTransform;
-            uint32_t mPhysicalTransform;
-            uint32_t mBlending;
+            int32_t mLogicalTransform;
+            int32_t mPhysicalTransform;
+            int32_t mBlending;
             uint32_t mFormat;
             uint32_t mNumBuffers;
             uint32_t mPlaneAlpha;   // only used from Android 4.3
             Coord<int32_t> mWidth; // buffer width
             Coord<int32_t> mHeight; // buffer height
             uint32_t mUsage;
-
+            buffer_handle_t handle;
+            hwc2_layer_t hwc2_layer;
             // Forced tiling options
             enum
             {
@@ -285,9 +275,11 @@ namespace Hwch
             // Functions for framework usage only //
             ////////////////////////////////////////
 
-            void AssignLayerProperties(hwc_layer_1_t& hwLayer, buffer_handle_t handle);
-            void AssignVisibleRegions(hwc_layer_1_t& hwLayer, hwc_rect_t* visibleRegions, uint32_t& visibleRegionCount);
-            virtual void Send(hwc_layer_1_t& hwLayer, hwc_rect_t* visibleRegions, uint32_t& visibleRegionCount);
+            // void AssignLayerProperties(hwc2_layer_t& hwLayer, buffer_handle_t
+            // handle);
+            hwc_rect_t *AssignVisibleRegions(hwc_rect_t *visibleRegions,
+                                             uint32_t &visibleRegionCount);
+            virtual buffer_handle_t Send();
 
             void SetCompositionType(uint32_t compType);
             void PostFrame(uint32_t compType, int releaseFenceFd);
@@ -304,7 +296,9 @@ namespace Hwch
             Layer& SetForCloning(bool forCloning);
             Layer& SetFrame(Frame* frame);
             Hwch::Frame* GetFrame();
-            void SetAcquireFence(hwc_layer_1_t& hwLayer, android::sp<TimelineThread>& timelineThread, int mergeFence);
+            void SetAcquireFence(hwc2_layer_t &hwLayer,
+                                 android::sp<TimelineThread> &timelineThread,
+                                 int mergeFence);
 
             void CalculateSourceCrop(Display& display);
             void CalculateDisplayFrame(Display& display);

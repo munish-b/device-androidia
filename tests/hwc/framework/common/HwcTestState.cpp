@@ -1,31 +1,18 @@
-/****************************************************************************
-
-Copyright (c) Intel Corporation (2014).
-
-DISCLAIMER OF WARRANTY
-NEITHER INTEL NOR ITS SUPPLIERS MAKE ANY REPRESENTATION OR WARRANTY OR
-CONDITION OF ANY KIND WHETHER EXPRESS OR IMPLIED (EITHER IN FACT OR BY
-OPERATION OF LAW) WITH RESPECT TO THE SOURCE CODE.  INTEL AND ITS SUPPLIERS
-EXPRESSLY DISCLAIM ALL WARRANTIES OR CONDITIONS OF MERCHANTABILITY OR
-FITNESS FOR A PARTICULAR PURPOSE.  INTEL AND ITS SUPPLIERS DO NOT WARRANT
-THAT THE SOURCE CODE IS ERROR-FREE OR THAT OPERATION OF THE SOURCE CODE WILL
-BE SECURE OR UNINTERRUPTED AND HEREBY DISCLAIM ANY AND ALL LIABILITY ON
-ACCOUNT THEREOF.  THERE IS ALSO NO IMPLIED WARRANTY OF NON-INFRINGEMENT.
-SOURCE CODE IS LICENSED TO LICENSEE ON AN "AS IS" BASIS AND NEITHER INTEL
-NOR ITS SUPPLIERS WILL PROVIDE ANY SUPPORT, ASSISTANCE, INSTALLATION,
-TRAINING OR OTHER SERVICES.  INTEL AND ITS SUPPLIERS WILL NOT PROVIDE ANY
-UPDATES, ENHANCEMENTS OR EXTENSIONS.
-
-File Name:      HwcTestState.cpp
-
-Description:    Class implementation for HWCShim class.
-
-Environment:
-
-Notes:
-
-****************************************************************************/
-
+/*
+ * Copyright (C) 2016 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 #undef LOG_TAG
 #define LOG_TAG "HWC_SHIM"
@@ -37,7 +24,6 @@ Notes:
 #include "HwcTestDefs.h"
 
 #include "hardware/hwcomposer_defs.h"
-#include "GrallocClient.h"
 
 #include "HwcTestState.h"
 #include "hwc_shim_binder.h"
@@ -51,7 +37,7 @@ Notes:
 #include "HwcvalThreadTable.h"
 
 #ifdef HWCVAL_ABSTRACTLOG_EXISTS
-#include "AbstractLog.h"
+#include "abstractlog.h"
 extern Hwcval::LogIntercept gLogIntercept;
 #endif
 
@@ -122,10 +108,10 @@ void HwcTestState::rundown()
     }
 }
 #ifdef HWCVAL_ABSTRACTLOG_EXISTS
-extern Hwcval::SetLogValPtr pfHwcLogSetLogVal;
+Hwcval::SetLogValPtr pfHwcLogSetLogVal = 0;
 #else
 #ifdef HWCVAL_ABSTRACTCOMPOSITIONCHECKER_EXISTS
-typedef uint32_t (*HwcLogSetCompositionCheckPtr) (intel::ufo::hwc::validation::AbstractCompositionChecker* compositionChecker);
+typedef uint32_t (*HwcLogSetCompositionCheckPtr) (hwcomposer::AbstractCompositionChecker* compositionChecker);
 static HwcLogSetCompositionCheckPtr pfHwcLogSetCompositionCheck = 0;
 #endif
 #endif
@@ -235,16 +221,19 @@ void HwcTestState::RegisterWithHwc()
     if (pfHwcLogSetLogVal)
     {
         HWCLOGD("HwcTestState: Registering for log validation");
-        intel::ufo::hwc::validation::AbstractCompositionChecker* compositionChecker = 0;
+        hwcomposer::AbstractCompositionChecker* compositionChecker = 0;
         Hwcval::LogChecker* logChecker = 0;
 
         if (mTestKernel)
         {
-            compositionChecker = static_cast<intel::ufo::hwc::validation::AbstractCompositionChecker*> (mTestKernel);
+          // compositionChecker =
+          // static_cast<hwcomposer::validation::AbstractCompositionChecker*>
+          // (mTestKernel);
             logChecker = mTestKernel->GetParser();
         }
 
-        gLogIntercept.Register(logChecker, compositionChecker, ABSTRACTCOMPOSITIONCHECKER_VAL_VERSIONS_SUPPORTED);
+        // gLogIntercept.Register(logChecker, compositionChecker,
+        // ABSTRACTCOMPOSITIONCHECKER_VAL_VERSIONS_SUPPORTED);
     }
     else
     {
@@ -256,8 +245,8 @@ void HwcTestState::RegisterWithHwc()
     if (pfHwcLogSetCompositionCheck)
     {
         HWCLOGD("HwcTestState: Registering for composition check callbacks");
-        intel::ufo::hwc::validation::AbstractCompositionChecker* compositionChecker =
-            static_cast<intel::ufo::hwc::validation::AbstractCompositionChecker*> (mTestKernel);
+        hwcomposer::AbstractCompositionChecker* compositionChecker =
+            static_cast<hwcomposer::AbstractCompositionChecker*> (mTestKernel);
         uint32_t hwcSupportedVersionMask = (pfHwcLogSetCompositionCheck)(compositionChecker);
 
         if ((hwcSupportedVersionMask & ABSTRACTCOMPOSITIONCHECKER_VAL_VERSIONS_SUPPORTED) == 0)
@@ -500,56 +489,7 @@ void HwcTestState::StopThreads()
 
 bool HwcTestState::IsFenceValid(int fence, uint32_t disp, uint32_t hwcFrame, bool checkSignalled, bool checkUnsignalled)
 {
-    if (mLive)
-    {
-        if (fence < 0)
-        {
-            HWCLOGD_COND(eLogFence, "IsFenceValid: fence=-1, and we are looking for %s",
-                checkSignalled ? "signalled so this is valid" : "not signalled so this is invalid");
-            return checkSignalled;
-        }
-        else if (fence == 0)
-        {
-            return false;
-        }
-
-        struct sync_fence_info_data * fenceData = sync_fence_info(fence);
-
-        if (fenceData == 0)
-        {
-            HWCERROR(eCheckFenceQueryFail, "Display %d frame:%d failed to query fence %d",
-                disp, hwcFrame, fence);
-
-            // We've already logged the error, so pretend everything is OK
-            return true;
-        }
-        else if (fenceData->status < 0)
-        {
-            HWCERROR(eCheckInternalError, "Display %d frame:%d ERRONEOUS fence %d %s",
-                disp, hwcFrame, fence, fenceData->name);
-            sync_fence_info_free(fenceData);
-
-            // We've already logged the error, so pretend everything is OK
-            return true;
-        }
-        else if (fenceData->status == 0)
-        {
-            // not signalled
-            sync_fence_info_free(fenceData);
-            return !checkSignalled;
-        }
-        else
-        {
-            // signalled
-            sync_fence_info_free(fenceData);
-            return !checkUnsignalled;
-        }
-    }
-    else
-    {
-        // We are not live, so we have to assume the fence is in the state we want it to be.
-        return true;
-    }
+  return false;
 }
 
 bool HwcTestState::IsFenceSignalled(int fence, uint32_t disp, uint32_t hwcFrame)

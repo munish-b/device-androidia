@@ -1,27 +1,18 @@
 /*
- * INTEL CONFIDENTIAL
+ * Copyright (C) 2016 The Android Open Source Project
  *
- * Copyright 2013-2015
- * Intel Corporation All Rights Reserved.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- * The source code contained or described herein and all documents related to the
- * source code ("Material") are owned by Intel Corporation or its suppliers or
- * licensors. Title to the Material remains with Intel Corporation or its suppliers
- * and licensors. The Material contains trade secrets and proprietary and confidential
- * information of Intel or its suppliers and licensors. The Material is protected by
- * worldwide copyright and trade secret laws and treaty provisions. No part of the
- * Material may be used, copied, reproduced, modified, published, uploaded, posted,
- * transmitted, distributed, or disclosed in any way without Intels prior express
- * written permission.
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
- * No license under any patent, copyright, trade secret or other intellectual
- * property right is granted to or conferred upon you by disclosure or delivery
- * of the Materials, either expressly, by implication, inducement, estoppel
- * or otherwise. Any license under such intellectual property rights must be
- * express and approved by Intel in writing.
- *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
-
 #include "HwcServiceShim.h"
 
 #ifdef HWCVAL_BUILD_SHIM_HWCSERVICE
@@ -46,17 +37,19 @@ HwcServiceShim::~HwcServiceShim()
 
 bool HwcServiceShim::Start()
 {
-    ALOGD("Starting %s in shim", INTEL_HWC_SERVICE_NAME);
-    if (hwcvalServiceManager()->OverrideService(String16(INTEL_HWC_SERVICE_NAME), String16(INTEL_HWCREAL_SERVICE_NAME), this, false))
-    {
-        HWCERROR(eCheckHwcServiceBind, "Failed to start HWC Shim Service (%s)", INTEL_HWC_SERVICE_NAME);
+  ALOGD("Starting %s in shim", IA_HWC_SERVICE_NAME);
+  if (hwcvalServiceManager()->OverrideService(String16(IA_HWC_SERVICE_NAME),
+                                              String16(IA_HWCREAL_SERVICE_NAME),
+                                              this, false)) {
+    HWCERROR(eCheckHwcServiceBind, "Failed to start HWC Shim Service (%s)",
+             IA_HWC_SERVICE_NAME);
         return false;
     }
-    HWCLOGA("Started %s in shim", INTEL_HWC_SERVICE_NAME);
+    HWCLOGA("Started %s in shim", IA_HWC_SERVICE_NAME);
     return true;
 }
 
-const android::String16 HwcServiceShim::descriptor("intel.hwc.IService.Shim");
+const android::String16 HwcServiceShim::descriptor("IA.IService.Shim");
 const android::String16& HwcServiceShim::getInterfaceDescriptor() const
 {
     return descriptor;
@@ -67,13 +60,15 @@ sp<IDisplayControl> HwcServiceShim::getDisplayControl(uint32_t display)
     if (mDisplayControls[display] == 0)
     {
         HWCLOGD("HwcServiceShim::getDisplayControl(%d) creating display control", display);
-        sp<IDisplayControl> realDispControl = Real()->getDisplayControl(display);
+        sp<IDisplayControl> realDispControl =
+            NULL; // Real()->GetDisplayControl(display);
         HwcTestKernel* testKernel = HwcTestState::getInstance()->GetTestKernel();
 
         ALOG_ASSERT(realDispControl.get());
         ALOG_ASSERT(testKernel);
-        sp<IDisplayControl> dispControl = new HwcTestDisplayControl(display, realDispControl, testKernel);
-        mDisplayControls[display] = dispControl;
+        // sp<IDisplayControl> dispControl = new HwcTestDisplayControl(display,
+        // realDispControl, testKernel);
+        // imDisplayControls[display] = dispControl;
     }
 
     return mDisplayControls[display];
@@ -81,7 +76,7 @@ sp<IDisplayControl> HwcServiceShim::getDisplayControl(uint32_t display)
 
 sp<IVideoControl> HwcServiceShim::getVideoControl()
 {
-    sp<IVideoControl> video = Real()->getVideoControl();
+  sp<IVideoControl> video = NULL; // Real()->GetVideoControl();
     HwcTestKernel* testKernel = HwcTestState::getInstance()->GetTestKernel();
 
     if (testKernel)
@@ -89,7 +84,7 @@ sp<IVideoControl> HwcServiceShim::getVideoControl()
         // We are shimming the IVideoControl
         if (mVideoControl.get() == 0)
         {
-            mVideoControl = new HwcTestVideoControl(video, testKernel);
+          // mVideoControl = new HwcTestVideoControl(video, testKernel);
         }
 
         return mVideoControl;
@@ -130,7 +125,7 @@ sp<IMDSExtModeControl> HwcServiceShim::getMDSExtModeControl()
     }
 }
 #endif // HWCVAL_MDSEXTMODECONTROL
-
+#if 0
 HwcTestVideoControl::HwcTestVideoControl(sp<IVideoControl> real, HwcTestKernel* testKernel)
   : mReal(real),
     mTestKernel(testKernel),
@@ -142,7 +137,7 @@ HwcTestVideoControl::HwcTestVideoControl(sp<IVideoControl> real, HwcTestKernel* 
 HwcTestVideoControl::~HwcTestVideoControl()
 {
 }
-
+#endif
 status_t HwcTestVideoControl::enableEncryptedSession( uint32_t sessionID, uint32_t instanceID )
 {
     mProtChecker.EnableEncryptedSession(sessionID, instanceID);
@@ -188,7 +183,7 @@ bool HwcTestVideoControl::isEncryptedSessionEnabled( uint32_t sessionID, uint32_
 {
     return mReal->isEncryptedSessionEnabled(sessionID, instanceID);
 }
-
+#if 0
 status_t HwcTestVideoControl::registerVideoResolutionListener( const sp<IVideoResolutionListener> &vppServiceListener )
 {
     return mReal->registerVideoResolutionListener(vppServiceListener);
@@ -198,7 +193,7 @@ status_t HwcTestVideoControl::unregisterVideoResolutionListener( const sp<IVideo
 {
     return mReal->unregisterVideoResolutionListener(vppServiceListener);
 }
-
+#endif
 status_t HwcTestVideoControl::updateStatus( EDisplayId display, EDisplayStatus status )
 {
     return mReal->updateStatus(display, status);

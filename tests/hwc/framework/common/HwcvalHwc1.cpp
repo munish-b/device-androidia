@@ -1,33 +1,18 @@
-/****************************************************************************
-
-Copyright (c) Intel Corporation (2014-15).
-
-DISCLAIMER OF WARRANTY
-NEITHER INTEL NOR ITS SUPPLIERS MAKE ANY REPRESENTATION OR WARRANTY OR
-CONDITION OF ANY KIND WHETHER EXPRESS OR IMPLIED (EITHER IN FACT OR BY
-OPERATION OF LAW) WITH RESPECT TO THE SOURCE CODE.  INTEL AND ITS SUPPLIERS
-EXPRESSLY DISCLAIM ALL WARRANTIES OR CONDITIONS OF MERCHANTABILITY OR
-FITNESS FOR A PARTICULAR PURPOSE.  INTEL AND ITS SUPPLIERS DO NOT WARRANT
-THAT THE SOURCE CODE IS ERROR-FREE OR THAT OPERATION OF THE SOURCE CODE WILL
-BE SECURE OR UNINTERRUPTED AND HEREBY DISCLAIM ANY AND ALL LIABILITY ON
-ACCOUNT THEREOF.  THERE IS ALSO NO IMPLIED WARRANTY OF NON-INFRINGEMENT.
-SOURCE CODE IS LICENSED TO LICENSEE ON AN "AS IS" BASIS AND NEITHER INTEL
-NOR ITS SUPPLIERS WILL PROVIDE ANY SUPPORT, ASSISTANCE, INSTALLATION,
-TRAINING OR OTHER SERVICES.  INTEL AND ITS SUPPLIERS WILL NOT PROVIDE ANY
-UPDATES, ENHANCEMENTS OR EXTENSIONS.
-
-File Name:      HwcTestKernel.cpp
-
-Description:    Drm shim implementation for check functions.
-
-                See hwc_shim/hwc_shim.h for a full description of how the shims
-                work
-
-Environment:
-
-Notes:
-
-****************************************************************************/
+/*
+ * Copyright (C) 2016 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 #include <unistd.h>
 #include <sys/ioctl.h>
@@ -53,8 +38,9 @@ Hwcval::Hwc1::Hwc1()
     mTestKernel = mState->GetTestKernel();
 }
 
-EXPORT_API void Hwcval::Hwc1::CheckOnPrepareEntry(size_t numDisplays, hwc_display_contents_1_t** displays)
-{
+EXPORT_API void
+Hwcval::Hwc1::CheckOnPrepareEntry(size_t numDisplays,
+                                  hwcval_display_contents_t **displays) {
     HWCVAL_UNUSED(numDisplays);
     HWCVAL_UNUSED(displays);
     PushThreadState ts("CheckOnPrepareEntry");
@@ -80,7 +66,7 @@ EXPORT_API void Hwcval::Hwc1::CheckOnPrepareEntry(size_t numDisplays, hwc_displa
                 mTestKernel->AdvanceFrame(displayIx, mHwcFrame);
             }
 
-            const hwc_display_contents_1_t* disp = displays[displayIx];
+            const hwcval_display_contents_t *disp = displays[displayIx];
 
             if ((disp) == 0 || (disp->numHwLayers == 0))
             {
@@ -102,16 +88,15 @@ EXPORT_API void Hwcval::Hwc1::CheckOnPrepareEntry(size_t numDisplays, hwc_displa
             // Every layer apart from the Framebuffer target
             for (uint32_t i = 0; i < disp->numHwLayers-1; ++i)
             {
-                const hwc_layer_1_t* layer = disp->hwLayers + i;
+              const hwcval_layer_t *layer = disp->hwLayers + i;
                 buffer_handle_t handle = layer->handle;
 
                 if (handle)
                 {
-                    intel_ufo_buffer_media_details_t md;
+                  hwc_buffer_media_details_t md;
 
-                    md.magic = sizeof(intel_ufo_buffer_media_details_t);
-                    if (mTestKernel->GetGralloc().queryMediaDetails(handle, &md) != 0)
-                    {
+                  md.magic = sizeof(hwc_buffer_media_details_t);
+                  if (1 /*mTestKernel->GetGralloc().queryMediaDetails(handle, &md) != 0*/) {
                         HWCLOGW("CheckOnPrepareEntry: queryMediaDetails Failed %p", handle);
 
                     }
@@ -140,8 +125,9 @@ EXPORT_API void Hwcval::Hwc1::CheckOnPrepareEntry(size_t numDisplays, hwc_displa
     }
 }
 
-EXPORT_API void Hwcval::Hwc1::CheckOnPrepareExit(size_t numDisplays, hwc_display_contents_1_t** displays)
-{
+EXPORT_API void
+Hwcval::Hwc1::CheckOnPrepareExit(size_t numDisplays,
+                                 hwcval_display_contents_t **displays) {
     HWCLOGD("In CheckOnPrepareExit");
 
     HWCVAL_UNUSED(numDisplays);
@@ -150,8 +136,9 @@ EXPORT_API void Hwcval::Hwc1::CheckOnPrepareExit(size_t numDisplays, hwc_display
 
 /// Called by HWC Shim to notify that OnSet has occurred, and pass in the
 /// contents of the display structures
-EXPORT_API void Hwcval::Hwc1::CheckSetEnter(size_t numDisplays, hwc_display_contents_1_t** displays)
-{
+EXPORT_API void
+Hwcval::Hwc1::CheckSetEnter(size_t numDisplays,
+                            hwcval_display_contents_t **displays) {
     // Dump memory usage, if enabled
     DumpMemoryUsage();
 
@@ -168,7 +155,7 @@ EXPORT_API void Hwcval::Hwc1::CheckSetEnter(size_t numDisplays, hwc_display_cont
     memset (mContent, 0, sizeof(mContent));
     for (uint32_t d=0; d<numDisplays; ++d)
     {
-        const hwc_display_contents_1_t* disp = displays[d];
+      const hwcval_display_contents_t *disp = displays[d];
 
         if (disp)
         {
@@ -215,7 +202,7 @@ EXPORT_API void Hwcval::Hwc1::CheckSetEnter(size_t numDisplays, hwc_display_cont
         for (uint32_t displayIx = 0; displayIx < numDisplays; ++displayIx)
         {
             Hwcval::LogDisplay& ld = mTestKernel->GetLogDisplay(displayIx);
-            const hwc_display_contents_1_t* disp = displays[displayIx];
+            const hwcval_display_contents_t *disp = displays[displayIx];
             mTestKernel->VideoInit(displayIx);
 
             if (disp == 0)
@@ -247,7 +234,8 @@ EXPORT_API void Hwcval::Hwc1::CheckSetEnter(size_t numDisplays, hwc_display_cont
                 allScreenVideo = false;
             }
 
-            const hwc_layer_1_t* fbtLayer = disp->hwLayers + disp->numHwLayers - 1;
+            const hwcval_layer_t *fbtLayer =
+                disp->hwLayers + disp->numHwLayers - 1;
             ALOG_ASSERT(fbtLayer->compositionType == HWC_FRAMEBUFFER_TARGET);
 
             const hwc_rect_t& fbtRect = fbtLayer->displayFrame;
@@ -263,7 +251,7 @@ EXPORT_API void Hwcval::Hwc1::CheckSetEnter(size_t numDisplays, hwc_display_cont
 
             for (uint32_t i = 0; i < disp->numHwLayers; ++i)
             {
-                const hwc_layer_1_t* layer = disp->hwLayers + i;
+              const hwcval_layer_t *layer = disp->hwLayers + i;
                 const char* bufferType = "Unknown";
                 android::sp<DrmShimBuffer> buf;
                 char notes[HWCVAL_DEFAULT_STRLEN];
@@ -478,8 +466,7 @@ EXPORT_API void Hwcval::Hwc1::CheckSetEnter(size_t numDisplays, hwc_display_cont
 }
 
 void Hwcval::Hwc1::CheckSetExit(size_t numDisplays,
-                                 hwc_display_contents_1_t** displays)
-{
+                                hwcval_display_contents_t **displays) {
     HWCLOGI("CheckSetExit frame:%d", mHwcFrame);
     PushThreadState ts("CheckSetExit");
 
@@ -493,7 +480,7 @@ void Hwcval::Hwc1::CheckSetExit(size_t numDisplays,
     for (uint32_t d=0; d<numDisplays; ++d)
     {
         HwcTestCrtc* crtc = mTestKernel->GetHwcTestCrtcByDisplayIx(d);
-        hwc_display_contents_1_t* disp = displays[d];
+        hwcval_display_contents_t *disp = displays[d];
 
         if (crtc && disp && crtc->IsDisplayEnabled())
         {
@@ -516,7 +503,7 @@ void Hwcval::Hwc1::CheckSetExit(size_t numDisplays,
         // will move the retire fence index from the secondary display to D0 in extended mode.
         for (uint32_t d=0; d<numDisplays; ++d)
         {
-            hwc_display_contents_1_t* disp = displays[d];
+          hwcval_display_contents_t *disp = displays[d];
 
             // If no display, continue
             if (!disp)
@@ -524,7 +511,7 @@ void Hwcval::Hwc1::CheckSetExit(size_t numDisplays,
                 continue;
             }
 
-            int rf = disp->retireFenceFd;
+            int rf = -1; // FIX_ME disp->retireFenceFd;
 
             // There should be a retire fence on the primary display - check.
             if (d == 0)
@@ -549,7 +536,7 @@ void Hwcval::Hwc1::CheckSetExit(size_t numDisplays,
 
         for (uint32_t d=0; d<numDisplays; ++d)
         {
-            hwc_display_contents_1_t* disp = displays[d];
+          hwcval_display_contents_t *disp = displays[d];
             Hwcval::LayerListQueue& llq = mTestKernel->GetLLQ(d);
 
             if (disp && llq.BackNeedsValidating())
@@ -604,7 +591,8 @@ void Hwcval::Hwc1::CheckSetExit(size_t numDisplays,
                     ll->SetRetireFence(-1);
                 }
 
-                HWCLOGI_COND(eLogFence, "  -- Display %d retire fence %d dup %d", d, disp->retireFenceFd, ll->GetRetireFence());
+                // HWCLOGI_COND(eLogFence, "  -- Display %d retire fence %d dup
+                // %d", d, disp->retireFenceFd, ll->GetRetireFence());
             }
         }
 

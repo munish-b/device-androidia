@@ -1,31 +1,18 @@
-
-/****************************************************************************
-*
-* Copyright (c) Intel Corporation (2014).
-*
-* DISCLAIMER OF WARRANTY
-* NEITHER INTEL NOR ITS SUPPLIERS MAKE ANY REPRESENTATION OR WARRANTY OR
-* CONDITION OF ANY KIND WHETHER EXPRESS OR IMPLIED (EITHER IN FACT OR BY
-* OPERATION OF LAW) WITH RESPECT TO THE SOURCE CODE.  INTEL AND ITS SUPPLIERS
-* EXPRESSLY DISCLAIM ALL WARRANTIES OR CONDITIONS OF MERCHANTABILITY OR
-* FITNESS FOR A PARTICULAR PURPOSE.  INTEL AND ITS SUPPLIERS DO NOT WARRANT
-* THAT THE SOURCE CODE IS ERROR-FREE OR THAT OPERATION OF THE SOURCE CODE WILL
-* BE SECURE OR UNINTERRUPTED AND HEREBY DISCLAIM ANY AND ALL LIABILITY ON
-* ACCOUNT THEREOF.  THERE IS ALSO NO IMPLIED WARRANTY OF NON-INFRINGEMENT.
-* SOURCE CODE IS LICENSED TO LICENSEE ON AN "AS IS" BASIS AND NEITHER INTEL
-* NOR ITS SUPPLIERS WILL PROVIDE ANY SUPPORT, ASSISTANCE, INSTALLATION,
-* TRAINING OR OTHER SERVICES.  INTEL AND ITS SUPPLIERS WILL NOT PROVIDE ANY
-* UPDATES, ENHANCEMENTS OR EXTENSIONS.
-*
-* File Name:            HwcTestCompValThread.h
-*
-* Description:          Composition Validation thread class definition
-*
-* Environment:
-*
-* Notes:
-*
-*****************************************************************************/
+/*
+ * Copyright (C) 2016 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 #include "HwcTestCompValThread.h"
 #include "DrmShimTransform.h"
 #include "HwcTestKernel.h"
@@ -89,7 +76,7 @@ bool HwcTestCompValThread::Compose(android::sp<DrmShimBuffer> buf, Hwcval::Layer
 
     HWCLOGD("HwcTestCompValThread::Compose buf@%p handle %p %s", mBuf.get(), dest.GetHandle(), mBuf->GetHwcFrameStr(strbuf));
     uint32_t numSources = sources.GetNumLayers();
-    hwc_layer_1_t valSources[numSources];
+    hwcval_layer_t valSources[numSources];
 
     // Allocate a big buffer for
     uint32_t maxRects = 1024;
@@ -395,8 +382,10 @@ void HwcTestCompValThread::TakeCopy(android::sp<DrmShimBuffer> buf)
     }
 }
 
-void HwcTestCompValThread::TakeTransformedCopy(const hwc_layer_1_t* layer, android::sp<DrmShimBuffer> buf, uint32_t width, uint32_t height)
-{
+void HwcTestCompValThread::TakeTransformedCopy(const hwcval_layer_t *layer,
+                                               android::sp<DrmShimBuffer> buf,
+                                               uint32_t width,
+                                               uint32_t height) {
     char strbuf[HWCVAL_DEFAULT_STRLEN];
     ATRACE_CALL();
 
@@ -405,12 +394,11 @@ void HwcTestCompValThread::TakeTransformedCopy(const hwc_layer_1_t* layer, andro
             buf->GetUsage() | GRALLOC_USAGE_SW_READ_OFTEN); // Encourage use of linear buffers - it will speed the comparison
 
     HWCLOGD("TakeTransformedCopy: %s",buf->IdStr(strbuf));
-    hwc_layer_1_t srcLayer = *layer;
+    hwcval_layer_t srcLayer = *layer;
     srcLayer.compositionType = HWC_FRAMEBUFFER;
     srcLayer.blending = HWC_BLENDING_NONE;
 
-
-    hwc_layer_1_t tgtLayer;
+    hwcval_layer_t tgtLayer;
     tgtLayer.handle = spDestBuffer->handle;
     tgtLayer.compositionType = HWC_FRAMEBUFFER;
     tgtLayer.hints = 0;

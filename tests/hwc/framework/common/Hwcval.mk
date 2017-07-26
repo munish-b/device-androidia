@@ -1,22 +1,4 @@
 
-## Common ufo Android include. To manage software and hardware variants.
-include $(call my-dir)/DetermineAndroidVersion.mk
-
-# Do we have UFO available?
-ifneq (,$(wildcard hardware/intel/ufo/ufo ))
-    VAL_HWC_HAVE_UFO=1
-    VAL_HWC_INTEL_UFO_ANDROID=hardware/intel/ufo/ufo/Source/Android
-    ifneq ($(VAL_HWC_UFO_MESSAGE_DONE), 1)
-        $(info UFO Build: VAL_HWC_UFO_BASE $(VAL_HWC_INTEL_UFO_ANDROID))
-        VAL_HWC_UFO_MESSAGE_DONE=1
-    endif
-else
-    ifneq ($(VAL_HWC_UFO_MESSAGE_DONE), 1)
-        $(info No-UFO Build: Using prebuilts and previously saved PAVP include files)
-        VAL_HWC_UFO_MESSAGE_DONE=1
-    endif
-endif
-
 # Determine the DRM include path
 ifeq ($(VAL_HWC_LIB_DRM_PATHS),)
     ifeq (,$(wildcard $(ANDROID_PRODUCT_OUT)/obj/SHARED_LIBRARIES/libdrm_intermediates/export_includes ))
@@ -28,7 +10,7 @@ ifeq ($(VAL_HWC_LIB_DRM_PATHS),)
 endif
 
 # Determine the iVP include path
-ifeq ($(VAL_HWC_LIB_IVP_PATHS),)
+ifeq ($(VAL_HWC_LIB_IVP_PATHS),y)
     ifeq (,$(wildcard $(ANDROID_PRODUCT_OUT)/obj/SHARED_LIBRARIES/libivp_intermediates/export_includes ))
         $(error libivp must be build first)
     else
@@ -131,33 +113,10 @@ ifneq ($(wildcard $(VAL_HWC_HARDWARE_COMPOSER_PATH)/libhwcservice/IMDSExtModeCon
     BUILD_MDSEXTMODECONTROL := 1
 endif
 
-grep_command_1=grep enableEncryptedSession $(VAL_HWC_HARDWARE_COMPOSER_PATH)/libhwcservice/IVideoControl.h
-ifneq ($(shell $(grep_command_1)),)
 
-    ifeq ($(wildcard $(VAL_HWC_HARDWARE_COMPOSER_PATH)/libhwcservice/HwcServiceApi.cpp),)
-      BUILD_SHIM_HWCSERVICE := 1
-      LOCAL_CFLAGS += -DHWCVAL_BUILD_SHIM_HWCSERVICE
-
-      grep_command_2=grep setOptimizationMode $(VAL_HWC_HARDWARE_COMPOSER_PATH)/libhwcservice/IVideoControl.h
-      ifneq ($(shell $(grep_command_2)),)
-          LOCAL_CFLAGS += -DHWCVAL_VIDEOCONTROL_OPTIMIZATIONMODE
-      endif
-    else
-      BUILD_HWCSERVICE_API := 1
-      LOCAL_CFLAGS += -DHWCVAL_BUILD_HWCSERVICE_API -DHWCVAL_VIDEOCONTROL_OPTIMIZATIONMODE
-    endif
-
-    # Do we have PAVP library available?
-    ifeq ($(UFO_PAVP),n)
-        BUILD_PAVP := 1
-    else
-        BUILD_PAVP := 0
-    endif
-else
-    BUILD_SHIM_HWCSERVICE := 0
-    BUILD_HWCSERVICE_API := 0
-    BUILD_PAVP := 0
-endif
+BUILD_SHIM_HWCSERVICE := 0
+BUILD_HWCSERVICE_API := 1
+LOCAL_CFLAGS += -DHWCVAL_BUILD_HWCSERVICE_API 
 
 # In non-UFO builds we don't have a UFO_PAVP flag available
 # So if we want to decide which builds will support PAVP and which will not, we should choose this ourselves on some

@@ -1,33 +1,18 @@
-/****************************************************************************
-
-Copyright (c) Intel Corporation (2014-15).
-
-DISCLAIMER OF WARRANTY
-NEITHER INTEL NOR ITS SUPPLIERS MAKE ANY REPRESENTATION OR WARRANTY OR
-CONDITION OF ANY KIND WHETHER EXPRESS OR IMPLIED (EITHER IN FACT OR BY
-OPERATION OF LAW) WITH RESPECT TO THE SOURCE CODE.  INTEL AND ITS SUPPLIERS
-EXPRESSLY DISCLAIM ALL WARRANTIES OR CONDITIONS OF MERCHANTABILITY OR
-FITNESS FOR A PARTICULAR PURPOSE.  INTEL AND ITS SUPPLIERS DO NOT WARRANT
-THAT THE SOURCE CODE IS ERROR-FREE OR THAT OPERATION OF THE SOURCE CODE WILL
-BE SECURE OR UNINTERRUPTED AND HEREBY DISCLAIM ANY AND ALL LIABILITY ON
-ACCOUNT THEREOF.  THERE IS ALSO NO IMPLIED WARRANTY OF NON-INFRINGEMENT.
-SOURCE CODE IS LICENSED TO LICENSEE ON AN "AS IS" BASIS AND NEITHER INTEL
-NOR ITS SUPPLIERS WILL PROVIDE ANY SUPPORT, ASSISTANCE, INSTALLATION,
-TRAINING OR OTHER SERVICES.  INTEL AND ITS SUPPLIERS WILL NOT PROVIDE ANY
-UPDATES, ENHANCEMENTS OR EXTENSIONS.
-
-File Name:      HwcTestKernel.cpp
-
-Description:    Drm shim implementation for check functions.
-
-                See hwc_shim/hwc_shim.h for a full description of how the shims
-                work
-
-Environment:
-
-Notes:
-
-****************************************************************************/
+/*
+ * Copyright (C) 2016 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 #include <unistd.h>
 #include <sys/ioctl.h>
@@ -50,10 +35,8 @@ Notes:
 #include "HwcServiceShim.h"
 #endif
 
-#include "GrallocClient.h"
 #include "drm_fourcc.h"
 #include "i915_drm.h"
-#include <ufo/graphics.h>
 
 #ifdef HWCVAL_TARGET_HAS_MULTIPLE_DISPLAY
 #include "MultiDisplayType.h"
@@ -102,7 +85,6 @@ HwcTestKernel::HwcTestKernel()
 #endif
     mNumSetResolutionsReceived(0),
     mWidiLastFrame(0),
-    mGralloc(::intel::ufo::gralloc::GrallocClient::getInstance()),
     mSfCompMismatchCount(0),
     mProtChecker(this),
     mLastOnPrepareTime(0),
@@ -491,12 +473,6 @@ void HwcTestKernel::checkWidiBuffer(HwcTestCrtc *crtc,
             if (IsWidiEnabled())
             {
                 HWCCHECK(eCheckWidiWrongFormat);
-                if (buf->GetFormat() != WIDI_OUTPUT_BUFFER_FORMAT)
-                {
-                    // Check that layer 0 (i.e. the layer which will be routed to Widi) is in the correct format
-                    HWCERROR(eCheckWidiWrongFormat, "Widi buffer %s is not NV12 format (%s)",
-                        buf->IdStr(strbuf), FormatToStr(buf->GetFormat()));
-                }
             }
             else
             {
@@ -740,7 +716,7 @@ void HwcTestKernel::SetExtendedModeExpectation(bool singleFullScreenVideo, bool 
     }
 
 }
-
+#if 0
 // Convert IVP blending type to HWC blending types.
 //
 uint32_t HwcTestKernel::GetBlending(iVP_blend_t blend)
@@ -766,7 +742,7 @@ uint32_t HwcTestKernel::GetBlending(iVP_blend_t blend)
 // NOTE: The code to build up equivalent layers in sfLayers is currently disabled.
 // Its purpose would be to trigger a reference composition in
 android::sp<DrmShimBuffer> HwcTestKernel::IvpCoordinateCheck(DrmShimTransformVector& contributors,
-    android::Vector<hwc_layer_1_t>& sfLayers,
+    android::Vector<hwcval_layer_t>& sfLayers,
     uint32_t layerIx, iVP_layer_t* ivpLayer,
     buffer_handle_t outHandle, bool& err,
     const char* description, int param)
@@ -863,7 +839,7 @@ android::sp<DrmShimBuffer> HwcTestKernel::IvpCoordinateCheck(DrmShimTransformVec
 // NOT CURRENTLY SUPPORTED
 // TODO: Rework to use ValLayer etc.
 // No point in doing this until we have NV12 supported in SSIM.
-            hwc_layer_1_t layer;
+            hwcval_layer_t layer;
             layer.compositionType = HWC_FRAMEBUFFER;
             layer.hints = 0;
             layer.flags = 0;
@@ -889,7 +865,7 @@ android::sp<DrmShimBuffer> HwcTestKernel::IvpCoordinateCheck(DrmShimTransformVec
     }
     return buf;
 }
-
+#if 0
 // On some platforms, very large or very small scaling factors may cause iVP to hang or crash.
 // We therefore have the ability to skip iVP compositions with extreme scaling factors so
 // that we can continue to validate HWC.
@@ -1014,7 +990,7 @@ void HwcTestKernel::NotifyIvpExecExit(iVPCtxID *ctx, iVP_layer_t *primarySurf,
     }
 
     android::sp<DrmShimBuffer> buf;
-    android::Vector<hwc_layer_1_t> sfLayers;
+    android::Vector<hwcval_layer_t> sfLayers;
 
     DrmShimTransformVector contributors;
     bool err = false;
@@ -1119,7 +1095,7 @@ void HwcTestKernel::NotifyIvpExecExit(iVPCtxID *ctx, iVP_layer_t *primarySurf,
 // NOT CURRENTLY SUPPORTED
 // TODO: Rework to use ValLayer etc.
 // No point in doing this until we have NV12 supported in SSIM.
-            hwc_layer_1_t tgtLayer;
+            hwcval_layer_t tgtLayer;
             tgtLayer.compositionType = HWC_FRAMEBUFFER;
             tgtLayer.hints = 0;
             tgtLayer.flags = 0;
@@ -1155,7 +1131,8 @@ void HwcTestKernel::NotifyIvpExecExit(iVPCtxID *ctx, iVP_layer_t *primarySurf,
         }
     }
 }
-
+#endif
+#endif
 #ifdef HWCVAL_ABSTRACTCOMPOSITIONCHECKER_EXISTS
 
 // Implementation of the abstract composition interface
@@ -2442,7 +2419,7 @@ android::sp<DrmShimBuffer> HwcTestKernel::RecordBufferState(buffer_handle_t hand
                ->SetBlanking(false);
 
             // Refresh the sequence number
-            altbuf->SetLastHwcFrame(mHwcFrame, isOnSet);
+            // altbuf->SetLastHwcFrame(mHwcFrame, isOnSet);
 
             // Add to the handle index
             mBuffers.replaceValueFor(handle, altbuf);
@@ -2949,42 +2926,12 @@ uint32_t HwcTestKernel::CrtcIdToDisplayIx(uint32_t crtcId)
     return HWCVAL_MAX_CRTCS;
 }
 
-::intel::ufo::gralloc::GrallocClient& HwcTestKernel::GetGralloc()
-{
-    return mGralloc;
-}
-
-::intel::ufo::gralloc::GrallocClient& GetGralloc()
-{
-    return HwcTestState::getInstance()->GetTestKernel()->GetGralloc();
-}
 
 void HwcTestKernel::DoStall(Hwcval::StallType ix, Hwcval::Mutex* mtx)
 {
     mState->GetStall(ix).Do(mtx);
 }
 
-void HwcTestKernel::CheckSetOptimizationModeEnter(::intel::ufo::hwc::services::IVideoControl::EOptimizationMode mode)
-{
-    bool bForceLowDDRMode = (mode != ::intel::ufo::hwc::services::IVideoControl::eNormal);
-    HWCLOGD("CheckSetOptimizationModeEnter: DDR Optimization mode setting to %s", bForceLowDDRMode ? "LOW" : "NORMAL");
-    mChangingDDRMode++;
-}
-
-void HwcTestKernel::CheckSetOptimizationModeExit(int status, ::intel::ufo::hwc::services::IVideoControl::EOptimizationMode mode )
-{
-    if (status)
-    {
-        HWCLOGW("IVideoControl failed to set optimization mode");
-    }
-    else
-    {
-        mForceLowDDRMode = (mode != ::intel::ufo::hwc::services::IVideoControl::eNormal);
-        HWCLOGD("CheckSetOptimizationModeExit: DDR Optimization mode set to %s", mForceLowDDRMode ? "LOW" : "NORMAL");
-    }
-
-    mChangingDDRMode--;
-}
 
 void HwcTestKernel::ValidateOptimizationMode(Hwcval::LayerList* ll)
 {

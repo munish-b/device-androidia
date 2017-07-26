@@ -1,30 +1,19 @@
-/****************************************************************************
-*
-* Copyright (c) Intel Corporation (2014).
-*
-* DISCLAIMER OF WARRANTY
-* NEITHER INTEL NOR ITS SUPPLIERS MAKE ANY REPRESENTATION OR WARRANTY OR
-* CONDITION OF ANY KIND WHETHER EXPRESS OR IMPLIED (EITHER IN FACT OR BY
-* OPERATION OF LAW) WITH RESPECT TO THE SOURCE CODE.  INTEL AND ITS SUPPLIERS
-* EXPRESSLY DISCLAIM ALL WARRANTIES OR CONDITIONS OF MERCHANTABILITY OR
-* FITNESS FOR A PARTICULAR PURPOSE.  INTEL AND ITS SUPPLIERS DO NOT WARRANT
-* THAT THE SOURCE CODE IS ERROR-FREE OR THAT OPERATION OF THE SOURCE CODE WILL
-* BE SECURE OR UNINTERRUPTED AND HEREBY DISCLAIM ANY AND ALL LIABILITY ON
-* ACCOUNT THEREOF.  THERE IS ALSO NO IMPLIED WARRANTY OF NON-INFRINGEMENT.
-* SOURCE CODE IS LICENSED TO LICENSEE ON AN "AS IS" BASIS AND NEITHER INTEL
-* NOR ITS SUPPLIERS WILL PROVIDE ANY SUPPORT, ASSISTANCE, INSTALLATION,
-* TRAINING OR OTHER SERVICES.  INTEL AND ITS SUPPLIERS WILL NOT PROVIDE ANY
-* UPDATES, ENHANCEMENTS OR EXTENSIONS.
-*
-* File Name:            HwchTest.cpp
-*
-* Description:          Abstract test class implementation
-*
-* Environment:
-*
-* Notes:
-*
-*****************************************************************************/
+/*
+ * Copyright (C) 2016 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 #include "HwchTest.h"
 #include "HwcTestLog.h"
 #include "HwcTestState.h"
@@ -33,17 +22,16 @@
 #ifdef HWCVAL_TARGET_HAS_MULTIPLE_DISPLAY
 #include "MultiDisplayShim.h"
 #endif
-#include "IService.h"
+#include "iservice.h"
 #ifdef HWCVAL_MDSEXTMODECONTROL
 #include "IMDSExtModeControl.h"
 #endif
 
 #ifdef HWCVAL_BUILD_HWCSERVICE_API
-#include "HwcServiceApi.h"
+#include "hwcserviceapi.h"
 #endif
 
-using namespace ::intel::ufo::hwc::services;
-
+using namespace hwcomposer;
 
 // TestParams class
 // Encapsulates command-line options
@@ -280,11 +268,13 @@ bool Hwch::Test::CheckMDSAndSetup(bool report)
     if (HwcTestState::getInstance()->IsOptionEnabled(eOptNewMds))
     {
         // Find and connect to HWC service
-        sp<IBinder> hwcBinder = defaultServiceManager()->getService(String16(INTEL_HWC_SERVICE_NAME));
+      sp<IBinder> hwcBinder =
+          defaultServiceManager()->getService(String16(IA_HWC_SERVICE_NAME));
         sp<IService> hwcService = interface_cast<IService>(hwcBinder);
         if(hwcService == NULL)
         {
-            HWCERROR(eCheckSessionFail, "Could not connect to service %s", INTEL_HWC_SERVICE_NAME);
+          HWCERROR(eCheckSessionFail, "Could not connect to service %s",
+                   IA_HWC_SERVICE_NAME);
             return false;
         }
 
@@ -483,21 +473,24 @@ bool Hwch::Test::SimulateHotPlug(bool connected, uint32_t displayTypes, uint32_t
     return SendEvent(connected ? AsyncEvent::eHotPlug : AsyncEvent::eHotUnplug, pData, delayUs);
 }
 
+#ifndef HWCVAL_BUILD_HWCSERVICE_API
 bool Hwch::Test::GetVideoControl()
 {
     if (mVideoControl.get() == 0)
     {
         // Find and connect to HWC service
-        sp<android::IBinder> hwcBinder = defaultServiceManager()->getService(String16(INTEL_HWC_SERVICE_NAME));
+      sp<android::IBinder> hwcBinder =
+          defaultServiceManager()->getService(String16(IA_HWC_SERVICE_NAME));
         sp<IService> hwcService = interface_cast<IService>(hwcBinder);
         if(hwcService == NULL)
         {
-            HWCERROR(eCheckSessionFail, "Could not connect to service %s", INTEL_HWC_SERVICE_NAME);
+          HWCERROR(eCheckSessionFail, "Could not connect to service %s",
+                   IA_HWC_SERVICE_NAME);
             return false;
         }
 
         // Get MDSExtModeControl interface.
-        mVideoControl = hwcService->getVideoControl();
+        // mVideoControl = hwcService->getVideoControl();
         if (mVideoControl == NULL)
         {
             HWCERROR(eCheckSessionFail, "Cannot obtain IVideoControl");
@@ -507,7 +500,7 @@ bool Hwch::Test::GetVideoControl()
 
     return true;
 }
-
+#endif
 bool Hwch::Test::SetVideoOptimizationMode(Display::VideoOptimizationMode videoOptimizationMode, uint32_t delayUs)
 {
 #ifndef HWCVAL_BUILD_HWCSERVICE_API
@@ -515,12 +508,13 @@ bool Hwch::Test::SetVideoOptimizationMode(Display::VideoOptimizationMode videoOp
     {
         return false;
     }
-#endif
 
     android::sp<Hwch::AsyncEvent::VideoOptimizationModeData> params =
         new Hwch::AsyncEvent::VideoOptimizationModeData(mVideoControl, videoOptimizationMode);
 
     return Hwch::System::getInstance().AddEvent(Hwch::AsyncEvent::eSetVideoOptimizationMode, params, delayUs);
+#endif
+    return false;
 }
 
 void Hwch::Test::SetCheckPriority(HwcTestCheckType check, int priority)

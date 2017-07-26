@@ -1,37 +1,24 @@
-/****************************************************************************
-
-Copyright (c) Intel Corporation (2014).
-
-DISCLAIMER OF WARRANTY
-NEITHER INTEL NOR ITS SUPPLIERS MAKE ANY REPRESENTATION OR WARRANTY OR
-CONDITION OF ANY KIND WHETHER EXPRESS OR IMPLIED (EITHER IN FACT OR BY
-OPERATION OF LAW) WITH RESPECT TO THE SOURCE CODE.  INTEL AND ITS SUPPLIERS
-EXPRESSLY DISCLAIM ALL WARRANTIES OR CONDITIONS OF MERCHANTABILITY OR
-FITNESS FOR A PARTICULAR PURPOSE.  INTEL AND ITS SUPPLIERS DO NOT WARRANT
-THAT THE SOURCE CODE IS ERROR-FREE OR THAT OPERATION OF THE SOURCE CODE WILL
-BE SECURE OR UNINTERRUPTED AND HEREBY DISCLAIM ANY AND ALL LIABILITY ON
-ACCOUNT THEREOF.  THERE IS ALSO NO IMPLIED WARRANTY OF NON-INFRINGEMENT.
-SOURCE CODE IS LICENSED TO LICENSEE ON AN "AS IS" BASIS AND NEITHER INTEL
-NOR ITS SUPPLIERS WILL PROVIDE ANY SUPPORT, ASSISTANCE, INSTALLATION,
-TRAINING OR OTHER SERVICES.  INTEL AND ITS SUPPLIERS WILL NOT PROVIDE ANY
-UPDATES, ENHANCEMENTS OR EXTENSIONS.
-
-File Name:      HwcvalHwc1Content.cpp
-
-Description:    Class implementation for internal content construction
-                driven by HWC 1 API structures.
-
-Environment:
-
-Notes:
-
-****************************************************************************/
+/*
+ * Copyright (C) 2016 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 #include "HwcvalHwc1Content.h"
 #include "DrmShimBuffer.h"
 #include "HwcTestState.h"
 
-#include <hardware/hwcomposer.h>
+#include <hardware/hwcomposer2.h>
 
 Hwcval::CompositionType Hwcval::Hwc1CompositionTypeToHwcval(uint32_t compositionType)
 {
@@ -63,9 +50,8 @@ Hwcval::BlendingType Hwcval::Hwc1BlendingTypeToHwcval(uint32_t blendingType)
     }
 }
 
-
-Hwcval::Hwc1Layer::Hwc1Layer(const hwc_layer_1_t* sfLayer, android::sp<DrmShimBuffer>& buf)
-{
+Hwcval::Hwc1Layer::Hwc1Layer(const hwcval_layer_t *sfLayer,
+                             android::sp<DrmShimBuffer> &buf) {
     mCompositionType = Hwc1CompositionTypeToHwcval(sfLayer->compositionType);
     mHints = sfLayer->hints;
     mFlags = sfLayer->flags;
@@ -86,15 +72,15 @@ Hwcval::Hwc1Layer::Hwc1Layer(const hwc_layer_1_t* sfLayer, android::sp<DrmShimBu
     }
 }
 
-Hwcval::Hwc1LayerList::Hwc1LayerList(const hwc_display_contents_1_t* sfDisplay)
-{
+Hwcval::Hwc1LayerList::Hwc1LayerList(
+    const hwcval_display_contents_t *sfDisplay) {
     mRetireFenceFd = 0; // Correct value won't be known until exit of OnSet
 
     if (sfDisplay)
     {
         mOutbuf = sfDisplay->outbuf;                // This will change when we do virtual displays
-        mOutbufAcquireFenceFd = sfDisplay->outbufAcquireFenceFd;
-        mFlags = sfDisplay->flags;
+        // mOutbufAcquireFenceFd = sfDisplay->outbufAcquireFenceFd;
+        // mFlags = sfDisplay->flags;
         mNumLayers = sfDisplay->numHwLayers;
     }
     else
@@ -120,9 +106,10 @@ uint32_t Hwcval::HwcvalBlendingTypeToHwc1(Hwcval::BlendingType blendingType)
     }
 }
 
-// Convert internal layer format back to hwc_layer_1_t.
-void Hwcval::HwcvalLayerToHwc1(const char* str, uint32_t ix, hwc_layer_1_t& out, Hwcval::ValLayer& in, hwc_rect_t* pRect, uint32_t& rectsRemaining)
-{
+// Convert internal layer format back to hwcval_layer_t.
+void Hwcval::HwcvalLayerToHwc1(const char *str, uint32_t ix,
+                               hwcval_layer_t &out, Hwcval::ValLayer &in,
+                               hwc_rect_t *pRect, uint32_t &rectsRemaining) {
     const hwc_frect_t& sourceCropf = in.GetSourceCrop();
     const hwc_rect_t displayFrame = in.GetDisplayFrame();
 

@@ -1,30 +1,19 @@
-/****************************************************************************
-*
-* Copyright (c) Intel Corporation (2014).
-*
-* DISCLAIMER OF WARRANTY
-* NEITHER INTEL NOR ITS SUPPLIERS MAKE ANY REPRESENTATION OR WARRANTY OR
-* CONDITION OF ANY KIND WHETHER EXPRESS OR IMPLIED (EITHER IN FACT OR BY
-* OPERATION OF LAW) WITH RESPECT TO THE SOURCE CODE.  INTEL AND ITS SUPPLIERS
-* EXPRESSLY DISCLAIM ALL WARRANTIES OR CONDITIONS OF MERCHANTABILITY OR
-* FITNESS FOR A PARTICULAR PURPOSE.  INTEL AND ITS SUPPLIERS DO NOT WARRANT
-* THAT THE SOURCE CODE IS ERROR-FREE OR THAT OPERATION OF THE SOURCE CODE WILL
-* BE SECURE OR UNINTERRUPTED AND HEREBY DISCLAIM ANY AND ALL LIABILITY ON
-* ACCOUNT THEREOF.  THERE IS ALSO NO IMPLIED WARRANTY OF NON-INFRINGEMENT.
-* SOURCE CODE IS LICENSED TO LICENSEE ON AN "AS IS" BASIS AND NEITHER INTEL
-* NOR ITS SUPPLIERS WILL PROVIDE ANY SUPPORT, ASSISTANCE, INSTALLATION,
-* TRAINING OR OTHER SERVICES.  INTEL AND ITS SUPPLIERS WILL NOT PROVIDE ANY
-* UPDATES, ENHANCEMENTS OR EXTENSIONS.
-*
-* File Name:            Hwch::Interface.cpp
-*
-* Description:          Hardware composer interface class implementation
-*
-* Environment:
-*
-* Notes:
-*
-*****************************************************************************/
+/*
+ * Copyright (C) 2016 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 #define LOG_TAG "HWCINTFC"
 
 #include "HwchInterface.h"
@@ -35,25 +24,23 @@
 #include "HwcTestState.h"
 #include "HwcTestUtil.h"
 
-static uint32_t hwcApiVersion(const hwc_composer_device_1_t* hwc) {
+static uint32_t hwcApiVersion(const hwc2_device_t *hwc) {
     uint32_t hwcVersion = hwc->common.version;
     return hwcVersion & HARDWARE_API_VERSION_2_MAJ_MIN_MASK;
 }
 
-static uint32_t hwcHeaderVersion(const hwc_composer_device_1_t* hwc) {
+static uint32_t hwcHeaderVersion(const hwc2_device_t *hwc) {
     uint32_t hwcVersion = hwc->common.version;
     return hwcVersion & HARDWARE_API_VERSION_2_HEADER_MASK;
 }
 
-static bool hwcHasApiVersion(const hwc_composer_device_1_t* hwc,
-        uint32_t version) {
+static bool hwcHasApiVersion(const hwc2_device_t *hwc, uint32_t version) {
     return hwcApiVersion(hwc) >= (version & HARDWARE_API_VERSION_2_MAJ_MIN_MASK);
 }
 
 struct Hwch::Interface::cb_context
 {
-    struct callbacks : public hwc_procs_t
-    {
+  struct callbacks : public hwcval_procs_t {
         // these are here to facilitate the transition when adding
         // new callbacks (an implementation can check for NULL before
         // calling a new callback).
@@ -99,7 +86,7 @@ void Hwch::Interface::LoadHwcModule()
         return;
     }
 
-    int err = hwc_open_1(module, &hwc_composer_device);
+    int err = hwc2_open(module, &hwc_composer_device);
     if (err) {
         ALOGE("%s device failed to initialize (%s)",
               HWC_HARDWARE_COMPOSER, strerror(-err));
@@ -114,7 +101,7 @@ void Hwch::Interface::LoadHwcModule()
             hwcHeaderVersion(hwc_composer_device) > HWC_HEADER_VERSION) {
         ALOGE("%s device version %#x unsupported, will not be used",
               HWC_HARDWARE_COMPOSER, hwc_composer_device->common.version);
-        hwc_close_1(hwc_composer_device);
+        hwc2_close(hwc_composer_device);
         hwc_composer_device = NULL;
         return;
     }
@@ -126,21 +113,21 @@ int Hwch::Interface::RegisterProcs(void)
 {
     HWCLOGD_COND(eLogHwchInterface, "RegisterProcs: hwc_composer_device = %p", (void *)hwc_composer_device);
 
-    if (hwc_composer_device->registerProcs) {
-        mCBContext->iface = this;
-        mCBContext->procs.invalidate = &hook_invalidate;
-        mCBContext->procs.vsync      = &hook_vsync;
+    hwc2_device_t *hwc2_dvc =
+        reinterpret_cast<hwc2_device_t *>(hwc_composer_device);
+    HWC2_PFN_REGISTER_CALLBACK pfnRegisterCallBack =
+        reinterpret_cast<HWC2_PFN_REGISTER_CALLBACK>(
+            hwc2_dvc->getFunction(hwc2_dvc, HWC2_FUNCTION_REGISTER_CALLBACK));
 
-        if (has_api_version(HWC_DEVICE_API_VERSION_1_1))
-        {
-            mCBContext->procs.hotplug = &hook_hotplug;
-        }
-        else
-        {
-            mCBContext->procs.hotplug = NULL;
-        }
-        memset(mCBContext->procs.zero, 0, sizeof(mCBContext->procs.zero));
-        hwc_composer_device->registerProcs(hwc_composer_device, &mCBContext->procs);
+    if (pfnRegisterCallBack) {
+      hwc2_callback_data_t callbackData = NULL;
+
+      pfnRegisterCallBack(hwc2_dvc, HWC2_CALLBACK_HOTPLUG, &callbackData,
+                          (hwc2_function_pointer_t)&hook_hotplug);
+      pfnRegisterCallBack(hwc2_dvc, HWC2_CALLBACK_VSYNC, &callbackData,
+                          (hwc2_function_pointer_t)&hook_vsync);
+      pfnRegisterCallBack(hwc2_dvc, HWC2_CALLBACK_REFRESH, &callbackData,
+                          (hwc2_function_pointer_t)&hook_invalidate);
     }
 
     return 0;
@@ -150,6 +137,7 @@ int Hwch::Interface::GetDisplayAttributes()
 {
     for (int disp=0; disp<MAX_DISPLAYS; ++disp)
     {
+      ALOGE("Get Attributes %d", disp);
         GetDisplayAttributes(disp);
     }
     return android::NO_ERROR;
@@ -157,8 +145,9 @@ int Hwch::Interface::GetDisplayAttributes()
 
 int Hwch::Interface::GetDisplayAttributes(uint32_t disp)
 {
-    uint32_t configs[100];
-    uint32_t numConfigs = sizeof(configs) / sizeof(uint32_t);
+  hwc2_device_t *hwc2_dvc;
+  hwc2_config_t configs[100];
+  uint32_t numConfigs = 0; // sizeof(configs) / sizeof(uint32_t);
     Hwch::System& system = Hwch::System::getInstance();
 
     // Add the virtual display (if enabled on the command line)
@@ -179,10 +168,21 @@ int Hwch::Interface::GetDisplayAttributes(uint32_t disp)
     else
     {
         Hwch::Display& display = system.GetDisplay(disp);
-        size_t nc = sizeof(configs) / sizeof(uint32_t);
-        int ret = hwc_composer_device->getDisplayConfigs(hwc_composer_device, disp, configs, &nc);
-        numConfigs = nc;
+        uint32_t nc = 0; // sizeof(configs) / sizeof(uint32_t);
+        int ret = -1;
 
+        /* hwc2_device_t */ hwc2_dvc =
+            reinterpret_cast<hwc2_device_t *>(hwc_composer_device);
+        HWC2_PFN_GET_DISPLAY_CONFIGS pfngetDisplayConfigs =
+            reinterpret_cast<HWC2_PFN_GET_DISPLAY_CONFIGS>(
+                hwc2_dvc->getFunction(hwc2_dvc,
+                                      HWC2_FUNCTION_GET_DISPLAY_CONFIGS));
+
+        if (pfngetDisplayConfigs) {
+          ret = pfngetDisplayConfigs(hwc2_dvc, disp, &nc, configs);
+        }
+        numConfigs = nc;
+        ALOGE(" nc =%d", nc);
         if (ret != android::NO_ERROR)
         {
             Hwch::Display::Attributes& att = display.mAttributes;
@@ -226,22 +226,32 @@ int Hwch::Interface::GetDisplayAttributes(uint32_t disp)
 #endif
 
         // Selected config is first in the list
-        const uint32_t attributes[] =
-        {
-            HWC_DISPLAY_VSYNC_PERIOD,
-            HWC_DISPLAY_WIDTH,
-            HWC_DISPLAY_HEIGHT,
-            HWC_DISPLAY_NO_ATTRIBUTE
+        const uint32_t attributes[] = {// HWC2_ATTRIBUTE_INVALID,
+                                       HWC2_ATTRIBUTE_VSYNC_PERIOD,
+                                       HWC2_ATTRIBUTE_WIDTH,
+                                       HWC2_ATTRIBUTE_HEIGHT,
+                                       // HWC2_ATTRIBUTE_DPI_X,
+                                       // HWC2_ATTRIBUTE_DPI_Y
         };
+        HWC2_PFN_GET_DISPLAY_ATTRIBUTE pfngetDisplayAttribute =
+            reinterpret_cast<HWC2_PFN_GET_DISPLAY_ATTRIBUTE>(
+                hwc2_dvc->getFunction(hwc2_dvc,
+                                      HWC2_FUNCTION_GET_DISPLAY_ATTRIBUTE));
 
         if (HwcTestState::getInstance()->IsOptionEnabled(eLogHwcDisplayConfigs))
         {
             HWCLOGD("Logging HWC display configs for D%d", disp);
-            int32_t v[5];
+            int32_t v[sizeof(attributes)];
+            int32_t ret = -1;
             for (uint32_t i=0; i<numConfigs; ++i)
             {
-                ret = hwc_composer_device->getDisplayAttributes(hwc_composer_device, disp, configs[i],
-                    attributes, v);
+              for (uint32_t j = 0; j < sizeof(attributes); ++j) {
+                if (pfngetDisplayAttribute) {
+                  ret = pfngetDisplayAttribute(hwc2_dvc, disp, configs[i],
+                                               attributes[j], v + j);
+                }
+              }
+
                 if (ret < 0)
                 {
                     HWCLOGE("Config %d/%d %x ERROR %d", i, numConfigs, configs[i], ret);
@@ -253,12 +263,17 @@ int Hwch::Interface::GetDisplayAttributes(uint32_t disp)
             }
         }
 
-
-        HWCLOGD("Hwch::Interface::GetDisplayAttributes Getting attributes for display %d config ix %d/%d %x", disp, activeConfig, numConfigs, configs[activeConfig]);
+        ALOGE("Hwch::Interface::GetDisplayAttributes Getting attributes for "
+              "display %d config ix %d/%d %x",
+              disp, activeConfig, numConfigs, configs[activeConfig]);
         int32_t* values = (int32_t*) (&(display.mAttributes));
-        hwc_composer_device->getDisplayAttributes(hwc_composer_device, disp, configs[activeConfig],
-            attributes, values);
-
+        for (uint32_t j = 0; j < 3; ++j) {
+          if (pfngetDisplayAttribute) {
+            ret = pfngetDisplayAttribute(hwc2_dvc, disp, configs[activeConfig],
+                                         attributes[j], values + j);
+            ALOGE("atrib %d value %d", attributes[j], values[j]);
+          }
+        }
         if ((display.GetWidth() == 0) && (display.GetHeight() == 0))
         {
             display.SetConnected(false);
@@ -279,29 +294,169 @@ int Hwch::Interface::GetDisplayAttributes(uint32_t disp)
     return android::NO_ERROR;
 }
 
-int Hwch::Interface::Prepare(size_t numDisplays, hwc_display_contents_1_t** displays)
-{
-    if (hwc_composer_device)
-    {
-        return hwc_composer_device->prepare(hwc_composer_device, numDisplays, displays);
-    }
-    return -1; // ERROR
+int Hwch::Interface::CreateLayer(hwc2_display_t disp, hwc2_layer_t *outLayer) {
+  int ret = -1;
+  hwc2_device_t *hwc2_dvc =
+      reinterpret_cast<hwc2_device_t *>(hwc_composer_device);
+  HWC2_PFN_CREATE_LAYER pfnCreateLayer =
+      reinterpret_cast<HWC2_PFN_CREATE_LAYER>(
+          hwc2_dvc->getFunction(hwc2_dvc, HWC2_FUNCTION_CREATE_LAYER));
+
+  if (pfnCreateLayer) {
+    ret = pfnCreateLayer(hwc2_dvc, disp, outLayer);
+  }
+  return ret;
 }
 
-int Hwch::Interface::Set(size_t numDisplays, hwc_display_contents_1_t** displays)
-{
+int Hwch::Interface::setLayerCompositionType(hwc2_display_t disp,
+                                             hwc2_layer_t layer, int32_t type) {
+  int ret = -1;
+  hwc2_device_t *hwc2_dvc =
+      reinterpret_cast<hwc2_device_t *>(hwc_composer_device);
+  HWC2_PFN_SET_LAYER_COMPOSITION_TYPE pfnsetLayerCompositionType =
+      reinterpret_cast<HWC2_PFN_SET_LAYER_COMPOSITION_TYPE>(
+          hwc2_dvc->getFunction(hwc2_dvc,
+                                HWC2_FUNCTION_SET_LAYER_COMPOSITION_TYPE));
+
+  if (pfnsetLayerCompositionType) {
+    ret = pfnsetLayerCompositionType(hwc2_dvc, disp, layer, type);
+  }
+  return ret;
+}
+
+int Hwch::Interface::setLayerBlendMode(hwc2_display_t disp, hwc2_layer_t layer,
+                                       int32_t mode) {
+  int ret = -1;
+  hwc2_device_t *hwc2_dvc =
+      reinterpret_cast<hwc2_device_t *>(hwc_composer_device);
+  HWC2_PFN_SET_LAYER_BLEND_MODE pfnsetLayerBlendMode =
+      reinterpret_cast<HWC2_PFN_SET_LAYER_BLEND_MODE>(
+          hwc2_dvc->getFunction(hwc2_dvc, HWC2_FUNCTION_SET_LAYER_BLEND_MODE));
+
+  if (pfnsetLayerBlendMode) {
+    ret = pfnsetLayerBlendMode(hwc2_dvc, disp, layer, mode);
+  }
+  return ret;
+}
+
+int Hwch::Interface::setLayerTransform(hwc2_display_t disp, hwc2_layer_t layer,
+                                       int32_t transform) {
+  int ret = -1;
+  hwc2_device_t *hwc2_dvc =
+      reinterpret_cast<hwc2_device_t *>(hwc_composer_device);
+  HWC2_PFN_SET_LAYER_TRANSFORM pfnsetLayerTransform =
+      reinterpret_cast<HWC2_PFN_SET_LAYER_TRANSFORM>(
+          hwc2_dvc->getFunction(hwc2_dvc, HWC2_FUNCTION_SET_LAYER_TRANSFORM));
+
+  if (pfnsetLayerTransform) {
+    ret = pfnsetLayerTransform(hwc2_dvc, disp, layer, transform);
+  }
+  return ret;
+}
+
+int Hwch::Interface::setLayerSourceCrop(hwc2_display_t disp, hwc2_layer_t layer,
+                                        hwc_frect_t crop) {
+  int ret = -1;
+  hwc2_device_t *hwc2_dvc =
+      reinterpret_cast<hwc2_device_t *>(hwc_composer_device);
+  HWC2_PFN_SET_LAYER_SOURCE_CROP pfnsetLayerSourceCrop =
+      reinterpret_cast<HWC2_PFN_SET_LAYER_SOURCE_CROP>(
+          hwc2_dvc->getFunction(hwc2_dvc, HWC2_FUNCTION_SET_LAYER_SOURCE_CROP));
+
+  if (pfnsetLayerSourceCrop) {
+    ret = pfnsetLayerSourceCrop(hwc2_dvc, disp, layer, crop);
+  }
+  return ret;
+}
+
+int Hwch::Interface::setLayerDisplayFrame(hwc2_display_t disp,
+                                          hwc2_layer_t layer,
+                                          hwc_rect_t frame) {
+  int ret = -1;
+  hwc2_device_t *hwc2_dvc =
+      reinterpret_cast<hwc2_device_t *>(hwc_composer_device);
+  HWC2_PFN_SET_LAYER_DISPLAY_FRAME pfnsetLayerDisplayFrame =
+      reinterpret_cast<HWC2_PFN_SET_LAYER_DISPLAY_FRAME>(hwc2_dvc->getFunction(
+          hwc2_dvc, HWC2_FUNCTION_SET_LAYER_DISPLAY_FRAME));
+
+  if (pfnsetLayerDisplayFrame) {
+    ret = pfnsetLayerDisplayFrame(hwc2_dvc, disp, layer, frame);
+  }
+  return ret;
+}
+
+int Hwch::Interface::setLayerPlaneAlpha(hwc2_display_t disp, hwc2_layer_t layer,
+                                        float alpha) {
+  int ret = -1;
+  hwc2_device_t *hwc2_dvc =
+      reinterpret_cast<hwc2_device_t *>(hwc_composer_device);
+  HWC2_PFN_SET_LAYER_PLANE_ALPHA pfnsetLayerPlaneAlpha =
+      reinterpret_cast<HWC2_PFN_SET_LAYER_PLANE_ALPHA>(
+          hwc2_dvc->getFunction(hwc2_dvc, HWC2_FUNCTION_SET_LAYER_PLANE_ALPHA));
+
+  if (pfnsetLayerPlaneAlpha) {
+    ret = pfnsetLayerPlaneAlpha(hwc2_dvc, disp, layer, alpha);
+  }
+  return ret;
+}
+
+int Hwch::Interface::setLayerVisibleRegion(hwc2_display_t disp,
+                                           hwc2_layer_t layer,
+                                           hwc_region_t visible) {
+  int ret = -1;
+  hwc2_device_t *hwc2_dvc =
+      reinterpret_cast<hwc2_device_t *>(hwc_composer_device);
+  HWC2_PFN_SET_LAYER_VISIBLE_REGION pfnsetLayerVisibleRegion =
+      reinterpret_cast<HWC2_PFN_SET_LAYER_VISIBLE_REGION>(hwc2_dvc->getFunction(
+          hwc2_dvc, HWC2_FUNCTION_SET_LAYER_VISIBLE_REGION));
+
+  if (pfnsetLayerVisibleRegion) {
+    ret = pfnsetLayerVisibleRegion(hwc2_dvc, disp, layer, visible);
+  }
+  return ret;
+}
+
+int Hwch::Interface::ValidateDisplay(hwc2_display_t display,
+                                     uint32_t *outNumTypes,
+                                     uint32_t *outNumRequests) {
+  int ret = -1;
     if (hwc_composer_device)
     {
-        return hwc_composer_device->set(hwc_composer_device, numDisplays, displays);
+      hwc2_device_t *hwc2_dvc =
+          reinterpret_cast<hwc2_device_t *>(hwc_composer_device);
+      HWC2_PFN_VALIDATE_DISPLAY pfnValidateDisplay =
+          reinterpret_cast<HWC2_PFN_VALIDATE_DISPLAY>(
+              hwc2_dvc->getFunction(hwc2_dvc, HWC2_FUNCTION_VALIDATE_DISPLAY));
+      if (pfnValidateDisplay) {
+        ret =
+            pfnValidateDisplay(hwc2_dvc, display, outNumTypes, outNumRequests);
+      }
     }
-    return -1; // ERROR
+    return ret; // ERROR
+}
+
+int Hwch::Interface::PresentDisplay(hwc2_display_t display,
+                                    int32_t *outPresentFence) {
+  int ret = -1;
+    if (hwc_composer_device)
+    {
+      hwc2_device_t *hwc2_dvc =
+          reinterpret_cast<hwc2_device_t *>(hwc_composer_device);
+      HWC2_PFN_PRESENT_DISPLAY pfnPresentDisplay =
+          reinterpret_cast<HWC2_PFN_PRESENT_DISPLAY>(
+              hwc2_dvc->getFunction(hwc2_dvc, HWC2_FUNCTION_PRESENT_DISPLAY));
+      int32_t *outPresentFence;
+      if (pfnPresentDisplay) {
+        ret = pfnPresentDisplay(hwc2_dvc, display, outPresentFence);
+      }
+    }
+    return ret; // ERROR
 }
 
 int Hwch::Interface::EventControl(uint32_t disp, uint32_t event, uint32_t enable)
 {
     if (hwc_composer_device)
     {
-        return hwc_composer_device->eventControl(hwc_composer_device, disp, event, enable);
     }
     return -1; // ERROR
 }
@@ -318,12 +473,14 @@ int Hwch::Interface::Blank(int disp, int blank)
 #if defined(HWC_DEVICE_API_VERSION_1_4)
         if (hwc_composer_device->common.version >= HWC_DEVICE_API_VERSION_1_4)
         {
-            return hwc_composer_device->setPowerMode(hwc_composer_device, disp, blank ? HWC_POWER_MODE_OFF : HWC_POWER_MODE_NORMAL);
+          // return hwc_composer_device->setPowerMode(hwc_composer_device, disp,
+          // blank ? HWC_POWER_MODE_OFF : HWC_POWER_MODE_NORMAL);
         }
         else
 #endif
         {
-            return hwc_composer_device->blank(hwc_composer_device, disp, blank);
+          // return hwc_composer_device->blank(hwc_composer_device, disp,
+          // blank);
         }
     }
     return -1; // ERROR
@@ -341,11 +498,7 @@ int Hwch::Interface::IsBlanked(int disp)
     }
 }
 
-hwc_composer_device_1* Hwch::Interface::GetDevice(void)
-{
-    return hwc_composer_device;
-}
-
+hwc2_device_t *Hwch::Interface::GetDevice(void) { return hwc_composer_device; }
 
 // private member functions
 
@@ -376,22 +529,16 @@ bool Hwch::Interface::has_api_version(uint32_t version) {
 void Hwch::Interface::hook_invalidate(const struct hwc_procs* procs)
 {
     HWCLOGD_COND(eLogHwchInterface, "hook_invalidate:");
-    cb_context* ctx = reinterpret_cast<cb_context*>(const_cast<hwc_procs_t*>(procs));
-    ctx->iface->invalidate();
 }
 
 void Hwch::Interface::hook_vsync(const struct hwc_procs* procs, int disp, int64_t timestamp)
 {
     HWCLOGD_COND(eLogHwchInterface, "hook_vsync:");
-    cb_context* ctx = reinterpret_cast<cb_context*>(const_cast<hwc_procs_t*>(procs));
-    ctx->iface->vsync(disp, timestamp);
 }
 
 void Hwch::Interface::hook_hotplug(const struct hwc_procs* procs, int disp, int connected)
 {
     HWCLOGD_COND(eLogHwchInterface, "hook_hotplug:");
-    cb_context* ctx = reinterpret_cast<cb_context*>(const_cast<hwc_procs_t*>(procs));
-    ctx->iface->hotplug(disp, connected);
 }
 
 /////////////////////////

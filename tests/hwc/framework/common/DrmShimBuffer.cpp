@@ -1,33 +1,20 @@
-/****************************************************************************
+/*
+ * Copyright (C) 2016 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
-Copyright (c) Intel Corporation (2014).
-
-DISCLAIMER OF WARRANTY
-NEITHER INTEL NOR ITS SUPPLIERS MAKE ANY REPRESENTATION OR WARRANTY OR
-CONDITION OF ANY KIND WHETHER EXPRESS OR IMPLIED (EITHER IN FACT OR BY
-OPERATION OF LAW) WITH RESPECT TO THE SOURCE CODE.  INTEL AND ITS SUPPLIERS
-EXPRESSLY DISCLAIM ALL WARRANTIES OR CONDITIONS OF MERCHANTABILITY OR
-FITNESS FOR A PARTICULAR PURPOSE.  INTEL AND ITS SUPPLIERS DO NOT WARRANT
-THAT THE SOURCE CODE IS ERROR-FREE OR THAT OPERATION OF THE SOURCE CODE WILL
-BE SECURE OR UNINTERRUPTED AND HEREBY DISCLAIM ANY AND ALL LIABILITY ON
-ACCOUNT THEREOF.  THERE IS ALSO NO IMPLIED WARRANTY OF NON-INFRINGEMENT.
-SOURCE CODE IS LICENSED TO LICENSEE ON AN "AS IS" BASIS AND NEITHER INTEL
-NOR ITS SUPPLIERS WILL PROVIDE ANY SUPPORT, ASSISTANCE, INSTALLATION,
-TRAINING OR OTHER SERVICES.  INTEL AND ITS SUPPLIERS WILL NOT PROVIDE ANY
-UPDATES, ENHANCEMENTS OR EXTENSIONS.
-
-File Name:      DrmShimBuffer.cpp
-
-Description:    Class implementation for DRMShimBuffer class.
-                Keeps track of usage of a gralloc buffer within HWC.
-
-Environment:
-
-Notes:
-
-****************************************************************************/
-
-#include "ufo/graphics.h"
+#include "graphics.h"
 
 #include "DrmShimBuffer.h"
 #include "BufferObject.h"
@@ -38,9 +25,6 @@ Notes:
 #include "HwcTestUtil.h"
 #include "HwcTestDebug.h"
 #include "HwcTestProtectionChecker.h"
-
-#include "GrallocClient.h"
-#include "ufo/gralloc.h"
 
 #include "drm_fourcc.h"
 #include "SSIMUtils.h"
@@ -64,11 +48,10 @@ void LogProtection(int priority, buffer_handle_t handle, const char* desc)
         return;
     }
 
-    intel_ufo_buffer_media_details_t md;
+    hwc_buffer_media_details_t md;
 
-    md.magic = sizeof(intel_ufo_buffer_media_details_t);
-    if (GetGralloc().queryMediaDetails(handle, &md) != 0)
-    {
+    md.magic = sizeof(hwc_buffer_media_details_t);
+    if (1 /*GetGralloc().queryMediaDetails(handle, &md) != 0*/) {
         HWCLOGW("LogProtection: queryMediaDetails Failed %p", handle);
         return;
     }
@@ -81,6 +64,7 @@ void LogProtection(int priority, buffer_handle_t handle, const char* desc)
 static void InitBufferInfo(Hwcval::buffer_details_t* details)
 {
     // Default all buffer info state
+  details->gralloc = 0;
     details->width = 0;
     details->height = 0;
     details->format = 0;
@@ -105,10 +89,91 @@ static void InitBufferInfo(Hwcval::buffer_details_t* details)
 #endif
 }
 
+void hwc_buffer_details::GetGralloc() {
+  hw_device_t *device;
+  int ret = -1;
+  ret =
+      hw_get_module(GRALLOC_HARDWARE_MODULE_ID, (const hw_module_t **)&gralloc);
+  if (ret) {
+    ALOGE("Failed to get gralloc module");
+    return;
+  }
+
+  gralloc_version = gralloc->module_api_version;
+  ALOGE("gralloc version in use: %d", gralloc_version);
+
+  if (gralloc_version == HARDWARE_MODULE_API_VERSION(1, 0)) {
+    ret = gralloc->methods->open(gralloc, GRALLOC_HARDWARE_MODULE_ID, &device);
+    if (ret) {
+      ALOGE("Failed to open hw_device device");
+      return;
+    } else {
+      gralloc1_dvc = (gralloc1_device_t *)device;
+
+      pfn_getFormat = (GRALLOC1_PFN_GET_FORMAT)gralloc1_dvc->getFunction(
+          gralloc1_dvc, GRALLOC1_FUNCTION_GET_FORMAT);
+
+      pfn_getDimensions = (GRALLOC1_PFN_GET_DIMENSIONS)gralloc1_dvc->getFunction(
+          gralloc1_dvc, GRALLOC1_FUNCTION_GET_DIMENSIONS);
+
+    }
+  }
+}
+
+int hwc_buffer_details::getBufferInfo(buffer_handle_t handle) {
+  if (!gralloc)
+    GetGralloc();
+  ALOGE("handle BufferInfo %llu", handle);
+  int ret = -1;
+  if (gralloc_version == HARDWARE_MODULE_API_VERSION(1, 0)) {
+
+    if (!pfn_getDimensions) {
+      ALOGE("Gralloc does not support getDimension");
+      return -1;
+    }
+    ret = pfn_getDimensions(gralloc1_dvc, handle, &width, &height);
+    if (ret) {
+      ALOGE("gralloc->getDimension failed: %d", ret);
+      return -1;
+    }
+
+    if (!pfn_getFormat) {
+      ALOGE("Gralloc does not support getFormat");
+      return -1;
+    }
+    ret = pfn_getFormat(gralloc1_dvc, handle, &format);
+    if (ret) {
+      ALOGE("gralloc->getFormat failed: %d", ret);
+      return -1;
+    }
+  } else {
+
+    gralloc_module_t *gralloc0;
+    gralloc0 = reinterpret_cast<gralloc_module_t *>(gralloc);
+
+    if (!gralloc0->perform) {
+      ALOGE("gralloc->perform not supported");
+      return -1;
+    }
+    ret = gralloc0->perform(gralloc0, GRALLOC_DRM_GET_FORMAT, handle, &format);
+    if (ret) {
+      ALOGE("gralloc->perform failed with error: %d", ret);
+      return -1;
+    }
+    ret = gralloc0->perform(gralloc0, GRALLOC_DRM_GET_DIMENSIONS, handle,
+                            &width, &height);
+    if (ret) {
+      ALOGE("gralloc->perform failed with error: %d", ret);
+      return -1;
+    }
+  }
+  return 0;
+}
+
 int DrmShimBuffer::GetBufferInfo(buffer_handle_t handle, Hwcval::buffer_details_t* details)
 {
     InitBufferInfo(details);
-    return GetGralloc().getBufferInfo(handle, details);
+    return details->getBufferInfo(handle);
 }
 
 // Usual constructor, when we recognise a new buffer passed into OnSet
@@ -132,9 +197,9 @@ DrmShimBuffer::DrmShimBuffer(buffer_handle_t handle, Hwcval::BufferSourceType bu
     mBufferContent(Hwcval::BufferContentType::ContentNotTested)
 {
     InitBufferInfo(&mDetails);
-    memset( &mMediaDetails, 0, sizeof(intel_ufo_buffer_media_details_t));
+    memset(&mMediaDetails, 0, sizeof(hwc_buffer_media_details_t));
 #ifdef HWCVAL_ENABLE_RENDER_COMPRESSION
-    memset( &mResolveDetails, 0, sizeof(intel_ufo_buffer_resolve_details_t));
+    memset(&mResolveDetails, 0, sizeof(hwc_buffer_resolve_details_t));
 #endif
     for (uint32_t i=0; i<HWCVAL_MAX_CRTCS; ++i)
     {
@@ -387,11 +452,10 @@ DrmShimBuffer* DrmShimBuffer::UpdateMediaDetails()
 
     if (mHandle != 0)
     {
-        mMediaDetails.magic = sizeof(intel_ufo_buffer_media_details_t);
-        if (GetGralloc().queryMediaDetails(mHandle, &mMediaDetails) != 0)
-        {
+      mMediaDetails.magic = sizeof(hwc_buffer_media_details_t);
+      if (1 /*GetGralloc().queryMediaDetails(mHandle, &mMediaDetails) != 0*/) {
             HWCLOGW("DrmShimBuffer::UpdateMediaDetails: queryMediaDetails Failed %s", IdStr(strbuf));
-            memset(&mMediaDetails, 0, sizeof(intel_ufo_buffer_media_details_t));
+            memset(&mMediaDetails, 0, sizeof(hwc_buffer_media_details_t));
         }
         else
         {
@@ -401,7 +465,7 @@ DrmShimBuffer* DrmShimBuffer::UpdateMediaDetails()
     }
     else
     {
-        memset(&mMediaDetails, 0, sizeof(intel_ufo_buffer_media_details_t));
+      memset(&mMediaDetails, 0, sizeof(hwc_buffer_media_details_t));
     }
 
     // We aren't going to clear this flag just because the media details say the buffer is not protected
@@ -421,11 +485,11 @@ DrmShimBuffer* DrmShimBuffer::UpdateResolveDetails()
 
     if ((mHandle != 0) && (mDetails.rc.aux_pitch != 0) && (mDetails.rc.aux_offset < mDetails.size))
     {
-        mResolveDetails.magic = sizeof(intel_ufo_buffer_resolve_details_t);
+      mResolveDetails.magic = sizeof(hwc_buffer_resolve_details_t);
         if (GetGralloc().getBufferResolveDetails(mHandle, &mResolveDetails) != 0)
         {
             HWCLOGW("DrmShimBuffer::UpdateResolveDetails: getBufferResolveDetails failed %s", IdStr(strbuf));
-            memset(&mResolveDetails, 0, sizeof(intel_ufo_buffer_resolve_details_t));
+            memset(&mResolveDetails, 0, sizeof(hwc_buffer_resolve_details_t));
         }
         else
         {
@@ -444,7 +508,7 @@ DrmShimBuffer* DrmShimBuffer::UpdateResolveDetails()
     }
     else
     {
-        memset(&mResolveDetails, 0, sizeof(intel_ufo_buffer_resolve_details_t));
+      memset(&mResolveDetails, 0, sizeof(hwc_buffer_resolve_details_t));
     }
 #endif
 
@@ -472,14 +536,12 @@ bool DrmShimBuffer::IsRenderCompressibleFormat()
 #endif
 }
 
-const intel_ufo_buffer_media_details_t& DrmShimBuffer::GetMediaDetails() const
-{
+const hwc_buffer_media_details_t &DrmShimBuffer::GetMediaDetails() const {
     return mMediaDetails;
 }
 
 #ifdef HWCVAL_ENABLE_RENDER_COMPRESSION
-const intel_ufo_buffer_resolve_details_t& DrmShimBuffer::GetResolveDetails() const
-{
+const hwc_buffer_resolve_details_t &DrmShimBuffer::GetResolveDetails() const {
     return mResolveDetails;
 }
 #endif

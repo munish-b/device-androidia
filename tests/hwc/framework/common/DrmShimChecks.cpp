@@ -1,39 +1,23 @@
-/****************************************************************************
-
-Copyright (c) Intel Corporation (2014).
-
-DISCLAIMER OF WARRANTY
-NEITHER INTEL NOR ITS SUPPLIERS MAKE ANY REPRESENTATION OR WARRANTY OR
-CONDITION OF ANY KIND WHETHER EXPRESS OR IMPLIED (EITHER IN FACT OR BY
-OPERATION OF LAW) WITH RESPECT TO THE SOURCE CODE.  INTEL AND ITS SUPPLIERS
-EXPRESSLY DISCLAIM ALL WARRANTIES OR CONDITIONS OF MERCHANTABILITY OR
-FITNESS FOR A PARTICULAR PURPOSE.  INTEL AND ITS SUPPLIERS DO NOT WARRANT
-THAT THE SOURCE CODE IS ERROR-FREE OR THAT OPERATION OF THE SOURCE CODE WILL
-BE SECURE OR UNINTERRUPTED AND HEREBY DISCLAIM ANY AND ALL LIABILITY ON
-ACCOUNT THEREOF.  THERE IS ALSO NO IMPLIED WARRANTY OF NON-INFRINGEMENT.
-SOURCE CODE IS LICENSED TO LICENSEE ON AN "AS IS" BASIS AND NEITHER INTEL
-NOR ITS SUPPLIERS WILL PROVIDE ANY SUPPORT, ASSISTANCE, INSTALLATION,
-TRAINING OR OTHER SERVICES.  INTEL AND ITS SUPPLIERS WILL NOT PROVIDE ANY
-UPDATES, ENHANCEMENTS OR EXTENSIONS.
-
-File Name:      DrmShimChecks.cpp
-
-Description:    Drm shim implementation for check functions.
-
-                See hwc_shim/hwc_shim.h for a full description of how the shims
-                work
-
-Environment:
-
-Notes:
-
-****************************************************************************/
+/*
+ * Copyright (C) 2016 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 #include <unistd.h>
 #include <sys/ioctl.h>
 #include <ctype.h>
 #include <math.h>
-#include <ufo/graphics.h>
 #include "DrmShimChecks.h"
 #include "DrmShimCrtc.h"
 #include "DrmShimBuffer.h"
@@ -49,7 +33,6 @@ Notes:
 
 #include "DrmAtomic.h"
 
-#include "GrallocClient.h"
 #include "drm_fourcc.h"
 #ifdef HWCVAL_TARGET_HAS_MULTIPLE_DISPLAY
 #include "MultiDisplayType.h"
@@ -340,13 +323,6 @@ void DrmShimChecks::CheckGetConnectorExit(int fd, uint32_t connId, drmModeConnec
         mode.width = pMode->hdisplay;
         mode.height = pMode->vdisplay;
         mode.refresh = pMode->vrefresh;
-        mode.ratio = pMode->HWCVAL_DRM_ASPECT;
-        mode.flags = 0;
-
-        if (pMode->type & DRM_MODE_TYPE_PREFERRED)
-        {
-            mode.flags = HWCVAL_MODE_FLAG_PREFERRED;
-        }
 
         modes.add(mode);
 
@@ -373,13 +349,6 @@ void DrmShimChecks::CheckGetConnectorExit(int fd, uint32_t connId, drmModeConnec
             mode.width = pMode->hdisplay;
             mode.height = pMode->vdisplay;
             mode.refresh = pMode->vrefresh;
-            mode.ratio = pMode->HWCVAL_DRM_ASPECT;
-            mode.flags = 0;
-
-            if (pMode->type & DRM_MODE_TYPE_PREFERRED)
-            {
-                mode.flags = HWCVAL_MODE_FLAG_PREFERRED;
-            }
 
             modes.add(mode);
         }
@@ -596,8 +565,6 @@ void DrmShimChecks::CheckSetCrtcEnter ( int fd, uint32_t crtcId,
     actualMode.width = mode->hdisplay;
     actualMode.height = mode->vdisplay;
     actualMode.refresh = mode->vrefresh;
-    actualMode.flags = mode->flags;
-    actualMode.ratio = mode->HWCVAL_DRM_ASPECT;
     crtc->SetActualMode(actualMode);
 
     ix = mPlanes.indexOfKey(crtcId);
@@ -1023,8 +990,7 @@ void DrmShimChecks::DoWork(const Hwcval::Work::AddFbItem& item)
 
             // Assume this is a blanking or empty buffer until it is associated with a handle.
             // We decide which based on the size of the buffer - this is based on our knowledge of how HWC works.
-            if (BelievedEmpty(item.mWidth, item.mHeight))
-            {
+            if (1 /*BelievedEmpty(item.mWidth, item.mHeight)*/) {
                 buf->SetBlack(true);
             }
             else
@@ -1940,13 +1906,6 @@ int DrmShimChecks::CheckSetDisplayEnter(drm_mode_set_display* drmDisp, DrmShimCr
     {
         // Non-Broxton: check panel fitter not used with main plane enabled
         HWCCHECK(eCheckPanelFitterOutOfSpec);
-        if (!crtc->MainPlaneIsDisabled() && drmDisp->panel_fitter.mode != DRM_PFIT_OFF)
-        {
-            // Panel fitter was enabled when main plane also active
-            // This is unreliable, especially on CHV
-
-            HWCERROR(eCheckPanelFitterOutOfSpec, "CRTC %d", crtc->GetCrtcId());
-        }
     }
 
 
@@ -2447,7 +2406,6 @@ bool DrmShimChecks::ConvertToSetDisplay(struct drm_mode_atomic* drmAtomic, drm_m
 
                 // Force panel fitter update (PFIT:OFF).
                 drmDisp->update_flag |= DRM_MODE_SET_DISPLAY_UPDATE_PANEL_FITTER;
-                drmDisp->panel_fitter.mode = DRM_PFIT_OFF;
                 drmDisp->panel_fitter.src_w = crtc->GetWidth();
                 drmDisp->panel_fitter.src_h = crtc->GetHeight();
                 drmDisp->panel_fitter.dst_w = crtc->GetWidth();
@@ -2650,7 +2608,8 @@ bool DrmShimChecks::ConvertToSetDisplay(struct drm_mode_atomic* drmAtomic, drm_m
                                 }
 
                                 // Under SetDisplay, if main plane is turned off it needs a blanking buffer.
-                                drmPlane->fb_id = crtc->GetBlankingFb(mGralloc, addFb2Func, mShimDrmFd);
+                                drmPlane->fb_id =
+                                    crtc->GetBlankingFb(addFb2Func, mShimDrmFd);
                                 ALOG_ASSERT(drmPlane->fb_id);
                                 drmPlane->crtc_w = crtc->GetWidth();
                                 drmPlane->crtc_h = crtc->GetHeight();
@@ -2930,7 +2889,7 @@ void DrmShimChecks::CheckIoctlI915SetPlaneZOrder(struct drm_i915_set_plane_zorde
     HWCLOGD("Plane ZOrder support missing");
 #endif
 }
-
+#if 0
 void DrmShimChecks::CheckIoctlI915SetPlane180Rotation(struct drm_i915_plane_180_rotation* rot)
 {
     if (rot->obj_type == DRM_MODE_OBJECT_PLANE || rot->obj_type == DRM_MODE_OBJECT_CRTC)
@@ -2964,7 +2923,7 @@ void DrmShimChecks::CheckIoctlI915SetPlane180Rotation(struct drm_i915_plane_180_
         HWCCHECK(eCheckIoctlParameters);
     }
 }
-
+#endif
 #if BUILD_I915_DISP_SCREEN_CONTROL
 void DrmShimChecks::CheckIoctlI915DispScreenControl(struct drm_i915_disp_screen_control* ctrl, int status)
 {
@@ -2994,7 +2953,7 @@ void DrmShimChecks::CheckIoctlI915DispScreenControl(struct drm_i915_disp_screen_
     }
 }
 #endif
-
+#if 0
 void DrmShimChecks::CheckIoctlI915SetDecrypt(struct drm_i915_reserved_reg_bit_2* decrypt)
 {
     if (decrypt)
@@ -3029,7 +2988,7 @@ void DrmShimChecks::CheckIoctlI915SetDecrypt(struct drm_i915_reserved_reg_bit_2*
         }
     }
 }
-
+#endif
 uint32_t DrmShimChecks::GetCrtcIdForConnector(uint32_t conn_id)
 {
     DrmShimCrtc* crtc = mConnectors.valueFor(conn_id).mCrtc;

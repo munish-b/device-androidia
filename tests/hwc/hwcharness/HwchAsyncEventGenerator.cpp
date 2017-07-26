@@ -1,42 +1,29 @@
-/****************************************************************************
-*
-* Copyright (c) Intel Corporation (2014).
-*
-* DISCLAIMER OF WARRANTY
-* NEITHER INTEL NOR ITS SUPPLIERS MAKE ANY REPRESENTATION OR WARRANTY OR
-* CONDITION OF ANY KIND WHETHER EXPRESS OR IMPLIED (EITHER IN FACT OR BY
-* OPERATION OF LAW) WITH RESPECT TO THE SOURCE CODE.  INTEL AND ITS SUPPLIERS
-* EXPRESSLY DISCLAIM ALL WARRANTIES OR CONDITIONS OF MERCHANTABILITY OR
-* FITNESS FOR A PARTICULAR PURPOSE.  INTEL AND ITS SUPPLIERS DO NOT WARRANT
-* THAT THE SOURCE CODE IS ERROR-FREE OR THAT OPERATION OF THE SOURCE CODE WILL
-* BE SECURE OR UNINTERRUPTED AND HEREBY DISCLAIM ANY AND ALL LIABILITY ON
-* ACCOUNT THEREOF.  THERE IS ALSO NO IMPLIED WARRANTY OF NON-INFRINGEMENT.
-* SOURCE CODE IS LICENSED TO LICENSEE ON AN "AS IS" BASIS AND NEITHER INTEL
-* NOR ITS SUPPLIERS WILL PROVIDE ANY SUPPORT, ASSISTANCE, INSTALLATION,
-* TRAINING OR OTHER SERVICES.  INTEL AND ITS SUPPLIERS WILL NOT PROVIDE ANY
-* UPDATES, ENHANCEMENTS OR EXTENSIONS.
-*
-* File Name:            HwchAsyncEventGenerator.cpp
-*
-* Description:          Generates suspend/resume, blank/unblank,
-*                       ESD recovery and hot plug events with an option
-*                       for them to take place asynchronously after a delay.
-*
-* Environment:
-*
-* Notes:
-*
-*****************************************************************************/
+/*
+ * Copyright (C) 2016 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 #include "HwchAsyncEventGenerator.h"
 #include "HwchSystem.h"
 #include "HwcTestState.h"
 #include "HwchInterface.h"
 
 #ifdef HWCVAL_BUILD_HWCSERVICE_API
-#include "HwcServiceApi.h"
+#include "hwcserviceapi.h"
 #endif
 
-using namespace intel::ufo::hwc::services;
+using namespace hwcomposer;
 
 const uint32_t Hwch::AsyncEvent::cFixedDisplay = HwcTestState::eFixed;
 const uint32_t Hwch::AsyncEvent::cRemovableDisplay = HwcTestState::eRemovable;
@@ -150,27 +137,8 @@ Hwch::AsyncEvent::HotPlugEventData::~HotPlugEventData()
 {
 }
 
-Hwch::AsyncEvent::ModeChangeEventData::ModeChangeEventData(uint32_t displayIx,
-                                                        android::sp<IDisplayModeControl> dispModeControl,
-                                                        const Hwch::Display::Mode& mode)
-  : mDisplayIx(displayIx),
-    mDispModeControl(dispModeControl),
-    mMode(mode)
-{
-}
 
 Hwch::AsyncEvent::ModeChangeEventData::~ModeChangeEventData()
-{
-}
-
-Hwch::AsyncEvent::VideoOptimizationModeData::VideoOptimizationModeData(android::sp<::intel::ufo::hwc::services::IVideoControl> videoControl,
-                                const Display::VideoOptimizationMode videoOptimizationMode)
-  : mVideoControl(videoControl),
-    mVideoOptimizationMode(videoOptimizationMode)
-{
-}
-
-Hwch::AsyncEvent::VideoOptimizationModeData::~VideoOptimizationModeData()
 {
 }
 
@@ -427,78 +395,17 @@ bool Hwch::AsyncEventGenerator::WidiFencePolicy(AsyncEvent::WidiFencePolicyEvent
 
 bool Hwch::AsyncEventGenerator::ModeSet(Hwch::AsyncEvent::ModeChangeEventData* mc)
 {
-    HWCLOGA("D%d: Start mode change %dx%d@%d flags 0x%x ratio 0x%x",
-        mc->mDisplayIx, mc->mMode.width, mc->mMode.height, mc->mMode.refresh, mc->mMode.flags, mc->mMode.ratio);
-
-    int64_t startTime = systemTime(SYSTEM_TIME_MONOTONIC);
-#ifdef HWCVAL_BUILD_HWCSERVICE_API
-    if (!GetHwcsHandle())
-    {
-        HWCLOGD_COND(eLogHarness, "Could not get handle!");
-        return false;
-    }
-
-    status_t st = HwcService_DisplayMode_SetMode(mHwcsHandle, mc->mDisplayIx, &mc->mMode);
-#else
-    status_t st = mc->mDispModeControl->setMode(mc->mMode.width, mc->mMode.height, mc->mMode.refresh, mc->mMode.flags, mc->mMode.ratio);
-#endif
-    int64_t duration = systemTime(SYSTEM_TIME_MONOTONIC) - startTime;
-
-    HWCLOGA( "D%d: Finish mode change %dx%d@%d flags 0x%x ratio 0x%x in %fs",
-        mc->mDisplayIx, mc->mMode.width, mc->mMode.height, mc->mMode.refresh, mc->mMode.flags, mc->mMode.ratio,
-        double(duration) / HWCVAL_SEC_TO_NS);
-
-    return (st == 0);
+    return false;
 }
 
 bool Hwch::AsyncEventGenerator::ModeClear(Hwch::AsyncEvent::ModeChangeEventData* mc)
 {
-    HWCLOGD_COND(eLogHarness, "D%d: Reset preferred mode", mc->mDisplayIx);
-
-    int64_t startTime = systemTime(SYSTEM_TIME_MONOTONIC);
-    status_t st = mc->mDispModeControl->restorePreferredMode();
-    int64_t duration = systemTime(SYSTEM_TIME_MONOTONIC) - startTime;
-
-    HWCLOGD_COND(eLogHarness, "D%d: Finish reset preferred mode in %fs",
-        mc->mDisplayIx,
-        double(duration) / HWCVAL_SEC_TO_NS);
-
-    return (st == 0);
+    return false;
 }
 
 bool Hwch::AsyncEventGenerator::SetVideoOptimizationMode(AsyncEvent::VideoOptimizationModeData* eventData)
 {
-#ifdef HWCVAL_VIDEOCONTROL_OPTIMIZATIONMODE
-    HWCLOGD_COND(eLogHarness, "Set video optimization mode to %s",
-        (eventData->mVideoOptimizationMode == IVideoControl::eCamera) ? "Camera" :
-        (eventData->mVideoOptimizationMode == IVideoControl::eVideo) ? "Video" :
-        (eventData->mVideoOptimizationMode == IVideoControl::eNormal) ? "Normal" : "UNKNOWN");
-
-    int64_t startTime = systemTime(SYSTEM_TIME_MONOTONIC);
-#ifdef HWCVAL_BUILD_HWCSERVICE_API
-    if (!GetHwcsHandle())
-    {
-      HWCLOGE_COND(eLogHarness, "Handle to HWC Service is not setup!");
-      return false;
-    }
-
-    status_t st = HwcService_Video_SetOptimizationMode(mHwcsHandle,
-        (eventData->mVideoOptimizationMode == IVideoControl::eCamera) ? HWCS_OPTIMIZE_CAMERA :
-        (eventData->mVideoOptimizationMode == IVideoControl::eVideo) ? HWCS_OPTIMIZE_VIDEO :
-        HWCS_OPTIMIZE_NORMAL);
-#else
-    status_t st = eventData->mVideoControl->setOptimizationMode(eventData->mVideoOptimizationMode);
-#endif
-    int64_t duration = systemTime(SYSTEM_TIME_MONOTONIC) - startTime;
-
-    HWCLOGD_COND(eLogHarness, "Finish set video optimization mode in %fs",
-        double(duration) / HWCVAL_SEC_TO_NS);
-
-    return (st == 0);
-#else
-    HWCERROR(eCheckFacilityNotAvailable, "Video optimization mode not available on this build.");
     return false;
-#endif
 }
 
 #ifdef HWCVAL_BUILD_HWCSERVICE_API

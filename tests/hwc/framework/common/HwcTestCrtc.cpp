@@ -1,32 +1,19 @@
-/****************************************************************************
+/*
+ * Copyright (C) 2016 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
-Copyright (c) Intel Corporation (2014).
-
-DISCLAIMER OF WARRANTY
-NEITHER INTEL NOR ITS SUPPLIERS MAKE ANY REPRESENTATION OR WARRANTY OR
-CONDITION OF ANY KIND WHETHER EXPRESS OR IMPLIED (EITHER IN FACT OR BY
-OPERATION OF LAW) WITH RESPECT TO THE SOURCE CODE.  INTEL AND ITS SUPPLIERS
-EXPRESSLY DISCLAIM ALL WARRANTIES OR CONDITIONS OF MERCHANTABILITY OR
-FITNESS FOR A PARTICULAR PURPOSE.  INTEL AND ITS SUPPLIERS DO NOT WARRANT
-THAT THE SOURCE CODE IS ERROR-FREE OR THAT OPERATION OF THE SOURCE CODE WILL
-BE SECURE OR UNINTERRUPTED AND HEREBY DISCLAIM ANY AND ALL LIABILITY ON
-ACCOUNT THEREOF.  THERE IS ALSO NO IMPLIED WARRANTY OF NON-INFRINGEMENT.
-SOURCE CODE IS LICENSED TO LICENSEE ON AN "AS IS" BASIS AND NEITHER INTEL
-NOR ITS SUPPLIERS WILL PROVIDE ANY SUPPORT, ASSISTANCE, INSTALLATION,
-TRAINING OR OTHER SERVICES.  INTEL AND ITS SUPPLIERS WILL NOT PROVIDE ANY
-UPDATES, ENHANCEMENTS OR EXTENSIONS.
-
-File Name:      HwcTestCrtc.cpp
-
-Description:    Implmentation of DRMShimCrtc class.
-
-Environment:
-
-Notes:
-
-****************************************************************************/
-
-#include "ufo/graphics.h"
 #include <cutils/properties.h>
 
 #include "HwcTestDefs.h"
@@ -36,7 +23,6 @@ Notes:
 #include "HwcTestState.h"
 #include "HwcvalContent.h"
 #include "HwcTestProtectionChecker.h"
-#include "IDisplayModeControl.h"
 #include "HwcvalLogDisplay.h"
 
 using namespace Hwcval;
@@ -438,15 +424,6 @@ HwcTestCrtc* HwcTestCrtc::SetDPMSEnabled(bool enable)
 
 void HwcTestCrtc::SetPanelFitter(uint32_t mode)
 {
-#ifdef DRM_PFIT_OFF
-    mPanelFitterMode = mode;
-#else
-    HWCVAL_UNUSED(mode);
-#endif
-    if ((mode != DRM_PFIT_OFF) && (mPanelFitterSourceWidth > 0) && (mPanelFitterSourceHeight > 0))
-    {
-        CalculatePanelFitterTransform();
-    }
 }
 
 void HwcTestCrtc::SetDimensions(uint32_t width, uint32_t height, uint32_t clock, uint32_t vrefresh)
@@ -526,10 +503,7 @@ bool HwcTestCrtc::SetPanelFitterSourceSize(uint32_t sourceWidth, uint32_t source
     bool isOK = true;
     mPanelFitterSourceWidth = sourceWidth;
     mPanelFitterSourceHeight = sourceHeight;
-    const char* modeStr = (mPanelFitterMode == DRM_PFIT_OFF) ? "OFF" :
-        (mPanelFitterMode == DRM_AUTOSCALE) ? "AUTO" :
-        (mPanelFitterMode == DRM_LETTERBOX) ? "LETTERBOX" :
-        (mPanelFitterMode == DRM_PILLARBOX) ? "PILLARBOX" : "INVALID";
+    const char *modeStr = "OFF";
     HWCLOGV_COND(eLogDrm, "Crtc %d: Panel Fitter source size set to %dx%d, mode=%s", mCrtcId, sourceWidth, sourceHeight, modeStr);
 
     if (HwcTestState::getInstance()->GetDeviceType() == HwcTestState::eDeviceTypeBXT)
@@ -558,57 +532,7 @@ bool HwcTestCrtc::SetPanelFitterSourceSize(uint32_t sourceWidth, uint32_t source
             HWCERROR(eCheckPanelFitterConstantAspectRatio, "Screen %dx%d Panel fitter %dx%d",
                     mWidth, mHeight, sourceWidth, sourceHeight);
         }
-
-        HWCCHECK(eCheckPanelFitterMode);
-        if (mPanelFitterMode == DRM_AUTOSCALE)
-        {
-            // Check that source w/h scale precisely to the screen
-            // (w1/h1 = w2/h2) => w1h2 = w2h1
-
-            if (swdh != shdw)
-            {
-                HWCERROR(eCheckPanelFitterMode, "Auto mode not suitable for source %dx%d dest %dx%d because EXACT scaling required",
-                    sourceWidth, sourceHeight, mWidth, mHeight);
-                isOK = false;
-            }
-        }
-        else
-        {
-            if (mPanelFitterMode == DRM_LETTERBOX)
-            {
-                if (swdh <= shdw)
-                {
-                    HWCERROR(eCheckPanelFitterMode, "Letterbox not suitable for source %dx%d dest %dx%d",
-                        sourceWidth, sourceHeight, mWidth, mHeight);
-                    isOK = false;
-                }
-
-                // Letterbox mode does not work on BYT!
-                isOK = false;
-            }
-            else if (mPanelFitterMode == DRM_PILLARBOX)
-            {
-                if (swdh >= shdw)
-                {
-                    HWCERROR(eCheckPanelFitterMode, "Pillarbox not suitable for source %dx%d dest %dx%d",
-                        sourceWidth, sourceHeight, mWidth, mHeight);
-                    isOK = false;
-                }
-            }
-
-            HWCCHECK(eCheckPanelFitterUnnecessary);
-            if ((sourceWidth == mWidth) && (sourceHeight == mHeight))
-            {
-                HWCERROR(eCheckPanelFitterUnnecessary, "Panel fitter used where no scaling is required %dx%d", sourceWidth, sourceHeight);
-            }
-        }
     }
-
-    if (mPanelFitterMode != DRM_PFIT_OFF)
-    {
-        HWCLOGD_COND(eOptBlockInvalidSetDisplay, "%s %s mode", (isOK ? "Using" : "Skipping"), modeStr);
-    }
-
     CalculatePanelFitterTransform();
     return isOK;
 }
@@ -621,28 +545,13 @@ void HwcTestCrtc::CalculatePanelFitterTransform()
     float destWidth;
     float destHeight;
 
-    if (mPanelFitterMode == DRM_AUTOSCALE)
-    {
-        destWidth = mWidth;
-        destHeight = mHeight;
-    }
-    else if (mPanelFitterMode == DRM_PILLARBOX)
-    {
-        destWidth = mHeight * desiredAspectRatio;
-        destHeight = mHeight;
-    }
-    else
-    {
-        destWidth = mWidth;
-        destHeight = mWidth / desiredAspectRatio;
-    }
+    destWidth = mWidth;
+    destHeight = mWidth / desiredAspectRatio;
 
-
-    HWCLOGV("HwcTestCrtc::CalculatePanelFitterTransform: mode=%s sw=%f sh=%f mWidth=%d mHeight=%d destWidth=%f destHeight=%f",
-        (mPanelFitterMode == DRM_AUTOSCALE) ? "auto" :
-        (mPanelFitterMode == DRM_PILLARBOX) ? "pillarbox" :
-        (mPanelFitterMode == DRM_LETTERBOX) ? "letterbox" : "unknown",
-        (double) sw, (double) sh, mWidth, mHeight, (double) destWidth, (double) destHeight);
+    HWCLOGV("HwcTestCrtc::CalculatePanelFitterTransform: mode=%s sw=%f sh=%f "
+            "mWidth=%d mHeight=%d destWidth=%f destHeight=%f",
+            "unknown", (double)sw, (double)sh, mWidth, mHeight,
+            (double)destWidth, (double)destHeight);
     mPanelFitterTransform = DrmShimTransform(sw, sh, destWidth, destHeight);
 }
 
@@ -1599,14 +1508,7 @@ void HwcTestCrtc::WidiVideoConsistencyChecks(Hwcval::LayerList* ll)
 
 void HwcTestCrtc::ReportPanelFitterStatistics(FILE* f)
 {
-    ALOG_ASSERT(DRM_PFIT_OFF  < (sizeof(mPanelFitterModeCount) / sizeof(uint32_t)));
-    ALOG_ASSERT(DRM_AUTOSCALE < (sizeof(mPanelFitterModeCount) / sizeof(uint32_t)));
-    ALOG_ASSERT(DRM_LETTERBOX < (sizeof(mPanelFitterModeCount) / sizeof(uint32_t)));
-    ALOG_ASSERT(DRM_PILLARBOX < (sizeof(mPanelFitterModeCount) / sizeof(uint32_t)));
-
-    fprintf(f, "Crtc %2d Panel Fitter OFF: %d AUTO: %d LETTER: %d PILLAR: %d\n",
-        mCrtcId, mPanelFitterModeCount[DRM_PFIT_OFF], mPanelFitterModeCount[DRM_AUTOSCALE],
-        mPanelFitterModeCount[DRM_LETTERBOX], mPanelFitterModeCount[DRM_PILLARBOX]);
+  fprintf(f, "Crtc %2d \n", mCrtcId);
 }
 
 void HwcTestCrtc::LogTransforms(int priority, uint32_t hwcFrame)
@@ -1823,8 +1725,6 @@ void HwcTestCrtc::SetUserModeFinish(android::status_t st, uint32_t width, uint32
         mUserMode.width = width;
         mUserMode.height = height;
         mUserMode.refresh = refresh;
-        mUserMode.flags = flags;
-        mUserMode.ratio = ratio;
         mUserModeState = eUserModeSet;
     }
     else
@@ -1838,18 +1738,6 @@ void HwcTestCrtc::SetAvailableModes(const HwcTestCrtc::ModeVec& modes)
     HWCLOGD_COND(eLogVideo, "D%d SetAvailableModes: %d modes", mDisplayIx, modes.size());
     mAvailableModes = modes;
     mPreferredModeCount = 0;
-
-    for (uint32_t i=0; i<mAvailableModes.size(); ++i)
-    {
-        const Mode& mode = mAvailableModes.itemAt(i);
-        if (mode.flags & HWCVAL_MODE_FLAG_PREFERRED)
-        {
-            HWCLOGD_COND(eLogVideo, "D%d SetAvailableModes found preferred mode %dx%d:%d",
-                mDisplayIx, mode.width, mode.height, mode.refresh);
-            mPreferredMode = mode;
-            ++mPreferredModeCount;
-        }
-    }
 
     // Don't generate any wrong mode errors until HWC has a chance to process this.
     // HWC issues drmModeGetConnector on the hotplug thread not the drm thread, so inherently it is racing the
@@ -1987,15 +1875,6 @@ void HwcTestCrtc::ValidateMode(HwcTestKernel* testKernel)
         mismatch = true;
     }
 
-    HWCLOGD_COND(eLogVideo, "D%d Using %dx%d:%d %x %s Requested %dx%d:%d %x %s Video Rate %d %s FramesSinceChange %d",
-                            mDisplayIx, mActualMode.width, mActualMode.height, mActualMode.refresh,
-                            mActualMode.ratio, DrmShimChecks::AspectStr(mActualMode.ratio),
-                            requiredMode.width, requiredMode.height, requiredMode.refresh,
-                            requiredMode.ratio, DrmShimChecks::AspectStr(requiredMode.ratio),
-                            extendedMode ? videoRate : 0,
-                            matchRefresh ? "Video matching required" : "",
-                            mFramesSinceRequiredModeChange);
-
     if (mismatch)
     {
         uint32_t minRefresh = UINT_MAX;
@@ -2005,11 +1884,8 @@ void HwcTestCrtc::ValidateMode(HwcTestKernel* testKernel)
         for (uint32_t i=0; i<mAvailableModes.size(); ++i)
         {
             const Mode& mode = mAvailableModes.itemAt(i);
-            HWCLOGV_COND(eLogVideo, "%dx%d:%d %x %s", mode.width, mode.height, mode.refresh,
-                mode.ratio, DrmShimChecks::AspectStr(mode.ratio));
             if ((mode.width == requiredMode.width) &&
-                (mode.height == requiredMode.height) &&
-                (mode.ratio == requiredMode.ratio))
+                (mode.height == requiredMode.height))
             {
                 bool err = false;
                 if (matchRefresh)
@@ -2040,26 +1916,11 @@ void HwcTestCrtc::ValidateMode(HwcTestKernel* testKernel)
                 }
                 if ( err )
                 {
-                    HWCERROR(eCheckDisplayMode, "D%d Using %dx%d:%d %s Requested %dx%d:%d %s Video Rate %d Available %dx%d:%d %s %s",
-                            mDisplayIx, mActualMode.width, mActualMode.height, mActualMode.refresh, DrmShimChecks::AspectStr(mActualMode.ratio),
-                            requiredMode.width, requiredMode.height, requiredMode.refresh, DrmShimChecks::AspectStr(requiredMode.ratio),
-                            extendedMode ? videoRate : 0,
-                            mode.width, mode.height, mode.refresh, DrmShimChecks::AspectStr(mode.ratio),
-                            matchRefresh ? "Video matching required" : "");
-
                     break;
                 }
             }
         }
 
-        if (drrs && (videoRate > minRefresh) && (videoRate < maxRefresh) && matchRefresh)
-        {
-            HWCERROR(eCheckDisplayMode, "D%d Using %dx%d:%d %s Requested %dx%d:%d %s Video Rate %d Available DRRS rates %d-%d",
-                            mDisplayIx, mActualMode.width, mActualMode.height, mActualMode.refresh, DrmShimChecks::AspectStr(mActualMode.ratio),
-                            requiredMode.width, requiredMode.height, requiredMode.refresh, DrmShimChecks::AspectStr(requiredMode.ratio),
-                            videoRate,
-                            minRefresh, maxRefresh);
-        }
     }
     else if (requiredMode.refresh != mActualMode.refresh)
     {

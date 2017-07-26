@@ -1,31 +1,18 @@
-/****************************************************************************
-
-Copyright (c) Intel Corporation (2014).
-
-DISCLAIMER OF WARRANTY
-NEITHER INTEL NOR ITS SUPPLIERS MAKE ANY REPRESENTATION OR WARRANTY OR
-CONDITION OF ANY KIND WHETHER EXPRESS OR IMPLIED (EITHER IN FACT OR BY
-OPERATION OF LAW) WITH RESPECT TO THE SOURCE CODE.  INTEL AND ITS SUPPLIERS
-EXPRESSLY DISCLAIM ALL WARRANTIES OR CONDITIONS OF MERCHANTABILITY OR
-FITNESS FOR A PARTICULAR PURPOSE.  INTEL AND ITS SUPPLIERS DO NOT WARRANT
-THAT THE SOURCE CODE IS ERROR-FREE OR THAT OPERATION OF THE SOURCE CODE WILL
-BE SECURE OR UNINTERRUPTED AND HEREBY DISCLAIM ANY AND ALL LIABILITY ON
-ACCOUNT THEREOF.  THERE IS ALSO NO IMPLIED WARRANTY OF NON-INFRINGEMENT.
-SOURCE CODE IS LICENSED TO LICENSEE ON AN "AS IS" BASIS AND NEITHER INTEL
-NOR ITS SUPPLIERS WILL PROVIDE ANY SUPPORT, ASSISTANCE, INSTALLATION,
-TRAINING OR OTHER SERVICES.  INTEL AND ITS SUPPLIERS WILL NOT PROVIDE ANY
-UPDATES, ENHANCEMENTS OR EXTENSIONS.
-
-File Name:      DrmShimBuffer.h
-
-Description:    Class definition for DRMShimBuffer class.
-                Keeps track of usage of a gralloc buffer within HWC.
-
-Environment:
-
-Notes:
-
-****************************************************************************/
+/*
+ * Copyright (C) 2016 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 #ifndef __DrmShimBuffer_h__
 #define __DrmShimBuffer_h__
 
@@ -33,10 +20,11 @@ Notes:
 #include <utils/Vector.h>
 #include <utils/SortedVector.h>
 #include <utils/KeyedVector.h>
-#include "ufo/gralloc.h"
 
 // NOTE: HwcTestDefs.h sets defines which are used in the HWC and DRM stack.
 // -> to be included before any other HWC or DRM header file.
+#include <hardware/gralloc1.h>
+#include <hardware/gralloc.h>
 #include "HwcTestDefs.h"
 #include <ui/GraphicBuffer.h>
 #include "hardware/hwcomposer_defs.h"
@@ -51,15 +39,42 @@ Notes:
 #define BUFIDSTR "name"
 #endif
 
-#include "GrallocClient.h"
+#define GRALLOC_DRM_GET_FORMAT 1
+#define GRALLOC_DRM_GET_DIMENSIONS 2
+
+typedef struct hwc_buffer_details {
+  hw_module_t *gralloc;
+  uint16_t gralloc_version;
+  gralloc1_device_t *gralloc1_dvc;
+  GRALLOC1_PFN_LOCK_FLEX pfn_lockflex;
+  GRALLOC1_PFN_GET_FORMAT pfn_getFormat;
+  GRALLOC1_PFN_GET_DIMENSIONS pfn_getDimensions;
+  uint32_t width;
+  uint32_t height;
+  int format;
+  int usage;
+  int size;
+  unsigned int magic;
+  int pitch;
+  int pavp_instance_id;
+  int pavp_session_id;
+  int is_encrypted;
+  int name;
+  int fb;
+  int fb_format;
+  int allocWidth;
+  int allocHeight;
+  int allocOffsetX;
+  int allocOffsetY;
+  void GetGralloc();
+  int getBufferInfo(buffer_handle_t handle);
+} hwc_buffer_details_t;
+
+typedef hwc_buffer_details_t hwc_buffer_media_details_t;
+
 namespace Hwcval
 {
-#if INTEL_UFO_GRALLOC_HAVE_BUFFER_DETAILS_1 && (INTEL_UFO_GRALLOC_BUFFER_DETAILS_LEVEL < 1)
-    typedef intel_ufo_buffer_details_1_t buffer_details_t;
-#define HWCVAL_BUFFER_DETAILS_HAVE_RC
-#else
-    typedef intel_ufo_buffer_details_t buffer_details_t;
-#endif
+typedef hwc_buffer_details_t buffer_details_t;
 }
 
 
@@ -104,10 +119,10 @@ protected:
     bool mBlack;                            // Content is (believed to be) all black
     int32_t mFbtDisplay;                    // -1 if not a FRAMEBUFFERTARGET; display index if it is
     Hwcval::buffer_details_t mDetails;      // gralloc usage etc
-    intel_ufo_buffer_media_details_t mMediaDetails;
+    hwc_buffer_media_details_t mMediaDetails;
 
 #ifdef HWCVAL_ENABLE_RENDER_COMPRESSION
-    intel_ufo_buffer_resolve_details_t mResolveDetails;
+    hwc_buffer_resolve_details_t mResolveDetails;
 #endif
 
     char mStrFormat[5];                     // Buffer format as a string
@@ -222,9 +237,9 @@ public:
 
     DrmShimBuffer* UpdateMediaDetails();
     DrmShimBuffer* UpdateResolveDetails();
-    const intel_ufo_buffer_media_details_t& GetMediaDetails() const;
+    const hwc_buffer_media_details_t &GetMediaDetails() const;
 #ifdef HWCVAL_ENABLE_RENDER_COMPRESSION
-    const intel_ufo_buffer_resolve_details_t& GetResolveDetails() const;
+    const hwc_buffer_resolve_details_t &GetResolveDetails() const;
 #endif
     uint32_t GetWidth();
     uint32_t GetHeight();

@@ -1,30 +1,18 @@
-/****************************************************************************
-
-Copyright (c) Intel Corporation (2015).
-
-DISCLAIMER OF WARRANTY
-NEITHER INTEL NOR ITS SUPPLIERS MAKE ANY REPRESENTATION OR WARRANTY OR
-CONDITION OF ANY KIND WHETHER EXPRESS OR IMPLIED (EITHER IN FACT OR BY
-OPERATION OF LAW) WITH RESPECT TO THE SOURCE CODE.  INTEL AND ITS SUPPLIERS
-EXPRESSLY DISCLAIM ALL WARRANTIES OR CONDITIONS OF MERCHANTABILITY OR
-FITNESS FOR A PARTICULAR PURPOSE.  INTEL AND ITS SUPPLIERS DO NOT WARRANT
-THAT THE SOURCE CODE IS ERROR-FREE OR THAT OPERATION OF THE SOURCE CODE WILL
-BE SECURE OR UNINTERRUPTED AND HEREBY DISCLAIM ANY AND ALL LIABILITY ON
-ACCOUNT THEREOF.  THERE IS ALSO NO IMPLIED WARRANTY OF NON-INFRINGEMENT.
-SOURCE CODE IS LICENSED TO LICENSEE ON AN "AS IS" BASIS AND NEITHER INTEL
-NOR ITS SUPPLIERS WILL PROVIDE ANY SUPPORT, ASSISTANCE, INSTALLATION,
-TRAINING OR OTHER SERVICES.  INTEL AND ITS SUPPLIERS WILL NOT PROVIDE ANY
-UPDATES, ENHANCEMENTS OR EXTENSIONS.
-
-File Name:      HwcvalLogIntercept.h
-
-Description:    Hwc log intercept functions.
-
-Environment:
-
-Notes:
-
-****************************************************************************/
+/*
+ * Copyright (C) 2016 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 #ifndef __Hwcval_LogIntercept_h__
 #define __Hwcval_LogIntercept_h__
@@ -33,8 +21,8 @@ Notes:
 #include <cstdarg>
 #include <utils/Log.h>
 
-#include "AbstractCompositionChecker.h"
-#include "AbstractLog.h"
+#include "abstractcompositionchecker.h"
+#include "abstractlog.h"
 
 namespace Hwcval
 {
@@ -79,10 +67,10 @@ namespace Hwcval
 
     // Our implementation of HWC's abstract log class.
     // We supply this to HWC so that we can intercept (and parse) its log entries.
-    class LogIntercept : public ::intel::ufo::hwc::AbstractLogWrite
+    class LogIntercept : public ::hwcomposer::AbstractLogWrite
     {
     private:
-        ::intel::ufo::hwc::AbstractLogWrite* mRealLog;
+        ::hwcomposer::AbstractLogWrite* mRealLog;
         char* mInterceptedEntry;
         Hwcval::LogChecker *mChecker;
 
@@ -94,19 +82,19 @@ namespace Hwcval
 
         // Control functions
         void Register( Hwcval::LogChecker* logChecker,
-                       ::intel::ufo::hwc::validation::AbstractCompositionChecker* compositionChecker,
+                       ::hwcomposer::AbstractCompositionChecker* compositionChecker,
                        uint32_t compositionVersionsSupported);
 
-        ::intel::ufo::hwc::AbstractLogWrite* GetRealLog();
+        ::hwcomposer::AbstractLogWrite* GetRealLog();
     };
 
-    inline ::intel::ufo::hwc::AbstractLogWrite* LogIntercept::GetRealLog()
+    inline ::hwcomposer::AbstractLogWrite* LogIntercept::GetRealLog()
     {
         return mRealLog;
     }
 
-    typedef ::intel::ufo::hwc::AbstractLogWrite* (*SetLogValPtr) (::intel::ufo::hwc::AbstractLogWrite* logVal,
-                                   ::intel::ufo::hwc::validation::AbstractCompositionChecker* checkComposition,
+    typedef ::hwcomposer::AbstractLogWrite* (*SetLogValPtr) (::hwcomposer::AbstractLogWrite* logVal,
+                                   ::hwcomposer::AbstractCompositionChecker* checkComposition,
                                    uint32_t& versionSupportMask);
 }
 

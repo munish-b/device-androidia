@@ -1,27 +1,17 @@
 /*
- * INTEL CONFIDENTIAL
+ * Copyright (C) 2016 The Android Open Source Project
  *
- * Copyright 2014
- * Intel Corporation All Rights Reserved.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- * The source code contained or described herein and all documents related to the
- * source code ("Material") are owned by Intel Corporation or its suppliers or
- * licensors. Title to the Material remains with Intel Corporation or its suppliers
- * and licensors. The Material contains trade secrets and proprietary and confidential
- * information of Intel or its suppliers and licensors. The Material is protected by
- * worldwide copyright and trade secret laws and treaty provisions. No part of the
- * Material may be used, copied, reproduced, modified, published, uploaded, posted,
- * transmitted, distributed, or disclosed in any way without Intels prior express
- * written permission.
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
- * No license under any patent, copyright, trade secret or other intellectual
- * property right is granted to or conferred upon you by disclosure or delivery
- * of the Materials, either expressly, by implication, inducement, estoppel
- * or otherwise. Any license under such intellectual property rights must be
- * express and approved by Intel in writing.
- *
- * HwcTestReferenceComposer is a SLIGHTLY modified version of GLComposer in HWC.
- *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 #include <stdio.h>
@@ -29,8 +19,7 @@
 #include "HwcTestReferenceComposer.h"
 #include "HwcTestKernel.h"
 
-#include "GrallocClient.h"
-#include <ufo/graphics.h>
+#include <graphics.h>
 #include <utils/String8.h>
 
 #include <GLES/gl.h>
@@ -885,6 +874,7 @@ bool HwcTestReferenceComposer::lazyCreate()
 
     // Get a connection to the display
     m_display = eglGetDisplay( EGL_DEFAULT_DISPLAY );
+    ALOGE("m_displayi 3 = %p ",m_display);
     if (getEGLError("eglGetDisplay") || m_display == EGL_NO_DISPLAY)
     {
         HWCERROR(eCheckGlFail, "HwcTestReferenceComposer: Error on eglGetDisplay");
@@ -1101,6 +1091,7 @@ void HwcTestReferenceComposer::destroy()
     // Mark the display as invalid
     m_display = EGL_NO_DISPLAY;
 
+    ALOGE("m_displayi 5 = %p ",m_display);
     // Free the source layers array
     freeSourceLayers();
 }
@@ -1133,16 +1124,10 @@ bool HwcTestReferenceComposer::attachToFBO(GLuint textureId)
 }
 
 void HwcTestReferenceComposer::setTexture(
-    const hwc_layer_1_t* layer,
-    uint32_t texturingUnit,
-    bool *pEGLImageCreated,
-    bool *pTextureCreated,
-    bool *pTextureSet,
-    android::sp<android::GraphicBuffer> *pGraphicBuffer,
-    EGLImageKHR *pEGLImage,
-    GLuint *pTextureId,
-    int filter)
-{
+    const hwcval_layer_t *layer, uint32_t texturingUnit, bool *pEGLImageCreated,
+    bool *pTextureCreated, bool *pTextureSet,
+    android::sp<android::GraphicBuffer> *pGraphicBuffer, EGLImageKHR *pEGLImage,
+    GLuint *pTextureId, int filter) {
     // Nothing is successfull, unless something different is later stated
     *pEGLImageCreated = false;
     *pTextureCreated = false;
@@ -1167,7 +1152,7 @@ void HwcTestReferenceComposer::setTexture(
     *pGraphicBuffer = new android::GraphicBuffer(bi.width, bi.height, bi.format,
             bi.usage, bi.pitch, const_cast<native_handle*>(layer->handle), false);
 #endif
-
+    ALOGE("buffer = %p  width = %u height = %u",(*pGraphicBuffer)->getNativeBuffer(), bi.width, bi.height, bi.format);
     *pEGLImage = eglCreateImageKHR(m_display, EGL_NO_CONTEXT, EGL_NATIVE_BUFFER_ANDROID, EGLClientBuffer((*pGraphicBuffer)->getNativeBuffer()), 0);
     if (getEGLError("eglCreateImageKHR"))
     {
@@ -1266,13 +1251,8 @@ status_t HwcTestReferenceComposer::bindTexture(
  - Texture coordinates in [0,1] range, one pair per layer
 */
 
-static void setupVBOData(
-    GLfloat* vboData,
-    uint32_t stride,
-    uint32_t destWidth,
-    uint32_t destHeight,
-    const hwc_layer_1_t* layer)
-{
+static void setupVBOData(GLfloat *vboData, uint32_t stride, uint32_t destWidth,
+                         uint32_t destHeight, const hwcval_layer_t *layer) {
     // First get input buffer size
     Hwcval::buffer_details_t bi;
 
@@ -1417,8 +1397,9 @@ static void setupVBOData(
     vboData[3*stride+2+1] = texCoords[7];
 }
 
-status_t HwcTestReferenceComposer::beginFrame(uint32_t numSources, const hwc_layer_1_t* source, const hwc_layer_1_t* target)
-{
+status_t HwcTestReferenceComposer::beginFrame(uint32_t numSources,
+                                              const hwcval_layer_t *source,
+                                              const hwcval_layer_t *target) {
 #if CREATEDESTROY_ONCE
     static bool firstTime = true;
 #endif
@@ -1575,8 +1556,8 @@ status_t HwcTestReferenceComposer::beginFrame(uint32_t numSources, const hwc_lay
     return result;
 }
 
-status_t HwcTestReferenceComposer::draw(const hwc_layer_1_t* layer, uint32_t index)
-{
+status_t HwcTestReferenceComposer::draw(const hwcval_layer_t *layer,
+                                        uint32_t index) {
     // Check that the destination texture is attached to the FBO
     if (!m_destTextureAttachedToFBO)
     {
@@ -1697,8 +1678,10 @@ status_t HwcTestReferenceComposer::endFrame()
     return result;
 }
 
-status_t HwcTestReferenceComposer::Compose(uint32_t numSources, hwc_layer_1_t* source, hwc_layer_1_t* target, bool waitForFences)
-{
+status_t HwcTestReferenceComposer::Compose(uint32_t numSources,
+                                           hwcval_layer_t *source,
+                                           hwcval_layer_t *target,
+                                           bool waitForFences) {
     status_t result;
 
     HWCVAL_LOCK(_l, mComposeMutex);
@@ -1735,7 +1718,7 @@ status_t HwcTestReferenceComposer::Compose(uint32_t numSources, hwc_layer_1_t* s
     uint32_t screenIndex = 0;
     for (index = 0; index < numSources && result == OK; ++index)
     {
-        hwc_layer_1_t& srcLayer = source[index];
+      hwcval_layer_t &srcLayer = source[index];
 
         if ((srcLayer.compositionType == HWC_FRAMEBUFFER) &&
             (srcLayer.handle != 0))
@@ -1836,7 +1819,7 @@ android::sp<android::GraphicBuffer> HwcTestReferenceComposer::CopyBuf(buffer_han
     android::sp<android::GraphicBuffer> spDestBuffer = new android::GraphicBuffer(bi.width, bi.height, bi.format,
             bi.usage | GRALLOC_USAGE_SW_READ_OFTEN); // Encourage use of linear buffers - it will speed the comparison
 
-    hwc_layer_1_t srcLayer;
+    hwcval_layer_t srcLayer;
     srcLayer.handle = handle;
     srcLayer.compositionType = HWC_FRAMEBUFFER;
     srcLayer.hints = 0;
@@ -1857,7 +1840,7 @@ android::sp<android::GraphicBuffer> HwcTestReferenceComposer::CopyBuf(buffer_han
     srcLayer.releaseFenceFd = -1;
     srcLayer.planeAlpha=255;
 
-    hwc_layer_1_t tgtLayer = srcLayer;
+    hwcval_layer_t tgtLayer = srcLayer;
     tgtLayer.handle = spDestBuffer->handle;
 
     if (Compose(1, &srcLayer, &tgtLayer, false) == OK)
@@ -1871,9 +1854,7 @@ android::sp<android::GraphicBuffer> HwcTestReferenceComposer::CopyBuf(buffer_han
     }
 }
 
-
-bool HwcTestReferenceComposer::IsLayerNV12(const hwc_layer_1_t* pDest)
-{
+bool HwcTestReferenceComposer::IsLayerNV12(const hwcval_layer_t *pDest) {
     Hwcval::buffer_details_t bi;
 
     if (pDest->handle)
@@ -1894,8 +1875,7 @@ bool HwcTestReferenceComposer::IsLayerNV12(const hwc_layer_1_t* pDest)
     return ( IsNV12(bi.format) );
 }
 
-bool HwcTestReferenceComposer::HasAlpha(const hwc_layer_1_t* pSrc)
-{
+bool HwcTestReferenceComposer::HasAlpha(const hwcval_layer_t *pSrc) {
     Hwcval::buffer_details_t bi;
 
     if (pSrc->handle)

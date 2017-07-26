@@ -1,30 +1,19 @@
-/****************************************************************************
-*
-* Copyright (c) Intel Corporation (2014).
-*
-* DISCLAIMER OF WARRANTY
-* NEITHER INTEL NOR ITS SUPPLIERS MAKE ANY REPRESENTATION OR WARRANTY OR
-* CONDITION OF ANY KIND WHETHER EXPRESS OR IMPLIED (EITHER IN FACT OR BY
-* OPERATION OF LAW) WITH RESPECT TO THE SOURCE CODE.  INTEL AND ITS SUPPLIERS
-* EXPRESSLY DISCLAIM ALL WARRANTIES OR CONDITIONS OF MERCHANTABILITY OR
-* FITNESS FOR A PARTICULAR PURPOSE.  INTEL AND ITS SUPPLIERS DO NOT WARRANT
-* THAT THE SOURCE CODE IS ERROR-FREE OR THAT OPERATION OF THE SOURCE CODE WILL
-* BE SECURE OR UNINTERRUPTED AND HEREBY DISCLAIM ANY AND ALL LIABILITY ON
-* ACCOUNT THEREOF.  THERE IS ALSO NO IMPLIED WARRANTY OF NON-INFRINGEMENT.
-* SOURCE CODE IS LICENSED TO LICENSEE ON AN "AS IS" BASIS AND NEITHER INTEL
-* NOR ITS SUPPLIERS WILL PROVIDE ANY SUPPORT, ASSISTANCE, INSTALLATION,
-* TRAINING OR OTHER SERVICES.  INTEL AND ITS SUPPLIERS WILL NOT PROVIDE ANY
-* UPDATES, ENHANCEMENTS OR EXTENSIONS.
-*
-* File Name:            Hwch.cpp
-*
-* Description:          Frame class implementation
-*
-* Environment:
-*
-* Notes:
-*
-*****************************************************************************/
+/*
+ * Copyright (C) 2016 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 #include "HwchDefs.h"
 #include "HwchFrame.h"
 #include "HwchSystem.h"
@@ -453,7 +442,7 @@ uint32_t Hwch::Frame::GetFlags(uint32_t disp)
     if (mGeometryChanged[disp])
     {
         //HWCLOGV("Display %d Geometry changed, flags=%x", disp, mFlags | HWC_GEOMETRY_CHANGED);
-        return mFlags | HWC_GEOMETRY_CHANGED;
+      return mFlags; //| HWC_GEOMETRY_CHANGED;
     }
     else
     {
@@ -758,7 +747,8 @@ int Hwch::Frame::Send()
 
             display.RecordScreenSize();
         }
-
+#if 0 
+        /*FIX_ME disabled code as mInterface is incorrectly updated */
         // Update the geometry for displays where the number of layers has changed
         // but nothing else.
         for (uint32_t disp=0; disp<numDisplays; ++disp)
@@ -769,33 +759,36 @@ int Hwch::Frame::Send()
             }
             mNumLayers[disp] = mLayers[disp].size();
         }
-
+#endif
         // Allocate enough space for a frame with all it's layers
-        hwc_display_contents_1_t *dcs[MAX_DISPLAYS];
-        size_t displayStructSizes[MAX_DISPLAYS];
-        size_t totalSize=0;
+        hwcval_display_contents_t dcs[MAX_DISPLAYS];
+        /*        size_t displayStructSizes[MAX_DISPLAYS];
+                size_t totalSize=0;
 
-        for (uint32_t disp=0; disp<numDisplays; ++disp)
-        {
-            size_t size = 0;
-            if (connected[disp])
-            {
-                uint32_t numLayers = mLayers[disp].size();
-                size = sizeof(hwc_display_contents_1_t) + (numLayers+1) * sizeof(hwc_layer_1_t);
-            }
-            displayStructSizes[disp] = size;
-            totalSize += size;
-        }
+                for (uint32_t disp=0; disp<numDisplays; ++disp)
+                {
+                    size_t size = 0;
+                    if (connected[disp])
+                    {
+                        uint32_t numLayers = mLayers[disp].size();
+                        size = sizeof(hwc2_display_t) + (numLayers+1) *
+           sizeof(hwc2_layer_t);
+                    }
+                    displayStructSizes[disp] = size;
+                    totalSize += size;
+                }
 
-        // Allocate a buffer for the layer list including the visible regions
-        size_t allocSize = totalSize + (sizeof(hwc_rect_t) * MAX_VISIBLE_REGIONS);
-        char* memBuf = new char[allocSize];
-        char* displayContents = memBuf;
-        memset (displayContents, 0, totalSize);
-        hwc_rect_t* visibleRegions = (hwc_rect_t*) (memBuf + totalSize);
+                // Allocate a buffer for the layer list including the visible
+           regions
+                size_t allocSize = totalSize + (sizeof(hwc_rect_t) *
+           MAX_VISIBLE_REGIONS);
+                char* memBuf = new char[allocSize];*/
+        // hwcval_display_contents_t displayContents;
+        // memset (&displayContents, 0, sizeof(hwcval_display_contents_t));
+        hwc_rect_t visibleRegions[MAX_VISIBLE_REGIONS];
         uint32_t visibleRegionCount = 0;
 
-        char* pDc = displayContents;
+        hwcval_display_contents_t *pDc = &dcs[0];
 
         for (uint32_t disp=0; disp < numDisplays; ++disp)
         {
@@ -810,34 +803,37 @@ int Hwch::Frame::Send()
                 }
 
                 uint32_t numLayers = mLayers[disp].size();
-                hwc_display_contents_1_t* dc = (hwc_display_contents_1_t*)pDc;
-                dcs[disp] = dc;
+                hwcval_display_contents_t *dc = pDc;
+                dcs[disp].display = 0;
 
-                dc->retireFenceFd = -1;
-                dc->numHwLayers = numLayers+1;
-                dc->flags = GetFlags(disp);
-                dc->outbufAcquireFenceFd = -1;
+                // dc->retireFenceFd = -1;
+                // dc->numHwLayers = numLayers+1;
+                // dc->flags = GetFlags(disp);
+                // dc->outbufAcquireFenceFd = -1;
 
                 // Check if virtual or wireless display emulation is enabled. If so, set dc->outbuf to point
                 // to a real buffer in an Hwch::BufferSet.
                 if (mSystem.IsVirtualDisplayEmulationEnabled() && mSystem.GetDisplay(disp).IsVirtualDisplay())
                 {
-                    dc->outbuf = mSystem.GetDisplay(disp).GetNextExternalBuffer();
+                  // dc->outbuf =
+                  // mSystem.GetDisplay(disp).GetNextExternalBuffer();
                 }
 #ifdef TARGET_HAS_MCG_WIDI
                 else if (mSystem.IsWirelessDisplayEmulationEnabled() && mSystem.GetDisplay(disp).IsWirelessDisplay())
                 {
-                    dc->outbuf = mSystem.GetDisplay(disp).GetNextExternalBuffer();
+                  // dc->outbuf =
+                  // mSystem.GetDisplay(disp).GetNextExternalBuffer();
                 }
 #endif
                 else
                 {
-                    dc->outbuf = NULL;
+                  // dc->outbuf = NULL;
                 }
 
                 // Each layer must now populate HWC's layer list (in Layer::Send).
                 // Also, we determine the video rate, if there is one.
-                HWCLOGI("Frame::Send: Display %d: dc->numHwLayers=%d", disp, dc->numHwLayers);
+                HWCLOGI("Frame::Send: Display %d: dc->numHwLayers=%d", disp,
+                        numLayers + 1);
 
                 for (uint32_t i = 0; i < numLayers; i++)
                 {
@@ -850,12 +846,33 @@ int Hwch::Frame::Send()
                         layer->SetCompression(mSystem.GetGlobalRenderCompression());
                     }
 #endif
+                    hwc2_layer_t outLayer;
+                    mInterface.CreateLayer(disp, &outLayer);
+                    ALOGE("Layer ID = %llu", outLayer);
+                    layer->handle = layer->Send();
+                    mInterface.setLayerCompositionType(disp, outLayer,
+                                                       layer->mCurrentCompType);
+                    layer->compositionType = layer->mCurrentCompType;
+                    mInterface.setLayerTransform(disp, outLayer,
+                                                 layer->mPhysicalTransform);
+                    mInterface.setLayerSourceCrop(disp, outLayer,
+                                                  layer->mSourceCropf);
+                    mInterface.setLayerDisplayFrame(disp, outLayer,
+                                                    layer->mDisplayFrame);
+                    mInterface.setLayerPlaneAlpha(disp, outLayer,
+                                                  layer->mPlaneAlpha);
 
-                    layer->Send(dc->hwLayers[i], visibleRegions, visibleRegionCount);
+                    hwc_region_t region;
+                    region.rects = layer->AssignVisibleRegions(
+                        visibleRegions, visibleRegionCount);
+                    region.numRects = visibleRegionCount;
+
+                    ALOGE("visibleRegionCount = %d", visibleRegionCount);
+                    mInterface.setLayerVisibleRegion(disp, outLayer, region);
 
                     if (mGeometryChanged[disp])
                     {
-                        dc->hwLayers[i].compositionType = HWC_FRAMEBUFFER;
+                      // dc->hwLayers[i].compositionType = HWC_FRAMEBUFFER;
                     }
 
                     // If this is a video layer, get the rate and make sure we don't have different conflicting video rates
@@ -868,13 +885,38 @@ int Hwch::Frame::Send()
                 }
 
                 Hwch::Layer& target = mSystem.GetDisplay(disp).GetFramebufferTarget();
-                target.Send(dc->hwLayers[numLayers], visibleRegions, visibleRegionCount);
+                hwc2_layer_t targetLayer;
+                mInterface.CreateLayer(disp, &targetLayer);
+                mInterface.setLayerCompositionType(disp, targetLayer,
+                                                   target.mCurrentCompType);
+                target.compositionType = target.mCurrentCompType;
+                mInterface.setLayerTransform(disp, targetLayer,
+                                             target.mPhysicalTransform);
+                mInterface.setLayerSourceCrop(disp, targetLayer,
+                                              target.mSourceCropf);
+                mInterface.setLayerDisplayFrame(disp, targetLayer,
+                                                target.mDisplayFrame);
+                mInterface.setLayerPlaneAlpha(disp, targetLayer,
+                                              target.mPlaneAlpha);
+                dc->hwLayers[numLayers].handle = target.handle = target.Send();
+
+                hwc_region_t targetregion;
+                targetregion.rects = target.AssignVisibleRegions(
+                    visibleRegions, visibleRegionCount);
+                targetregion.numRects = visibleRegionCount;
+
+                mInterface.setLayerVisibleRegion(disp, targetLayer,
+                                                 targetregion);
+
+                // target.Send(dc->hwLayers[numLayers], visibleRegions,
+                // visibleRegionCount);
+
             }
             else
             {
-                dcs[disp] = 0;
+              dcs[disp].display = 0;
             }
-            pDc += displayStructSizes[disp];
+            // pDc += displayStructSizes[disp];
 
             if (videoCount > 1)
             {
@@ -895,8 +937,8 @@ int Hwch::Frame::Send()
                 HWCLOGV_COND(eLogEventHandler, "Waiting for VSync before Prepare");
                 mSystem.GetVSync().WaitForOffsetVSync();
             }
-
-            mInterface.Prepare(numDisplays, dcs);
+            uint32_t outNumTypes = 0, outNumRequests = 0;
+            mInterface.ValidateDisplay(0, &outNumTypes, &outNumRequests);
 
             // Populate the FRAMEBUFFER_TARGETs
             for (uint32_t disp=0; disp<numDisplays; ++disp)
@@ -904,7 +946,7 @@ int Hwch::Frame::Send()
                 // Are there any FRAMEBUFFER layers which were updated this frame?
                 bool framebufferTargetNeedsUpdate = false;
 
-                hwc_display_contents_1_t* dc = dcs[disp];
+                hwcval_display_contents_t *dc = &dcs[disp];
 
                 if (dc)
                 {
@@ -937,7 +979,8 @@ int Hwch::Frame::Send()
                         }
                         else
                         {
-                            layer->SetAcquireFence(dc->hwLayers[i], mTimelineThread, -1);
+                          // layer->SetAcquireFence(dc->hwLayers[i],
+                          // mTimelineThread, -1);
                         }
                     }
 
@@ -957,7 +1000,8 @@ int Hwch::Frame::Send()
                     if (framebufferTargetNeedsUpdate)
                     {
                         // Yes - so do the simulated composition
-                        dc->hwLayers[numLayers].handle = targetLayer.mBufs->GetNextBuffer();
+                      // dc->hwLayers[numLayers].handle =
+                      // targetLayer.mBufs->GetNextBuffer();
                         android::sp<android::GraphicBuffer> buf = targetLayer.mBufs->Get();
 
                         // Initialize the background of the buffer
@@ -966,13 +1010,15 @@ int Hwch::Frame::Send()
                         uint32_t height = buf->getHeight();
 
                         HWCLOGD_COND(eLogHarness, "Filling FBT %dx%d", width, height);
-                        targetLayer.mBufs->WaitReleaseFence(mSystem.GetFenceTimeout(), targetLayer.mName);
+                        // targetLayer.mBufs->WaitReleaseFence(mSystem.GetFenceTimeout(),
+                        // targetLayer.mName);
 
                         if (!mSystem.GetNoCompose())
                         {
                             sRefCmp.Compose(numLayers, dc->hwLayers, dc->hwLayers + numLayers, false);
                         }
-
+#if 0
+                         //FIX_ME disabling fences*/
                         // Our acquire fences are for testing, and hence are not in sync with the composition
                         // Merge and close any fences on FB layers, and use the merged fence in the FBT.
                         int mergedFence = -1;
@@ -1006,6 +1052,7 @@ int Hwch::Frame::Send()
                         // Set the fence for the framebuffer target
                         targetLayer.SetAcquireFence(dc->hwLayers[numLayers],
                                                     mTimelineThread, mergedFence);
+#endif
                     }
                     else
                     {
@@ -1030,29 +1077,32 @@ int Hwch::Frame::Send()
                 state->TriggerOnSetCondition();
             }
 
-            mInterface.Set(numDisplays, dcs);
+            // mInterface.PresentDisplay(numDisplays, dcs);
+            int32_t *outPresentFence;
+            mInterface.PresentDisplay(0, outPresentFence);
 
             // Note, these are return values from the HWC, you have to close them
             for (uint32_t disp=0; disp<numDisplays; ++disp)
             {
-                hwc_display_contents_1_t* dc = dcs[disp];
+              hwcval_display_contents_t *dc = &dcs[disp];
 
                 if (dc)
                 {
                     uint32_t numLayers = mLayers[disp].size();
-
+#if 0
+                    /* FIX_ME */
                     if (dc->retireFenceFd > 0)
                     {
                         // TODO: Consider checking that this fence has been signalled within 2 frames?
                         CloseFence(dc->retireFenceFd);
                     }
-
+#endif
                     for (uint32_t i=0; i<numLayers; ++i)
                     {
                         // Save composition type for next time
                         Hwch::Layer* layer = mLayers[disp].editItemAt(i);
 
-                        layer->PostFrame(dc->hwLayers[i].compositionType, dc->hwLayers[i].releaseFenceFd);
+                        layer->PostFrame(dc->hwLayers[i].compositionType, -1);
 
                         if (layer->HasPattern())
                         {
@@ -1060,12 +1110,12 @@ int Hwch::Frame::Send()
                         }
                     }
 
-                    mSystem.GetDisplay(disp).GetFramebufferTarget().PostFrame(HWC_FRAMEBUFFER_TARGET,
-                        dc->hwLayers[numLayers].releaseFenceFd);
+                    mSystem.GetDisplay(disp).GetFramebufferTarget().PostFrame(
+                        HWC_FRAMEBUFFER_TARGET, -1);
                 }
             }
 
-            delete [] memBuf;
+            // delete [] memBuf;
             ClearGeometryChanged();
         }
         else
@@ -1076,7 +1126,7 @@ int Hwch::Frame::Send()
 
             for (uint32_t disp=0; disp<numDisplays; ++disp)
             {
-                hwc_display_contents_1_t* dc = dcs[disp];
+              hwcval_display_contents_t *dc = &dcs[disp];
 
                 if (dc)
                 {
@@ -1087,16 +1137,18 @@ int Hwch::Frame::Send()
                         // Save composition type for next time
                         Hwch::Layer* layer = mLayers[disp].editItemAt(i);
                         layer->PostFrame(dc->hwLayers[i].compositionType, -1);
-
+#if 0
+                        /* FIX_ME*/
                         int acquireFence = dc->hwLayers[i].acquireFenceFd;
                         if (acquireFence > 0)
                         {
                             close(acquireFence);
                         }
+#endif
                     }
                 }
             }
-            delete [] memBuf;
+            // delete [] memBuf;
        }
 
     }

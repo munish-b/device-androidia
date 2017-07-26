@@ -1,47 +1,27 @@
-/****************************************************************************
-
-Copyright (c) Intel Corporation (2014).
-
-DISCLAIMER OF WARRANTY
-NEITHER INTEL NOR ITS SUPPLIERS MAKE ANY REPRESENTATION OR WARRANTY OR
-CONDITION OF ANY KIND WHETHER EXPRESS OR IMPLIED (EITHER IN FACT OR BY
-OPERATION OF LAW) WITH RESPECT TO THE SOURCE CODE.  INTEL AND ITS SUPPLIERS
-EXPRESSLY DISCLAIM ALL WARRANTIES OR CONDITIONS OF MERCHANTABILITY OR
-FITNESS FOR A PARTICULAR PURPOSE.  INTEL AND ITS SUPPLIERS DO NOT WARRANT
-THAT THE SOURCE CODE IS ERROR-FREE OR THAT OPERATION OF THE SOURCE CODE WILL
-BE SECURE OR UNINTERRUPTED AND HEREBY DISCLAIM ANY AND ALL LIABILITY ON
-ACCOUNT THEREOF.  THERE IS ALSO NO IMPLIED WARRANTY OF NON-INFRINGEMENT.
-SOURCE CODE IS LICENSED TO LICENSEE ON AN "AS IS" BASIS AND NEITHER INTEL
-NOR ITS SUPPLIERS WILL PROVIDE ANY SUPPORT, ASSISTANCE, INSTALLATION,
-TRAINING OR OTHER SERVICES.  INTEL AND ITS SUPPLIERS WILL NOT PROVIDE ANY
-UPDATES, ENHANCEMENTS OR EXTENSIONS.
-
-File Name:      DrmShimTransform.cpp
-
-Description:    Class implementation for DRMShimTransform class.
-                Keeps track of Z-order, scale, crop, rotation and flip
-                within a SF or iVP composition.
-
-Environment:
-
-Notes:
-
-****************************************************************************/
+/*
+ * Copyright (C) 2016 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 #include "DrmShimTransform.h"
-#include "hardware/hwcomposer.h"
+#include "hardware/hwcomposer2.h"
 #include "HwcTestDefs.h"
 #include "HwcTestUtil.h"
 #include "HwcTestState.h"
 #include "DrmShimBuffer.h"
 #include "HwcTestCrtc.h"
 #include "HwcvalHwc1Content.h"
-
-#ifdef HWCVAL_USE_IVPAPI_H
-#include "iVP_api.h"
-#else
-#include "iVP.h"
-#endif
 
 #include <math.h>
 
@@ -150,21 +130,16 @@ DrmShimTransform::DrmShimTransform(double sw, double sh, double dw, double dh)
 }
 
 // Transform creation for SF composition
-DrmShimTransform::DrmShimTransform(android::sp<DrmShimBuffer>& buf, uint32_t layerIx, const hwc_layer_1_t* layer)
-  : mBuf(buf),
-    mZOrder(uint64_t (layerIx) << MOST_SIGNIFICANT_Z_ORDER_BITS),
-    mZOrderLevels(1),
-    mSourcecropf(layer->sourceCropf),
-    mXoffset(layer->displayFrame.left),
-    mYoffset(layer->displayFrame.top),
-    mTransform(layer->transform),
-    mLayerIndex(eNoLayer),
-    mDecrypt(false),
-    mBlending(Hwc1BlendingTypeToHwcval(layer->blending)),
-    mHasPixelAlpha(buf.get() ? buf->FormatHasPixelAlpha() : false),
-    mPlaneAlpha(float(layer->planeAlpha) / 255.0),
-    mSources(0)
-{
+DrmShimTransform::DrmShimTransform(android::sp<DrmShimBuffer> &buf,
+                                   uint32_t layerIx,
+                                   const hwcval_layer_t *layer)
+    : mBuf(buf), mZOrder(uint64_t(layerIx) << MOST_SIGNIFICANT_Z_ORDER_BITS),
+      mZOrderLevels(1), mSourcecropf(layer->sourceCropf),
+      mXoffset(layer->displayFrame.left), mYoffset(layer->displayFrame.top),
+      mTransform(layer->transform), mLayerIndex(eNoLayer), mDecrypt(false),
+      mBlending(Hwc1BlendingTypeToHwcval(layer->blending)),
+      mHasPixelAlpha(buf.get() ? buf->FormatHasPixelAlpha() : false),
+      mPlaneAlpha(float(layer->planeAlpha) / 255.0), mSources(0) {
     const hwc_frect_t& sourcecropf = layer->sourceCropf;
     const hwc_rect_t& displayframe = layer->displayFrame;
     uint32_t transform = layer->transform;
@@ -227,7 +202,7 @@ DrmShimTransform::DrmShimTransform(android::sp<DrmShimBuffer>& buf, uint32_t lay
 const int DrmShimTransform::ivpRotationTable[] = {eTransformNone, eTransformRot90, eTransformRot180, eTransformRot270};
 const int DrmShimTransform::ivpFlipTable[] = {eTransformNone, eTransformFlipH, eTransformFlipV};
 
-
+#if 0
 // Transform creation for iVP composition
 DrmShimTransform::DrmShimTransform(android::sp<DrmShimBuffer>& buf, uint32_t layerIx, const iVP_layer_t* layer)
   : mBuf(buf),
@@ -331,7 +306,7 @@ DrmShimTransform::DrmShimTransform(android::sp<DrmShimBuffer>& buf, uint32_t lay
     }
     HWCLOGD_COND(eLogBuffer, "DrmShimTransform::DrmShimTransform(&buf, int, ivp_layer) Created transform@%p", this);
 }
-
+#endif
 DrmShimTransform DrmShimTransform::Inverse()
 {
     DrmShimTransform result;
@@ -1052,7 +1027,7 @@ hwc_rect_t InverseTransformRect(hwc_rect_t& rect, const Hwcval::ValLayer& layer)
 
     // The subject rect in the dest frame of reference,
     // expressed as a transform so we can combine it.
-    hwc_layer_1_t videoDfLayer;
+    hwcval_layer_t videoDfLayer;
     videoDfLayer.sourceCropf = ToFRect(rect);
     videoDfLayer.displayFrame = rect;
     videoDfLayer.transform = 0;

@@ -1,31 +1,18 @@
-/****************************************************************************
-
-Copyright (c) Intel Corporation (2014).
-
-DISCLAIMER OF WARRANTY
-NEITHER INTEL NOR ITS SUPPLIERS MAKE ANY REPRESENTATION OR WARRANTY OR
-CONDITION OF ANY KIND WHETHER EXPRESS OR IMPLIED (EITHER IN FACT OR BY
-OPERATION OF LAW) WITH RESPECT TO THE SOURCE CODE.  INTEL AND ITS SUPPLIERS
-EXPRESSLY DISCLAIM ALL WARRANTIES OR CONDITIONS OF MERCHANTABILITY OR
-FITNESS FOR A PARTICULAR PURPOSE.  INTEL AND ITS SUPPLIERS DO NOT WARRANT
-THAT THE SOURCE CODE IS ERROR-FREE OR THAT OPERATION OF THE SOURCE CODE WILL
-BE SECURE OR UNINTERRUPTED AND HEREBY DISCLAIM ANY AND ALL LIABILITY ON
-ACCOUNT THEREOF.  THERE IS ALSO NO IMPLIED WARRANTY OF NON-INFRINGEMENT.
-SOURCE CODE IS LICENSED TO LICENSEE ON AN "AS IS" BASIS AND NEITHER INTEL
-NOR ITS SUPPLIERS WILL PROVIDE ANY SUPPORT, ASSISTANCE, INSTALLATION,
-TRAINING OR OTHER SERVICES.  INTEL AND ITS SUPPLIERS WILL NOT PROVIDE ANY
-UPDATES, ENHANCEMENTS OR EXTENSIONS.
-
-File Name:      HwcTestLog.h
-
-Description:    Test logger function.
-
-Environment:
-
-Notes:
-
-****************************************************************************/
-
+/*
+ * Copyright (C) 2016 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 #ifndef __HwcTestLog_h__
 #define __HwcTestLog_h__
@@ -55,9 +42,10 @@ int HwcValLogVA(int priority, const char* fmt, va_list& args);
 int HwcValError(HwcTestCheckType check, HwcTestConfig* config, HwcTestResult* result, const char* fmt, ...);
 
 #ifndef HWCVAL_LOG_VERBOSE
-#define HWCLOG(LEVEL,...) if (HwcGetTestConfig()->IsLevelEnabled(LEVEL)) HwcValLog(LEVEL, __VA_ARGS__)
+#define HWCLOG(LEVEL, ...) ALOGE(__VA_ARGS__)
 #else
-#define HWCLOG(LEVEL,...) if (HwcGetTestConfig()->IsLevelEnabled(LEVEL)) HwcValLogVerbose(LEVEL,__FILE__ , __LINE__, __VA_ARGS__)
+#define HWCLOG(LEVEL, ...)                                                     \
+  HwcValLogVerbose(LEVEL, __FILE__, __LINE__, __VA_ARGS__)
 #endif
 
 #define HWCLOGV(...) HWCLOG(ANDROID_LOG_VERBOSE,__VA_ARGS__)
@@ -80,8 +68,8 @@ int HwcValError(HwcTestCheckType check, HwcTestConfig* config, HwcTestResult* re
 #define HWCERROR(CHECKNUM, ...) HwcValError(CHECKNUM, HwcGetTestConfig(), HwcGetTestResult(), __VA_ARGS__)
 #define HWCCOND(CHECK) (HwcGetTestConfig()->mCheckConfigs[CHECK].enable)
 
-#define HWCLOGV_COND(CHECK,...) if HWCCOND(CHECK) HWCLOGV(__VA_ARGS__)
-#define HWCLOGD_COND(CHECK,...) if HWCCOND(CHECK) HWCLOGD(__VA_ARGS__)
+#define HWCLOGV_COND(CHECK, ...) HWCLOGV(__VA_ARGS__)
+#define HWCLOGD_COND(CHECK, ...) HWCLOGD(__VA_ARGS__)
 #define HWCLOGI_COND(CHECK,...) if HWCCOND(CHECK) HWCLOGI(__VA_ARGS__)
 #define HWCLOGW_COND(CHECK,...) if HWCCOND(CHECK) HWCLOGW(__VA_ARGS__)
 #define HWCLOGE_COND(CHECK,...) if HWCCOND(CHECK) HWCLOGE(__VA_ARGS__)

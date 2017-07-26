@@ -1,34 +1,22 @@
-/****************************************************************************
-*
-* Copyright (c) Intel Corporation (2014).
-*
-* DISCLAIMER OF WARRANTY
-* NEITHER INTEL NOR ITS SUPPLIERS MAKE ANY REPRESENTATION OR WARRANTY OR
-* CONDITION OF ANY KIND WHETHER EXPRESS OR IMPLIED (EITHER IN FACT OR BY
-* OPERATION OF LAW) WITH RESPECT TO THE SOURCE CODE.  INTEL AND ITS SUPPLIERS
-* EXPRESSLY DISCLAIM ALL WARRANTIES OR CONDITIONS OF MERCHANTABILITY OR
-* FITNESS FOR A PARTICULAR PURPOSE.  INTEL AND ITS SUPPLIERS DO NOT WARRANT
-* THAT THE SOURCE CODE IS ERROR-FREE OR THAT OPERATION OF THE SOURCE CODE WILL
-* BE SECURE OR UNINTERRUPTED AND HEREBY DISCLAIM ANY AND ALL LIABILITY ON
-* ACCOUNT THEREOF.  THERE IS ALSO NO IMPLIED WARRANTY OF NON-INFRINGEMENT.
-* SOURCE CODE IS LICENSED TO LICENSEE ON AN "AS IS" BASIS AND NEITHER INTEL
-* NOR ITS SUPPLIERS WILL PROVIDE ANY SUPPORT, ASSISTANCE, INSTALLATION,
-* TRAINING OR OTHER SERVICES.  INTEL AND ITS SUPPLIERS WILL NOT PROVIDE ANY
-* UPDATES, ENHANCEMENTS OR EXTENSIONS.
-*
-* File Name:            HwchLayers.cpp
-*
-* Description:          Implementation for specific layer classes
-*
-* Environment:
-*
-* Notes:
-*
-*****************************************************************************/
+/*
+ * Copyright (C) 2016 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 #include "HwchLayers.h"
 #include "HwchDisplay.h"
 #include "HwchSystem.h"
-#include "ufo/graphics.h"
 #include "HwchPngImage.h"
 
 Hwch::RGBALayer::RGBALayer(Coord<int32_t> w, Coord<int32_t> h, float  updateFreq, uint32_t fg, uint32_t bg, uint32_t matrix)
@@ -167,11 +155,8 @@ Hwch::NotificationLayer::NotificationLayer()
 }
 
 Hwch::NV12VideoLayer::NV12VideoLayer(uint32_t w, uint32_t h)
-  : Hwch::Layer("NV12Video",
-    (w != 0) ? Coord<int32_t>(w) : MaxRel(0),
-    (h != 0) ? Coord<int32_t>(h) : MaxRel(0),
-    HAL_PIXEL_FORMAT_NV12_Y_TILED_INTEL)
-{
+    : Hwch::Layer("NV12Video", (w != 0) ? Coord<int32_t>(w) : MaxRel(0),
+                  (h != 0) ? Coord<int32_t>(h) : MaxRel(0)) {
     SetPattern(GetPatternMgr().CreateHorizontalLinePtn(mFormat, 24.0, eRed, eDarkBlue));
     SetHwcAcquireDelay(0);
 }
@@ -196,13 +181,9 @@ Hwch::TransparentFullScreenLayer::TransparentFullScreenLayer()
 }
 
 Hwch::ProtectedVideoLayer::ProtectedVideoLayer(uint32_t encryption)
-  : Hwch::Layer("ProtectedVideo",
-    MaxRel(0),
-    MaxRel(0),
-    HAL_PIXEL_FORMAT_NV12_Y_TILED_INTEL,
-    -1,
-    GRALLOC_USAGE_HW_COMPOSER | GRALLOC_USAGE_HW_TEXTURE | GRALLOC_USAGE_HW_RENDER)
-{
+    : Hwch::Layer("ProtectedVideo", MaxRel(0), MaxRel(0), 0, -1,
+                  GRALLOC_USAGE_HW_COMPOSER | GRALLOC_USAGE_HW_TEXTURE |
+                      GRALLOC_USAGE_HW_RENDER) {
     SetPattern(GetPatternMgr().CreateHorizontalLinePtn(mFormat, 60.0, eRed, eDarkBlue));
     SetEncrypted(encryption);
     SetHwcAcquireDelay(0);

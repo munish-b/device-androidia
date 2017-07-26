@@ -1,25 +1,17 @@
 /*
- * INTEL CONFIDENTIAL
+ * Copyright (C) 2016 The Android Open Source Project
  *
- * Copyright 2014
- * Intel Corporation All Rights Reserved.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- * The source code contained or described herein and all documents related to the
- * source code ("Material") are owned by Intel Corporation or its suppliers or
- * licensors. Title to the Material remains with Intel Corporation or its suppliers
- * and licensors. The Material contains trade secrets and proprietary and confidential
- * information of Intel or its suppliers and licensors. The Material is protected by
- * worldwide copyright and trade secret laws and treaty provisions. No part of the
- * Material may be used, copied, reproduced, modified, published, uploaded, posted,
- * transmitted, distributed, or disclosed in any way without Intels prior express
- * written permission.
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
- * No license under any patent, copyright, trade secret or other intellectual
- * property right is granted to or conferred upon you by disclosure or delivery
- * of the Materials, either expressly, by implication, inducement, estoppel
- * or otherwise. Any license under such intellectual property rights must be
- * express and approved by Intel in writing.
- *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 #ifndef __HwcTestReferenceComposer_h__
@@ -41,6 +33,7 @@
 #include <utils/StrongPointer.h>
 #include <ui/GraphicBuffer.h>
 
+#include "Hwcval.h"
 #include <hardware/hwcomposer_defs.h>
 
 #include "DrmShimBuffer.h"
@@ -55,7 +48,10 @@ public:
     HwcTestReferenceComposer();
     virtual ~HwcTestReferenceComposer();
 
-    virtual android::status_t Compose(uint32_t numSources, hwc_layer_1_t* source, hwc_layer_1_t* target, bool waitForFences);
+    virtual android::status_t Compose(uint32_t numSources,
+                                      hwcval_layer_t *source,
+                                      hwcval_layer_t *target,
+                                      bool waitForFences);
 
     // Make a duplicate of a gralloc buffer
     android::sp<android::GraphicBuffer> CopyBuf(buffer_handle_t handle);
@@ -77,24 +73,21 @@ private:
     inline bool isCreated() const;
     void destroy();
 
-    android::status_t beginFrame(uint32_t numSources, const hwc_layer_1_t* source, const hwc_layer_1_t* target);
-    android::status_t draw(const hwc_layer_1_t* layer, uint32_t index);
+    android::status_t beginFrame(uint32_t numSources,
+                                 const hwcval_layer_t *source,
+                                 const hwcval_layer_t *target);
+    android::status_t draw(const hwcval_layer_t *layer, uint32_t index);
     android::status_t endFrame();
 
     bool isFormatSupportedAsOutput(int32_t format);
 
     bool attachToFBO(GLuint textureId);
 
-    void setTexture(
-        const hwc_layer_1_t* layer,
-        uint32_t texturingUnit,
-        bool *pEGLImageCreated,
-        bool *pTextureCreated,
-        bool *pTextureSet,
-        android::sp<android::GraphicBuffer> *pGraphicBuffer,
-        EGLImageKHR *pEGLImage,
-        GLuint *pTextureId,
-        int filter);
+    void setTexture(const hwcval_layer_t *layer, uint32_t texturingUnit,
+                    bool *pEGLImageCreated, bool *pTextureCreated,
+                    bool *pTextureSet,
+                    android::sp<android::GraphicBuffer> *pGraphicBuffer,
+                    EGLImageKHR *pEGLImage, GLuint *pTextureId, int filter);
 
     android::status_t bindTexture(GLuint texturingUnit, GLuint textureId);
 
@@ -321,8 +314,8 @@ private:
 
     bool verifyContextCreated();
 
-    bool IsLayerNV12(const hwc_layer_1_t* pDest);
-    bool HasAlpha(const hwc_layer_1_t* pSrc);
+    bool IsLayerNV12(const hwcval_layer_t *pDest);
+    bool HasAlpha(const hwcval_layer_t *pSrc);
 };
 
 #endif // __HwcTestReferenceComposer_h__

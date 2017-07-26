@@ -1,30 +1,19 @@
-/****************************************************************************
-*
-* Copyright (c) Intel Corporation (2014).
-*
-* DISCLAIMER OF WARRANTY
-* NEITHER INTEL NOR ITS SUPPLIERS MAKE ANY REPRESENTATION OR WARRANTY OR
-* CONDITION OF ANY KIND WHETHER EXPRESS OR IMPLIED (EITHER IN FACT OR BY
-* OPERATION OF LAW) WITH RESPECT TO THE SOURCE CODE.  INTEL AND ITS SUPPLIERS
-* EXPRESSLY DISCLAIM ALL WARRANTIES OR CONDITIONS OF MERCHANTABILITY OR
-* FITNESS FOR A PARTICULAR PURPOSE.  INTEL AND ITS SUPPLIERS DO NOT WARRANT
-* THAT THE SOURCE CODE IS ERROR-FREE OR THAT OPERATION OF THE SOURCE CODE WILL
-* BE SECURE OR UNINTERRUPTED AND HEREBY DISCLAIM ANY AND ALL LIABILITY ON
-* ACCOUNT THEREOF.  THERE IS ALSO NO IMPLIED WARRANTY OF NON-INFRINGEMENT.
-* SOURCE CODE IS LICENSED TO LICENSEE ON AN "AS IS" BASIS AND NEITHER INTEL
-* NOR ITS SUPPLIERS WILL PROVIDE ANY SUPPORT, ASSISTANCE, INSTALLATION,
-* TRAINING OR OTHER SERVICES.  INTEL AND ITS SUPPLIERS WILL NOT PROVIDE ANY
-* UPDATES, ENHANCEMENTS OR EXTENSIONS.
-*
-* File Name:            HwchBufferSet.cpp
-*
-* Description:          Buffer Set class implementation
-*
-* Environment:
-*
-* Notes:
-*
-*****************************************************************************/
+/*
+ * Copyright (C) 2016 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 #include "HwchBufferSet.h"
 #include "HwchSystem.h"
 #include "HwchDefs.h"
@@ -33,7 +22,6 @@
 #include "HwcTestState.h"
 #include "HwcTestUtil.h"
 
-#include "GrallocClient.h"
 
 extern "C" { // shame
     #include <intel_bufmgr.h>
@@ -199,16 +187,15 @@ android::sp<android::GraphicBuffer> Hwch::BufferSet::Get()
 {
     return mFencedB->mBuf;
 }
-
 void Hwch::BufferSet::AdvanceTimestamp(uint64_t delta)
 {
-    intel::ufo::gralloc::GrallocClient& gralloc = intel::ufo::gralloc::GrallocClient::getInstance();
+  // intel::ufo::gralloc::GrallocClient& gralloc =
+  // intel::ufo::gralloc::GrallocClient::getInstance();
     mLastTimestamp += delta;
 #ifdef HWCVAL_GRALLOC_HAS_MEDIA_TIMESTAMPS
     gralloc.setBufferTimestamp(GetHandle(), mLastTimestamp);
 #endif
 }
-
 void Hwch::BufferSet::PostFrame(int fenceFd)
 {
     // Don't allow rotation of buffers if only one buffer was allocated
@@ -304,7 +291,7 @@ void Hwch::BufferSet::SetProtectionState(bool encrypted)
     Hwch::System& system = Hwch::System::getInstance();
     SetProtectionState(encrypted, system.GetPavpSessionId(), system.GetPavpInstance());
 }
-
+#if 0
 void Hwch::BufferSet::SetProtectionState(bool encrypted, uint32_t sessionId, uint32_t instance)
 {
     mEncrypted = encrypted;
@@ -321,6 +308,7 @@ void Hwch::BufferSet::SetProtectionState(bool encrypted, uint32_t sessionId, uin
     mSessionId = sessionId;
     mInstance = instance;
 }
+#endif
 #endif
 
 Hwch::BufferSetPtr::~BufferSetPtr()

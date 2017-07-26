@@ -1,30 +1,19 @@
-/****************************************************************************
-*
-* Copyright (c) Intel Corporation (2014).
-*
-* DISCLAIMER OF WARRANTY
-* NEITHER INTEL NOR ITS SUPPLIERS MAKE ANY REPRESENTATION OR WARRANTY OR
-* CONDITION OF ANY KIND WHETHER EXPRESS OR IMPLIED (EITHER IN FACT OR BY
-* OPERATION OF LAW) WITH RESPECT TO THE SOURCE CODE.  INTEL AND ITS SUPPLIERS
-* EXPRESSLY DISCLAIM ALL WARRANTIES OR CONDITIONS OF MERCHANTABILITY OR
-* FITNESS FOR A PARTICULAR PURPOSE.  INTEL AND ITS SUPPLIERS DO NOT WARRANT
-* THAT THE SOURCE CODE IS ERROR-FREE OR THAT OPERATION OF THE SOURCE CODE WILL
-* BE SECURE OR UNINTERRUPTED AND HEREBY DISCLAIM ANY AND ALL LIABILITY ON
-* ACCOUNT THEREOF.  THERE IS ALSO NO IMPLIED WARRANTY OF NON-INFRINGEMENT.
-* SOURCE CODE IS LICENSED TO LICENSEE ON AN "AS IS" BASIS AND NEITHER INTEL
-* NOR ITS SUPPLIERS WILL PROVIDE ANY SUPPORT, ASSISTANCE, INSTALLATION,
-* TRAINING OR OTHER SERVICES.  INTEL AND ITS SUPPLIERS WILL NOT PROVIDE ANY
-* UPDATES, ENHANCEMENTS OR EXTENSIONS.
-*
-* File Name:            HwchDisplay.cpp
-*
-* Description:          Display class implementation
-*
-* Environment:
-*
-* Notes:
-*
-*****************************************************************************/
+/*
+ * Copyright (C) 2016 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 #include "HwchDisplay.h"
 #include "HwchLayer.h"
 #include "HwchSystem.h"
@@ -36,17 +25,9 @@
 #include "HwchInterface.h"
 
 // Display mode control
-#ifdef HWCVAL_BUILD_HWCSERVICE_API
-#include "HwcServiceApi.h"
-#else
+#include "hwcserviceapi.h"
 
-#include "IService.h"
-#include "IDisplayModeControl.h"
-#include "IDisplayControl.h"
-
-#endif
-
-using namespace ::intel::ufo::hwc::services;
+using namespace hwcomposer;
 
 Hwch::Display::Display()
   : mFramebufferTarget(0),
@@ -447,16 +428,18 @@ bool Hwch::Display::GetModeControl()
     if (mDisplayModeControl.get() == 0)
     {
         // Find and connect to HWC service
-        sp<android::IBinder> hwcBinder = defaultServiceManager()->getService(String16(INTEL_HWC_SERVICE_NAME));
+      sp<android::IBinder> hwcBinder =
+          defaultServiceManager()->getService(String16(IA_HWC_SERVICE_NAME));
         sp<IService> hwcService = interface_cast<IService>(hwcBinder);
         if(hwcService == NULL)
         {
-            HWCERROR(eCheckSessionFail, "Could not connect to service %s", INTEL_HWC_SERVICE_NAME);
+          HWCERROR(eCheckSessionFail, "Could not connect to service %s",
+                   IA_HWC_SERVICE_NAME);
             return false;
         }
 
         // Get MDSExtModeControl interface.
-        mDisplayControl = hwcService->getDisplayControl(mDisplayIx);
+        // mDisplayControl = hwcService->getDisplayControl(mDisplayIx);
         if (mDisplayControl == NULL)
         {
             HWCERROR(eCheckSessionFail, "Cannot obtain IDisplayControl");
@@ -484,16 +467,9 @@ uint32_t Hwch::Display::GetModes()
       return 0;
     }
 
-    // Get the number of available modes
-    status_t numModes = HwcService_DisplayMode_GetAvailableModes(mHwcsHandle, mDisplayIx, 0, NULL);
+    HwcService_DisplayMode_GetAvailableModes(mHwcsHandle, mDisplayIx, mModes);
 
-    if (numModes > 0)
-    {
-        mModes.resize(numModes);
-        HwcService_DisplayMode_GetAvailableModes(mHwcsHandle, mDisplayIx, numModes, mModes.editArray());
-    }
-
-    return numModes;
+    return mModes.size();
 #else
     if (GetModeControl())
     {
@@ -548,7 +524,7 @@ bool Hwch::Display::GetCurrentMode(uint32_t& ix)
 
         for (uint32_t i=0; i<mModes.size(); ++i)
         {
-            Hwch::Display::Mode testMode = mModes.itemAt(i);
+            Hwch::Display::Mode testMode = mModes[i];
             // workaround gcc 4.8 bug? This was not compiling using operator== once I declared additional templatized
             // operator== functions in HwchCoord.h. Hence change to a normal function.
             if (IsEqual(mode, testMode))
@@ -566,59 +542,25 @@ Hwch::Display::Mode Hwch::Display::GetMode(uint32_t ix)
 {
     ALOG_ASSERT(ix < mModes.size());
 
-    return mModes.itemAt(ix);
+    return mModes[ix];
 }
 
 bool Hwch::Display::SetMode(uint32_t ix, int32_t delayUs)
 {
     ALOG_ASSERT(ix < mModes.size());
-    const Mode& mode = mModes.itemAt(ix);
+    const Mode& mode = mModes[ix];
 
     return SetMode(mode, delayUs);
 }
 
 bool Hwch::Display::SetMode(const Hwch::Display::Mode& mode, int32_t delayUs)
 {
-#ifdef HWCVAL_BUILD_SHIM_HWCSERVICE
-    GetModeControl();
-
-    if (mDisplayModeControl.get() == 0)
-    {
-        return false;
-    }
-
-    android::sp<Hwch::AsyncEvent::ModeChangeEventData> mc = new Hwch::AsyncEvent::ModeChangeEventData
-        (mDisplayIx, mDisplayModeControl, mode);
-#else
-    android::sp<Hwch::AsyncEvent::ModeChangeEventData> mc = new Hwch::AsyncEvent::ModeChangeEventData
-        (mDisplayIx, nullptr, mode);
-#endif
-
-    Hwch::System::getInstance().AddEvent(Hwch::AsyncEvent::eModeSet, mc, delayUs);
-
-    HWCLOGD_COND(eLogHarness, "D%d: Set mode requested: %dx%d refresh %d flags 0x%x ratio 0x%x delay %fms",
-        mDisplayIx, mode.width, mode.height, mode.refresh, mode.flags, mode.ratio, double(delayUs) / HWCVAL_MS_TO_US);
 
     return true;
 }
 
 bool Hwch::Display::ClearMode()
 {
-    Hwch::Display::Mode mode;
-#ifdef HWCVAL_BUILD_SHIM_HWCSERVICE
-    GetModeControl();
-
-    android::sp<Hwch::AsyncEvent::ModeChangeEventData> mc = new Hwch::AsyncEvent::ModeChangeEventData
-        (mDisplayIx, mDisplayModeControl, mode);
-#else
-    android::sp<Hwch::AsyncEvent::ModeChangeEventData> mc = new Hwch::AsyncEvent::ModeChangeEventData
-        (mDisplayIx, nullptr, mode);
-#endif
-
-    Hwch::System::getInstance().AddEvent(Hwch::AsyncEvent::eModeClear, mc, 0);
-
-    HWCLOGD_COND(eLogHarness, "D%d: Clear mode requested",
-        mDisplayIx);
 
     return true;
 }

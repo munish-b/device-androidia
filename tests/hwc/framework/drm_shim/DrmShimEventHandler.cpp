@@ -1,61 +1,56 @@
 /*
- * INTEL CONFIDENTIAL
+ * Copyright (C) 2016 The Android Open Source Project
  *
- * Copyright 2014-2014
- * Intel Corporation All Rights Reserved.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- * The source code contained or described herein and all documents related to the
- * source code ("Material") are owned by Intel Corporation or its suppliers or
- * licensors. Title to the Material remains with Intel Corporation or its suppliers
- * and licensors. The Material contains trade secrets and proprietary and confidential
- * information of Intel or its suppliers and licensors. The Material is protected by
- * worldwide copyright and trade secret laws and treaty provisions. No part of the
- * Material may be used, copied, reproduced, modified, published, uploaded, posted,
- * transmitted, distributed, or disclosed in any way without Intels prior express
- * written permission.
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
- * No license under any patent, copyright, trade secret or other intellectual
- * property right is granted to or conferred upon you by disclosure or delivery
- * of the Materials, either expressly, by implication, inducement, estoppel
- * or otherwise. Any license under such intellectual property rights must be
- * express and approved by Intel in writing.
- *
- *
- * DrmShimEventHandler
- * ===================
- *
- * This class runs a thread that captures VBlank and page flip events from
- * DRM, so that the VBlank events can be used within the shim for such
- * as flicker detection.
- *
- * In addition, the class emulates the behaviour that the HWC client will expect
- * in terms of requesting these events and supplying the necessary callbacks.
- *
- * WaitVBlank provides the emulation of drmWaitVBlank. It requests (and optionally
- * waits for) the next VSync event.
- * Normally, this will be asynchronous (indicated by the DRM_VBLANK_EVENT
- * flag).
- *
- * To collect the event, the client will have a thread running in which
- * it calls DrmHandleEvent iteratively. This is implemented here by
- * HandleEvent. It stores the event context, providing the addresses of the
- * client's callback functions, and waits for the event to arrive using the
- * android Condition object. It then pulls the event from the event queue
- * (this is implemented here as an array of 10 events for safety as it's just possible
- * that multiple displays will send their events at the same time).
- * With the event in hand, it is then able to call the user's callback function
- * for VBlank or Page Flip as appropriate.
- *
- * Meanwhile, in the thread, the call to the real DrmHandleEvent results in the
- * vblank_hander and page_flip_handler being called.
- * The page_flip_handler simply puts the event in the event
- * queue so that it will be dispatched by any running
- * HandleEvent.
- *
- * The vblank_handler calls DrmShimCrtc::IssueVBlank to find
- * out if the client has requested a VBlank callback
- * this frame. If so, the event is placed in the event queue.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+
+/* DrmShimEventHandler
+* ===================
+*
+* This class runs a thread that captures VBlank and page flip events from
+* DRM, so that the VBlank events can be used within the shim for such
+* as flicker detection.
+*
+* In addition, the class emulates the behaviour that the HWC client will expect
+* in terms of requesting these events and supplying the necessary callbacks.
+*
+* WaitVBlank provides the emulation of drmWaitVBlank. It requests (and
+*optionally
+* waits for) the next VSync event.
+* Normally, this will be asynchronous (indicated by the DRM_VBLANK_EVENT
+* flag).
+*
+* To collect the event, the client will have a thread running in which
+* it calls DrmHandleEvent iteratively. This is implemented here by
+* HandleEvent. It stores the event context, providing the addresses of the
+* client's callback functions, and waits for the event to arrive using the
+* android Condition object. It then pulls the event from the event queue
+* (this is implemented here as an array of 10 events for safety as it's just
+*possible
+* that multiple displays will send their events at the same time).
+* With the event in hand, it is then able to call the user's callback function
+* for VBlank or Page Flip as appropriate.
+*
+* Meanwhile, in the thread, the call to the real DrmHandleEvent results in the
+* vblank_hander and page_flip_handler being called.
+* The page_flip_handler simply puts the event in the event
+* queue so that it will be dispatched by any running
+* HandleEvent.
+*
+* The vblank_handler calls DrmShimCrtc::IssueVBlank to find
+* out if the client has requested a VBlank callback
+* this frame. If so, the event is placed in the event queue.
+*/
 
 #include <utils/Trace.h>
 
