@@ -143,6 +143,10 @@ ifneq ($(HWCVAL_RESOURCE_LEAK_CHECKING),)
     LOCAL_CFLAGS += -DHWCVAL_RESOURCE_LEAK_CHECKING
 endif
 
+ifeq ($(strip $(BOARD_USES_GRALLOC1)), true)
+#LOCAL_CFLAGS += -DHWCVAL_ENABLE_GRALLOC1
+endif
+
 # Enable private interfaces in HWC include files
 LOCAL_CFLAGS += -DINTEL_HWC_INTERNAL_BUILD
 

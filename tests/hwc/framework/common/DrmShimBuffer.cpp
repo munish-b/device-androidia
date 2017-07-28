@@ -37,6 +37,7 @@ using namespace Hwcval;
 uint32_t DrmShimBuffer::mCount = 0;
 uint32_t DrmShimBuffer::mCompMismatchCount = 0;
 static int sNumBufCopies = 0;
+GrallocInterface gralloc_interface;
 
 void LogProtection(int priority, buffer_handle_t handle, const char* desc)
 {
@@ -64,7 +65,6 @@ void LogProtection(int priority, buffer_handle_t handle, const char* desc)
 static void InitBufferInfo(Hwcval::buffer_details_t* details)
 {
     // Default all buffer info state
-  details->gralloc = 0;
     details->width = 0;
     details->height = 0;
     details->format = 0;
@@ -89,7 +89,7 @@ static void InitBufferInfo(Hwcval::buffer_details_t* details)
 #endif
 }
 
-void hwc_buffer_details::GetGralloc() {
+GrallocInterface::GrallocInterface() {
   hw_device_t *device;
   int ret = -1;
   ret =
@@ -101,7 +101,7 @@ void hwc_buffer_details::GetGralloc() {
 
   gralloc_version = gralloc->module_api_version;
   ALOGE("gralloc version in use: %d", gralloc_version);
-
+#ifdef HWCVAL_ENABLE_GRALLOC1
   if (gralloc_version == HARDWARE_MODULE_API_VERSION(1, 0)) {
     ret = gralloc->methods->open(gralloc, GRALLOC_HARDWARE_MODULE_ID, &device);
     if (ret) {
@@ -118,38 +118,40 @@ void hwc_buffer_details::GetGralloc() {
 
     }
   }
+#endif
 }
 
 int hwc_buffer_details::getBufferInfo(buffer_handle_t handle) {
-  if (!gralloc)
-    GetGralloc();
   ALOGE("handle BufferInfo %llu", handle);
   int ret = -1;
-  if (gralloc_version == HARDWARE_MODULE_API_VERSION(1, 0)) {
+#ifdef HWCVAL_ENABLE_GRALLOC1
+  if (gralloc_interface.gralloc_version == HARDWARE_MODULE_API_VERSION(1, 0)) {
 
-    if (!pfn_getDimensions) {
+    if (!gralloc_interface.pfn_getDimensions) {
       ALOGE("Gralloc does not support getDimension");
       return -1;
     }
-    ret = pfn_getDimensions(gralloc1_dvc, handle, &width, &height);
+    ret = gralloc_interface.pfn_getDimensions(gralloc_interface.gralloc1_dvc,
+                                              handle, &width, &height);
     if (ret) {
       ALOGE("gralloc->getDimension failed: %d", ret);
       return -1;
     }
 
-    if (!pfn_getFormat) {
+    if (!gralloc_interface.pfn_getFormat) {
       ALOGE("Gralloc does not support getFormat");
       return -1;
     }
-    ret = pfn_getFormat(gralloc1_dvc, handle, &format);
+    ret = gralloc_interface.pfn_getFormat(gralloc_interface.gralloc1_dvc,
+                                          handle, &format);
     if (ret) {
       ALOGE("gralloc->getFormat failed: %d", ret);
       return -1;
     }
   } else {
-
+#endif
     gralloc_module_t *gralloc0;
-    gralloc0 = reinterpret_cast<gralloc_module_t *>(gralloc);
+    gralloc0 = reinterpret_cast<gralloc_module_t *>(gralloc_interface.gralloc);
 
     if (!gralloc0->perform) {
       ALOGE("gralloc->perform not supported");
@@ -166,7 +168,9 @@ int hwc_buffer_details::getBufferInfo(buffer_handle_t handle) {
       ALOGE("gralloc->perform failed with error: %d", ret);
       return -1;
     }
+#ifdef HWCVAL_ENABLE_GRALLOC1
   }
+#endif
   return 0;
 }
 
