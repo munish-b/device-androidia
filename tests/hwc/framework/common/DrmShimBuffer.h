@@ -20,10 +20,11 @@
 #include <utils/Vector.h>
 #include <utils/SortedVector.h>
 #include <utils/KeyedVector.h>
-
 // NOTE: HwcTestDefs.h sets defines which are used in the HWC and DRM stack.
 // -> to be included before any other HWC or DRM header file.
+#ifdef HWCVAL_ENABLE_GRALLOC1
 #include <hardware/gralloc1.h>
+#endif
 #include <hardware/gralloc.h>
 #include "HwcTestDefs.h"
 #include <ui/GraphicBuffer.h>
@@ -42,13 +43,20 @@
 #define GRALLOC_DRM_GET_FORMAT 1
 #define GRALLOC_DRM_GET_DIMENSIONS 2
 
-typedef struct hwc_buffer_details {
+class GrallocInterface {
+public:
+  GrallocInterface();
   hw_module_t *gralloc;
   uint16_t gralloc_version;
+#ifdef HWCVAL_ENABLE_GRALLOC1
   gralloc1_device_t *gralloc1_dvc;
   GRALLOC1_PFN_LOCK_FLEX pfn_lockflex;
   GRALLOC1_PFN_GET_FORMAT pfn_getFormat;
   GRALLOC1_PFN_GET_DIMENSIONS pfn_getDimensions;
+#endif
+};
+
+typedef struct hwc_buffer_details {
   uint32_t width;
   uint32_t height;
   int format;
@@ -66,7 +74,6 @@ typedef struct hwc_buffer_details {
   int allocHeight;
   int allocOffsetX;
   int allocOffsetY;
-  void GetGralloc();
   int getBufferInfo(buffer_handle_t handle);
 } hwc_buffer_details_t;
 

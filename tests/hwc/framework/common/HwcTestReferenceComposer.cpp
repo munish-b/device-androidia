@@ -539,7 +539,7 @@ bool HwcTestReferenceComposer::CProgramStore::lazyCreateProgram(
             static const char fragmentShaderFormat[] =
                 "#version 300 es\n"
                 "#extension GL_OES_EGL_image_external : require\n"
-                "%sout vec4 outColor;\n" // Output Decls
+                "%sout mediump vec4 outColor;\n" // Output Decls
                 "\n"
                 "uniform mediump sampler2D uTexture[%d];\n"
                 "uniform mediump float uPlaneAlpha[%d];\n"
@@ -640,13 +640,13 @@ bool HwcTestReferenceComposer::CProgramStore::lazyCreateProgram(
         else
         {
             // Zero layers should result in clear to transparent
-            static const char fragmentShaderFormat[] =
-                "#version 300 es\n"
-                "%sout vec4 outColor;\n"
-                "void main()\n"
-                "{\n"
-                "    outColor = %s;\n"
-                "}";
+          static const char fragmentShaderFormat[] =
+              "#version 300 es\n"
+              "%sout mediump vec4 outColor;\n"
+              "void main()\n"
+              "{\n"
+              "    outColor = %s;\n"
+              "}";
 
             String8 outputDecls;
             String8 outputValue;
@@ -1144,7 +1144,7 @@ void HwcTestReferenceComposer::setTexture(
             HWCERROR(eCheckGrallocDetails, "Failed to get gralloc buffer info in reference composer");
         }
     }
-
+    bi.pitch = bi.width;
 #if ANDROID_VERSION > 711
     *pGraphicBuffer = new android::GraphicBuffer(bi.width, bi.height, bi.format, 1,
             bi.usage, bi.pitch, const_cast<native_handle*>(layer->handle), false);
