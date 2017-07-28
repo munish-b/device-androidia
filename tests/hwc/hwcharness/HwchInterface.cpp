@@ -445,7 +445,6 @@ int Hwch::Interface::PresentDisplay(hwc2_display_t display,
       HWC2_PFN_PRESENT_DISPLAY pfnPresentDisplay =
           reinterpret_cast<HWC2_PFN_PRESENT_DISPLAY>(
               hwc2_dvc->getFunction(hwc2_dvc, HWC2_FUNCTION_PRESENT_DISPLAY));
-      int32_t *outPresentFence;
       if (pfnPresentDisplay) {
         ret = pfnPresentDisplay(hwc2_dvc, display, outPresentFence);
       }

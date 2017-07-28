@@ -308,8 +308,7 @@ namespace Hwch
 
 }
 
-#define REGISTER_TEST(T)
-// static Hwch::TestReg<Hwch::T##Test> reg##T(#T);
+#define REGISTER_TEST(T) static Hwch::TestReg<Hwch::T##Test> reg##T(#T);
 
 #endif // __HwchTest_h__
 

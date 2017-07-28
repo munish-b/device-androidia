@@ -849,7 +849,7 @@ int Hwch::Frame::Send()
                     hwc2_layer_t outLayer;
                     mInterface.CreateLayer(disp, &outLayer);
                     ALOGE("Layer ID = %llu", outLayer);
-                    layer->handle = layer->Send();
+                    dc->hwLayers[i].handle = layer->handle = layer->Send();
                     mInterface.setLayerCompositionType(disp, outLayer,
                                                        layer->mCurrentCompType);
                     layer->compositionType = layer->mCurrentCompType;
@@ -1078,8 +1078,8 @@ int Hwch::Frame::Send()
             }
 
             // mInterface.PresentDisplay(numDisplays, dcs);
-            int32_t *outPresentFence;
-            mInterface.PresentDisplay(0, outPresentFence);
+            int32_t outPresentFence;
+            mInterface.PresentDisplay(0, &outPresentFence);
 
             // Note, these are return values from the HWC, you have to close them
             for (uint32_t disp=0; disp<numDisplays; ++disp)
@@ -1102,7 +1102,8 @@ int Hwch::Frame::Send()
                         // Save composition type for next time
                         Hwch::Layer* layer = mLayers[disp].editItemAt(i);
 
-                        layer->PostFrame(dc->hwLayers[i].compositionType, -1);
+                        // layer->PostFrame(dc->hwLayers[i].compositionType,
+                        // -1);
 
                         if (layer->HasPattern())
                         {
@@ -1110,8 +1111,8 @@ int Hwch::Frame::Send()
                         }
                     }
 
-                    mSystem.GetDisplay(disp).GetFramebufferTarget().PostFrame(
-                        HWC_FRAMEBUFFER_TARGET, -1);
+                    // mSystem.GetDisplay(disp).GetFramebufferTarget().PostFrame(
+                    //   HWC_FRAMEBUFFER_TARGET, -1);
                 }
             }
 
@@ -1136,7 +1137,7 @@ int Hwch::Frame::Send()
                     {
                         // Save composition type for next time
                         Hwch::Layer* layer = mLayers[disp].editItemAt(i);
-                        layer->PostFrame(dc->hwLayers[i].compositionType, -1);
+// layer->PostFrame(dc->hwLayers[i].compositionType, -1);
 #if 0
                         /* FIX_ME*/
                         int acquireFence = dc->hwLayers[i].acquireFenceFd;
