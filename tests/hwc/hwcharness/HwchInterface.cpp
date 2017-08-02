@@ -530,9 +530,11 @@ void Hwch::Interface::hook_invalidate(const struct hwc_procs* procs)
     HWCLOGD_COND(eLogHwchInterface, "hook_invalidate:");
 }
 
-void Hwch::Interface::hook_vsync(const struct hwc_procs* procs, int disp, int64_t timestamp)
+void Hwch::Interface::hook_vsync(hwc2_callback_data_t callbackData, int disp, int64_t timestamp)
 {
+    ALOGE("Called hook_vsync:");
     HWCLOGD_COND(eLogHwchInterface, "hook_vsync:");
+    Hwch::System::getInstance().GetVSync().Signal(disp);
 }
 
 void Hwch::Interface::hook_hotplug(const struct hwc_procs* procs, int disp, int connected)
@@ -548,7 +550,7 @@ void Hwch::Interface::invalidate()
     mRepaintNeeded = true;
 }
 
-void Hwch::Interface::vsync(int disp, int64_t timestamp)
+void Hwch::Interface::vsync( int disp, int64_t timestamp)
 {
     HWCLOGD_COND(eLogHwchInterface, "vsync: disp=%d timestamp=%llu", disp, timestamp);
     Hwch::System::getInstance().GetVSync().Signal(disp);

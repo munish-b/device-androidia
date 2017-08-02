@@ -45,7 +45,7 @@ int Hwch::BasicTest::RunScenario()
     frame.Add(layer1);
     frame.Add(layer2);
 
-    frame.Send(200);
+    frame.Send();
     return 0;
 }
 

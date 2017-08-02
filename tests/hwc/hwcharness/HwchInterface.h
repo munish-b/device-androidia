@@ -88,7 +88,7 @@ namespace Hwch
 
             // RegisterProcs
             static void hook_invalidate(const struct hwc_procs* procs);
-            static void hook_vsync(const struct hwc_procs* procs, int disp, int64_t timestamp);
+            static void hook_vsync(hwc2_callback_data_t callbackData, int disp, int64_t timestamp);
             static void hook_hotplug(const struct hwc_procs* procs, int disp, int connected);
             void invalidate(void);
             void vsync(int disp, int64_t timestamp);
