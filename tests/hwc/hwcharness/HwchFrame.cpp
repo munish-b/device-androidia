@@ -677,17 +677,6 @@ int Hwch::Frame::Send()
             mSystem.GetVSync().WaitForOffsetVSync();
         }
 
-#ifdef TARGET_HAS_MCG_WIDI
-        // Add the Widi Windowed Visualisation layer to the frame (if available).
-        // Also, tell the shims to ignore the layer in the transform expansion.
-        if (mSystem.IsWindowedLayerAvailable())
-        {
-            HwchLayerWindowed& widi_layer = *mSystem.GetWirelessWindowedLayer();
-            Add(widi_layer, 0);
-            HwcTestState::getInstance()->SetWidiVisualisationHandle(widi_layer.GetHandle());
-        }
-#endif
-
         // Update all the cloning & geometry for display 0
         Layer* lastClonedLayer[MAX_DISPLAYS];
         memset(lastClonedLayer, 0, sizeof(lastClonedLayer));
@@ -815,16 +804,8 @@ int Hwch::Frame::Send()
                 // to a real buffer in an Hwch::BufferSet.
                 if (mSystem.IsVirtualDisplayEmulationEnabled() && mSystem.GetDisplay(disp).IsVirtualDisplay())
                 {
-                  // dc->outbuf =
-                  // mSystem.GetDisplay(disp).GetNextExternalBuffer();
+                  // dc->outbuf = mSystem.GetDisplay(disp).GetNextExternalBuffer();
                 }
-#ifdef TARGET_HAS_MCG_WIDI
-                else if (mSystem.IsWirelessDisplayEmulationEnabled() && mSystem.GetDisplay(disp).IsWirelessDisplay())
-                {
-                  // dc->outbuf =
-                  // mSystem.GetDisplay(disp).GetNextExternalBuffer();
-                }
-#endif
                 else
                 {
                   // dc->outbuf = NULL;
@@ -867,6 +848,9 @@ int Hwch::Frame::Send()
                         visibleRegions, visibleRegionCount);
                     region.numRects = visibleRegionCount;
 
+                    dc->hwLayers[i].displayFrame  = *visibleRegions;
+                    dc->hwLayers[i].planeAlpha = layer->mPlaneAlpha;
+
                     ALOGE("visibleRegionCount = %d", visibleRegionCount);
                     mInterface.setLayerVisibleRegion(disp, outLayer, region);
 
@@ -904,9 +888,11 @@ int Hwch::Frame::Send()
                 targetregion.rects = target.AssignVisibleRegions(
                     visibleRegions, visibleRegionCount);
                 targetregion.numRects = visibleRegionCount;
-
+                    dc->hwLayers[numLayers].displayFrame = *targetregion.rects; 
+                dc->hwLayers[numLayers].planeAlpha = target.mPlaneAlpha;
                 mInterface.setLayerVisibleRegion(disp, targetLayer,
                                                  targetregion);
+                ALOGE(" target1sdf =%p handle = %p",&target ,target.handle);
 
                 // target.Send(dc->hwLayers[numLayers], visibleRegions,
                 // visibleRegionCount);

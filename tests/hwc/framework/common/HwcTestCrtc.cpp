@@ -652,24 +652,6 @@ void HwcTestCrtc::Checks(Hwcval::LayerList* ll, HwcTestKernel* testKernel, uint3
         {
             ExtendedModeChecks(testKernel);
         }
-
-#ifdef TARGET_HAS_MCG_WIDI
-        // Check whether we are playing full or partial screen video in extended mode. This is true if:
-        //   - MDS says that a video is playing (determined by calling isVideoSessionPlaying)
-        //   - Extended mode is not disabled
-        //   - This display is not the panel (i.e. GetDisplayIx returns > 0)
-        //   - There is an NV12/YUV layer somewhere in the stack
-        if (testKernel &&
-            testKernel->IsWidiVideoMode(ll->GetVideoFlags(), hwcFrame) &&
-            GetDisplayIx() > 1)
-        {
-            WidiVideoConsistencyChecks(ll);
-
-            // Checks complete - we don't need to run ConsistencyChecks (below).
-        }
-        else
-#endif
-
         {
             // Panel is turned off in Extended Mode, so don't generate any errors
             // (We have already checked that the panel was DPMS disabled).

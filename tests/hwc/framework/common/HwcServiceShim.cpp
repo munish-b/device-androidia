@@ -96,48 +96,6 @@ sp<IVideoControl> HwcServiceShim::getVideoControl()
     }
 }
 
-#ifdef HWCVAL_MDSEXTMODECONTROL
-sp<IMDSExtModeControl> HwcServiceShim::getMDSExtModeControl()
-{
-    if (mMDSExtModeControl.get())
-    {
-        return mMDSExtModeControl;
-    }
-
-    HWCLOGV_COND(eLogVideo, "HwcServiceShim Creating shim IMDSExtModeControl");
-    sp<IMDSExtModeControl> mds = Real()->getMDSExtModeControl();
-    HwcTestKernel* testKernel = HwcTestState::getInstance()->GetTestKernel();
-
-    if (testKernel)
-    {
-        // We are shimming the IMDSExtModeControl
-        if (mMDSExtModeControl.get() == 0)
-        {
-            mMDSExtModeControl = new HwcTestMdsControl(mds, testKernel);
-        }
-
-        return mMDSExtModeControl;
-    }
-    else
-    {
-        // Not shimming (shims not installed)
-        return mds;
-    }
-}
-#endif // HWCVAL_MDSEXTMODECONTROL
-#if 0
-HwcTestVideoControl::HwcTestVideoControl(sp<IVideoControl> real, HwcTestKernel* testKernel)
-  : mReal(real),
-    mTestKernel(testKernel),
-    mProtChecker(testKernel->GetProtectionChecker())
-{
-    testKernel->SetVideoControl(this);
-}
-
-HwcTestVideoControl::~HwcTestVideoControl()
-{
-}
-#endif
 status_t HwcTestVideoControl::enableEncryptedSession( uint32_t sessionID, uint32_t instanceID )
 {
     mProtChecker.EnableEncryptedSession(sessionID, instanceID);

@@ -255,7 +255,6 @@ Hwch::Layer::Layer(const Layer& rhs, bool clone)
 
 Hwch::Layer::~Layer()
 {
-#if 0
     // Delete any layers to which we have cloned this layer
     for (uint32_t i=0; i<MAX_DISPLAYS; ++i)
     {
@@ -263,7 +262,7 @@ Hwch::Layer::~Layer()
         {
             HWCLOGD_COND(eLogLayerAlloc, "Layer@%p::~Layer() %s Deleting cloned layer D%d @ %p",
                 this, GetName(), i, mClonedLayers[i]);
-           // delete mClonedLayers[i];
+            delete mClonedLayers[i];
             mClonedLayers[i] = 0;
         }
     }
@@ -276,7 +275,6 @@ Hwch::Layer::~Layer()
     }
     DecLayerCount();
     HWCLOGV_COND(eLogLayerAlloc, "Layer@%p::~Layer() exit",this);
-#endif
 }
 
 Hwch::Layer& Hwch::Layer::operator=(const Hwch::Layer& rhs)

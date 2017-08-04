@@ -318,52 +318,6 @@ bool Hwch::AsyncEventGenerator::WidiConnect(bool connect, AsyncEvent::WidiConnec
 {
     android::status_t ret = android::UNKNOWN_ERROR;
 
-#ifdef TARGET_HAS_MCG_WIDI
-    HWCLOGD_COND(eLogHarness, "Harness simulating widi %sconnect", (connect ? "" : "dis"));
-
-    Hwch::Widi& widi = Hwch::Widi::getInstance();
-
-    if (connect)
-    {
-        if (!widi.WidiIsConnected())
-        {
-            HWCLOGV_COND(eLogHarness, "Connecting Widi");
-
-            // Check that we have been passed a resolution
-            if (!eventData)
-            {
-                HWCERROR(eCheckSessionFail, "Widi connection requested but no resolution given!");
-            }
-
-            // Connect the Widi session
-            ret = widi.WidiConnect(eventData->mWidth, eventData->mHeight);
-            if (ret != android::NO_ERROR)
-            {
-                HWCLOGW( "WidiConnect returned failure %d", ret);
-            }
-        }
-    }
-    else // disconnect
-    {
-        if (widi.WidiIsConnected())
-        {
-            HWCLOGV_COND(eLogHarness, "Disconnecting Widi");
-
-            // Disconnect the Widi session
-            ret = widi.WidiDisconnect();
-            if (ret != android::NO_ERROR)
-            {
-                HWCLOGV_COND(eLogHarness, "WidiDisconnect returned failure %d", ret);
-            }
-        }
-    }
-#else
-    HWCVAL_UNUSED(connect);
-    HWCVAL_UNUSED(eventData);
-
-    HWCERROR(eCheckFacilityNotAvailable, "Widi Connect/disconnect not available");
-#endif
-
     return (ret == android::NO_ERROR);
 }
 

@@ -80,9 +80,6 @@ HwcTestKernel::HwcTestKernel()
     mFramesSinceEMPanelChange(HWCVAL_EXTENDED_MODE_CHANGE_WINDOW),
     mExtVideoModeDisabled(false),
     mBufferInfoRequired(false),
-#ifdef TARGET_HAS_MCG_WIDI
-    mWidiFrameType(HWC_FRAMETYPE_NOTHING),
-#endif
     mNumSetResolutionsReceived(0),
     mWidiLastFrame(0),
     mSfCompMismatchCount(0),
@@ -480,15 +477,6 @@ void HwcTestKernel::checkWidiBuffer(HwcTestCrtc *crtc,
                 // Hence no format check
             }
 
-#ifdef TARGET_HAS_MCG_WIDI
-            // Check to see if we are expecting Widi direct mode. If so, then there should be no iVP
-            // compositions (and entry into this function is an error).
-            HWCCHECK(eCheckWidiDirectModeExpected);
-            if (mState && mState->GetWidiDirectModeExpected() && buf->IsCompositionTarget())
-            {
-                HWCERROR(eCheckWidiDirectModeExpected, "iVP Composition detected when expecting Widi direct mode");
-            }
-#endif
             // Signal that this frame was drawn to the screen to prevent
             // it being classified as a dropped frame rather than an error.
             crtc->IncDrawCount();
@@ -508,35 +496,6 @@ void HwcTestKernel::checkWidiBuffer(HwcTestCrtc *crtc,
                 HWCLOGW("CRTC has NULL plane!");
             }
 
-#ifdef TARGET_HAS_MCG_WIDI
-            // Check for 'FrameTypeChange' Errors
-
-            // Check that the buffer is a video format if we are expecting video. The
-            // (mNumSetResolutionsReceived > 2) clause prevents this error being trigerred
-            // erroneously during the 'set resolution' protocol.
-            if (mNumSetResolutionsReceived > 2)
-            {
-                HWCCHECK(eCheckWidiWrongFrameType);
-                if ((ll->IsVideo()) && (mWidiFrameType != HWC_FRAMETYPE_VIDEO))
-                {
-                    HWCERROR(eCheckWidiWrongFrameType, "Saw video buffer but Widi Frame Type is set to %s",
-                        mWidiFrameType == HWC_FRAMETYPE_NOTHING ? "nothing - SurfaceFlinger provides frames" :
-                        mWidiFrameType == HWC_FRAMETYPE_FRAME_BUFFER ? "frame buffer" :
-                        mWidiFrameType == HWC_FRAMETYPE_VIDEO ? "video" :
-                        mWidiFrameType == HWC_FRAMETYPE_INCOMING_CALL ? "incoming call" : "unknown");
-                }
-                else if (!(ll->IsVideo()) && (mWidiFrameType == HWC_FRAMETYPE_VIDEO))
-                {
-                    HWCERROR(eCheckWidiWrongFrameType, "No video layer in frame but Widi Frame Type is set to video");
-                }
-                else if ((mWidiFrameType == HWC_FRAMETYPE_NOTHING) || (mWidiFrameType == HWC_FRAMETYPE_INCOMING_CALL))
-                {
-                    HWCERROR(eCheckWidiWrongFrameType, "Unrecognised Widi frame type (%s)",
-                        mWidiFrameType == HWC_FRAMETYPE_NOTHING ? "nothing - SurfaceFlinger provides frames" :
-                        mWidiFrameType == HWC_FRAMETYPE_INCOMING_CALL ? "incoming call" : "unknown");
-                }
-            }
-#endif
             HWCCHECK(eCheckBufferInfoRequired);
             if (mBufferInfoRequired)
             {

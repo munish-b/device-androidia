@@ -152,11 +152,7 @@ int Hwch::Interface::GetDisplayAttributes(uint32_t disp)
 
     // Add the virtual display (if enabled on the command line)
     if ( ((system.GetDisplay(disp).IsVirtualDisplay()) && (system.IsVirtualDisplayEmulationEnabled()))
-#ifdef TARGET_HAS_MCG_WIDI
-        || ((system.GetDisplay(disp).IsWirelessDisplay()) && (system.IsWirelessDisplayEmulationEnabled()))
-#endif
         )
-
     {
         Hwch::Display::Attributes& att = system.GetDisplay(disp).mAttributes;
         att.width = system.GetVirtualDisplayWidth();
@@ -182,7 +178,7 @@ int Hwch::Interface::GetDisplayAttributes(uint32_t disp)
           ret = pfngetDisplayConfigs(hwc2_dvc, disp, &nc, configs);
         }
         numConfigs = nc;
-        ALOGE(" nc =%d", nc);
+
         if (ret != android::NO_ERROR)
         {
             Hwch::Display::Attributes& att = display.mAttributes;
@@ -263,15 +259,13 @@ int Hwch::Interface::GetDisplayAttributes(uint32_t disp)
             }
         }
 
-        ALOGE("Hwch::Interface::GetDisplayAttributes Getting attributes for "
-              "display %d config ix %d/%d %x",
-              disp, activeConfig, numConfigs, configs[activeConfig]);
+
+        HWCLOGD("Hwch::Interface::GetDisplayAttributes Getting attributes for display %d config ix %d/%d %x", disp, activeConfig, numConfigs, configs[activeConfig]);
         int32_t* values = (int32_t*) (&(display.mAttributes));
         for (uint32_t j = 0; j < 3; ++j) {
           if (pfngetDisplayAttribute) {
             ret = pfngetDisplayAttribute(hwc2_dvc, disp, configs[activeConfig],
                                          attributes[j], values + j);
-            ALOGE("atrib %d value %d", attributes[j], values[j]);
           }
         }
         if ((display.GetWidth() == 0) && (display.GetHeight() == 0))
@@ -530,9 +524,11 @@ void Hwch::Interface::hook_invalidate(const struct hwc_procs* procs)
     HWCLOGD_COND(eLogHwchInterface, "hook_invalidate:");
 }
 
-void Hwch::Interface::hook_vsync(const struct hwc_procs* procs, int disp, int64_t timestamp)
+void Hwch::Interface::hook_vsync(hwc2_callback_data_t callbackData, int disp, int64_t timestamp)
 {
+    ALOGE("Called hook_vsync:");
     HWCLOGD_COND(eLogHwchInterface, "hook_vsync:");
+    Hwch::System::getInstance().GetVSync().Signal(disp);
 }
 
 void Hwch::Interface::hook_hotplug(const struct hwc_procs* procs, int disp, int connected)
@@ -548,7 +544,7 @@ void Hwch::Interface::invalidate()
     mRepaintNeeded = true;
 }
 
-void Hwch::Interface::vsync(int disp, int64_t timestamp)
+void Hwch::Interface::vsync( int disp, int64_t timestamp)
 {
     HWCLOGD_COND(eLogHwchInterface, "vsync: disp=%d timestamp=%llu", disp, timestamp);
     Hwch::System::getInstance().GetVSync().Signal(disp);

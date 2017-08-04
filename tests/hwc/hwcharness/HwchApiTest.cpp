@@ -1084,13 +1084,6 @@ void Hwch::ApiTest::ReportStatistics()
         mNumSuspends, mNumModeChanges, mNumVideoOptimizationModeChanges);
     printf("Hot unplugs:                %6d Esd recovery events:        %6d\n", numHotUnplugs, numEsdRecoveryEvents);
 
-    // Only print the Widi statistics if enabled
-    if (mWidiChooser.IsEnabled())
-    {
-        printf("Widi connects:              %6d Widi disconnects:           %6d Widi fence policy changes:  %6d\n",
-            mNumWidiConnects, mNumWidiDisconnects, mNumFencePolicySelections);
-    }
-
     // Only print the Wireless Docking statistics if enabled
     if (mWirelessDockingChooser.IsEnabled())
     {

@@ -36,7 +36,6 @@ Hwch::RandomTest::RandomTest(Hwch::Interface& interface)
     mBlankFrameSleepUsChoice(0.1, 10 * HWCVAL_SEC_TO_US),    // 0.1 will be rounded down to 0
     mHotPlugChooser(0, -1, "mHotPlugChooser"),
     mEsdRecoveryChooser(0, -1, "mEsdRecoveryChooser"),
-    mWidiChooser(0, -1, "mWidiChooser"),
     mWirelessDockingChooser(0, -1, "mWirelessDocking"),
     mModeChangeChooser(0, -1, "mModeChangeChooser"),
     mModeChoice(0, -1, "mModeChoice"),
@@ -46,13 +45,11 @@ Hwch::RandomTest::RandomTest(Hwch::Interface& interface)
 #else
     mVideoOptimizationModeChoice(0, 0, "mVideoOptimizationModeChoice"),
 #endif
-    mWidiRetainOldestChooser(0, -1, "mWidiRetainOldestChooser"),
     mEventDelayChoice(17000000, "mEventDelayChoice"), // 0 to 17ms
     mModeChangeDelayChoice(1, 17000000, "mModeChangeDelayChoice"), // 1 to 17 ms
     mHotPlugDelayChoice(1, 17000000, "mHotPlugDelayChoice"), // 1 to 17ms
     mVideoOptimizationModeDelayChoice(1, 17000000, "mVideoOptimizationModeDelayChoice"), // 1 to 17 ms
     mPlugged(0),
-    mWidiConnected(true),
     mWirelessDockingMode(false),
     mNumNormalLayersCreated(0),
     mNumPanelFitterLayersCreated(0),
@@ -60,9 +57,7 @@ Hwch::RandomTest::RandomTest(Hwch::Interface& interface)
     mNumProtectedLayersCreated(0),
     mNumSkipLayersCreated(0),
     mNumSuspends(0),
-    mNumWidiConnects(0),
     mNumFencePolicySelections(0),
-    mNumWidiDisconnects(0),
     mNumModeChanges(0),
     mNumExtendedModeTransitions(0),
     mNumExtendedModePanelDisables(0),
@@ -119,16 +114,8 @@ void Hwch::RandomTest::ParseOptions()
     // Mean period (in frames) of changes to video optimization mode
     uint32_t videoOptimizationModePeriod = GetIntParam("video_optimization_mode_period", 0);
 
-    // Mean period (in frames) of Widi connect / disconnect (if widi enabled on command-line)
-    // Defaults to no Widi
-    uint32_t widiPeriod = GetIntParam("widi_period", 0);
-
     // Mean period (in frames) for entry/exit of wireless docking mode. Note, this only works if
-    // Widi is also enabled.
     uint32_t wirelessDockingPeriod = GetIntParam("wireless_docking_period", 0);
-
-    // Parameter to vary the number of frames before signalling the oldest fence in the Widi shim
-    uint32_t widiRetainOldest = GetIntParam("widi_retain_oldest", 0);
 
     // Max delay in microseconds between request of asynchronous event, and that event being triggered.
     // Negative value means only synchronous (main thread) event delivery is allowed
@@ -165,10 +152,8 @@ void Hwch::RandomTest::ParseOptions()
         mSystem.AddEvent(continuousKernelEvent, 0, burstInterval, repeatData);
     }
 
-    mWidiChooser.SetMax(widiPeriod - 1, (widiPeriod == 0));
     mModeChangeChooser.SetMax(modeChangePeriod - 1, (modeChangePeriod == 0));
     mVideoOptimizationModeChooser.SetMax(videoOptimizationModePeriod - 1, (videoOptimizationModePeriod == 0));
-    mWidiRetainOldestChooser.SetMax(widiRetainOldest, (widiPeriod == 0));
 
     mWirelessDockingChooser.SetMax(wirelessDockingPeriod-1,(wirelessDockingPeriod == 0));
 
@@ -385,112 +370,6 @@ void Hwch::RandomTest::RandomEvent()
         }
     }
 
-#ifdef TARGET_HAS_MCG_WIDI
-    if (mWidiChooser.IsEnabled())
-    {
-        Hwch::Widi& widi = Hwch::Widi::getInstance();
-
-        // See note above for rationale of basing decisions on the random numbers we pick rather
-        // than deciding on the length of time between events.
-        uint32_t choice = mWidiChooser.Get();
-        if (choice == 0)
-        {
-            if (widi.WidiIsConnected())
-            {
-                HWCLOGV_COND(eLogHarness, "Disconnecting Widi");
-
-                // Disconnect the Widi session
-                if (SendEvent(AsyncEvent::eWidiDisconnect, mEventDelayChoice.Get()))
-                {
-                    ++mNumWidiDisconnects;
-                    mWidiConnected = false;
-                }
-            }
-        }
-        else if (choice == 1)
-        {
-            if (!widi.WidiIsConnected())
-            {
-                HWCLOGV_COND(eLogHarness, "Connecting Widi");
-
-                mWidiResolutionChooser.Get();
-
-                uint32_t mWidth = mWidiResolutionChooser.GetWidth();
-                uint32_t mHeight = mWidiResolutionChooser.GetHeight();
-
-                android::sp<Hwch::AsyncEvent::WidiConnectEventData> res =
-                    new Hwch::AsyncEvent::WidiConnectEventData(mWidth, mHeight);
-
-                // Connect the Widi session
-                if (SendEvent(AsyncEvent::eWidiConnect, res, mEventDelayChoice.Get()))
-                {
-                    ++mNumWidiConnects;
-                    mWidiConnected = true;
-                }
-                else
-                {
-                    HWCLOGV_COND(eLogHarness, "Could not get Widi resolution choice! NOT sending connect event");
-                }
-            }
-        }
-        else if (choice == 2)
-        {
-            // Select new fence processing policy
-            uint32_t fence_policy = mWidiFencePolicyChooser.Get();
-            uint32_t retain_oldest = mWidiRetainOldestChooser.Get();
-
-            // Add further options (depending on fence release policy type here)
-
-            android::sp<Hwch::AsyncEvent::WidiFencePolicyEventData> params =
-                new Hwch::AsyncEvent::WidiFencePolicyEventData(fence_policy, retain_oldest);
-
-            if (SendEvent(AsyncEvent::eWidiFencePolicy, params, mEventDelayChoice.Get()))
-            {
-                ++mNumFencePolicySelections;
-            }
-            else
-            {
-                HWCLOGV_COND(eLogHarness, "Error setting Widi fence policy! NOT sending fence policy event");
-            }
-        }
-    }
-
-    // Wireless Docking support
-    if (mWirelessDockingChooser.IsEnabled())
-    {
-        Hwch::Widi& widi = Hwch::Widi::getInstance();
-
-        uint32_t choice = mWirelessDockingChooser.Get();
-        if (choice == 0)
-        {
-            if (widi.WidiIsConnected() && !mWirelessDockingMode)
-            {
-                HWCLOGV_COND(eLogHarness, "Entering Wireless Docking mode");
-
-                // Enter Wireless Docking mode
-                if (SendEvent(AsyncEvent::eWirelessDockingEntry, mHotPlugDelayChoice.Get()))
-                {
-                    mWirelessDockingMode = true;
-                    ++mNumWirelessDockingEntries;
-                }
-            }
-        }
-        else if (choice == 1)
-        {
-            if (widi.WidiIsConnected() && mWirelessDockingMode)
-            {
-                HWCLOGV_COND(eLogHarness, "Exiting Wireless Docking Mode");
-
-                // Exit Wireless Docking mode
-                if (SendEvent(AsyncEvent::eWirelessDockingExit, mHotPlugDelayChoice.Get()))
-                {
-                    mWirelessDockingMode = false;
-                    ++mNumWirelessDockingExits;
-                }
-            }
-        }
-    }
-#endif // TARGET_HAS_MCG_WIDI
 
     if (mEsdRecoveryChooser.IsEnabled())
     {
@@ -542,13 +421,6 @@ void Hwch::RandomTest::ReportStatistics()
     printf("Extended mode transitions:  %6d Ext mode panel disables:    %6d Video opt mode changes:     %6d\n",
         mNumExtendedModeTransitions, mNumExtendedModePanelDisables, mNumVideoOptimizationModeChanges);
     printf("Hot unplugs:                %6d Esd recovery events:        %6d\n", numHotUnplugs, numEsdRecoveryEvents);
-
-    // Only print the Widi statistics if enabled
-    if (mWidiChooser.IsEnabled())
-    {
-        printf("Widi connects:              %6d Widi disconnects:           %6d Widi fence policy changes:  %6d\n",
-            mNumWidiConnects, mNumWidiDisconnects, mNumFencePolicySelections);
-    }
 
     // Only print the Wireless Docking statistics if enabled
     if (mWirelessDockingChooser.IsEnabled())

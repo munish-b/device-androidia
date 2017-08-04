@@ -196,7 +196,7 @@ runner_init()
     elif [[ $TARGET_DEVICE == *bxt* ]]
     then
         echo "valsmoke Enter BXT target overrides"
-        export HWCVAL_LOG_ENABLE="$HWCVAL_LOG_ENABLE eOptNewMds eLogVBlank eOptFakePavpSession"
+        export HWCVAL_LOG_ENABLE="$HWCVAL_LOG_ENABLE eLogVBlank eOptFakePavpSession"
         API_TEST_OPTIONS="-min_display_frame_size=64 -crop_alignment=1 -min_ivp_scale=0.2 -max_ivp_scale=5.0"
         API_TEST_OPTIONS="$API_TEST_OPTIONS -min_NV12_crop_size=128 -min_NV12_display_frame_size=128 -NV12_crop_alignment=2 -NV12_display_frame_alignment=2"
         API_TEST_OPTIONS="$API_TEST_OPTIONS -min_YUY2_crop_size=128 -min_YUY2_display_frame_size=128 -YUY2_crop_alignment=2 -YUY2_display_frame_alignment=2"
@@ -245,7 +245,6 @@ process_args()
     RUN_default=0
     RUN_main=0
     RUN_prot=0
-    RUN_widi=0
     RUN_full=0
     RUN_gta=0
 
@@ -273,13 +272,12 @@ process_args()
         OPTION=`echo ${i} | tr '[:upper:]' '[:lower:]'`
         if [[ "$OPTION" == "usage" || "$OPTION" == "-usage" || "$OPTION" == "-h" ]]
         then
-            echo 'Usage: valsmoke \{ usage | prot | widi | all | comp \}'
+            echo 'Usage: valsmoke \{ usage | prot | all | comp \}'
             echo '    usage: Print this message.'
             echo '    [no]default : Include default smoke tests (Smoke and one Api test).'
-            echo '    [no]main    : Include all main tests in default mode (includes protected content but no WiDi).'
+            echo '    [no]main    : Include all main tests in default mode (includes protected content).'
             echo '    [no]full    : Include comprehensive random Api testing [This is very agressive. Some chance of HWC or kernel crash].'
             echo '    [no]prot    : Include protected video tests, and protected video modes on Api tests.'
-            echo '    [no]widi    : Include widi tests.'
             echo 'Default: valsmoke default prot'
             exit
         fi
@@ -346,18 +344,6 @@ run_gta_testset()
         valhwch -logname=ProtectedVideoHotPlug -t ProtectedVideoHotPlug $COMMON_SUFFIX |& vallogadd $TMPFILE
         valhwch -logname=ProtectedVideoScreenDisable -t ProtectedVideoScreenDisable $COMMON_SUFFIX |& vallogadd $TMPFILE
         valhwch -logname=ComplexProtectedVideo_comp -t ComplexProtectedVideo -val_hwc_composition -no_val_hwc $COMMON_SUFFIX |& vallogadd $TMPFILE
-    fi
-
-    # Widi Tests
-    if [ $RUN_prot -eq 1 ]
-    then
-        valhwch -logname=WidiDirect -t WidiDirect -widi 1920x1080 1920x1080 60 $COMMON_SUFFIX |& vallogadd $TMPFILE
-        valhwch -logname=WidiDisconnect -t WidiDisconnect -widi 1920x1080 1920x1080 60  $COMMON_SUFFIX |& vallogadd $TMPFILE
-        valhwch -logname=WidiFrameTypeChange -t WidiFrameTypeChange -widi 1920x1080 1920x1080 60 $COMMON_SUFFIX |& vallogadd $TMPFILE
-        valhwch -logname=WidiProcessingPolicy -t WidiProcessingPolicy -widi 1920x1080 1920x1080 60 $COMMON_SUFFIX |& vallogadd $TMPFILE
-        valhwch -logname=WidiSmoke -t WidiSmoke -widi 1920x1080 1920x1080 60 $COMMON_SUFFIX |& vallogadd $TMPFILE
-        # Corner case, GTA WIDI means this test set, NOT the WIDI testset
-        RUN_widi = 0;
     fi
 
     # Current code cannot handle these tests
@@ -545,96 +531,6 @@ run_weekly_testset()
 }
 
 ###########################################################################################################################
-# Define the WIDI test set ################################################################################################
-###########################################################################################################################
-#
-#  Legacy and likely broken...
-#
-run_widi_testset()
-{
-    # Also disable the OnSet latency check - just for WiDi - until the iVP lockup is fixed
-    # We are using $API_TEST_OPTIONS here to prevent use of odd numbered source crops in valsmoke when cloned to D1. This causes DRM failures.
-    HWCVAL_LOG_SETWARNING="$HWCVAL_LOG_SETWARNING eCheckUnblankingLatency" \
-    valhwch -logname=widi -t Smoke -t WidiSmoke -t WidiDisconnect -t WidiProcessingPolicy -t WidiFrameTypeChange -widi 1920x1200 1920x1200 60 \
-        $API_TEST_OPTIONS $COMMON_SUFFIX |& vallogadd $TMPFILE
-
-    # WidiDirect requires the widi display to be the same resolution as the panel. For portrait devices (CHT/BXT), WidiDirect performs
-    # a 90 degree rotation to simulate playing video in landscape.
-    if [[ $TARGET_DEVICE == *bxt* ]]
-    then
-        valhwch -logname=widi_direct -t WidiDirect -widi 1920x1080 1920x1080 60 $COMMON_SUFFIX |& vallogadd $TMPFILE
-    else # BYT/CHT
-        valhwch -logname=widi_direct -t WidiDirect -widi 1920x1200 1920x1200 60 $COMMON_SUFFIX |& vallogadd $TMPFILE
-    fi
-
-    if [[ $TARGET_DEVICE == *bxt* ]]
-    then
-        if [ $RUN_prot -eq 1 ]
-        then
-            valhwch -logname=widi_prot -t ProtectedVideo -t ComplexProtectedVideo -t InvalidProtectedVideo \
-                -widi 1920x1200 1920x1200 60 \
-                -no_hdmi \
-                -skip_ivp \
-                $API_TEST_OPTIONS \
-                $COMMON_SUFFIX |& vallogadd $TMPFILE
-        fi
-
-        # Use of WiDi is likely to increase onSet latency
-        HWCVAL_LOG_SETWARNING="$HWCVAL_LOG_SETWARNING eCheckOnSetLatency eCheckLLQOverflow" \
-        valhwch -logname=widi_api -t Api -max_frames_per_iteration=10 -widi_period=50 -widi 1920x1200 1920x1200 60 -test_iterations=80 -transparency_filter \
-            -hot_plug_period=50 \
-            -skip_percent=2 \
-            -render_compression=hint \
-            -no_hdmi \
-            $API_TEST_OPTIONS_2 $PROT \
-            $COMMON_SUFFIX |& vallogadd $TMPFILE
-
-        # With extmodeauto enabled, the following test was failing with "Hwc is in extended mode without Widi in full screen vidoe" error.
-        # This was because in the HwcTestCrtc for widi, mWidth and mHeight are zero
-        # though in fact it seems unlikely we actually have full screen video here.
-        # TODO: investigate further.
-        HWCVAL_LOG_SETWARNING="$HWCVAL_LOG_SETWARNING eCheckWidiFullScreenScaling" \
-        valhwch -logname=widi_virtdisp_api -t Api -max_frames_per_iteration=10 -virtual_display 1920x1200 -test_iterations=300 -transparency_filter \
-            -skip_percent=2 \
-            -render_compression=hint \
-            -no_hdmi \
-            $API_TEST_OPTIONS_2 $PROT \
-            $COMMON_SUFFIX |& vallogadd $TMPFILE
-
-    elif [[ $TARGET_DEVICE == *cht* ]]
-    then
-        if [ $RUN_prot -eq 1 ]
-        then
-            valhwch -logname=widi_prot -t ProtectedVideoHotPlug -t ProtectedVideoScreenDisable -t ComplexProtectedVideo -widi 1920x1200 1920x1200 60 \
-                $API_TEST_OPTIONS \
-                $COMMON_SUFFIX |& vallogadd $TMPFILE
-        fi
-
-        HWCVAL_LOG_SETWARNING="$HWCVAL_LOG_SETWARNING eCheckLLQOverflow eCheckMissingTeardown" \
-        valhwch -logname=widi_api -t Api -max_frames_per_iteration=10 -widi_period=50 -widi 1920x1200 1920x1200 60 -test_iterations=300 -transparency_filter \
-            -hot_plug_period=50  -screen_disable_period=50  \
-            $API_TEST_OPTIONS_2 $PROT \
-            $COMMON_SUFFIX |& vallogadd $TMPFILE
-    else
-        if [ $RUN_prot -eq 1 ]
-        then
-            valhwch -logname=widi_prot -t ProtectedVideoHotPlug -t ProtectedVideoScreenDisable -t ComplexProtectedVideo -widi 1920x1200 1920x1200 60 \
-                $API_TEST_OPTIONS \
-                $COMMON_SUFFIX |& vallogadd $TMPFILE
-        fi
-
-        # On BYT there were a lot of display hangs with hotplug/screen disable so let's not do this.
-        #
-        # The LLQ overflows should be investigated. It appears that for some time periods, when WiDi is apparently enabled, no frames are presented
-        # to the WiDi stack.
-        HWCVAL_LOG_SETWARNING="HWCVAL_LOG_SETWARNING eCheckLLQOverflow eCheckMissingTeardown" \
-        valhwch -logname=widi_api -t Api -max_frames_per_iteration=10 -widi_period=50 -widi 1920x1200 1920x1200 60 -test_iterations=300 -transparency_filter \
-            $API_TEST_OPTIONS_2 $PROT \
-            $COMMON_SUFFIX |& vallogadd $TMPFILE
-    fi
-}
-
-###########################################################################################################################
 # Define the DEFAULT test set #############################################################################################
 ###########################################################################################################################
 #
@@ -711,9 +607,6 @@ run_full_testset()
     # Extra test for mosaic displays
     run_test_set ALL full_mosaic
 
-    # Run the normal "MAIN WIDI" set
-    # This is to check for regressions that may have occurred as a result of a combination of different commits.
-    run_test_set ALL main widi
 }
 
 ###########################################################################################################################

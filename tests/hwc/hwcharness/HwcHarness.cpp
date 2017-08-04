@@ -23,9 +23,6 @@
 #include <dirent.h>
 #include "iservice.h"
 
-#ifdef HWCVAL_TARGET_HAS_MULTIPLE_DISPLAY
-#include "MultiDisplayShim.h"
-#endif
 #include <ctype.h>
 
 #include <binder/ProcessState.h>
@@ -430,62 +427,6 @@ int HwcTestRunner::getargs(int argc, char **argv)
             }
 
             mSystem.EnableVirtualDisplayEmulation(vd_width, vd_height);
-        }
-        else if (strcmp(argv[i], "-widi") == 0)
-        {
-#ifdef TARGET_HAS_MCG_WIDI
-            int32_t wd_width = 0, wd_height = 0, swd_width = 0, swd_height = 0, refresh = 0;
-
-            if ((i+3 >= argc) ||
-                (std::sscanf(argv[i+1],"%dx%d", &wd_width, &wd_height) != 2) ||
-                (std::sscanf(argv[i+2],"%dx%d", &swd_width, &swd_height) != 2) ||
-                (std::sscanf(argv[i+3],"%d", &refresh) != 1))
-            {
-               std::fprintf(stderr,"Fatal: can not parse wireless display dimensions.\n"
-                   "Usage is: -widi <w>x<h> <sw>x<sh> refresh (e.g. -widi 1920x1200 1920x1200 60)\n");
-               exit(-1);
-            }
-            else if ((wd_width <= 0) || (wd_height <= 0) || (swd_width <= 0) ||
-                     (swd_height <= 0) || (refresh <= 0))
-            {
-               std::fprintf(stderr,"Fatal: invalid wireless display configuration (%dx%d, %dx%d, %d).\n"
-                   "Widi disabled.\n", wd_width, wd_height, swd_width, swd_height, refresh);
-               exit(-1);
-            }
-
-            mArgs += android::String8::format("%s %s %s %s ",
-                argv[i], argv[i+1], argv[i+2], argv[i+3]);
-            // The arguments have been parsed successfully - consume them by incrementing the index.
-            i += 3;
-
-            mState->SetWirelessCrtcParams(swd_width, swd_height, refresh);
-
-            mSystem.SetWirelessDisplayFrameProcessingPolicy(swd_width, swd_height, refresh);
-            mSystem.EnableWirelessDisplayEmulation(wd_width, wd_height);
-#else
-            std::fprintf(stderr,"Fatal: MCG Widi is not available on this build.\n");
-            exit(-1);
-#endif
-        }
-        else if (strcmp(argv[i], "-widi_window") == 0)
-        {
-#ifdef TARGET_HAS_MCG_WIDI
-            int32_t wd_window_width = 0, wd_window_height = 0;
-
-            if ((++i >= argc) || (std::sscanf(argv[i],"%dx%d", &wd_window_width, &wd_window_height) != 2) ||
-                (wd_window_width <= 0) || (wd_window_height <= 0))
-            {
-               std::fprintf(stderr,"Fatal: parsed Widi window dimensions as %dx%d.\n"
-                                   "Usage is: -widi_window <w>x<h> (e.g. -widi_window 600x300)\n",
-                            wd_window_width, wd_window_height);
-               exit(-1);
-            }
-
-            mArgs += android::String8::format("%s %s ", argv[i-1], argv[i]);
-
-            mSystem.SetWirelessWindowSize(wd_window_width, wd_window_height);
-            mSystem.EnableWirelessDisplayCloning(true);
-#endif
         }
         // keep this last in the option processing
         else if (argv[i][0] == '-')
@@ -1785,11 +1726,6 @@ int main(int argc, char **argv)
     sp<ProcessState> proc(ProcessState::self());
     ProcessState::self()->startThreadPool();
 
-#ifdef HWCVAL_TARGET_HAS_MULTIPLE_DISPLAY
-    // Tell MDS Shim to run without trying to connect to real MDS
-    Hwcval::MultiDisplayShimService::setIsolatedMode(true);
-#endif
-
     // Virtual Display Emulation Support.
     //
     // Note: currently, if the Virtual Display support is enabled, the virtual
@@ -1800,63 +1736,6 @@ int main(int argc, char **argv)
         HWCLOGI("Initialising Virtual Display Support\n");
         system.GetDisplay(HWCVAL_DISPLAY_ID_WIDI_VIRTUAL).EmulateVirtualDisplay();
     }
-
-#ifdef TARGET_HAS_MCG_WIDI
-    // Wireless Display Emulation Support.
-    //
-    // Similarly, if Wireless Display (Widi) support is enabled, then create the
-    // display on D2.
-    if (system.IsWirelessDisplayEmulationEnabled())
-    {
-        // Look for (and check) the fence related Widi arguments
-        HWCLOGI("Initialising Widi Subsystem\n");
-
-        int32_t widi_fence_pool_size = runner.GetIntParam("widi_fence_pool_size",
-            HWCVAL_WIDI_FENCE_POOL_SIZE_DEFAULT);
-        if (widi_fence_pool_size <= 0)
-        {
-            HWCLOGW("Warning: widi_fence_pool_size <= 0. Setting to default value (%d)\n",
-                HWCVAL_WIDI_FENCE_POOL_SIZE_DEFAULT);
-        }
-
-        int32_t widi_retain_oldest = runner.GetIntParam("widi_retain_oldest",
-                HWCVAL_WIDI_RETAIN_OLDEST_DEFAULT);
-        if (widi_retain_oldest <= 0)
-        {
-            HWCLOGW("Warning: widi_retain_oldest <= 0. Setting to default value (%d)\n",
-                HWCVAL_WIDI_RETAIN_OLDEST_DEFAULT);
-        }
-
-        const char *widi_fence_mode = runner.GetStrParam("widi_fence_mode",
-            HWCVAL_WIDI_FENCE_MODE_DEFAULT_STR);
-        using FenceReleaseMode = Hwch::System::FenceReleaseMode;
-
-        FenceReleaseMode fence_release_mode;
-        if (strncmp(widi_fence_mode,"sequential", 10) == 0)
-        {
-            fence_release_mode = FenceReleaseMode::eSequential;
-        }
-        else if (strncmp(widi_fence_mode,"random", 6) == 0)
-        {
-            fence_release_mode = FenceReleaseMode::eRandom;
-        }
-        else if (strncmp(widi_fence_mode,"oldest", 6) == 0)
-        {
-            fence_release_mode = FenceReleaseMode::eRetainOldest;
-        }
-        else
-        {
-            HWCLOGW("Warning: widi_fence_mode not recognised - defaulting to: %s",
-                HWCVAL_WIDI_FENCE_MODE_DEFAULT_STR);
-            fence_release_mode = FenceReleaseMode::eSequential;
-        }
-
-        system.SetWirelessFencePoolSize(widi_fence_pool_size);
-        system.SetWirelessBeforeOldest(widi_retain_oldest);
-        system.SetWirelessFenceReleaseMode(fence_release_mode);
-        system.GetDisplay(HWCVAL_DISPLAY_ID_WIDI_VIRTUAL).EmulateWirelessDisplay();
-    }
-#endif
 
     // Configure choice of patterns
     system.GetPatternMgr().Configure(HwcTestState::getInstance()->IsOptionEnabled(eOptForceGlFill),

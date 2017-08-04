@@ -13,8 +13,6 @@ VAL_HWC_DOXYGEN_SRC_DIR := ""
 
 VAL_HWC_FEATURE := hwc
 
-VAL_HWC_MDSSHIM_INC_PATH=$(LOCAL_PATH)/../framework/mds_shim
-VAL_HWC_WIDISHIM_INC_PATH=$(LOCAL_PATH)/../framework/widi_shim
 VAL_HWC_LIBPNG_INC_PATH=$(ANDROID_BUILD_TOP)/external/libpng
 VAL_HWC_ZLIB_INC_PATH=$(ANDROID_BUILD_TOP)/external/zlib
 
@@ -23,7 +21,6 @@ LOCAL_SRC_FILES:=\
     HwchGlInterface.cpp \
     HwcHarness.cpp \
     HwchChoice.cpp \
-    HwchDisplayChoice.cpp \
     HwchLayerChoice.cpp \
     HwchTest.cpp \
     HwchTests.cpp \

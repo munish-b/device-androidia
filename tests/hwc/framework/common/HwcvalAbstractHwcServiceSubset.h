@@ -44,10 +44,6 @@ namespace Hwcval
       virtual android::sp<hwcomposer::IDisplayControl>
       getDisplayControl(uint32_t display) = 0;
       virtual android::sp<hwcomposer::IVideoControl> getVideoControl() = 0;
-#ifdef HWCVAL_MDSEXTMODECONTROL
-      virtual android::sp<hwcomposer::IMDSExtModeControl>
-      getMDSExtModeControl() = 0;
-#endif
     };
 
 } // namespace Hwcval

@@ -78,14 +78,6 @@ extern "C"
 
 #include <sys/stat.h>
 
-#ifdef HWCVAL_TARGET_HAS_MULTIPLE_DISPLAY
-#include "MultiDisplayShimService.h"
-#endif
-
-#ifdef TARGET_HAS_MCG_WIDI
-#include "WidiShimService.h"
-#endif
-
 #undef LOG_TAG
 #define LOG_TAG "HWC_SHIM"
 
@@ -162,17 +154,6 @@ int HwcShim::HwcShimInit(void)
 
     state->SetRunningShim(HwcTestState::eHwcShim);
     state->SetDrmFunctions(::drm_intel_bo_map, ::drm_intel_bo_unmap);
-
-#ifdef HWCVAL_TARGET_HAS_MULTIPLE_DISPLAY
-#ifdef HWCVAL_ENABLE_MDS_SHIM
-    Hwcval::MultiDisplayShimService::instantiate();
-#endif
-#endif
-
-#ifdef TARGET_HAS_MCG_WIDI
-    HWCLOGI("Starting WidiShimService");
-    WidiShimService::instantiate(state);
-#endif
 
     int ret = 0;
 

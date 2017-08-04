@@ -84,17 +84,8 @@ bool Hwcval::LogParser::ParseHWCServiceApi(pid_t pid, int64_t timestamp, const c
     CALL_PARSER_FUNC(ParseDisplayModeGetModeExit);
     CALL_PARSER_FUNC(ParseDisplayModeSetModeEntry);
     CALL_PARSER_FUNC(ParseDisplayModeSetModeExit);
-    CALL_PARSER_FUNC(ParseMDSUpdateVideoStateEntry);
-    CALL_PARSER_FUNC(ParseMDSUpdateVideoStateExit);
-    CALL_PARSER_FUNC(ParseMDSUpdateVideoFPSEntry);
-    CALL_PARSER_FUNC(ParseMDSUpdateVideoFPSExit);
-    CALL_PARSER_FUNC(ParseMDSUpdateInputStateEntry);
-    CALL_PARSER_FUNC(ParseMDSUpdateInputStateExit);
     CALL_PARSER_FUNC(ParseSetOptimizationModeEntry);
     CALL_PARSER_FUNC(ParseSetOptimizationModeExit);
-    CALL_PARSER_FUNC(ParseWidiSetSingleDisplayEntry);
-    CALL_PARSER_FUNC(ParseWidiSetSingleDisplayExit);
-
     return false;
 }
 
@@ -519,92 +510,6 @@ bool Hwcval::LogParser::ParseDisplayModeSetModeExit(pid_t pid, int64_t timestamp
     }
 
     return false;
-}
-
-bool Hwcval::LogParser::ParseMDSUpdateVideoStateEntry(pid_t pid, int64_t timestamp, const char* str)
-{
-    HWCVAL_UNUSED(pid);
-    HWCVAL_UNUSED(timestamp);
-
-    int32_t prepared = 0, num_fields_matched = 0;
-    int64_t session = 0;
-
-    if (MatchRegex("HwcService_MDS_UpdateVideoState session:(\\d+), prepared:(\\d+) -->",
-         str, &num_fields_matched, &session, &prepared))
-    {
-        mTestKernel->UpdateVideoState(session, prepared);
-
-        HWCLOGD_COND(eLogParse, "PARSED MATCHED %s - setting MDS Video State for session: %" PRId64
-            " (prepared: %d)", str, session, prepared);
-        return true;
-    }
-
-    return false;
-}
-
-bool Hwcval::LogParser::ParseMDSUpdateVideoStateExit(pid_t pid, int64_t timestamp, const char* str)
-{
-    HWCVAL_UNUSED(pid);
-    HWCVAL_UNUSED(timestamp);
-
-    return ParseCommonExit(str, "MDS_UpdateVideoState");
-}
-
-bool Hwcval::LogParser::ParseMDSUpdateVideoFPSEntry(pid_t pid, int64_t timestamp, const char* str)
-{
-    HWCVAL_UNUSED(pid);
-    HWCVAL_UNUSED(timestamp);
-
-    int32_t num_fields_matched = 0, fps = 0;
-    int64_t session = 0;
-
-    if (MatchRegex("HwcService_MDS_UpdateVideoFPS session:(\\d+), fps:(\\d+) -->",
-         str, &num_fields_matched, &session, &fps))
-    {
-        mTestKernel->UpdateVideoFPS(session, fps);
-
-        HWCLOGD_COND(eLogParse, "PARSED MATCHED %s - setting MDS Video FPS for session: %d "
-            "to %d", str, session, fps);
-        return true;
-    }
-
-    return false;
-}
-
-bool Hwcval::LogParser::ParseMDSUpdateVideoFPSExit(pid_t pid, int64_t timestamp, const char* str)
-{
-    HWCVAL_UNUSED(pid);
-    HWCVAL_UNUSED(timestamp);
-
-    return ParseCommonExit(str, "MDS_UpdateVideoFPS");
-}
-
-bool Hwcval::LogParser::ParseMDSUpdateInputStateEntry(pid_t pid, int64_t timestamp, const char* str)
-{
-    HWCVAL_UNUSED(pid);
-    HWCVAL_UNUSED(timestamp);
-
-    int32_t num_fields_matched = 0;
-    int64_t state = 0;
-
-    if (MatchRegex("HwcService_MDS_UpdateInputState (\\d) -->", str, &num_fields_matched, &state))
-    {
-        mTestKernel->UpdateInputState(state);
-
-        HWCLOGD_COND(eLogParse, "PARSED MATCHED %s - setting MDS Input State to %s",
-            str, state ? "true" : "false");
-        return true;
-    }
-
-    return false;
-}
-
-bool Hwcval::LogParser::ParseMDSUpdateInputStateExit(pid_t pid, int64_t timestamp, const char* str)
-{
-    HWCVAL_UNUSED(pid);
-    HWCVAL_UNUSED(timestamp);
-
-    return ParseCommonExit(str, "MDS_UpdateInputState");
 }
 
 bool Hwcval::LogParser::ParseSetOptimizationModeEntry(pid_t pid, int64_t timestamp, const char* str)

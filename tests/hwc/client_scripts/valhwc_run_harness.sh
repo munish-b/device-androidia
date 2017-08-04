@@ -52,7 +52,6 @@ do
 done
 
 # Make /dev/input/* writable
-# Currently necessary for MDS removal work
 # TODO: remove
 saved_pwd=$PWD
 cd /dev/input

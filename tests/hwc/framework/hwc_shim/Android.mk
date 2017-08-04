@@ -28,19 +28,11 @@ LOCAL_C_INCLUDES += \
     $(LOCAL_PATH) \
     $(LOCAL_PATH)/../common/ \
     $(LOCAL_PATH)/../drm_shim/ \
-    $(LOCAL_PATH)/../mds_shim/ \
     $(VAL_HWC_TOP)/hwcharness \
     $(VAL_HWC_HARDWARE_COMPOSER_PATH)/../libdrm/intel/ \
     $(VAL_HWC_HARDWARE_COMPOSER_PATH)/os/android/libhwcservice \
     $(VAL_HWC_HARDWARE_COMPOSER_PATH)/common/utils/val
 
-
-# Compile in the widi components if needed
-ifneq ($(filter true, $(INTEL_WIDI_BAYTRAIL) $(INTEL_WIDI_GEN)),)
-    LOCAL_CFLAGS += -DTARGET_HAS_MCG_WIDI=1
-    LOCAL_C_INCLUDES += $(LOCAL_PATH)/../widi_shim/
-    LOCAL_SHARED_LIBRARIES += libvalhwc_widishim
-endif
 
 LOCAL_SHARED_LIBRARIES += \
     libdrm \
@@ -55,10 +47,6 @@ LOCAL_SHARED_LIBRARIES += \
     libsync \
     liblog
 
-# Compile in the MCG Multi display components if needed
-ifeq ($(strip $(TARGET_HAS_MULTIPLE_DISPLAY)), true)
-    LOCAL_SHARED_LIBRARIES += libvalhwc_mdsshim
-endif
 
 LOCAL_STATIC_LIBRARIES +=
 

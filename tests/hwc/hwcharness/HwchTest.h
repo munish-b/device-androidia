@@ -37,12 +37,6 @@
 
 #include "HwchInterface.h"
 
-#ifdef HWCVAL_TARGET_HAS_MULTIPLE_DISPLAY
-#include "IMultiDisplayCallback.h"
-#endif
-#ifdef HWCVAL_MDSEXTMODECONTROL
-#include "IMDSExtModeControl.h"
-#endif
 #ifdef HWCVAL_BUILD_HWCSERVICE_API
 #include "hwcserviceapi.h"
 #endif
@@ -126,12 +120,6 @@ namespace Hwch
             ////////////////////////////////////////////////////////
             // PUBLIC FUNCTIONS FOR USE INSIDE THE TEST ////////////
             ////////////////////////////////////////////////////////
-
-#ifdef HWCVAL_TARGET_HAS_MULTIPLE_DISPLAY
-            // Return pointer to the MDS callback shim
-            // This allows simulation of MDS events
-            android::intel::IMultiDisplayCallback* MDSCallback();
-#endif
             status_t UpdateVideoState(int sessionId, bool isPrepared, uint32_t fps=0);
             status_t UpdateInputState(bool inputActive, bool expectPanelEnableAsInput = true, Hwch::Frame* frame = 0);
 
@@ -193,26 +181,11 @@ namespace Hwch
             Hwch::Interface& mInterface;
             System& mSystem;
 
-#ifdef HWCVAL_TARGET_HAS_MULTIPLE_DISPLAY
-            // Old Multi-Display service support
-            android::sp<android::intel::IMultiDisplayCallback> mMdsCbkShim;
-#endif
-
-#ifdef HWCVAL_MDSEXTMODECONTROL
-            // New multi-display service support
-            android::sp<hwcomposer::IMDSExtModeControl> mMdsExtModeControl;
-#endif
-
 #ifdef HWCVAL_BUILD_HWCSERVICE_API
             // HWC Service Api support
             HWCSHANDLE mHwcsHandle = nullptr;
 #endif
 
-
-#ifdef TARGET_HAS_MCG_WIDI
-            // Widi related member variables
-            android::sp<Hwch::Widi> mWidi;
-#endif
     };
 
     class BaseReg

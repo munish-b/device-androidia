@@ -20,48 +20,4 @@
 #include "HwchChoice.h"
 #include "HwchSystem.h"
 
-namespace Hwch
-{
-    class WidiResolutionChoice : public GenericChoice<uint32_t>
-    {
-    public:
-        WidiResolutionChoice();
-        ~WidiResolutionChoice() = default;
-
-        virtual uint32_t Get();
-        uint32_t NumChoices() { return eLastEntry; }
-        uint32_t GetWidth() { return mWidth; }
-        uint32_t GetHeight() { return mHeight; }
-
-    private:
-        // Note: enum values MUST be sequential and not reordered
-        enum WidiResolutionType
-        {
-            eSameAsPanel = 0,
-            eFixed1080p,
-            eFixed720p,
-            eRandom,
-            eLastEntry
-        };
-
-        MultiChoice<WidiResolutionType> mWidiResolutionChoice;
-        uint32_t mWidth;
-        uint32_t mHeight;
-    };
-
-    class WidiFenceReleasePolicyChoice : public GenericChoice<uint32_t>
-    {
-    public:
-        WidiFenceReleasePolicyChoice();
-        ~WidiFenceReleasePolicyChoice() = default;
-
-        virtual uint32_t Get();
-        uint32_t NumChoices() { return Hwch::System::FenceReleaseMode::eLastEntry; }
-
-    private:
-
-        MultiChoice<Hwch::System::FenceReleaseMode> mWidiFenceReleasePolicyChoice;
-    };
-}
-
 #endif // __HwchDisplayChoice_h__
