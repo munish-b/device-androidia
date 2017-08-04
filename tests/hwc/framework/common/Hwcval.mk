@@ -19,9 +19,6 @@ ifeq ($(VAL_HWC_LIB_IVP_PATHS),y)
     endif
 endif
 
-VAL_HWC_MDS_PATH= vendor/intel/hardware/libmultidisplay/native/include
-VAL_HWC_MDS_PATH += vendor/intel/hardware/libmedia_utils/libmultidisplay/native/include
-
 ifeq ($(VAL_HWC_HARDWARE_COMPOSER_PATH),)
     ifeq (,$(wildcard $(ANDROID_PRODUCT_OUT)/obj/SHARED_LIBRARIES/libhwcservice_intermediates/export_includes))
         $(error HWC service must be built first)
@@ -69,16 +66,6 @@ ifneq (,$(filter bxt_rvp bxtp_abl,$(TARGET_PRODUCT)))
     LOCAL_CFLAGS += -DHWCVAL_BROXTON
 endif
 
-# Enable a flag in the code to show that Widi is enabled for this platform
-ifneq ($(filter true, $(INTEL_WIDI_BAYTRAIL) $(INTEL_WIDI_GEN)),)
-    LOCAL_CFLAGS += -DTARGET_HAS_MCG_WIDI=1
-endif
-
-# Compile in the MCG Multi display components if needed
-ifeq ($(strip $(TARGET_HAS_MULTIPLE_DISPLAY)),true)
-    LOCAL_CFLAGS += -DHWCVAL_TARGET_HAS_MULTIPLE_DISPLAY
-endif
-
 ifneq ($(wildcard $(VAL_HWC_HARDWARE_COMPOSER_PATH)/val/AbstractCompositionChecker.h),)
     LOCAL_CFLAGS += -DHWCVAL_ABSTRACTCOMPOSITIONCHECKER_EXISTS
 endif
@@ -107,12 +94,6 @@ endif
 
 LOCAL_C_INCLUDES += $(VAL_HWC_HARDWARE_COMPOSER_PATH)/val
 LOCAL_C_INCLUDES += $(VAL_HWC_HWCSERVICE_INC_PATH)
-
-ifneq ($(wildcard $(VAL_HWC_HARDWARE_COMPOSER_PATH)/libhwcservice/IMDSExtModeControl.h),)
-    LOCAL_CFLAGS += -DHWCVAL_MDSEXTMODECONTROL
-    BUILD_MDSEXTMODECONTROL := 1
-endif
-
 
 BUILD_SHIM_HWCSERVICE := 0
 BUILD_HWCSERVICE_API := 1

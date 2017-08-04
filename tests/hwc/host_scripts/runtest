@@ -19,31 +19,14 @@ HWCVAL_TESTS=( "Api" "Camera" "Dialog" "Flicker1" \
 HWCVAL_CP_TESTS=( "ComplexProtectedVideo" "InvalidProtectedVideo" \
         "ProtectedVideo" "ProtectedVideoHotPlug" "ProtectedVideoScreenDisable" )
 
-HWCVAL_WIDI_TESTS=( "WidiSmoke" "WidiDisconnect" "WidiFrameTypeChange" "WidiDirect" "WidiProcessingPolicy" )
-
 HWCVAL_HWCCOMP=( "Api" "ComplexProtectedVideo" \
         "FlipRot" "NV12PartVideo2" "Smoke" "TransparencyComposition" )
-
-WIDI_OPTIONS=0
-WIDI_CHT_OPTIONS="-widi 1920x1200 1920x1200 60"
-WIDI_BXT_OPTIONS="-widi 1920x1080 1920x1080 60"
-
-# Check which is the appropriate set of widi variables to be used for this platform
-if [[ $TARGET_PRODUCT == *bxt* ]]
-then
-    WIDI_OPTIONS=$WIDI_BXT_OPTIONS
-elif [[ $TARGET_PRODUCT == *cht* ]]
-then
-    WIDI_OPTIONS=$WIDI_CHT_OPTIONS
-else
-    echo "Target not supported"
-fi
 
 
 if [ "$1" == "" ]
 then
     echo "Missing block of tests to be performed."
-    echo "For Test Cycles: hwcval, hwcval_cp, hwcval_widi, hwccomp, all"
+    echo "For Test Cycles: hwcval, hwcval_cp, hwccomp, all"
     echo ""
     return
 fi
@@ -65,15 +48,6 @@ then
     for ((i = 0; i < ${#HWCVAL_CP_TESTS[@]}; i++))
     do
         valhwch -t ${HWCVAL_CP_TESTS[i]}
-    done
-fi
-
-if [[ $1 == "hwcval_widi" || "$1" == "all" ]]
-then
-    echo "Run hwcval_widi tests"
-    for ((i = 0; i < ${#HWCVAL_WIDI_TESTS[@]}; i++))
-    do
-        valhwch -t ${HWCVAL_WIDI_TESTS[i]} $WIDI_OPTIONS
     done
 fi
 

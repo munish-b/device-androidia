@@ -54,8 +54,7 @@ private:
         // accessor for IBinder interface functions
         TRANSACT_GET_DIAGNOSTIC = 100,
         TRANSACT_GET_DISPLAY_CONTROL,
-        TRANSACT_GET_VIDEO_CONTROL,
-        TRANSACT_GET_MDS_EXT_MODE_CONTROL
+        TRANSACT_GET_VIDEO_CONTROL
     };
 
     void GetRealService();

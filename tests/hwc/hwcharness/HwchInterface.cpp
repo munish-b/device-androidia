@@ -152,11 +152,7 @@ int Hwch::Interface::GetDisplayAttributes(uint32_t disp)
 
     // Add the virtual display (if enabled on the command line)
     if ( ((system.GetDisplay(disp).IsVirtualDisplay()) && (system.IsVirtualDisplayEmulationEnabled()))
-#ifdef TARGET_HAS_MCG_WIDI
-        || ((system.GetDisplay(disp).IsWirelessDisplay()) && (system.IsWirelessDisplayEmulationEnabled()))
-#endif
         )
-
     {
         Hwch::Display::Attributes& att = system.GetDisplay(disp).mAttributes;
         att.width = system.GetVirtualDisplayWidth();
@@ -182,7 +178,7 @@ int Hwch::Interface::GetDisplayAttributes(uint32_t disp)
           ret = pfngetDisplayConfigs(hwc2_dvc, disp, &nc, configs);
         }
         numConfigs = nc;
-        ALOGE(" nc =%d", nc);
+
         if (ret != android::NO_ERROR)
         {
             Hwch::Display::Attributes& att = display.mAttributes;
@@ -263,15 +259,13 @@ int Hwch::Interface::GetDisplayAttributes(uint32_t disp)
             }
         }
 
-        ALOGE("Hwch::Interface::GetDisplayAttributes Getting attributes for "
-              "display %d config ix %d/%d %x",
-              disp, activeConfig, numConfigs, configs[activeConfig]);
+
+        HWCLOGD("Hwch::Interface::GetDisplayAttributes Getting attributes for display %d config ix %d/%d %x", disp, activeConfig, numConfigs, configs[activeConfig]);
         int32_t* values = (int32_t*) (&(display.mAttributes));
         for (uint32_t j = 0; j < 3; ++j) {
           if (pfngetDisplayAttribute) {
             ret = pfngetDisplayAttribute(hwc2_dvc, disp, configs[activeConfig],
                                          attributes[j], values + j);
-            ALOGE("atrib %d value %d", attributes[j], values[j]);
           }
         }
         if ((display.GetWidth() == 0) && (display.GetHeight() == 0))

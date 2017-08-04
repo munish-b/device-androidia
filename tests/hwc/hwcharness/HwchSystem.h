@@ -38,12 +38,6 @@
 
 #include "iservice.h"
 
-#ifdef TARGET_HAS_MCG_WIDI
-#include "HwchWidi.h"
-#include "HwchLayerWindowed.h"
-#endif
-
-
 namespace Hwch
 {
     enum SyncOptionType
@@ -132,63 +126,7 @@ namespace Hwch
             void SetRCIgnoreHintRange(Hwch::Range& range);
             bool IsRCHintToBeIgnored();
             bool IsGlobalRenderCompressionEnabled();
-
-#ifdef TARGET_HAS_MCG_WIDI
-            // Functions for setting up and querrying the Wireless Display settings
-            void EnableWirelessDisplayEmulation(int32_t width, int32_t height);
-            void DisableWirelessDisplayEmulation();
-            void EnableWirelessDisplayCloning(bool enable_cloning);
-            uint32_t GetWirelessFencePoolSize();
-            uint32_t GetWirelessBeforeOldest();
-            uint32_t GetWirelessFenceReleaseMode();
-            bool IsWirelessDisplayEmulationEnabled();
-            struct FrameProcessingPolicy& GetWirelessDisplayFrameProcessingPolicy();
-            void SetWirelessDisplayFrameProcessingPolicy(int32_t scaled_width,
-                int32_t scaled_height, int32_t refresh);
-            void SetWirelessFrameCount(uint32_t frame_count);
-            uint32_t GetWirelessFrameCount();
-
-            // Wireless Visualisation Window: Layer related declarations
-            android::sp<HwchLayerWindowed> mWindowedLayer;
-            void SetWirelessWindowedLayer(android::sp<HwchLayerWindowed> layer)
-            {
-                mWindowedLayer = layer;
-            }
-
-            android::sp<HwchLayerWindowed> GetWirelessWindowedLayer()
-            {
-                return mWindowedLayer;
-            }
-
-            bool IsWindowedLayerAvailable()
-            {
-                return mWindowedLayer.get();
-            }
-
-            // Wireless Visualisation Window: Window related declarations
-            uint32_t mWindowWidth = 0, mWindowHeight = 0;
-            void SetWirelessWindowSize(uint32_t wd_window_width, uint32_t wd_window_height)
-            {
-                mWindowWidth = wd_window_width;
-                mWindowHeight = wd_window_height;
-            }
-
-            uint32_t GetWirelessWindowWidth()
-            {
-                return mWindowWidth;
-            }
-
-            uint32_t GetWirelessWindowHeight()
-            {
-                return mWindowHeight;
-            }
-
-            bool IsWirelessWindowEnabled()
-            {
-                return mWindowWidth && mWindowHeight;
-            }
-#endif
-
+  
             bool IsWirelessDisplayCloningEnabled();
 
             uint32_t GetPavpSessionId();
@@ -308,9 +246,6 @@ namespace Hwch
             Hwch::Layer::CompressionType mGlobalRenderCompression = Hwch::Layer::eCompressionAuto;
             Hwch::Range mRCIgnoreHintRange;
 
-#ifdef TARGET_HAS_MCG_WIDI
-            struct FrameProcessingPolicy mWidiFrameProcessingPolicy;
-#endif
     };
 
     PatternMgr& GetPatternMgr();

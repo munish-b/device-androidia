@@ -269,8 +269,6 @@ function get_binary_file_lists()
         lib/libvalhwc_drmshim.so
         lib/libvalhwc_ivpshim.so
         lib/valhwc_composershim.so
-        lib/libvalhwc_widishim.so
-        lib/libvalhwc_mdsshim.so
         bin/valhwcharness
         bin/valhwc_kmsgReader
         bin/valhwc_util
@@ -299,8 +297,6 @@ function get_binary_file_lists()
         lib64/libvalhwc_drmshim.so
         lib64/libvalhwc_ivpshim.so
         lib64/valhwc_composershim.so
-        lib64/libvalhwc_widishim.so
-        lib64/libvalhwc_mdsshim.so
     "
 
     ADDITIONAL_BINARY_FILES="$ADDITIONAL_BINARY_FILES

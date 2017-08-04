@@ -15,9 +15,6 @@
  */
 
 #include "BxService.h"
-#ifdef HWCVAL_MDSEXTMODECONTROL
-#include "IMDSExtModeControl.h"
-#endif
 #include <binder/IServiceManager.h>
 #include "HwcTestDefs.h"
 #include "HwcTestState.h"
@@ -130,20 +127,6 @@ android::status_t BxService::onTransact(uint32_t code,
             reply->writeStrongBinder(b);
             return android::NO_ERROR;
         }
-#ifdef HWCVAL_MDSEXTMODECONTROL
-        case TRANSACT_GET_MDS_EXT_MODE_CONTROL:
-        {
-            data.checkInterface(this);
-            GetRealService();
-#if ANDROID_VERSION >= 600
-            android::sp<IBinder> b = this->IInterface::asBinder(getMDSExtModeControl());
-#else
-            android::sp<IBinder> b = this->getMDSExtModeControl()->asBinder();
-#endif
-            reply->writeStrongBinder(b);
-            return android::NO_ERROR;
-        }
-#endif // HWCVAL_MDSEXTMODECONTROL
         default:
         {
             if ((code >> 24) == '_')

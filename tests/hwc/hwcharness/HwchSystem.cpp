@@ -24,16 +24,9 @@
 #include "HwcTestState.h"
 #include <dlfcn.h>
 
-#ifdef TARGET_HAS_MCG_WIDI
-#include "HwchWidi.h"
-#endif
 
 #include <cutils/properties.h>
 #include "i915_drm.h"
-
-#ifdef HWCVAL_BUILD_PAVP
-#include "libpavp.h"
-#endif
 
 using namespace hwcomposer;
 
@@ -522,96 +515,9 @@ void Hwch::System::SetWirelessFencePoolSize(int32_t fence_pool_size)
     mWirelessFencePoolSize = fence_pool_size;
 }
 
-#ifdef TARGET_HAS_MCG_WIDI
-// Functions relating to the creation of Wireless Displays
-//
-// Note: I did consider combining these functions with their Virtual Display
-// counterparts (to create a common set) but I separated them for the following
-// reasons:
-//
-//  i)  Widi and Virtual displays (though related) are different and I wanted
-//      to avoid any cross-dependency as the code evolve;
-//  ii) Should we ever need to remove Intel Widi support (e.g. because it is
-//      discontinued by MCG), then it will be easy to do so.
-void Hwch::System::EnableWirelessDisplayEmulation(int32_t width, int32_t height)
-{
-    mVirtualDisplayWidth = width;
-    mVirtualDisplayHeight = height;
-    mWirelessDisplayEnabled = true;
-}
-
-void Hwch::System::DisableWirelessDisplayEmulation()
-{
-    mWirelessDisplayEnabled = false;
-}
-
-void Hwch::System::EnableWirelessDisplayCloning(bool enable_cloning)
-{
-    mWirelessDisplayCloning = enable_cloning;
-}
-
-uint32_t Hwch::System::GetWirelessFencePoolSize()
-{
-    return mWirelessFencePoolSize;
-}
-
-uint32_t Hwch::System::GetWirelessBeforeOldest()
-{
-    return mWirelessBeforeOldest;
-}
-
-uint32_t Hwch::System::GetWirelessFenceReleaseMode()
-{
-    return mWirelessFenceReleaseMode;
-}
-
-bool Hwch::System::IsWirelessDisplayEmulationEnabled()
-{
-    return mWirelessDisplayEnabled;
-}
-
-// Getter and Setter for the Widi frame processing policy.
-//
-// Note: the DPI value in the frame processing policy is set here at 96 dpi.
-// This is the value that the Miracast stack uses (its hardcoded). Also, the
-// HWC ignores this value (currently) as its deemed to be display related.
-// If this ever changes, I will make it command-line configurable.
-
-#define WIDI_FRAME_PROCESSING_DPI 96
-
-struct FrameProcessingPolicy& Hwch::System::GetWirelessDisplayFrameProcessingPolicy(void)
-{
-    return mWidiFrameProcessingPolicy;
-}
-
-void Hwch::System::SetWirelessDisplayFrameProcessingPolicy(int32_t scaled_width,
-    int32_t scaled_height, int32_t refresh)
-{
-    mWidiFrameProcessingPolicy.scaledWidth = scaled_width;
-    mWidiFrameProcessingPolicy.scaledHeight = scaled_height;
-    mWidiFrameProcessingPolicy.refresh = refresh;
-    mWidiFrameProcessingPolicy.xdpi = WIDI_FRAME_PROCESSING_DPI;
-    mWidiFrameProcessingPolicy.ydpi = WIDI_FRAME_PROCESSING_DPI;
-
-    HwcTestState* state = HwcTestState::getInstance();
-    if (state)
-    {
-        state->SetWidiOutDimensions(scaled_width, scaled_height);
-    }
-    else
-    {
-        HWCLOGD("Can not get pointer to Test State");
-    }
-}
-#endif
-
 bool Hwch::System::IsWirelessDisplayCloningEnabled()
 {
-#ifdef TARGET_HAS_MCG_WIDI
-    return mWirelessDisplayCloning;
-#else
     return false;
-#endif
 }
 
 // Provided as a regular function to avoid awkward compilation dependency in HwchCoord.h

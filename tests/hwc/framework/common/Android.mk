@@ -84,7 +84,6 @@ ifeq ($(BUILD_SHIM_HWCSERVICE),1)
     LOCAL_SRC_FILES += \
         BxService.cpp  \
         HwcServiceShim.cpp \
-        HwcTestMdsControl.cpp \
         HwcTestDisplayControl.cpp
 endif
 
@@ -107,11 +106,9 @@ LOCAL_C_INCLUDES += \
     $(VAL_HWC_SRC_PATH) \
     $(LOCAL_PATH) \
     $(LOCAL_PATH)/../drm_shim/ \
-    $(LOCAL_PATH)/../mds_shim/ \
     $(VAL_HWC_LIB_DRM_PATHS) \
     $(VAL_HWC_LIB_IVP_PATHS) \
     $(VAL_HWC_HARDWARE_COMPOSER_PATH)/os/android/libhwcservice \
-    $(VAL_HWC_MDS_PATH) \
     $(VAL_HWC_HARDWARE_COMPOSER_PATH)/../libdrm/intel \
     $(VAL_HWC_TOP)/intel \
     $(VAL_HWC_TOP)/hwcharness \

@@ -19,13 +19,7 @@
 #include "HwcTestState.h"
 #include "HwcTestUtil.h"
 
-#ifdef HWCVAL_TARGET_HAS_MULTIPLE_DISPLAY
-#include "MultiDisplayShim.h"
-#endif
 #include "iservice.h"
-#ifdef HWCVAL_MDSEXTMODECONTROL
-#include "IMDSExtModeControl.h"
-#endif
 
 #ifdef HWCVAL_BUILD_HWCSERVICE_API
 #include "hwcserviceapi.h"
@@ -223,22 +217,6 @@ const char* Hwch::Test::GetName()
     return mName.string();
 }
 
-#ifdef HWCVAL_TARGET_HAS_MULTIPLE_DISPLAY
-android::intel::IMultiDisplayCallback* Hwch::Test::MDSCallback()
-{
-    if (mMdsCbkShim.get() == 0)
-    {
-        android::sp<Hwcval::MultiDisplayCallbackRegistrarShim> reg = Hwcval::MultiDisplayCallbackRegistrarShim::getInstance();
-
-        if (reg != 0)
-        {
-            mMdsCbkShim = reg->getCallback();
-        }
-    }
-    return mMdsCbkShim.get();
-}
-#endif
-
 bool Hwch::Test::CheckMDSAndSetup(bool report)
 {
 #ifdef HWCVAL_BUILD_HWCSERVICE_API
@@ -257,62 +235,6 @@ bool Hwch::Test::CheckMDSAndSetup(bool report)
 
     return true;
 #endif
-
-#ifdef HWCVAL_MDSEXTMODECONTROL
-    if (mMdsExtModeControl.get())
-    {
-        HWCLOGD_COND(eLogVideo, "Using mMdsExtModeControl=%p", mMdsExtModeControl.get());
-        return true;
-    }
-
-    if (HwcTestState::getInstance()->IsOptionEnabled(eOptNewMds))
-    {
-        // Find and connect to HWC service
-      sp<IBinder> hwcBinder =
-          defaultServiceManager()->getService(String16(IA_HWC_SERVICE_NAME));
-        sp<IService> hwcService = interface_cast<IService>(hwcBinder);
-        if(hwcService == NULL)
-        {
-          HWCERROR(eCheckSessionFail, "Could not connect to service %s",
-                   IA_HWC_SERVICE_NAME);
-            return false;
-        }
-
-        // Get MDSExtModeControl interface.
-        mMdsExtModeControl = hwcService->getMDSExtModeControl();
-        if (mMdsExtModeControl == NULL)
-        {
-            HWCERROR(eCheckSessionFail, "Cannot obtain IMDSExtModeControl");
-            return false;
-        }
-
-        return true;
-    }
-    else
-#endif
-    {
-#ifdef HWCVAL_TARGET_HAS_MULTIPLE_DISPLAY
-        if (MDSCallback())
-        {
-            return true;
-        }
-        else
-        {
-            if (report)
-            {
-                HWCERROR(eCheckSessionFail, "MDS Shim Callback is required for this test");
-            }
-            return false;
-        }
-#else
-        if (report)
-        {
-            HWCERROR(eCheckSessionFail, "Test requires MDS which is not supported on this platform");
-        }
-
-        return false;
-#endif
-    }
 }
 
 bool Hwch::Test::IsAutoExtMode()
@@ -340,51 +262,6 @@ status_t Hwch::Test::UpdateVideoState(int sessionId, bool isPrepared, uint32_t f
             st = HwcService_MDS_UpdateVideoFPS(mHwcsHandle, sessionId, fps);
         }
 #endif
-
-#ifdef HWCVAL_MDSEXTMODECONTROL
-        if (mMdsExtModeControl.get())
-        {
-            st = mMdsExtModeControl->updateVideoState(sessionId, isPrepared);
-
-            if (st == 0)
-            {
-                st = mMdsExtModeControl->updateVideoFPS(sessionId, fps);
-            }
-        }
-        else
-#endif
-        {
-#ifdef HWCVAL_TARGET_HAS_MULTIPLE_DISPLAY
-            st = MDSCallback()->updateVideoState(sessionId,
-                                        (isPrepared ? android::intel::MDS_VIDEO_PREPARED :
-                                                      android::intel::MDS_VIDEO_UNPREPARED));
-
-            if (st == 0)
-            {
-                Hwcval::MultiDisplayInfoProviderShim* shim = HwcTestState::getInstance()->GetMDSInfoProviderShim();
-
-                if (shim)
-                {
-                    // Note: only the frameRate will be used, as currently understood.
-                    MDSVideoSourceInfo videoSource;
-                    videoSource.displayW=1920;
-                    videoSource.displayH=1080;
-                    videoSource.frameRate = fps;
-                    videoSource.isInterlaced = false;
-                    videoSource.isProtected = false;
-
-                    // If we are saying a video is being played, tell the shim the frame rate for this video source
-                    // otherwise tell it there is no valid session playing (-1 won't match a session).
-                    shim->SetShimVideoSourceInfo(isPrepared ? sessionId : -1,
-                                                 &videoSource);
-                }
-                else
-                {
-                    HWCERROR(eCheckSessionFail, "No MDS Info provider shim");
-                }
-            }
-#endif
-        }
     }
 
     return st;
@@ -438,19 +315,6 @@ status_t Hwch::Test::UpdateInputState(bool inputActive, bool expectPanelEnableAs
         return HwcService_MDS_UpdateInputState(mHwcsHandle, inputActive ? HWCS_TRUE : HWCS_FALSE);
 #endif
 #endif
-
-#ifdef HWCVAL_MDSEXTMODECONTROL
-        if (mMdsExtModeControl.get())
-        {
-             return mMdsExtModeControl->updateInputState(inputActive);
-        }
-        else
-#endif
-        {
-#ifdef HWCVAL_TARGET_HAS_MULTIPLE_DISPLAY
-            return MDSCallback()->updateInputState(inputActive);
-#endif
-        }
     }
 
     return NAME_NOT_FOUND;
@@ -595,15 +459,6 @@ bool Hwch::Test::WirelessDocking(bool entry, int32_t delayUs)
 
 int Hwch::Test::Run()
 {
-#ifdef TARGET_HAS_MCG_WIDI
-    // Open the Widi session (if required)
-    Hwch::Widi& widi = Hwch::Widi::getInstance();
-    if (mSystem.IsWirelessDisplayEmulationEnabled())
-    {
-        widi.WidiConnect();
-    }
-#endif
-
     // Unblank if previously blanked
     for (uint32_t i=0; i<HWCVAL_MAX_CRTCS; ++i)
     {
@@ -641,14 +496,6 @@ int Hwch::Test::Run()
             }
         }
     }
-
-#ifdef TARGET_HAS_MCG_WIDI
-    // Close the Widi session (if required)
-    if (mSystem.IsWirelessDisplayEmulationEnabled())
-    {
-        widi.WidiDisconnect();
-    }
-#endif
 
     return 0;
 }

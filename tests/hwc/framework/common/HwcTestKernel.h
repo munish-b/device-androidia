@@ -52,10 +52,6 @@
 
 #include "HwcCrcReader.h"
 
-#ifdef TARGET_HAS_MCG_WIDI
-#include "IFrameTypeChangeListener.h"
-#endif
-
 
 class HwcTestState;
 class DrmShimBuffer;
@@ -178,9 +174,6 @@ protected:
     WidiEnableState mWidiState;
     bool mExtVideoModeDisabled;
     bool mBufferInfoRequired;
-#ifdef TARGET_HAS_MCG_WIDI
-    enum HWCFrameType mWidiFrameType;
-#endif
     uint32_t mNumSetResolutionsReceived;
     uint32_t mWidiLastFrame;
 
@@ -292,11 +285,6 @@ public:
     EXPORT_API void checkWidiBuffer(HwcTestCrtc *crtc, Hwcval::LayerList* ll, buffer_handle_t handle);
     EXPORT_API void checkWidiBuffer(buffer_handle_t handle);
 
-#ifdef TARGET_HAS_MCG_WIDI
-    EXPORT_API void setWidiEnabled(bool widiEnabled);
-    EXPORT_API void setExpectedWidiFrameType(enum HWCFrameType frameType) { mWidiFrameType = frameType; }
-    EXPORT_API void SetWidiLastFrame(uint32_t lastFrame) { mWidiLastFrame = lastFrame; }
-#endif
     EXPORT_API uint32_t GetWidiLastFrame() { return mWidiLastFrame; }
     EXPORT_API void setBufferInfoRequired(bool bufferInfoRequired) { mBufferInfoRequired = bufferInfoRequired; }
     EXPORT_API void IncNumSetResolutions() { ++mNumSetResolutionsReceived; }
@@ -685,12 +673,6 @@ inline void HwcTestKernel::SetHdmiPreferredMode(uint32_t width, uint32_t height,
     mPrefHdmiRefresh = refresh;
 }
 
-#ifdef TARGET_HAS_MCG_WIDI
-inline void HwcTestKernel::setWidiEnabled(bool widiEnabled)
-{
-    mWidiState = widiEnabled ? eWidiEnabled : eWidiDisabling;
-}
-#endif
 
 inline bool HwcTestKernel::IsWidiEnabled()
 {

@@ -39,4 +39,3 @@ include $(HWCVAL_TOP_SRC_PATH)/framework/hwc_shim/Android.mk
 include $(HWCVAL_TOP_SRC_PATH)/tests/Android.mk
 
 include $(HWCVAL_TOP_SRC_PATH)/hwcharness/Android.mk
-include $(HWCVAL_TOP_SRC_PATH)/surfaceflingershim/Android.mk

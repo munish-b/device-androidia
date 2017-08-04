@@ -3,7 +3,7 @@
 # valsmoke
 #
 # Easy script for developers to run smoke tests.
-# Use on its own, or with one or more of the optional arguments, "prot" and "widi".
+# Use on its own, or with one or more of the optional arguments, "prot".
 #
 echo "$0 $@"
 proc_path="${BASH_SOURCE[0]}"
@@ -44,11 +44,6 @@ run_full_subset
 if [ $RUN_weekly -eq 1 ]
 then
     run_weekly_testset
-fi
-
-if [ $RUN_widi -eq 1 ]
-then
-    run_widi_testset
 fi
 
 if [ $RUN_default -eq 1 ]

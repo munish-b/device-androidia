@@ -22,9 +22,6 @@
 #include "BxService.h"
 #include "idiagnostic.h"
 //#include "IVideoResolutionListener.h"
-#ifdef HWCVAL_MDSEXTMODECONTROL
-#include "IMDSExtModeControl.h"
-#endif
 #include <binder/IInterface.h>
 
 #include "HwcTestUtil.h"
@@ -47,9 +44,6 @@ public:
     // 3. add the pure virtual function declaration to HwcvalAbstractHwcServiceSubset.h.
     virtual sp<IDisplayControl>     getDisplayControl(uint32_t display);
     virtual sp<IVideoControl>       getVideoControl();
-#ifdef HWCVAL_MDSEXTMODECONTROL
-    virtual sp<IMDSExtModeControl>  getMDSExtModeControl();
-#endif
 
     bool Start();
 

@@ -44,9 +44,7 @@ namespace Hwch
         LogarithmicChoice mBlankFrameSleepUsChoice;
         Choice mHotPlugChooser;
         Choice mEsdRecoveryChooser;
-        Choice mWidiChooser;
         Choice mWirelessDockingChooser;
-        WidiResolutionChoice mWidiResolutionChooser;
         Choice mModeChangeChooser;
         Choice mModeChoice;
         Choice mVideoOptimizationModeChooser;
@@ -55,8 +53,6 @@ namespace Hwch
         // Which display will we hot plug?
         MultiChoice<uint32_t> mHotPlugDisplayTypeChoice;
 
-        WidiFenceReleasePolicyChoice mWidiFencePolicyChooser;
-        Choice mWidiRetainOldestChooser;
         // suspend/resume
         EventDelayChoice mEventDelayChoice;
         LogIntChoice mModeChangeDelayChoice;
@@ -73,9 +69,6 @@ namespace Hwch
         // Which display types are plugged?
         uint32_t mPlugged;
 
-        // Widi related member variables
-        bool mWidiConnected;
-
         // Wireless docking support
         bool mWirelessDockingMode;
 
@@ -86,13 +79,10 @@ namespace Hwch
         uint32_t mNumProtectedLayersCreated;
         uint32_t mNumSkipLayersCreated;
         uint32_t mNumSuspends;
-        uint32_t mNumWidiConnects;
         uint32_t mNumFencePolicySelections;
-        uint32_t mNumWidiDisconnects;
         uint32_t mNumModeChanges;
         uint32_t mNumExtendedModeTransitions;
         uint32_t mNumExtendedModePanelDisables;
-        uint32_t mNumWidiFencePolicySelections;
         uint32_t mNumEsdRecoveryEvents;
         uint32_t mNumVideoOptimizationModeChanges;
         uint32_t mNumWirelessDockingEntries;

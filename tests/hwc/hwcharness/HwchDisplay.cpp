@@ -359,12 +359,12 @@ void Hwch::Display::CreateExternalBufferSet(void)
     }
 }
 
-// Returns the next buffer in the external (Virtual display or Widi) output buffer set.
+// Returns the next buffer in the external (Virtual display) output buffer set.
 buffer_handle_t Hwch::Display::GetNextExternalBuffer(void)
 {
     buffer_handle_t ret = NULL;
 
-    // Create the WIDI/Virtual Display buffer set, if not created already
+    // Create the Virtual Display buffer set, if not created already
     CreateExternalBufferSet();
 
     if (mExternalBufferSet != 0)
@@ -390,19 +390,6 @@ void Hwch::Display::EmulateVirtualDisplay(void)
 bool Hwch::Display::IsVirtualDisplay(void)
 {
     return mVirtualDisplay;
-}
-
-// Enables Wireless Display (WiDi) emulation on this display.
-void Hwch::Display::EmulateWirelessDisplay(void)
-{
-    CreateExternalBufferSet();
-    mWirelessDisplay = true;
-}
-
-// Returns whether Wireless Display (WiDi) emulation is enabled on this display.
-bool Hwch::Display::IsWirelessDisplay(void)
-{
-    return mWirelessDisplay;
 }
 
 #ifdef HWCVAL_BUILD_HWCSERVICE_API
@@ -438,8 +425,6 @@ bool Hwch::Display::GetModeControl()
             return false;
         }
 
-        // Get MDSExtModeControl interface.
-        // mDisplayControl = hwcService->getDisplayControl(mDisplayIx);
         if (mDisplayControl == NULL)
         {
             HWCERROR(eCheckSessionFail, "Cannot obtain IDisplayControl");
