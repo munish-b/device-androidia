@@ -22,7 +22,6 @@
 #include <hardware/hwcomposer_defs.h>
 #include "HwchCoord.h"
 #include "HwchBufferSet.h"
-#define HWCVAL_BUILD_HWCSERVICE_API 0
 
 #ifdef HWCVAL_BUILD_HWCSERVICE_API
 #include "hwcserviceapi.h"

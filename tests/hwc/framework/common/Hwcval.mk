@@ -28,13 +28,13 @@ ifeq ($(VAL_HWC_HARDWARE_COMPOSER_PATH),)
     endif
 endif
 
-VAL_HWC_HARDWARE_COMPOSER_PATH?=$(VAL_HWC_INTEL_UFO_ANDROID)/hwc
+VAL_HWC_HARDWARE_COMPOSER_PATH?=$(ANDROID_BUILD_TOP)/vendor/intel/external/android_ia/hwcomposer
 ifeq ($(VAL_HWC_HARDWARE_COMPOSER_PATH_PRINTED),)
     $(info VAL_HWC_HARDWARE_COMPOSER_PATH $(VAL_HWC_HARDWARE_COMPOSER_PATH))
     VAL_HWC_HARDWARE_COMPOSER_PATH_PRINTED=Y
 endif
 
-VAL_HWC_HWCSERVICE_INC_PATH=$(VAL_HWC_HARDWARE_COMPOSER_PATH)/libhwcservice
+VAL_HWC_HWCSERVICE_INC_PATH=$(VAL_HWC_HARDWARE_COMPOSER_PATH)/os/android/libhwcservice
 VAL_HWC_LIBHW_INC_PATH=hardware/libhardware/include/hardware
 VAL_HWC_LIBMULTIDISPLAY_INC_PATH=vendor/intel/hardware/libmultidisplay/native/include
 VAL_HWC_LIBMULTIDISPLAY_INC_PATH += vendor/intel/hardware/libmedia_utils/libmultidisplay/native/include
@@ -97,7 +97,7 @@ LOCAL_C_INCLUDES += $(VAL_HWC_HWCSERVICE_INC_PATH)
 
 BUILD_SHIM_HWCSERVICE := 0
 BUILD_HWCSERVICE_API := 1
-LOCAL_CFLAGS += -DHWCVAL_BUILD_HWCSERVICE_API 
+LOCAL_CFLAGS += -DHWCVAL_BUILD_HWCSERVICE_API
 
 # In non-UFO builds we don't have a UFO_PAVP flag available
 # So if we want to decide which builds will support PAVP and which will not, we should choose this ourselves on some
