@@ -2959,11 +2959,7 @@ void DrmShimChecks::CheckIoctlI915SetDecrypt(struct drm_i915_reserved_reg_bit_2*
     if (decrypt)
     {
         uint32_t planeId;
-#ifdef INTEL_HWC_ANDROID_MCG
-        planeId = decrypt->plane + 2;
-#else
         planeId = decrypt->plane;
-#endif
         HWCLOGD("CheckIoctlI915SetDecrypt: Plane %d enable %d", planeId, decrypt->enable);
         HWCVAL_LOCK(_l,mMutex);
         mWorkQueue.Process();

@@ -57,10 +57,6 @@ LOCAL_CFLAGS += \
     -DHWCVAL_LOG_$(HWCVAL_LOG_VERBOSITY) \
     -DHWCVAL_LOG_$(HWCVAL_LOG_DESTINATION)
 
-ifeq ($(strip $(ANDROID_TYPE)),MCG)
-    LOCAL_CFLAGS += -DINTEL_HWC_ANDROID_MCG=1
-endif
-
 # Define whether or not we are compiling for Broxton
 ifneq (,$(filter bxt_rvp bxtp_abl,$(TARGET_PRODUCT)))
     LOCAL_CFLAGS += -DHWCVAL_BROXTON
