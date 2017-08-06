@@ -23,9 +23,7 @@
 #include "HwchCoord.h"
 #include "HwchBufferSet.h"
 
-#ifdef HWCVAL_BUILD_HWCSERVICE_API
 #include "hwcserviceapi.h"
-#endif
 
 #define HWCH_WIDI_VIRTUAL_NUM_BUFFERS 4
 
@@ -145,20 +143,11 @@ namespace Hwch
         buffer_handle_t GetNextExternalBuffer(void);
 
         // Display mode control
-#ifdef HWCVAL_BUILD_HWCSERVICE_API
         typedef HwcsDisplayModeInfo Mode;
-#else
-      typedef hwcomposer::IDisplayModeControl::Info Mode;
-#endif
 
         // Video optimization mode
-#ifdef HWCVAL_VIDEOCONTROL_OPTIMIZATIONMODE
-      typedef hwcomposer::IVideoControl::EOptimizationMode
-          VideoOptimizationMode;
-#else
         // Make everything build without too many ifdefs
         typedef int VideoOptimizationMode;
-#endif
 
         uint32_t GetModes();
         bool GetCurrentMode(Mode& mode);
@@ -170,12 +159,7 @@ namespace Hwch
 
         bool HasScreenSizeChanged();
         void RecordScreenSize();
-
-#ifdef HWCVAL_BUILD_HWCSERVICE_API
         bool GetHwcsHandle(void);
-#else
-        bool GetModeControl();
-#endif
 
     private:
         Display(const Display& display);    // verboten
@@ -183,11 +167,8 @@ namespace Hwch
         uint32_t mDisplayIx;
         Layer* mFramebufferTarget;
         RotationType mRotation;
-
-#ifdef HWCVAL_BUILD_HWCSERVICE_API
         // HWC Service Api support
         HWCSHANDLE mHwcsHandle = nullptr;
-#endif
 
         // This is the BufferSet which acts as the composition target for
         // Virtual and Widi displays.

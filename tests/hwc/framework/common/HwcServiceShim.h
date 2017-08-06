@@ -61,31 +61,6 @@ private:
     sp<IMDSExtModeControl> mMDSExtModeControl;
 #endif
 };
-#ifndef HWCVAL_BUILD_HWCSERVICE_API
-class HwcTestVideoControl : public BnVideoControl
-{
-public:
-    HwcTestVideoControl(sp<IVideoControl> real, HwcTestKernel* testKernel);
-    virtual ~HwcTestVideoControl();
-    virtual status_t enableEncryptedSession( uint32_t sessionID, uint32_t instanceID );
-    virtual status_t disableEncryptedSession( uint32_t sessionID );
-    virtual status_t disableAllEncryptedSessions( );
-    virtual bool     isEncryptedSessionEnabled( uint32_t sessionID, uint32_t instanceID );
-    // virtual status_t registerVideoResolutionListener( const
-    // sp<IVideoResolutionListener> &vppServiceListener );
-    // virtual status_t unregisterVideoResolutionListener( const
-    // sp<IVideoResolutionListener> &vppServiceListener );
-    virtual status_t updateStatus( EDisplayId display, EDisplayStatus status );
-#ifdef HWCVAL_VIDEOCONTROL_OPTIMIZATIONMODE
-    virtual status_t setOptimizationMode(EOptimizationMode mode);
-#endif
-
-private:
-    sp<IVideoControl> mReal;
-    HwcTestKernel* mTestKernel;
-    HwcTestProtectionChecker& mProtChecker;
-};
-#endif
 #endif // HWCVAL_BUILD_SHIM_HWCSERVICE
 
 #endif // __HwcServiceShim_h__

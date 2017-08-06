@@ -49,7 +49,6 @@ class HwcTestState;
 class DrmShimBuffer;
 class HwcTestBufferObject;
 class HwcServiceShim;
-class HwcTestVideoControl;
 
 struct drm_mode_set_display;
 
@@ -194,9 +193,6 @@ protected:
 
     // Time last onPrepare started
     int64_t mLastOnPrepareTime;
-
-    // For notification of onSet timing
-    HwcTestVideoControl* mVideoControl;
 
 #ifdef HWCVAL_BUILD_SHIM_HWCSERVICE
     // Shim of HWC IService
@@ -388,9 +384,6 @@ public:
     // Returns the parser object
     virtual Hwcval::LogChecker* GetParser() = 0;
 
-    // Set video control shim pointer
-    void SetVideoControl(HwcTestVideoControl* videoControl);
-
     // Translate CRTC Id to display index
     uint32_t CrtcIdToDisplayIx(uint32_t crtcId);
 
@@ -429,13 +422,6 @@ public:
     // Configure/Use stalls
     void SetStall(Hwcval::StallType ix, const Hwcval::Stall& stall);
     void DoStall(Hwcval::StallType ix, Hwcval::Mutex* mtx = 0);
-#ifndef HWCVAL_BUILD_HWCSERVICE_API
-    // Memory optimization mode
-    void CheckSetOptimizationModeEnter(
-        hwcomposer::IVideoControl::EOptimizationMode mode);
-    void CheckSetOptimizationModeExit(
-        int status, hwcomposer::IVideoControl::EOptimizationMode mode);
-#endif
     // Hwc options
     const char* GetHwcOptionStr(const char* optionName);
     int GetHwcOptionInt(const char* optionName);
@@ -612,11 +598,6 @@ inline const Hwcval::FrameNums& HwcTestKernel::GetFrameNums() const
 inline Hwcval::Work::Queue& HwcTestKernel::GetWorkQueue()
 {
     return mWorkQueue;
-}
-
-inline void HwcTestKernel::SetVideoControl(HwcTestVideoControl* videoControl)
-{
-    mVideoControl = videoControl;
 }
 
 inline Hwcval::LayerListQueue& HwcTestKernel::GetLLQ(uint32_t displayIx)

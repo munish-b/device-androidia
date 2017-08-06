@@ -48,13 +48,11 @@ Hwch::Display::~Display()
         delete mFramebufferTarget;
     }
 
-#ifdef HWCVAL_BUILD_HWCSERVICE_API
     // Disconnect from the HWC Service Api
     if (mHwcsHandle)
     {
         HwcService_Disconnect(mHwcsHandle);
     }
-#endif
 }
 
 void Hwch::Display::Init(uint32_t ix, Hwch::System* system)
@@ -392,7 +390,6 @@ bool Hwch::Display::IsVirtualDisplay(void)
     return mVirtualDisplay;
 }
 
-#ifdef HWCVAL_BUILD_HWCSERVICE_API
 bool Hwch::Display::GetHwcsHandle()
 {
     if (!mHwcsHandle)
@@ -409,43 +406,9 @@ bool Hwch::Display::GetHwcsHandle()
 
     return true;
 }
-#else
-bool Hwch::Display::GetModeControl()
-{
-    if (mDisplayModeControl.get() == 0)
-    {
-        // Find and connect to HWC service
-      sp<android::IBinder> hwcBinder =
-          defaultServiceManager()->getService(String16(IA_HWC_SERVICE_NAME));
-        sp<IService> hwcService = interface_cast<IService>(hwcBinder);
-        if(hwcService == NULL)
-        {
-          HWCERROR(eCheckSessionFail, "Could not connect to service %s",
-                   IA_HWC_SERVICE_NAME);
-            return false;
-        }
-
-        if (mDisplayControl == NULL)
-        {
-            HWCERROR(eCheckSessionFail, "Cannot obtain IDisplayControl");
-            return false;
-        }
-
-        mDisplayModeControl = mDisplayControl->getModeControl();
-        if (mDisplayModeControl == NULL)
-        {
-            HWCERROR(eCheckSessionFail, "Cannot obtain IDisplayModeControl");
-            return false;
-        }
-    }
-
-    return true;
-}
-#endif
 
 uint32_t Hwch::Display::GetModes()
 {
-#ifdef HWCVAL_BUILD_HWCSERVICE_API
     if (!GetHwcsHandle())
     {
       HWCLOGE_COND(eLogHarness, "Handle to HWC Service is not setup!");
@@ -455,23 +418,10 @@ uint32_t Hwch::Display::GetModes()
     HwcService_DisplayMode_GetAvailableModes(mHwcsHandle, mDisplayIx, mModes);
 
     return mModes.size();
-#else
-    if (GetModeControl())
-    {
-        mModes = mDisplayModeControl->getAvailableModes();
-
-        return mModes.size();
-    }
-    else
-    {
-        return 0;
-    }
-#endif
 }
 
 bool Hwch::Display::GetCurrentMode(Mode& mode)
 {
-#ifdef HWCVAL_BUILD_HWCSERVICE_API
     if (!GetHwcsHandle())
     {
       HWCLOGE_COND(eLogHarness, "Handle to HWC Service is not setup!");
@@ -481,15 +431,6 @@ bool Hwch::Display::GetCurrentMode(Mode& mode)
     status_t st = HwcService_DisplayMode_GetMode(mHwcsHandle, mDisplayIx, &mode);
 
     return (st == 0);
-#else
-    if (GetModeControl())
-    {
-        status_t st = mDisplayModeControl->getMode(&mode.width, &mode.height, &mode.refresh, &mode.flags, &mode.ratio);
-        return (st == 0);
-    }
-
-    return false;
-#endif
 }
 
 bool Hwch::Display::GetCurrentMode(uint32_t& ix)
@@ -546,7 +487,6 @@ bool Hwch::Display::SetMode(const Hwch::Display::Mode& mode, int32_t delayUs)
 
 bool Hwch::Display::ClearMode()
 {
-
     return true;
 }
 

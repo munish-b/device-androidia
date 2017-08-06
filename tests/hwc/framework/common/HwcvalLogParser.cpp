@@ -17,7 +17,7 @@
 #include "HwcTestState.h"
 #include "HwcTestKernel.h"
 
-#if defined(HWCVAL_BUILD_HWCSERVICE_API) && ANDROID_VERSION<600
+#if ANDROID_VERSION<600
 #include "re2/re2.h"
 #include "re2/stringpiece.h"
 #endif
@@ -41,7 +41,6 @@ bool Hwcval::LogParser::DoParse(pid_t pid, int64_t timestamp, const char* str)
         return true;
     }
 
-#ifdef HWCVAL_BUILD_HWCSERVICE_API
     // See if the string has the HWC Service Api prefix
     if (strncmp("HwcService_", str, 11) == 0)
     {
@@ -53,7 +52,6 @@ bool Hwcval::LogParser::DoParse(pid_t pid, int64_t timestamp, const char* str)
 
         return true;
     }
-#endif
 
     return false;
 }
@@ -67,8 +65,6 @@ bool Hwcval::LogParser::ParseKernel(pid_t pid, int64_t timestamp, const char* st
 
     return false;
 }
-
-#ifdef HWCVAL_BUILD_HWCSERVICE_API
 
 bool Hwcval::LogParser::ParseHWCServiceApi(pid_t pid, int64_t timestamp, const char *str)
 {
@@ -158,7 +154,7 @@ bool Hwcval::LogParser::MatchRegex(const char *regex, const char *line,
     return result;
 }
 
-#if defined(HWCVAL_BUILD_HWCSERVICE_API) && ANDROID_VERSION>=600
+#if ANDROID_VERSION>=600
 // Field extraction overloads
 template <typename T>
 bool Hwcval::LogParser::ExtractField(const std::cmatch::value_type field, T *field_ptr)
@@ -549,7 +545,6 @@ bool Hwcval::LogParser::ParseWidiSetSingleDisplayExit(pid_t pid, int64_t timesta
 
     return ParseCommonExit(str, "Widi_SetSingleDisplay");
 }
-#endif
 
 bool Hwcval::LogParser::ParseBufferNotifications(pid_t pid, int64_t timestamp, const char* str)
 {

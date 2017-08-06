@@ -40,11 +40,7 @@ Hwch::RandomTest::RandomTest(Hwch::Interface& interface)
     mModeChangeChooser(0, -1, "mModeChangeChooser"),
     mModeChoice(0, -1, "mModeChoice"),
     mVideoOptimizationModeChooser(0, -1, "mVideoOptimizationModeChooser"),
-#ifdef HWCVAL_VIDEOCONTROL_OPTIMIZATIONMODE
-    mVideoOptimizationModeChoice(IVideoControl::eNormal, IVideoControl::eCamera, "mVideoOptimizationModeChoice"),
-#else
     mVideoOptimizationModeChoice(0, 0, "mVideoOptimizationModeChoice"),
-#endif
     mEventDelayChoice(17000000, "mEventDelayChoice"), // 0 to 17ms
     mModeChangeDelayChoice(1, 17000000, "mModeChangeDelayChoice"), // 1 to 17 ms
     mHotPlugDelayChoice(1, 17000000, "mHotPlugDelayChoice"), // 1 to 17ms

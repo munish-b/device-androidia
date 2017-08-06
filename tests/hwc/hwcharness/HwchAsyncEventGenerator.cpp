@@ -18,10 +18,7 @@
 #include "HwchSystem.h"
 #include "HwcTestState.h"
 #include "HwchInterface.h"
-
-#ifdef HWCVAL_BUILD_HWCSERVICE_API
 #include "hwcserviceapi.h"
-#endif
 
 using namespace hwcomposer;
 
@@ -158,13 +155,11 @@ Hwch::AsyncEventGenerator::AsyncEventGenerator(Hwch::Interface& iface)
 
 Hwch::AsyncEventGenerator::~AsyncEventGenerator()
 {
-#ifdef HWCVAL_BUILD_HWCSERVICE_API
     // Disconnect from the HWC Service Api
     if (mHwcsHandle)
     {
         HwcService_Disconnect(mHwcsHandle);
     }
-#endif
 }
 
 bool Hwch::AsyncEventGenerator::Add(uint32_t eventType, int32_t delayUs)
@@ -362,7 +357,6 @@ bool Hwch::AsyncEventGenerator::SetVideoOptimizationMode(AsyncEvent::VideoOptimi
     return false;
 }
 
-#ifdef HWCVAL_BUILD_HWCSERVICE_API
 bool Hwch::AsyncEventGenerator::WirelessDocking(bool entry)
 {
     ALOG_ASSERT(GetHwcsHandle());
@@ -371,7 +365,6 @@ bool Hwch::AsyncEventGenerator::WirelessDocking(bool entry)
 
     return (st == 0);
 }
-#endif
 
 bool Hwch::AsyncEventGenerator::Do(uint32_t eventType, android::sp<AsyncEvent::Data> data)
 {
@@ -418,7 +411,6 @@ bool Hwch::AsyncEventGenerator::Do(uint32_t eventType, android::sp<AsyncEvent::D
         success &= WidiFencePolicy(fence_policy);
     }
 
-#ifdef HWCVAL_BUILD_HWCSERVICE_API
     if (eventType & AsyncEvent::eWirelessDockingEntry)
     {
         success &= WirelessDocking(true);
@@ -428,7 +420,6 @@ bool Hwch::AsyncEventGenerator::Do(uint32_t eventType, android::sp<AsyncEvent::D
     {
         success &= WirelessDocking(false);
     }
-#endif
 
     if (eventType & AsyncEvent::eModeSet)
     {
@@ -472,7 +463,6 @@ void Hwch::AsyncEventGenerator::Do(AsyncEvent& ev)
     }
 }
 
-#ifdef HWCVAL_BUILD_HWCSERVICE_API
 bool Hwch::AsyncEventGenerator::GetHwcsHandle()
 {
     if (!mHwcsHandle)
@@ -489,7 +479,6 @@ bool Hwch::AsyncEventGenerator::GetHwcsHandle()
 
     return true;
 }
-#endif
 
 // KernelEventGenerator
 Hwch::KernelEventGenerator::KernelEventGenerator()

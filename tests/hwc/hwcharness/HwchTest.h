@@ -36,12 +36,7 @@
 #include "HwchRange.h"
 
 #include "HwchInterface.h"
-
-#ifdef HWCVAL_BUILD_HWCSERVICE_API
 #include "hwcserviceapi.h"
-#endif
-
-
 
 namespace Hwch
 {
@@ -180,12 +175,8 @@ namespace Hwch
             android::String8 mName;
             Hwch::Interface& mInterface;
             System& mSystem;
-
-#ifdef HWCVAL_BUILD_HWCSERVICE_API
             // HWC Service Api support
             HWCSHANDLE mHwcsHandle = nullptr;
-#endif
-
     };
 
     class BaseReg

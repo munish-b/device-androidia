@@ -19,7 +19,7 @@
 
 #include "HwcvalLogIntercept.h"
 
-#if defined(HWCVAL_BUILD_HWCSERVICE_API) && ANDROID_VERSION>=600
+#if ANDROID_VERSION>=600
 #include <regex>
 #endif
 
@@ -58,7 +58,7 @@ namespace Hwcval
         bool MatchRegex(const char *regex, const char *line, int32_t *num_fields_matched = nullptr,
             T* match1_ptr = nullptr, U* match2_ptr = nullptr);
 
-#if defined(HWCVAL_BUILD_HWCSERVICE_API) && ANDROID_VERSION>=600
+#if ANDROID_VERSION>=600
         // Overloads for field extraction
         template <typename T>
         bool ExtractField(const std::cmatch::value_type field, T *field_ptr);

@@ -1631,25 +1631,9 @@ void HwcTestRunner::Unlock()
 void HwcTestRunner::ReportVersion()
 {
     android::String8 hwcBinVersion;
-#ifdef HWCVAL_BUILD_HWCSERVICE_API
     HWCSHANDLE hwcs = HwcService_Connect();
     hwcBinVersion.setTo(HwcService_GetHwcVersion(hwcs));
     HwcService_Disconnect(hwcs);
-#else
-    sp<android::IBinder> hwcBinder =
-        defaultServiceManager()->getService(String16(IA_HWC_SERVICE_NAME));
-    sp<hwcomposer::IService> hwcService =
-        interface_cast<hwcomposer::IService>(hwcBinder);
-    if(hwcService == NULL)
-    {
-      HWCERROR(eCheckSessionFail, "Could not connect to service %s",
-               IA_HWC_SERVICE_NAME);
-        ALOG_ASSERT(0);
-        return;
-    }
-
-    hwcBinVersion = hwcService->GetHwcVersion();
-#endif
 
     android::String8 strbuf(hwcBinVersion);
     android::Vector<char*> hwcVersionWords = splitString(strbuf);

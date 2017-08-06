@@ -20,12 +20,7 @@
 #include "HwchAbstractPavpSession.h"
 
 // Encryption control
-#ifdef HWCVAL_BUILD_HWCSERVICE_API
-    #include "hwcserviceapi.h"
-#else
-    #include "ivideocontrol.h"
-#endif
-
+#include "hwcserviceapi.h"
 #include "utils/Thread.h"
 
 namespace Hwch
@@ -47,11 +42,7 @@ namespace Hwch
             virtual bool threadLoop();
 
             // Private data
-#ifdef HWCVAL_BUILD_HWCSERVICE_API
             HWCSHANDLE mHwcsHandle;
-#else
-      android::sp<hwcomposer::IVideoControl> mVideoControl;
-#endif
             bool mProtectedContentStarted;
     };
 

@@ -27,11 +27,7 @@
 #include <utils/RefBase.h>
 
 // Define display Info structure
-#ifdef HWCVAL_BUILD_HWCSERVICE_API
 #include "hwcserviceapi.h"
-#else
-#include "idisplaymodecontrol.h"
-#endif
 
 class DrmShimPlane;
 class HwcTestKernel;
@@ -73,13 +69,8 @@ public:
         eEsdAny
     };
 
-#ifdef HWCVAL_BUILD_HWCSERVICE_API
     typedef HwcsDisplayModeInfo Mode;
     #define HWCVAL_MODE_FLAG_PREFERRED HWCS_MODE_FLAG_PREFERRED
-#else
-    typedef hwcomposer::IDisplayModeControl::Info Mode;
-    #define HWCVAL_MODE_FLAG_PREFERRED HwcTestCrtc::Mode::FLAG_PREFERRED
-#endif
     typedef android::Vector<Mode> ModeVec;
 
     //-----------------------------------------------------------------------------

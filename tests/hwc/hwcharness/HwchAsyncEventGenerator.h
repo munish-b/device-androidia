@@ -23,10 +23,7 @@
 #include "HwchDefs.h"
 #include "HwchDisplay.h"
 #include "HwcvalWatchdog.h"
-
-#ifdef HWCVAL_BUILD_HWCSERVICE_API
 #include "hwcserviceapi.h"
-#endif
 
 namespace Hwch
 {
@@ -191,9 +188,7 @@ namespace Hwch
         bool Add(uint32_t eventType, android::sp<Hwch::AsyncEvent::Data> data, int32_t delayUs);
         bool Do(uint32_t eventType, android::sp<AsyncEvent::Data> data = 0);
         virtual void Do(AsyncEvent& ev);
-#ifdef HWCVAL_BUILD_HWCSERVICE_API
         bool GetHwcsHandle(void);
-#endif
 
     private:
         Hwch::Interface& mInterface;
@@ -209,12 +204,9 @@ namespace Hwch
         bool mAllowSimultaneousBlank;
         volatile int mBlankInProgress;
         bool mBlankStateRequired;
-
-#ifdef HWCVAL_BUILD_HWCSERVICE_API
         // HWC Service Api support
         HWCSHANDLE mHwcsHandle = nullptr;
         bool WirelessDocking(bool entry);
-#endif
     };
 
     // All kernel events will come from one thread.

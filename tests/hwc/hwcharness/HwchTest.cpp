@@ -20,10 +20,7 @@
 #include "HwcTestUtil.h"
 
 #include "iservice.h"
-
-#ifdef HWCVAL_BUILD_HWCSERVICE_API
 #include "hwcserviceapi.h"
-#endif
 
 using namespace hwcomposer;
 
@@ -46,13 +43,11 @@ Hwch::Test::Test(Hwch::Interface& interface)
 
 Hwch::Test::~Test()
 {
-#ifdef HWCVAL_BUILD_HWCSERVICE_API
     // Disconnect from the HWC Service Api
     if (mHwcsHandle)
     {
         HwcService_Disconnect(mHwcsHandle);
     }
-#endif
 }
 
 void Hwch::TestParams::SetParams(ParamVec& params)
@@ -219,7 +214,6 @@ const char* Hwch::Test::GetName()
 
 bool Hwch::Test::CheckMDSAndSetup(bool report)
 {
-#ifdef HWCVAL_BUILD_HWCSERVICE_API
     if (mHwcsHandle)
     {
         return true; // Already connected
@@ -234,7 +228,6 @@ bool Hwch::Test::CheckMDSAndSetup(bool report)
     }
 
     return true;
-#endif
 }
 
 bool Hwch::Test::IsAutoExtMode()
@@ -254,14 +247,12 @@ status_t Hwch::Test::UpdateVideoState(int sessionId, bool isPrepared, uint32_t f
 
     if (CheckMDSAndSetup(false))
     {
-#ifdef HWCVAL_BUILD_HWCSERVICE_API
         st = HwcService_MDS_UpdateVideoState(mHwcsHandle, sessionId, isPrepared ? HWCS_TRUE : HWCS_FALSE);
 
         if (st == 0)
         {
             st = HwcService_MDS_UpdateVideoFPS(mHwcsHandle, sessionId, fps);
         }
-#endif
     }
 
     return st;
@@ -310,10 +301,8 @@ status_t Hwch::Test::UpdateInputState(bool inputActive, bool expectPanelEnableAs
             SetExpectedMode(inputActive ? HwcTestConfig::eOn : HwcTestConfig::eOff);
         }
 
-#ifdef HWCVAL_BUILD_HWCSERVICE_API
 #ifndef HWCVAL_TARGET_HAS_MULTIPLE_DISPLAY
         return HwcService_MDS_UpdateInputState(mHwcsHandle, inputActive ? HWCS_TRUE : HWCS_FALSE);
-#endif
 #endif
     }
 
@@ -337,47 +326,8 @@ bool Hwch::Test::SimulateHotPlug(bool connected, uint32_t displayTypes, uint32_t
     return SendEvent(connected ? AsyncEvent::eHotPlug : AsyncEvent::eHotUnplug, pData, delayUs);
 }
 
-#ifndef HWCVAL_BUILD_HWCSERVICE_API
-bool Hwch::Test::GetVideoControl()
-{
-    if (mVideoControl.get() == 0)
-    {
-        // Find and connect to HWC service
-      sp<android::IBinder> hwcBinder =
-          defaultServiceManager()->getService(String16(IA_HWC_SERVICE_NAME));
-        sp<IService> hwcService = interface_cast<IService>(hwcBinder);
-        if(hwcService == NULL)
-        {
-          HWCERROR(eCheckSessionFail, "Could not connect to service %s",
-                   IA_HWC_SERVICE_NAME);
-            return false;
-        }
-
-        // Get MDSExtModeControl interface.
-        // mVideoControl = hwcService->getVideoControl();
-        if (mVideoControl == NULL)
-        {
-            HWCERROR(eCheckSessionFail, "Cannot obtain IVideoControl");
-            return false;
-        }
-    }
-
-    return true;
-}
-#endif
 bool Hwch::Test::SetVideoOptimizationMode(Display::VideoOptimizationMode videoOptimizationMode, uint32_t delayUs)
 {
-#ifndef HWCVAL_BUILD_HWCSERVICE_API
-    if (!GetVideoControl())
-    {
-        return false;
-    }
-
-    android::sp<Hwch::AsyncEvent::VideoOptimizationModeData> params =
-        new Hwch::AsyncEvent::VideoOptimizationModeData(mVideoControl, videoOptimizationMode);
-
-    return Hwch::System::getInstance().AddEvent(Hwch::AsyncEvent::eSetVideoOptimizationMode, params, delayUs);
-#endif
     return false;
 }
 
