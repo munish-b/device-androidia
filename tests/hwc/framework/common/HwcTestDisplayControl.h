@@ -55,10 +55,6 @@ public:
     virtual status_t powerOff(int off)               { return 0; }
 #endif
 
-#ifdef HWCVAL_USE_IWIDICONTROL
-    virtual sp<IWidiControl> getWidiControl() { return 0; }
-#endif
-
 #endif
 private:
     uint32_t mDisplayIx;
