@@ -299,11 +299,7 @@ DECLARE_CHECK(eCheckOnSetLatency, HWC, WARN, "Check OnSet Latency", Hwc)
 
 // If the HWC composes into a buffer which is on screen, then it is corrupting the state of the display
 // and the internal state must be incorrect.
-#ifdef HWCVAL_ABSTRACTLOG_EXISTS
 DECLARE_CHECK(eCheckCompToDisplayedBuf, HWC, ERROR, "HWC composed to on-screen buffer", Hwc)
-#else
-DECLARE_CHECK(eCheckCompToDisplayedBuf, HWC, WARN, "HWC composed to on-screen buffer", Hwc)
-#endif
 
 // Legacy code.
 DECLARE_CHECK(eCheckDelayedOnSetComp, HWC, WARN, "HWC has signalled retire fence too early - OR onSet completion delayed by >5ms - frame not validated", Hwc)

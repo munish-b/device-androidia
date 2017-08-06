@@ -62,10 +62,6 @@ ifneq (,$(filter bxt_rvp bxtp_abl,$(TARGET_PRODUCT)))
     LOCAL_CFLAGS += -DHWCVAL_BROXTON
 endif
 
-ifneq ($(wildcard $(VAL_HWC_HARDWARE_COMPOSER_PATH)/val/AbstractLog.h),)
-    LOCAL_CFLAGS += -DHWCVAL_ABSTRACTLOG_EXISTS
-endif
-
 ifneq ($(wildcard system/core/libsync/sw_sync.h),)
     LOCAL_CFLAGS += -DSW_SYNC_H_PATH="<sync/../../sw_sync.h>"
 else

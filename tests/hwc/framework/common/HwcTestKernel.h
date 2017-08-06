@@ -16,8 +16,6 @@
 #ifndef __HwcTestKernel_h__
 #define __HwcTestKernel_h__
 
-#define HWCVAL_ABSTRACTLOG_EXISTS 1
-
 // NOTE: HwcTestDefs.h sets defines which are used in the HWC and DRM stack.
 // -> to be included before any other HWC or DRM header file.
 #include "HwcTestDefs.h"
@@ -43,11 +41,8 @@
 #include "HwcTestProtectionChecker.h"
 #include "HwcTestCompValThread.h"
 
-#ifdef HWCVAL_ABSTRACTLOG_EXISTS
-#include "HwcvalLogParser.h"
-#endif
-
 #include "HwcCrcReader.h"
+#include "HwcvalLogParser.h"
 
 
 class HwcTestState;

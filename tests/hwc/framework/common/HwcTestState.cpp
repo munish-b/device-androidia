@@ -36,11 +36,6 @@
 #include "HwcServiceShim.h"
 #include "HwcvalThreadTable.h"
 
-#ifdef HWCVAL_ABSTRACTLOG_EXISTS
-#include "abstractlog.h"
-extern Hwcval::LogIntercept gLogIntercept;
-#endif
-
 // HwcTestState Constructor
 HwcTestState::HwcTestState()
   : mDrmChecks(0),
@@ -102,10 +97,6 @@ void HwcTestState::rundown()
         delete mInstance;
     }
 }
-#ifdef HWCVAL_ABSTRACTLOG_EXISTS
-Hwcval::SetLogValPtr pfHwcLogSetLogVal = 0;
-#endif
-
 
 void HwcTestState::CreateTestKernel()
 {
@@ -119,7 +110,6 @@ int HwcTestState::LoggingInit(void* libHwcHandle)
     mLibHwcHandle = libHwcHandle;
     const char* sym;
 
-#ifndef HWCVAL_ABSTRACTLOG_EXISTS
     dlerror();
     sym = "hwcLogAdd";
     mpHwcLogAdd = (HwcLogAddPtr)dlsym(mLibHwcHandle, sym);
@@ -133,18 +123,8 @@ int HwcTestState::LoggingInit(void* libHwcHandle)
     {
         HWCLOGI("HWC Shim failed to connect to HWCLogAdd");
     }
-#endif // HWCVAL_ABSTRACTLOG_EXISTS
 
-#ifdef HWCVAL_ABSTRACTLOG_EXISTS
-    sym = "hwcSetLogVal";
-    pfHwcLogSetLogVal = (Hwcval::SetLogValPtr) dlsym(mLibHwcHandle, sym);
-
-    // Enable HWCVAL logging to HWC
     CreateTestKernel();
-    RegisterWithHwc();
-#else
-    CreateTestKernel();
-#endif
 
     return 0;
 }
@@ -202,30 +182,6 @@ int HwcTestState::TestStateInit(HwcShimInitializer* hwcShimInitializer)
 
 void HwcTestState::RegisterWithHwc()
 {
-#ifdef HWCVAL_ABSTRACTLOG_EXISTS
-    // Tell Hwc we want to be informed of compositions
-    if (pfHwcLogSetLogVal)
-    {
-        HWCLOGD("HwcTestState: Registering for log validation");
-        hwcomposer::AbstractCompositionChecker* compositionChecker = 0;
-        Hwcval::LogChecker* logChecker = 0;
-
-        if (mTestKernel)
-        {
-          // compositionChecker =
-          // static_cast<hwcomposer::validation::AbstractCompositionChecker*>
-          // (mTestKernel);
-            logChecker = mTestKernel->GetParser();
-        }
-
-        // gLogIntercept.Register(logChecker, compositionChecker,
-        // ABSTRACTCOMPOSITIONCHECKER_VAL_VERSIONS_SUPPORTED);
-    }
-    else
-    {
-        HWCLOGD("HwcTestState: Can't register for composition check callbacks");
-    }
-#endif
 }
 
 void HwcTestState::SetPreferences()
