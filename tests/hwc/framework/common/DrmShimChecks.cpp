@@ -2334,8 +2334,6 @@ void DrmShimChecks::CheckSetDisplayExit(drm_mode_set_display* drmDisp, DrmShimCr
     DumpMemoryUsage();
 }
 
-#ifdef DRM_IOCTL_MODE_ATOMIC
-
 bool DrmShimChecks::ConvertToSetDisplay(struct drm_mode_atomic* drmAtomic, drm_mode_set_display*& drmDisp, DrmShimCrtc::DrmModeAddFB2Func addFb2Func)
 {
     PushThreadState ts("ConvertToSetDisplay (locking)");
@@ -2845,8 +2843,6 @@ EXPORT_API void DrmShimChecks::AtomicUnshimUserData(struct drm_mode_atomic* drmA
         break;
     }
 }
-
-#endif // DRM_IOCTL_MODE_ATOMIC
 
 void DrmShimChecks::CheckIoctlI915SetPlaneZOrder(struct drm_i915_set_plane_zorder* ord)
 {

@@ -219,9 +219,7 @@
 #define HWCVAL_DRM_ASPECT flags
 #endif
 
-#ifdef DRM_IOCTL_MODE_ATOMIC
 #define HWCVAL_DRM_HAS_BLEND
-#endif
 
 // Special internal blending value for use in combined transforms
 #define HWCVAL_BLENDING_PASSTHROUGH 0xaaca9955

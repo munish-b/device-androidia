@@ -26,7 +26,7 @@
 // This should be moved to $ANDROID_TOP/external/drm
 
 /* Set display IOCTL */
-#define DRM_IOCTL_MODE_SETDISPLAY DRM_IOWR(0xBC, struct drm_mode_set_display)
+#define DRM_IOCTL_MODE_ATOMIC DRM_IOWR(0xBC, struct drm_mode_atomic)
 
 /* drm_mode_set_display API */
 

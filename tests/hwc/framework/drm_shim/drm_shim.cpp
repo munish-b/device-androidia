@@ -1577,14 +1577,7 @@ static const char* DrmDecode(unsigned long request)
         else DECODE_DRM(DRM_IOCTL_I915_EXT_IOCTL) else DECODE_DRM(
             DRM_IOCTL_I915_EXT_USERDATA)
 #endif
-#ifdef DRM_IOCTL_MODE_ATOMIC
         else DECODE_DRM(DRM_IOCTL_MODE_ATOMIC)
-#else
-#ifdef DRM_IOCTL_MODE_SETDISPLAY
-        else DECODE_DRM(DRM_IOCTL_MODE_SETDISPLAY)
-#endif
-#endif
-
         else {
         static char buf[20];
         sprintf(buf, "0x%lx", request);
@@ -1613,8 +1606,6 @@ int drmIoctl(int fd, unsigned long request, void *arg)
             struct drm_i915_reserved_reg_bit_2* decrypt = (struct drm_i915_reserved_reg_bit_2*) arg;
             checks->CheckIoctlI915SetDecrypt(decrypt);
         }
-
-#ifdef DRM_IOCTL_MODE_ATOMIC
         // Nuclear API is defined in the header files
         else if (request == DRM_IOCTL_MODE_ATOMIC)
         {
@@ -1660,18 +1651,6 @@ int drmIoctl(int fd, unsigned long request, void *arg)
                 return st;
             }
         }
-#else
-        if (request == DRM_IOCTL_MODE_SETDISPLAY) {
-            drm_mode_set_display* drmDisp = (drm_mode_set_display*) arg;
-            int st = checks->CheckSetDisplayEnter(drmDisp, crtc);
-
-            if (st != 0)
-            {
-                // Failure spoofing
-                return st;
-            }
-        }
-#endif
 #if HWCVAL_HAVE_ZORDER_API
         else if (request == DRM_IOCTL_I915_SET_PLANE_ZORDER)
         {
@@ -1811,17 +1790,6 @@ int drmIoctl(int fd, unsigned long request, void *arg)
     }
 
     IoctlLatencyCheck(request, durationNs);
-
-    if (checks)
-    {
-        if (request == DRM_IOCTL_MODE_SETDISPLAY)
-        {
-            drm_mode_set_display* drmDisp = (drm_mode_set_display*) arg;
-            checks->CheckSetDisplayExit(drmDisp, crtc, status);
-            flipRequestTimeStat.Add(float(durationNs) / HWCVAL_US_TO_NS);
-        }
-    }
-
     return status;
 }
 

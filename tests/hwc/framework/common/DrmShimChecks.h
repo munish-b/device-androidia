@@ -171,11 +171,9 @@ public:
 
     EXPORT_API void CheckSetDisplayExit ( drm_mode_set_display* drmDisp, DrmShimCrtc* crtc, int ret);
 
-#ifdef DRM_IOCTL_MODE_ATOMIC
     EXPORT_API bool ConvertToSetDisplay(struct drm_mode_atomic* drmAtomic, drm_mode_set_display*& drmDisp, DrmShimCrtc::DrmModeAddFB2Func addFb2Func);
     EXPORT_API void AtomicShimUserData(struct drm_mode_atomic* drmAtomic);
     EXPORT_API void AtomicUnshimUserData(struct drm_mode_atomic* drmAtomic);
-#endif
 
     EXPORT_API void CheckGetResourcesExit(int fd, drmModeResPtr res);
 

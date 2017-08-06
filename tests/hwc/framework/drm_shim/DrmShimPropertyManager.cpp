@@ -175,9 +175,7 @@ drmModePropertyPtr DrmShimPropertyManager::GetProperty(int fd, uint32_t property
     HWCLOGV_COND(eLogNuclear, "DrmShimPropertyManager::GetProperty fd %d propertyId 0x%x",
         fd, propertyId);
 
-#ifdef DRM_IOCTL_MODE_ATOMIC
     if ((propertyId < HWCVAL_SPOOF_PROPERTY_OFFSET) || (propertyId > eDrmPropLast))
-#endif
     {
         // Property id out of spoof range - use normal GetProperty
         drmModePropertyPtr prop = fpDrmModeGetProperty(fd, propertyId);
@@ -195,7 +193,6 @@ drmModePropertyPtr DrmShimPropertyManager::GetProperty(int fd, uint32_t property
 
         return prop;
     }
-#ifdef DRM_IOCTL_MODE_ATOMIC
     else
     {
         uint32_t ix = propertyId - HWCVAL_SPOOF_PROPERTY_OFFSET;
@@ -209,7 +206,6 @@ drmModePropertyPtr DrmShimPropertyManager::GetProperty(int fd, uint32_t property
         HWCLOGV_COND(eLogNuclear, "DrmShimPropertyManager::GetProperty name %s returning prop @%p", name, prop);
         return prop;
     }
-#endif
 }
 
 

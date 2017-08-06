@@ -226,7 +226,6 @@ uint32_t DrmShimPlane::GetDrmPlaneId()
     // So we invent this concept of a "DrmPlaneId" which is the same as the
     // regular plane id on the sprite planes, but on the main plane we
     // instead use the CRTC Id.
-#ifdef DRM_IOCTL_MODE_ATOMIC
     if (HwcTestState::getInstance()->IsOptionEnabled(eOptSpoofNuclear))
     {
         if (IsMainPlane())
@@ -234,7 +233,7 @@ uint32_t DrmShimPlane::GetDrmPlaneId()
             return GetCrtc()->GetCrtcId();
         }
     }
-#endif
+
     return mPlaneId;
 }
 
