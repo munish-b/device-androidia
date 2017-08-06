@@ -41,11 +41,6 @@
 extern Hwcval::LogIntercept gLogIntercept;
 #endif
 
-#ifdef HWCVAL_ABSTRACTCOMPOSITIONCHECKER_EXISTS
-// We support version 0 of AbstractCompositionChecker interface
-#define ABSTRACTCOMPOSITIONCHECKER_VAL_VERSIONS_SUPPORTED (1<<0)
-#endif
-
 // HwcTestState Constructor
 HwcTestState::HwcTestState()
   : mDrmChecks(0),
@@ -109,11 +104,6 @@ void HwcTestState::rundown()
 }
 #ifdef HWCVAL_ABSTRACTLOG_EXISTS
 Hwcval::SetLogValPtr pfHwcLogSetLogVal = 0;
-#else
-#ifdef HWCVAL_ABSTRACTCOMPOSITIONCHECKER_EXISTS
-typedef uint32_t (*HwcLogSetCompositionCheckPtr) (hwcomposer::AbstractCompositionChecker* compositionChecker);
-static HwcLogSetCompositionCheckPtr pfHwcLogSetCompositionCheck = 0;
-#endif
 #endif
 
 
@@ -154,10 +144,6 @@ int HwcTestState::LoggingInit(void* libHwcHandle)
     RegisterWithHwc();
 #else
     CreateTestKernel();
-#ifdef HWCVAL_ABSTRACTCOMPOSITIONCHECKER_EXISTS
-    sym = "hwcLogSetCompositionCheck";
-    pfHwcLogSetCompositionCheck = (HwcLogSetCompositionCheckPtr)dlsym(mLibHwcHandle, sym);
-#endif
 #endif
 
     return 0;
@@ -239,30 +225,6 @@ void HwcTestState::RegisterWithHwc()
     {
         HWCLOGD("HwcTestState: Can't register for composition check callbacks");
     }
-#else
-#ifdef HWCVAL_ABSTRACTCOMPOSITIONCHECKER_EXISTS
-    // Tell Hwc we want to be informed of compositions
-    if (pfHwcLogSetCompositionCheck)
-    {
-        HWCLOGD("HwcTestState: Registering for composition check callbacks");
-        hwcomposer::AbstractCompositionChecker* compositionChecker =
-            static_cast<hwcomposer::AbstractCompositionChecker*> (mTestKernel);
-        uint32_t hwcSupportedVersionMask = (pfHwcLogSetCompositionCheck)(compositionChecker);
-
-        if ((hwcSupportedVersionMask & ABSTRACTCOMPOSITIONCHECKER_VAL_VERSIONS_SUPPORTED) == 0)
-        {
-            (pfHwcLogSetCompositionCheck)(0);
-            HWCERROR(eCheckInternalError, "AbstractCompositionChecker incompatible between HWC and validation.");
-            HWCLOGE("  - Composition interception disabled, checks will fail.");
-        }
-    }
-    else
-    {
-        HWCLOGD("HwcTestState: Can't register for composition check callbacks");
-    }
-#else
-    HWCLOGD("Composition Check interface (AbstractCompositionChecker) unavailable");
-#endif
 #endif
 }
 

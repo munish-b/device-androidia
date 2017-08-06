@@ -42,9 +42,6 @@
 
 #include "HwcTestProtectionChecker.h"
 #include "HwcTestCompValThread.h"
-#ifdef HWCVAL_ABSTRACTCOMPOSITIONCHECKER_EXISTS
-#include "AbstractCompositionChecker.h"
-#endif
 
 #ifdef HWCVAL_ABSTRACTLOG_EXISTS
 #include "HwcvalLogParser.h"
@@ -62,11 +59,7 @@ class HwcTestVideoControl;
 struct drm_mode_set_display;
 
 #define EXPORT_API __attribute__ ((visibility("default")))
-class EXPORT_API HwcTestKernel
-#ifdef HWCVAL_ABSTRACTCOMPOSITIONCHECKER_EXISTS
-    : public hwcomposer::validation::AbstractCompositionChecker
-#endif
-      {
+class EXPORT_API HwcTestKernel {
 public:
     struct BoKey
     {
@@ -299,21 +292,6 @@ public:
 
     // Complete Widi state transition to disabled (if started)
     EXPORT_API void CompleteWidiDisable();
-#ifdef HWCVAL_ABSTRACTCOMPOSITIONCHECKER_EXISTS
-    // Composition check
-    // From AbstractCompositionChecker
-    typedef hwcomposer::validation::AbstractCompositionChecker::ValLayer
-        HwcValLayer;
-    virtual void* CreateContext(const char* composer);
-    virtual void AddSource(void* ctx, const HwcValLayer& layer, const char* description);
-    virtual void CheckComposition(void* ctx, const HwcValLayer& layer, const char* description);
-
-    // Composition check
-    // Internal
-    DrmShimTransformVector* CreateCompositionContext(const char* composer);
-    void AddCompositionSource(DrmShimTransformVector& contributors, const HwcValLayer& layer, const char* description);
-    void CheckComposition(DrmShimTransformVector& contributors, const HwcValLayer& layer, const char* description);
-#endif
 
     // Provide harness test with a way to wait until composition validation finishes
     EXPORT_API void WaitForCompValToComplete();
