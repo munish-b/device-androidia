@@ -106,19 +106,6 @@ LOCAL_SHARED_LIBRARIES += \
     libc_malloc_debug_leak
 endif
 
-# Include Widi support if Intel Widi is available on this platform
-ifeq ($(INTEL_WIDI), true)
-    LOCAL_SRC_FILES += \
-        HwchWidi.cpp \
-        HwchWidiReleaseFencePool.cpp \
-        HwchWidiFrameListener.cpp \
-        HwchWidiFrameTypeChangeListener.cpp \
-        HwchLayerWindowed.cpp \
-        HwchWidiTests.cpp
-
-    LOCAL_SHARED_LIBRARIES += libhwcwidi libEGL
-endif
-
 LOCAL_MODULE:= valhwcharness
 LOCAL_MODULE_PATH=$(VAL_HWC_TARGET_TEST_PATH)/bin
 

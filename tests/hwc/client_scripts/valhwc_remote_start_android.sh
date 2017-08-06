@@ -27,7 +27,7 @@ sleep 1
 
 # Test to see if the shims are running
 drm_shim_installed=`grep -c drmshim $LIBDIR/libdrm.so`
-hwc_shim_installed=`grep -c valhwc_composershim $LIBDIR/hw/hwcomposer.$TARGETSHIM.so`
+hwc_shim_installed=`grep -c valhwc_composershim $LIBDIR/hw/hwcomposer.android_ia.so`
 sf_shim_installed=`grep -c surfaceflingershim /system/bin/surfaceflinger`
 if [[ $drm_shim_installed == 0 || $hwc_shim_installed == 0 || $sf_shim_installed == 0 ]]
 then

@@ -91,14 +91,8 @@ BUILD_SHIM_HWCSERVICE := 0
 BUILD_HWCSERVICE_API := 1
 LOCAL_CFLAGS += -DHWCVAL_BUILD_HWCSERVICE_API
 
-# In non-UFO builds we don't have a UFO_PAVP flag available
-# So if we want to decide which builds will support PAVP and which will not, we should choose this ourselves on some
-# other basis such as target platform.
-#
-# Not currently building PAVP on N-dessert
-ifneq ($(major), 7)
-    BUILD_PAVP := 1
-endif
+# Not currently building PAVP
+BUILD_PAVP := 0
 
 ifneq ($(shell grep -r drm_i915_disp_screen_control ${VAL_HWC_LIB_DRM_PATHS}),)
     LOCAL_CFLAGS += -DBUILD_I915_DISP_SCREEN_CONTROL
