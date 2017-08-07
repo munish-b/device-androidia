@@ -56,8 +56,6 @@ class CHwcFrameControl;
 
 struct ShimHwcProcs
 {
-  hwcval_procs_t procs; // must be first member of structure
-  hwcval_procs_t const *orig_procs;
     HwcShim *shim;
 };
 
@@ -185,10 +183,6 @@ class HwcShim : hwc2_device, public HwcShimInitializer {
         /// Implementation of Real HWC - HookQuery
         static int HookQuery(struct hwc2_device *dev, int what, int *value);
 
-        /// Implementation of Real HWC - HookRegisterProcs
-        static void HookRegisterProcs(struct hwc2_device *dev,
-                                      hwcval_procs_t const *procs);
-
         /// Implementation of Real HWC - HookDump
         static void HookDump(struct hwc2_device *dev, char *buff, int buff_len);
 
@@ -217,9 +211,6 @@ class HwcShim : hwc2_device, public HwcShimInitializer {
 
         /// Implementation of Real HWC - OnQuery
         int OnQuery(int what, int* value);
-
-        /// Implementation of Real HWC - OnRegisterProcs
-        void OnRegisterProcs(hwcval_procs_t const *procs);
 
         /// Implementation of Real HWC - OnDump
         void OnDump(char *buff, int buff_len);

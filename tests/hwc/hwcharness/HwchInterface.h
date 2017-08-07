@@ -98,7 +98,6 @@ namespace Hwch
             struct cb_context;
 
             hwc2_device *hwc_composer_device;
-            cb_context*           mCBContext;
 
             uint32_t mDisplayNeedsUpdate;    // Hotplug received on this display and not processed yet
             uint32_t mNumDisplays;           // (Index of last connected display) + 1

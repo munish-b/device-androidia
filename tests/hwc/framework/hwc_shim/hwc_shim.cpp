@@ -84,20 +84,6 @@ extern "C"
 // const char * cLibiVPPath = HWCVAL_LIBPATH "/libivp.so";
 // const char * cLibiVPVendorPath = HWCVAL_VENDOR_LIBPATH "/libivp.so";
 
-static void hook_invalidate(const hwcval_procs *procs) {
-    const ShimHwcProcs *p = (const ShimHwcProcs *)procs;
-    p->orig_procs->invalidate(p->orig_procs);
-}
-
-static void hook_vsync(const hwcval_procs *procs, int disp, int64_t timestamp) {
-    const ShimHwcProcs *p = (const ShimHwcProcs *)procs;
-    p->orig_procs->vsync(p->orig_procs, disp, timestamp);
-}
-
-static void hook_hotplug(const hwcval_procs *procs, int disp, int connected) {
-    const ShimHwcProcs *p = (const ShimHwcProcs *)procs;
-    p->orig_procs->hotplug(p->orig_procs, disp, connected);
-}
 
 HwcShim::HwcShim(const hw_module_t* module)
 {
@@ -118,9 +104,6 @@ HwcShim::HwcShim(const hw_module_t* module)
     callTimeThreshold = 200000000;
 
     mShimProcs.shim = this;
-    mShimProcs.procs.invalidate = hook_invalidate;
-    mShimProcs.procs.vsync = hook_vsync;
-    mShimProcs.procs.hotplug = hook_hotplug;
 
     mHwc1 = new Hwcval::Hwc1();
 
@@ -869,39 +852,6 @@ int HwcShim::HookQuery(struct hwc2_device *dev, int what, int *value) {
     return ret;
 }
 
-void HwcShim::HookRegisterProcs(struct hwc2_device *dev,
-                                hwcval_procs_t const *procs) {
-  ALOGE("HwcShim::HookProcs %p", dev);
-    GetComposerShim(dev)->OnRegisterProcs(procs);
-}
-
-void HwcShim::HookDump(struct hwc2_device *dev, char *buff, int buff_len) {
-    HWCLOGV("HwcShim::HookDump");
-    GetComposerShim(dev)->OnDump(buff, buff_len);
-}
-
-int HwcShim::HookGetDisplayConfigs(struct hwc2_device *dev, int disp,
-                                   uint32_t *configs, size_t *numConfigs) {
-    HWCLOGV_COND(eLogHarness, "HwcShim::HookGetDisplayConfigs");
-    int ret = GetComposerShim(dev)->OnGetDisplayConfigs(disp, configs, numConfigs);
-    return ret;
-}
-
-int HwcShim::HookGetActiveConfig(struct hwc2_device *dev, int disp) {
-    HWCLOGV_COND(eLogHarness, "HwcShim::HookGetActiveConfig");
-    int ret = GetComposerShim(dev)->OnGetActiveConfig(disp);
-    return ret;
-}
-
-int HwcShim::HookGetDisplayAttributes(struct hwc2_device *dev, int disp,
-                                      uint32_t config,
-                                      const uint32_t *attributes,
-                                      int32_t *values) {
-    HWCLOGV_COND(eLogHarness, "HwcShim::HookGetDisplayAttributes");
-    int ret = GetComposerShim(dev)->OnGetDisplayAttributes(disp, config, attributes, values);
-    return ret;
-}
-
 
 void HwcShim::StartCallTime(void)
 {
@@ -1049,12 +999,6 @@ int HwcShim::OnQuery(int what, int* value)
 {
   int ret = -1; // hwc_composer_device->query(hwc_composer_device, what, value);
     return ret;
-}
-
-void HwcShim::OnRegisterProcs(hwcval_procs_t const *procs) {
-    mShimProcs.orig_procs = procs;
-    // hwc_composer_device->registerProcs(hwc_composer_device,
-    // &mShimProcs.procs);
 }
 
 void HwcShim::OnDump(char *buff, int buff_len)

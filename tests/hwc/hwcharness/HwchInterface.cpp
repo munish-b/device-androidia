@@ -38,21 +38,8 @@ static bool hwcHasApiVersion(const hwc2_device_t *hwc, uint32_t version) {
     return hwcApiVersion(hwc) >= (version & HARDWARE_API_VERSION_2_MAJ_MIN_MASK);
 }
 
-struct Hwch::Interface::cb_context
-{
-  struct callbacks : public hwcval_procs_t {
-        // these are here to facilitate the transition when adding
-        // new callbacks (an implementation can check for NULL before
-        // calling a new callback).
-        void (*zero[4])(void);
-    };
-    callbacks procs;
-    Hwch::Interface* iface;
-};
-
 Hwch::Interface::Interface() :
     hwc_composer_device(0),
-    mCBContext(new cb_context),
     mDisplayNeedsUpdate(0),          // 0 is always connected
     mNumDisplays(0),
     mRepaintNeeded(false)

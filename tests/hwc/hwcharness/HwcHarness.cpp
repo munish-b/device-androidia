@@ -1482,7 +1482,7 @@ int HwcTestRunner::RunTests()
         // If we think the shims should be running, make sure they are.
         if (!mNoShims)
         {
-            mState->CheckRunningShims(HwcTestState::eHwcShim | HwcTestState::eDrmShim | HwcTestState::eIvpShim);
+           mState->CheckRunningShims(HwcTestState::eHwcShim);
         }
 
         LogTestResult(mTestName.string(), testArgs.string());
