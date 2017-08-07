@@ -402,11 +402,6 @@ bool GlTargetPlatform::InitTarget(android::sp<android::GraphicBuffer> buf)
             checkGlError("glbindFramebuffer");
             m_fbo = framebuffer;
 
-
-            glEnable(GL_TEXTURE_2D);
-            checkGlError("glenable - texture 2d");
-
-
             glActiveTexture(GL_TEXTURE0);
             checkGlError("glActiveTexture");
 
