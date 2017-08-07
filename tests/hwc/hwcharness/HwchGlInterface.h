@@ -206,9 +206,6 @@ namespace Hwch
             void loadOrthof(GLfloat *m, GLfloat l, GLfloat r, GLfloat b, GLfloat t, GLfloat n, GLfloat f);
             void loadOrtho2Df(GLfloat *m, GLfloat l, GLfloat r, GLfloat b, GLfloat t);
 
-            // extension function for resolves
-            PFNGLEGLIMAGERESOLVEOESINTEL pfnImageResolve;
-
 
             GLuint m_fbo;
             GLuint m_rtTextureID;

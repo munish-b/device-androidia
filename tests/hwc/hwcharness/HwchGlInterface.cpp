@@ -120,8 +120,6 @@ GlTargetPlatform::GlTargetPlatform()
 {
     m_clearMask = GL_COLOR_BUFFER_BIT;
 
-    pfnImageResolve = (PFNGLEGLIMAGERESOLVEOESINTEL)(eglGetProcAddress("glEGLImageResolveOESINTEL"));
-
     m_display = EGL_NO_DISPLAY;
     m_context = EGL_NO_CONTEXT;
     m_surface = EGL_NO_SURFACE;
@@ -240,15 +238,8 @@ bool GlTargetPlatform::EndFrame(void)
 
 bool GlTargetPlatform::Resolve(BufferHandle bh)
 {
-    bool rv = false;
-    HWCLOGD_COND(eLogGl, "GlTargetPlatform::Resolve");
-
-    if (pfnImageResolve)
-    {
-        pfnImageResolve(GL_TEXTURE_2D, bh);
-    }
-
-    return (rv);
+    ALOGE("Resolve support is missing \n");
+    return true;
 }
 
 
