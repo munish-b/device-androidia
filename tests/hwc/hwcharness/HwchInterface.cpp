@@ -174,9 +174,12 @@ int Hwch::Interface::GetDisplayAttributes(uint32_t disp)
                 hwc2_dvc->getFunction(hwc2_dvc,
                                       HWC2_FUNCTION_GET_DISPLAY_CONFIGS));
 
-        if (pfngetDisplayConfigs) {
-          ret = pfngetDisplayConfigs(hwc2_dvc, disp, &nc, configs);
-        }
+	if (pfngetDisplayConfigs) {
+	  ret = pfngetDisplayConfigs(hwc2_dvc, disp, &nc, NULL);
+	  if (nc > 0) {
+	      ret = pfngetDisplayConfigs(hwc2_dvc, disp, &nc, configs);
+	  }
+	}
         numConfigs = nc;
 
         if (ret != android::NO_ERROR)
