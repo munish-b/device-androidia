@@ -89,7 +89,7 @@ bool HwcTestCompValThread::Compose(android::sp<DrmShimBuffer> buf, Hwcval::Layer
         ValLayer& layer = sources.GetLayer(i);
 
         HwcvalLayerToHwc1("HwcTestCompValThread::Compose: input", i, valSources[i], layer, pRect, rectsRemaining);
-        valSources[i].compositionType = HWC_FRAMEBUFFER;
+        valSources[i].compositionType = HWC2_COMPOSITION_CLIENT;
     }
 
     // Replace the original dest buffer in the layer list with one of our own
@@ -395,12 +395,12 @@ void HwcTestCompValThread::TakeTransformedCopy(const hwcval_layer_t *layer,
 
     HWCLOGD("TakeTransformedCopy: %s",buf->IdStr(strbuf));
     hwcval_layer_t srcLayer = *layer;
-    srcLayer.compositionType = HWC_FRAMEBUFFER;
+    srcLayer.compositionType = HWC2_COMPOSITION_CLIENT;
     srcLayer.blending = HWC_BLENDING_NONE;
 
     hwcval_layer_t tgtLayer;
     tgtLayer.handle = spDestBuffer->handle;
-    tgtLayer.compositionType = HWC_FRAMEBUFFER;
+    tgtLayer.compositionType = HWC2_COMPOSITION_CLIENT;
     tgtLayer.hints = 0;
     tgtLayer.flags = 0;
     tgtLayer.transform = 0;

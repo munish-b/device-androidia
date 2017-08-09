@@ -184,7 +184,7 @@ Hwcval::Hwc1::CheckSetEnter(size_t numDisplays,
         //    from intercepted DRM calls that will allow us to understand the relationships between gralloc buffer handle,
         //    buffer object and frambuffer ID.
         //
-        // 2. If any buffers are to be surface flinger composed - i.e. they have a composition type of HWC_FRAMEBUFFER -
+        // 2. If any buffers are to be surface flinger composed - i.e. they have a composition type of HWC2_COMPOSITION_CLIENT -
         //    then a transform mapping is created to track this surface flinger composition. This is then attached to
         //    the DrmShimBuffer of the framebuffer target.
         //
@@ -236,7 +236,7 @@ Hwcval::Hwc1::CheckSetEnter(size_t numDisplays,
 
             const hwcval_layer_t *fbtLayer =
                 disp->hwLayers + disp->numHwLayers - 1;
-            ALOG_ASSERT(fbtLayer->compositionType == HWC_FRAMEBUFFER_TARGET);
+            ALOG_ASSERT(fbtLayer->compositionType == HWC2_COMPOSITION_DEVICE);
 
             const hwc_rect_t& fbtRect = fbtLayer->displayFrame;
             if (displayIx < HWCVAL_VD_WIDI_DISPLAY_INDEX)
@@ -259,7 +259,7 @@ Hwcval::Hwc1::CheckSetEnter(size_t numDisplays,
 
                 switch (layer->compositionType)
                 {
-                    case HWC_FRAMEBUFFER:
+                    case HWC2_COMPOSITION_CLIENT:
                     {
                         sfCompositionRequired = true;
                         bufferType="Framebuffer";
@@ -290,8 +290,8 @@ Hwcval::Hwc1::CheckSetEnter(size_t numDisplays,
 
                         break;
                     }
-
-                    case HWC_FRAMEBUFFER_TARGET:
+#if 0 
+                    case HWC2_COMPOSITION_DEVICE:
                     {
                         bufferType = "FramebufferTarget";
 
@@ -321,8 +321,8 @@ Hwcval::Hwc1::CheckSetEnter(size_t numDisplays,
 
                         break;
                     }
-
-                    case HWC_OVERLAY:
+#endif
+                    case HWC2_COMPOSITION_DEVICE:
                     {
                         if (layer->handle == 0)
                         {

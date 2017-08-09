@@ -102,7 +102,7 @@ namespace Hwcval
          * fence to be signaled before returning, but the HWC must wait for
          * all buffers to be signaled before reading from them.
          *
-         * HWC_FRAMEBUFFER layers will never have an acquire fence, since
+         * HWC2_COMPOSITION_CLIENT layers will never have an acquire fence, since
          * reads from them are complete before the framebuffer is ready for
          * display.
          *
@@ -125,7 +125,7 @@ namespace Hwcval
          * the blit completes, but the overlay layers can't be reused until
          * a subsequent frame has been displayed.
          *
-         * Since HWC doesn't read from HWC_FRAMEBUFFER layers, it shouldn't
+         * Since HWC doesn't read from HWC2_COMPOSITION_CLIENT layers, it shouldn't
          * produce a release fence for them. The releaseFenceFd will be -1
          * for these layers when set() is called.
          *

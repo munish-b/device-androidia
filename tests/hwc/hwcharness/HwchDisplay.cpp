@@ -229,7 +229,7 @@ void Hwch::Display::CreateFramebufferTarget()
             HWCERROR(eCheckTestBufferAlloc, "Failed to create framebuffer target for display %d", mDisplayIx);
         }
 
-        mFramebufferTarget->SetCompositionType(HWC_FRAMEBUFFER_TARGET);
+        mFramebufferTarget->SetCompositionType(HWC2_COMPOSITION_DEVICE);
         mFramebufferTarget->SetBlending(HWC_BLENDING_PREMULT);
 
         mFramebufferTarget->SetPattern(new Hwch::FramebufferTargetPtn());

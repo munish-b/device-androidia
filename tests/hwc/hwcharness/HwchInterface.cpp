@@ -308,6 +308,21 @@ int Hwch::Interface::setLayerCompositionType(hwc2_display_t disp,
   return ret;
 }
 
+int Hwch::Interface::setLayerBuffer(hwc2_display_t disp, hwc2_layer_t layer,
+                                       buffer_handle_t buffer, int32_t acquireFence) {
+  int ret = -1;
+  hwc2_device_t *hwc2_dvc =
+      reinterpret_cast<hwc2_device_t *>(hwc_composer_device);
+  HWC2_PFN_SET_LAYER_BUFFER pfnsetLayerBuffer =
+      reinterpret_cast<HWC2_PFN_SET_LAYER_BUFFER>(
+          hwc2_dvc->getFunction(hwc2_dvc, HWC2_FUNCTION_SET_LAYER_BUFFER));
+
+  if (pfnsetLayerBuffer) {
+    ret = pfnsetLayerBuffer(hwc2_dvc, disp, layer, buffer, acquireFence);
+  }
+  return ret;
+}
+
 int Hwch::Interface::setLayerBlendMode(hwc2_display_t disp, hwc2_layer_t layer,
                                        int32_t mode) {
   int ret = -1;

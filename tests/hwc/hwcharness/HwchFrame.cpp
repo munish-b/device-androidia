@@ -786,11 +786,7 @@ int Hwch::Frame::Send()
 
             if (connected[disp])
             {
-                if (mInterface.IsRepaintNeeded())
-                {
                     mGeometryChanged[disp] = true;
-                }
-
                 uint32_t numLayers = mLayers[disp].size();
                 hwcval_display_contents_t *dc = pDc;
                 dcs[disp].display = 0;
@@ -829,8 +825,10 @@ int Hwch::Frame::Send()
 #endif
                     hwc2_layer_t outLayer;
                     mInterface.CreateLayer(disp, &outLayer);
-                    ALOGE("Layer ID = %llu", outLayer);
                     dc->hwLayers[i].handle = layer->handle = layer->Send();
+                    ALOGE("Layer ID = %llu handle = %p", outLayer,layer->handle);
+                    mInterface.setLayerBuffer(disp, outLayer,
+                                                       layer->handle, -1);
                     mInterface.setLayerCompositionType(disp, outLayer,
                                                        layer->mCurrentCompType);
                     layer->compositionType = layer->mCurrentCompType;
@@ -883,6 +881,9 @@ int Hwch::Frame::Send()
                 mInterface.setLayerPlaneAlpha(disp, targetLayer,
                                               target.mPlaneAlpha);
                 dc->hwLayers[numLayers].handle = target.handle = target.Send();
+                mInterface.setLayerBuffer(disp, targetLayer,
+                                                       target.handle, -1);
+
 
                 hwc_region_t targetregion;
                 targetregion.rects = target.AssignVisibleRegions(

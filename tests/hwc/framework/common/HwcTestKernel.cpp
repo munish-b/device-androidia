@@ -799,7 +799,7 @@ android::sp<DrmShimBuffer> HwcTestKernel::IvpCoordinateCheck(DrmShimTransformVec
 // TODO: Rework to use ValLayer etc.
 // No point in doing this until we have NV12 supported in SSIM.
             hwcval_layer_t layer;
-            layer.compositionType = HWC_FRAMEBUFFER;
+            layer.compositionType = HWC2_COMPOSITION_CLIENT;
             layer.hints = 0;
             layer.flags = 0;
             layer.handle = ivpLayer->gralloc_handle;
@@ -1055,7 +1055,7 @@ void HwcTestKernel::NotifyIvpExecExit(iVPCtxID *ctx, iVP_layer_t *primarySurf,
 // TODO: Rework to use ValLayer etc.
 // No point in doing this until we have NV12 supported in SSIM.
             hwcval_layer_t tgtLayer;
-            tgtLayer.compositionType = HWC_FRAMEBUFFER;
+            tgtLayer.compositionType = HWC2_COMPOSITION_CLIENT;
             tgtLayer.hints = 0;
             tgtLayer.flags = 0;
             tgtLayer.handle = buf->GetHandle();

@@ -1409,7 +1409,7 @@ status_t HwcTestReferenceComposer::beginFrame(uint32_t numSources,
     uint32_t numSourcesToCompose = 0;
     for (uint32_t i=0; i<numSources; ++i)
     {
-        if ((source[i].compositionType == HWC_FRAMEBUFFER) &&
+        if ((source[i].compositionType == HWC2_COMPOSITION_CLIENT) &&
             (source[i].handle != 0))
         {
             ++numSourcesToCompose;
@@ -1481,7 +1481,7 @@ status_t HwcTestReferenceComposer::beginFrame(uint32_t numSources,
 
     for (uint32_t i = 0; i < numSources; ++i)
     {
-        if ((source[i].compositionType == HWC_FRAMEBUFFER) &&
+        if ((source[i].compositionType == HWC2_COMPOSITION_CLIENT) &&
             (source[i].handle != 0))
         {
             bool sourceEGLImageCreated = false;
@@ -1720,7 +1720,7 @@ status_t HwcTestReferenceComposer::Compose(uint32_t numSources,
     {
       hwcval_layer_t &srcLayer = source[index];
 
-        if ((srcLayer.compositionType == HWC_FRAMEBUFFER) &&
+        if ((srcLayer.compositionType == HWC2_COMPOSITION_CLIENT) &&
             (srcLayer.handle != 0))
         {
             // Wait for any acquire fence
@@ -1821,7 +1821,7 @@ android::sp<android::GraphicBuffer> HwcTestReferenceComposer::CopyBuf(buffer_han
 
     hwcval_layer_t srcLayer;
     srcLayer.handle = handle;
-    srcLayer.compositionType = HWC_FRAMEBUFFER;
+    srcLayer.compositionType = HWC2_COMPOSITION_CLIENT;
     srcLayer.hints = 0;
     srcLayer.flags = 0;
     srcLayer.transform = 0;

@@ -61,6 +61,8 @@ namespace Hwch
             int CreateLayer(hwc2_display_t disp, hwc2_layer_t *outLayer);
             int setLayerCompositionType(hwc2_display_t disp, hwc2_layer_t layer,
                                         int32_t type);
+            int setLayerBuffer(hwc2_display_t disp, hwc2_layer_t layer,
+                                       buffer_handle_t buffer, int32_t acquireFencea); 
             int setLayerBlendMode(hwc2_display_t disp, hwc2_layer_t layer,
                                   int32_t mode);
             int setLayerTransform(hwc2_display_t disp, hwc2_layer_t layer,

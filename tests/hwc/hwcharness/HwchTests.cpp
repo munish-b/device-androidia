@@ -37,7 +37,6 @@ int Hwch::BasicTest::RunScenario()
 
     Hwch::Layer layer1("data", screenWidth, screenHeight);
     layer1.SetPattern(new Hwch::SolidColourPtn(eRed));
-
     Hwch::Layer layer2("Foreground Rectangle", 600, 400);
     layer2.SetLogicalDisplayFrame(LogDisplayRect(300, 200, 900, 600));
     layer2.SetPattern(new Hwch::HorizontalLinePtn(10.0, eGreen, eBlue));

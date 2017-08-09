@@ -168,8 +168,8 @@ Hwch::Layer::Layer()
 Hwch::Layer::Layer(const char* name,
     Hwch::Coord<int32_t> width, Hwch::Coord<int32_t> height,
     uint32_t pixelFormat, int32_t numBuffers, uint32_t usage)
-  : mCompType(HWC_FRAMEBUFFER),
-    mCurrentCompType(HWC_FRAMEBUFFER),
+  : mCompType(HWC2_COMPOSITION_CLIENT),
+    mCurrentCompType(HWC2_COMPOSITION_CLIENT),
     mHints(0),
     mFlags(0),
     mLogicalTransform(0),
@@ -215,8 +215,8 @@ Hwch::Layer::Layer(const char* name,
 }
 
 Hwch::Layer::Layer(const Layer& rhs, bool clone)
-  : mCompType(HWC_FRAMEBUFFER),
-    mCurrentCompType(HWC_FRAMEBUFFER),
+  : mCompType(HWC2_COMPOSITION_CLIENT),
+    mCurrentCompType(HWC2_COMPOSITION_CLIENT),
     mHints(rhs.mHints),
     mFlags(rhs.mFlags),
     mLogicalTransform(rhs.mLogicalTransform),

@@ -24,12 +24,10 @@ Hwcval::CompositionType Hwcval::Hwc1CompositionTypeToHwcval(uint32_t composition
 {
     switch (compositionType)
     {
-        case HWC_FRAMEBUFFER:
+        case HWC2_COMPOSITION_CLIENT:
             return Hwcval::CompositionType::SF;
-        case HWC_OVERLAY:
+        case HWC2_COMPOSITION_DEVICE:
             return Hwcval::CompositionType::HWC;
-        case HWC_FRAMEBUFFER_TARGET:
-            return Hwcval::CompositionType::TGT;
         default:
             return Hwcval::CompositionType::UNKNOWN;
     }
