@@ -34,83 +34,77 @@ class DrmShimCrtc;
 //
 //*****************************************************************************
 
-struct DrmEventData
-{
-    enum EventType
-    {
-        eVBlank,
-        ePageFlip,
-        eNone
-    };
+struct DrmEventData {
+  enum EventType { eVBlank, ePageFlip, eNone };
 
-    EventType eventType;
-    int fd;
-    unsigned int seq;
-    unsigned int sec;
-    unsigned int usec;
-    uint64_t data;
-    DrmShimCrtc* crtc;
+  EventType eventType;
+  int fd;
+  unsigned int seq;
+  unsigned int sec;
+  unsigned int usec;
+  uint64_t data;
+  DrmShimCrtc* crtc;
 
-    DrmEventData()
+  DrmEventData()
       : eventType(DrmEventData::eNone),
         fd(0),
         seq(0),
         sec(0),
         usec(0),
         data(0),
-        crtc(0)
-    {
-    }
+        crtc(0) {
+  }
 
-    DrmEventData(const DrmEventData& rhs)
+  DrmEventData(const DrmEventData& rhs)
       : eventType(rhs.eventType),
         fd(rhs.fd),
         seq(rhs.seq),
         sec(rhs.sec),
         usec(rhs.usec),
         data(rhs.data),
-        crtc(rhs.crtc)
-    {
-    }
+        crtc(rhs.crtc) {
+  }
 };
 
-class DrmShimEventHandler : public EventThread<DrmEventData, HWCVAL_MAX_EVENTS>, public HwcTestEventHandler
-{
-public:
-    DrmShimEventHandler(DrmShimChecks* checks);
-    virtual ~DrmShimEventHandler();
+class DrmShimEventHandler : public EventThread<DrmEventData, HWCVAL_MAX_EVENTS>,
+                            public HwcTestEventHandler {
+ public:
+  DrmShimEventHandler(DrmShimChecks* checks);
+  virtual ~DrmShimEventHandler();
 
-    void QueueCaptureVBlank(int fd, uint32_t crtcId);
-    void CaptureVBlank(int fd, uint32_t crtcId);
-    void CancelEvent(uint32_t crtcId);
+  void QueueCaptureVBlank(int fd, uint32_t crtcId);
+  void CaptureVBlank(int fd, uint32_t crtcId);
+  void CancelEvent(uint32_t crtcId);
 
-    int WaitVBlank(drmVBlankPtr vbl);
+  int WaitVBlank(drmVBlankPtr vbl);
 
-    int HandleEvent(int fd, drmEventContextPtr evctx);
+  int HandleEvent(int fd, drmEventContextPtr evctx);
 
-private:
-    static DrmShimEventHandler* mInstance;
-    DrmShimChecks* mChecks;
+ private:
+  static DrmShimEventHandler* mInstance;
+  DrmShimChecks* mChecks;
 
-    drmEventContext mUserEvctx;
-    drmEventContext mRealEvctx;
+  drmEventContext mUserEvctx;
+  drmEventContext mRealEvctx;
 
-    int mDrmFd;
-    DrmEventData mSavedPF;
-    int64_t mSavedPFTime;
+  int mDrmFd;
+  DrmEventData mSavedPF;
+  int64_t mSavedPFTime;
 
-    virtual void onFirstRef();
-    virtual bool threadLoop();
+  virtual void onFirstRef();
+  virtual bool threadLoop();
 
-    bool RaiseEventFromQueue();
-    void FwdVBlank(int fd, unsigned int frame, unsigned int sec, unsigned int usec, void *data);
-    void FwdPageFlip(int fd, unsigned int frame, unsigned int tv_sec, unsigned int tv_usec, void *data);
-    virtual void Restore(uint32_t disp);
+  bool RaiseEventFromQueue();
+  void FwdVBlank(int fd, unsigned int frame, unsigned int sec,
+                 unsigned int usec, void* data);
+  void FwdPageFlip(int fd, unsigned int frame, unsigned int tv_sec,
+                   unsigned int tv_usec, void* data);
+  virtual void Restore(uint32_t disp);
 
-    static void vblank_handler(int fd, unsigned int frame, unsigned int sec, unsigned int usec, void *data);
-    static void page_flip_handler(int fd, unsigned int frame, unsigned int tv_sec, unsigned int tv_usec, void *data);
-
+  static void vblank_handler(int fd, unsigned int frame, unsigned int sec,
+                             unsigned int usec, void* data);
+  static void page_flip_handler(int fd, unsigned int frame, unsigned int tv_sec,
+                                unsigned int tv_usec, void* data);
 };
 
-
-#endif // __Hwcval_DrmEventThread_h__
+#endif  // __Hwcval_DrmEventThread_h__

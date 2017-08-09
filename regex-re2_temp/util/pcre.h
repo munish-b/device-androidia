@@ -170,8 +170,11 @@ const bool UsingPCRE = true;
 namespace re2 {
 const bool UsingPCRE = false;
 struct pcre;
-struct pcre_extra { int flags, match_limit, match_limit_recursion; };
-#define pcre_free(x) {}
+struct pcre_extra {
+  int flags, match_limit, match_limit_recursion;
+};
+#define pcre_free(x) \
+  {}
 #define PCRE_EXTRA_MATCH_LIMIT 0
 #define PCRE_EXTRA_MATCH_LIMIT_RECURSION 0
 #define PCRE_ANCHORED 0
@@ -180,9 +183,35 @@ struct pcre_extra { int flags, match_limit, match_limit_recursion; };
 #define PCRE_ERROR_MATCHLIMIT 2
 #define PCRE_ERROR_RECURSIONLIMIT 3
 #define PCRE_INFO_CAPTURECOUNT 0
-#define pcre_compile(a,b,c,d,e) ({ (void)(a); (void)(b); *(c)=""; *(d)=0; (void)(e); ((pcre*)0); })
-#define pcre_exec(a, b, c, d, e, f, g, h) ({ (void)(a); (void)(b); (void)(c); (void)(d); (void)(e); (void)(f); (void)(g); (void)(h); 0; })
-#define pcre_fullinfo(a, b, c, d) ({ (void)(a); (void)(b); (void)(c); *(d) = 0; 0; })
+#define pcre_compile(a, b, c, d, e) \
+  ({                                \
+    (void)(a);                      \
+    (void)(b);                      \
+    *(c) = "";                      \
+    *(d) = 0;                       \
+    (void)(e);                      \
+    ((pcre*)0);                     \
+  })
+#define pcre_exec(a, b, c, d, e, f, g, h) \
+  ({                                      \
+    (void)(a);                            \
+    (void)(b);                            \
+    (void)(c);                            \
+    (void)(d);                            \
+    (void)(e);                            \
+    (void)(f);                            \
+    (void)(g);                            \
+    (void)(h);                            \
+    0;                                    \
+  })
+#define pcre_fullinfo(a, b, c, d) \
+  ({                              \
+    (void)(a);                    \
+    (void)(b);                    \
+    (void)(c);                    \
+    *(d) = 0;                     \
+    0;                            \
+  })
 }  // namespace re2
 #endif
 
@@ -224,7 +253,7 @@ class PCRE {
   PCRE(const char* pattern, Option option);
   PCRE(const string& pattern);
   PCRE(const string& pattern, Option option);
-  PCRE(const char *pattern, const PCRE_Options& re_option);
+  PCRE(const char* pattern, const PCRE_Options& re_option);
   PCRE(const string& pattern, const PCRE_Options& re_option);
 
   ~PCRE();
@@ -232,11 +261,15 @@ class PCRE {
   // The string specification for this PCRE.  E.g.
   //   PCRE re("ab*c?d+");
   //   re.pattern();    // "ab*c?d+"
-  const string& pattern() const { return pattern_; }
+  const string& pattern() const {
+    return pattern_;
+  }
 
   // If PCRE could not be created properly, returns an error string.
   // Else returns the empty string.
-  const string& error() const { return *error_; }
+  const string& error() const {
+    return *error_;
+  }
 
   // Whether the PCRE has hit a match limit during execution.
   // Not thread safe.  Intended only for testing.
@@ -277,23 +310,16 @@ class PCRE {
   //    int number;
   //    PCRE::FullMatch("abc", "[a-z]+(\\d+)?", &number);
   struct FullMatchFunctor {
-    bool operator ()(const StringPiece& text, const PCRE& re, // 3..16 args
-                     const Arg& ptr1 = no_more_args,
-                     const Arg& ptr2 = no_more_args,
-                     const Arg& ptr3 = no_more_args,
-                     const Arg& ptr4 = no_more_args,
-                     const Arg& ptr5 = no_more_args,
-                     const Arg& ptr6 = no_more_args,
-                     const Arg& ptr7 = no_more_args,
-                     const Arg& ptr8 = no_more_args,
-                     const Arg& ptr9 = no_more_args,
-                     const Arg& ptr10 = no_more_args,
-                     const Arg& ptr11 = no_more_args,
-                     const Arg& ptr12 = no_more_args,
-                     const Arg& ptr13 = no_more_args,
-                     const Arg& ptr14 = no_more_args,
-                     const Arg& ptr15 = no_more_args,
-                     const Arg& ptr16 = no_more_args) const;
+    bool operator()(
+        const StringPiece& text, const PCRE& re,  // 3..16 args
+        const Arg& ptr1 = no_more_args, const Arg& ptr2 = no_more_args,
+        const Arg& ptr3 = no_more_args, const Arg& ptr4 = no_more_args,
+        const Arg& ptr5 = no_more_args, const Arg& ptr6 = no_more_args,
+        const Arg& ptr7 = no_more_args, const Arg& ptr8 = no_more_args,
+        const Arg& ptr9 = no_more_args, const Arg& ptr10 = no_more_args,
+        const Arg& ptr11 = no_more_args, const Arg& ptr12 = no_more_args,
+        const Arg& ptr13 = no_more_args, const Arg& ptr14 = no_more_args,
+        const Arg& ptr15 = no_more_args, const Arg& ptr16 = no_more_args) const;
   };
 
   static const FullMatchFunctor FullMatch;
@@ -301,23 +327,16 @@ class PCRE {
   // Exactly like FullMatch(), except that "pattern" is allowed to match
   // a substring of "text".
   struct PartialMatchFunctor {
-    bool operator ()(const StringPiece& text, const PCRE& re, // 3..16 args
-                     const Arg& ptr1 = no_more_args,
-                     const Arg& ptr2 = no_more_args,
-                     const Arg& ptr3 = no_more_args,
-                     const Arg& ptr4 = no_more_args,
-                     const Arg& ptr5 = no_more_args,
-                     const Arg& ptr6 = no_more_args,
-                     const Arg& ptr7 = no_more_args,
-                     const Arg& ptr8 = no_more_args,
-                     const Arg& ptr9 = no_more_args,
-                     const Arg& ptr10 = no_more_args,
-                     const Arg& ptr11 = no_more_args,
-                     const Arg& ptr12 = no_more_args,
-                     const Arg& ptr13 = no_more_args,
-                     const Arg& ptr14 = no_more_args,
-                     const Arg& ptr15 = no_more_args,
-                     const Arg& ptr16 = no_more_args) const;
+    bool operator()(
+        const StringPiece& text, const PCRE& re,  // 3..16 args
+        const Arg& ptr1 = no_more_args, const Arg& ptr2 = no_more_args,
+        const Arg& ptr3 = no_more_args, const Arg& ptr4 = no_more_args,
+        const Arg& ptr5 = no_more_args, const Arg& ptr6 = no_more_args,
+        const Arg& ptr7 = no_more_args, const Arg& ptr8 = no_more_args,
+        const Arg& ptr9 = no_more_args, const Arg& ptr10 = no_more_args,
+        const Arg& ptr11 = no_more_args, const Arg& ptr12 = no_more_args,
+        const Arg& ptr13 = no_more_args, const Arg& ptr14 = no_more_args,
+        const Arg& ptr15 = no_more_args, const Arg& ptr16 = no_more_args) const;
   };
 
   static const PartialMatchFunctor PartialMatch;
@@ -326,23 +345,16 @@ class PCRE {
   // match a prefix of "text", and "input" is advanced past the matched
   // text.  Note: "input" is modified iff this routine returns true.
   struct ConsumeFunctor {
-    bool operator ()(StringPiece* input, const PCRE& pattern, // 3..16 args
-                     const Arg& ptr1 = no_more_args,
-                     const Arg& ptr2 = no_more_args,
-                     const Arg& ptr3 = no_more_args,
-                     const Arg& ptr4 = no_more_args,
-                     const Arg& ptr5 = no_more_args,
-                     const Arg& ptr6 = no_more_args,
-                     const Arg& ptr7 = no_more_args,
-                     const Arg& ptr8 = no_more_args,
-                     const Arg& ptr9 = no_more_args,
-                     const Arg& ptr10 = no_more_args,
-                     const Arg& ptr11 = no_more_args,
-                     const Arg& ptr12 = no_more_args,
-                     const Arg& ptr13 = no_more_args,
-                     const Arg& ptr14 = no_more_args,
-                     const Arg& ptr15 = no_more_args,
-                     const Arg& ptr16 = no_more_args) const;
+    bool operator()(
+        StringPiece* input, const PCRE& pattern,  // 3..16 args
+        const Arg& ptr1 = no_more_args, const Arg& ptr2 = no_more_args,
+        const Arg& ptr3 = no_more_args, const Arg& ptr4 = no_more_args,
+        const Arg& ptr5 = no_more_args, const Arg& ptr6 = no_more_args,
+        const Arg& ptr7 = no_more_args, const Arg& ptr8 = no_more_args,
+        const Arg& ptr9 = no_more_args, const Arg& ptr10 = no_more_args,
+        const Arg& ptr11 = no_more_args, const Arg& ptr12 = no_more_args,
+        const Arg& ptr13 = no_more_args, const Arg& ptr14 = no_more_args,
+        const Arg& ptr15 = no_more_args, const Arg& ptr16 = no_more_args) const;
   };
 
   static const ConsumeFunctor Consume;
@@ -352,23 +364,16 @@ class PCRE {
   // "input".  For example, "FindAndConsume(s, "(\\w+)", &word)" finds the next
   // word in "s" and stores it in "word".
   struct FindAndConsumeFunctor {
-    bool operator ()(StringPiece* input, const PCRE& pattern,
-                     const Arg& ptr1 = no_more_args,
-                     const Arg& ptr2 = no_more_args,
-                     const Arg& ptr3 = no_more_args,
-                     const Arg& ptr4 = no_more_args,
-                     const Arg& ptr5 = no_more_args,
-                     const Arg& ptr6 = no_more_args,
-                     const Arg& ptr7 = no_more_args,
-                     const Arg& ptr8 = no_more_args,
-                     const Arg& ptr9 = no_more_args,
-                     const Arg& ptr10 = no_more_args,
-                     const Arg& ptr11 = no_more_args,
-                     const Arg& ptr12 = no_more_args,
-                     const Arg& ptr13 = no_more_args,
-                     const Arg& ptr14 = no_more_args,
-                     const Arg& ptr15 = no_more_args,
-                     const Arg& ptr16 = no_more_args) const;
+    bool operator()(
+        StringPiece* input, const PCRE& pattern, const Arg& ptr1 = no_more_args,
+        const Arg& ptr2 = no_more_args, const Arg& ptr3 = no_more_args,
+        const Arg& ptr4 = no_more_args, const Arg& ptr5 = no_more_args,
+        const Arg& ptr6 = no_more_args, const Arg& ptr7 = no_more_args,
+        const Arg& ptr8 = no_more_args, const Arg& ptr9 = no_more_args,
+        const Arg& ptr10 = no_more_args, const Arg& ptr11 = no_more_args,
+        const Arg& ptr12 = no_more_args, const Arg& ptr13 = no_more_args,
+        const Arg& ptr14 = no_more_args, const Arg& ptr15 = no_more_args,
+        const Arg& ptr16 = no_more_args) const;
   };
 
   static const FindAndConsumeFunctor FindAndConsume;
@@ -386,8 +391,7 @@ class PCRE {
   //
   // Returns true if the pattern matches and a replacement occurs,
   // false otherwise.
-  static bool Replace(string *str,
-                      const PCRE& pattern,
+  static bool Replace(string* str, const PCRE& pattern,
                       const StringPiece& rewrite);
 
   // Like Replace(), except replaces all occurrences of the pattern in
@@ -400,8 +404,7 @@ class PCRE {
   // will leave "s" containing "yada dada doo"
   //
   // Returns the number of replacements made.
-  static int GlobalReplace(string *str,
-                           const PCRE& pattern,
+  static int GlobalReplace(string* str, const PCRE& pattern,
                            const StringPiece& rewrite);
 
   // Like Replace, except that if the pattern matches, "rewrite"
@@ -410,10 +413,8 @@ class PCRE {
   //
   // Returns true iff a match occurred and the extraction happened
   // successfully;  if no match occurs, the string is left unaffected.
-  static bool Extract(const StringPiece &text,
-                      const PCRE& pattern,
-                      const StringPiece &rewrite,
-                      string *out);
+  static bool Extract(const StringPiece& text, const PCRE& pattern,
+                      const StringPiece& rewrite, string* out);
 
   // Check that the given @p rewrite string is suitable for use with
   // this PCRE.  It checks that:
@@ -443,16 +444,14 @@ class PCRE {
 
   // Type of match (TODO: Should be restructured as an Option)
   enum Anchor {
-    UNANCHORED,         // No anchoring
-    ANCHOR_START,       // Anchor at start only
-    ANCHOR_BOTH,        // Anchor at start and end
+    UNANCHORED,    // No anchoring
+    ANCHOR_START,  // Anchor at start only
+    ANCHOR_BOTH,   // Anchor at start and end
   };
 
   // General matching routine.  Stores the length of the match in
   // "*consumed" if successful.
-  bool DoMatch(const StringPiece& text,
-               Anchor anchor,
-               int* consumed,
+  bool DoMatch(const StringPiece& text, Anchor anchor, int* consumed,
                const Arg* const* args, int n) const;
 
   // Return the number of capturing subpatterns, or -1 if the
@@ -474,42 +473,30 @@ class PCRE {
   // against "foo", "bar", and "baz" respectively.
   // When matching PCRE("(foo)|hello") against "hello", it will return 1.
   // But the values for all subpattern are filled in into "vec".
-  int TryMatch(const StringPiece& text,
-               int startpos,
-               Anchor anchor,
-               bool empty_ok,
-               int *vec,
-               int vecsize) const;
+  int TryMatch(const StringPiece& text, int startpos, Anchor anchor,
+               bool empty_ok, int* vec, int vecsize) const;
 
   // Append the "rewrite" string, with backslash subsitutions from "text"
   // and "vec", to string "out".
-  bool Rewrite(string *out,
-               const StringPiece &rewrite,
-               const StringPiece &text,
-               int *vec,
-               int veclen) const;
+  bool Rewrite(string* out, const StringPiece& rewrite, const StringPiece& text,
+               int* vec, int veclen) const;
 
   // internal implementation for DoMatch
-  bool DoMatchImpl(const StringPiece& text,
-                   Anchor anchor,
-                   int* consumed,
-                   const Arg* const args[],
-                   int n,
-                   int* vec,
-                   int vecsize) const;
+  bool DoMatchImpl(const StringPiece& text, Anchor anchor, int* consumed,
+                   const Arg* const args[], int n, int* vec, int vecsize) const;
 
   // Compile the regexp for the specified anchoring mode
   pcre* Compile(Anchor anchor);
 
-  string            pattern_;
-  Option            options_;
-  pcre*             re_full_;        // For full matches
-  pcre*             re_partial_;     // For partial matches
-  const string*     error_;          // Error indicator (or empty string)
-  bool              report_errors_;  // Silences error logging if false
-  int               match_limit_;    // Limit on execution resources
-  int               stack_limit_;    // Limit on stack resources (bytes)
-  mutable int32_t  hit_limit_;  // Hit limit during execution (bool)?
+  string pattern_;
+  Option options_;
+  pcre* re_full_;              // For full matches
+  pcre* re_partial_;           // For partial matches
+  const string* error_;        // Error indicator (or empty string)
+  bool report_errors_;         // Silences error logging if false
+  int match_limit_;            // Limit on execution resources
+  int stack_limit_;            // Limit on stack resources (bytes)
+  mutable int32_t hit_limit_;  // Hit limit during execution (bool)?
   DISALLOW_EVIL_CONSTRUCTORS(PCRE);
 };
 
@@ -528,34 +515,47 @@ class PCRE {
 class PCRE_Options {
  public:
   // constructor
-  PCRE_Options() : option_(PCRE::None), match_limit_(0), stack_limit_(0), report_errors_(true) {}
+  PCRE_Options()
+      : option_(PCRE::None),
+        match_limit_(0),
+        stack_limit_(0),
+        report_errors_(true) {
+  }
   // accessors
-  PCRE::Option option() const { return option_; }
+  PCRE::Option option() const {
+    return option_;
+  }
   void set_option(PCRE::Option option) {
     option_ = option;
   }
-  int match_limit() const { return match_limit_; }
+  int match_limit() const {
+    return match_limit_;
+  }
   void set_match_limit(int match_limit) {
     match_limit_ = match_limit;
   }
-  int stack_limit() const { return stack_limit_; }
+  int stack_limit() const {
+    return stack_limit_;
+  }
   void set_stack_limit(int stack_limit) {
     stack_limit_ = stack_limit;
   }
 
   // If the regular expression is malformed, an error message will be printed
   // iff report_errors() is true.  Default: true.
-  bool report_errors() const { return report_errors_; }
+  bool report_errors() const {
+    return report_errors_;
+  }
   void set_report_errors(bool report_errors) {
     report_errors_ = report_errors;
   }
+
  private:
   PCRE::Option option_;
   int match_limit_;
   int stack_limit_;
   bool report_errors_;
 };
-
 
 /***** Implementation details *****/
 
@@ -566,7 +566,8 @@ template <class T>
 class _PCRE_MatchObject {
  public:
   static inline bool Parse(const char* str, int n, void* dest) {
-    if (dest == NULL) return true;
+    if (dest == NULL)
+      return true;
     T* object = reinterpret_cast<T*>(dest);
     return object->ParseFrom(str, n);
   }
@@ -583,59 +584,63 @@ class PCRE::Arg {
   typedef bool (*Parser)(const char* str, int n, void* dest);
 
 // Type-specific parsers
-#define MAKE_PARSER(type,name) \
-  Arg(type* p) : arg_(p), parser_(name) { } \
-  Arg(type* p, Parser parser) : arg_(p), parser_(parser) { } \
+#define MAKE_PARSER(type, name)                            \
+  Arg(type* p) : arg_(p), parser_(name) {                  \
+  }                                                        \
+  Arg(type* p, Parser parser) : arg_(p), parser_(parser) { \
+  }
 
-
-  MAKE_PARSER(char,               parse_char);
-  MAKE_PARSER(unsigned char,      parse_uchar);
-  MAKE_PARSER(short,              parse_short);
-  MAKE_PARSER(unsigned short,     parse_ushort);
-  MAKE_PARSER(int,                parse_int);
-  MAKE_PARSER(unsigned int,       parse_uint);
-  MAKE_PARSER(long,               parse_long);
-  MAKE_PARSER(unsigned long,      parse_ulong);
-  MAKE_PARSER(long long,          parse_longlong);
+  MAKE_PARSER(char, parse_char);
+  MAKE_PARSER(unsigned char, parse_uchar);
+  MAKE_PARSER(short, parse_short);
+  MAKE_PARSER(unsigned short, parse_ushort);
+  MAKE_PARSER(int, parse_int);
+  MAKE_PARSER(unsigned int, parse_uint);
+  MAKE_PARSER(long, parse_long);
+  MAKE_PARSER(unsigned long, parse_ulong);
+  MAKE_PARSER(long long, parse_longlong);
   MAKE_PARSER(unsigned long long, parse_ulonglong);
-  MAKE_PARSER(float,              parse_float);
-  MAKE_PARSER(double,             parse_double);
-  MAKE_PARSER(string,             parse_string);
-  MAKE_PARSER(StringPiece,        parse_stringpiece);
+  MAKE_PARSER(float, parse_float);
+  MAKE_PARSER(double, parse_double);
+  MAKE_PARSER(string, parse_string);
+  MAKE_PARSER(StringPiece, parse_stringpiece);
 
 #undef MAKE_PARSER
 
   // Generic constructor
-  template <class T> Arg(T*, Parser parser);
+  template <class T>
+  Arg(T*, Parser parser);
   // Generic constructor template
-  template <class T> Arg(T* p)
-    : arg_(p), parser_(_PCRE_MatchObject<T>::Parse) {
+  template <class T>
+  Arg(T* p)
+      : arg_(p), parser_(_PCRE_MatchObject<T>::Parse) {
   }
 
   // Parse the data
   bool Parse(const char* str, int n) const;
 
  private:
-  void*         arg_;
-  Parser        parser_;
+  void* arg_;
+  Parser parser_;
 
-  static bool parse_null          (const char* str, int n, void* dest);
-  static bool parse_char          (const char* str, int n, void* dest);
-  static bool parse_uchar         (const char* str, int n, void* dest);
-  static bool parse_float         (const char* str, int n, void* dest);
-  static bool parse_double        (const char* str, int n, void* dest);
-  static bool parse_string        (const char* str, int n, void* dest);
-  static bool parse_stringpiece   (const char* str, int n, void* dest);
+  static bool parse_null(const char* str, int n, void* dest);
+  static bool parse_char(const char* str, int n, void* dest);
+  static bool parse_uchar(const char* str, int n, void* dest);
+  static bool parse_float(const char* str, int n, void* dest);
+  static bool parse_double(const char* str, int n, void* dest);
+  static bool parse_string(const char* str, int n, void* dest);
+  static bool parse_stringpiece(const char* str, int n, void* dest);
 
-#define DECLARE_INTEGER_PARSER(name)                                        \
- private:                                                                   \
-  static bool parse_ ## name(const char* str, int n, void* dest);           \
-  static bool parse_ ## name ## _radix(                                     \
-    const char* str, int n, void* dest, int radix);                         \
- public:                                                                    \
-  static bool parse_ ## name ## _hex(const char* str, int n, void* dest);   \
-  static bool parse_ ## name ## _octal(const char* str, int n, void* dest); \
-  static bool parse_ ## name ## _cradix(const char* str, int n, void* dest)
+#define DECLARE_INTEGER_PARSER(name)                                    \
+ private:                                                               \
+  static bool parse_##name(const char* str, int n, void* dest);         \
+  static bool parse_##name##_radix(const char* str, int n, void* dest,  \
+                                   int radix);                          \
+                                                                        \
+ public:                                                                \
+  static bool parse_##name##_hex(const char* str, int n, void* dest);   \
+  static bool parse_##name##_octal(const char* str, int n, void* dest); \
+  static bool parse_##name##_cradix(const char* str, int n, void* dest)
 
   DECLARE_INTEGER_PARSER(short);
   DECLARE_INTEGER_PARSER(ushort);
@@ -649,29 +654,34 @@ class PCRE::Arg {
 #undef DECLARE_INTEGER_PARSER
 };
 
-inline PCRE::Arg::Arg() : arg_(NULL), parser_(parse_null) { }
-inline PCRE::Arg::Arg(void* p) : arg_(p), parser_(parse_null) { }
+inline PCRE::Arg::Arg() : arg_(NULL), parser_(parse_null) {
+}
+inline PCRE::Arg::Arg(void* p) : arg_(p), parser_(parse_null) {
+}
 
 inline bool PCRE::Arg::Parse(const char* str, int n) const {
   return (*parser_)(str, n, arg_);
 }
 
 // This part of the parser, appropriate only for ints, deals with bases
-#define MAKE_INTEGER_PARSER(type, name) \
-  inline PCRE::Arg Hex(type* ptr) { \
-    return PCRE::Arg(ptr, PCRE::Arg::parse_ ## name ## _hex); } \
-  inline PCRE::Arg Octal(type* ptr) { \
-    return PCRE::Arg(ptr, PCRE::Arg::parse_ ## name ## _octal); } \
-  inline PCRE::Arg CRadix(type* ptr) { \
-    return PCRE::Arg(ptr, PCRE::Arg::parse_ ## name ## _cradix); }
+#define MAKE_INTEGER_PARSER(type, name)                      \
+  inline PCRE::Arg Hex(type* ptr) {                          \
+    return PCRE::Arg(ptr, PCRE::Arg::parse_##name##_hex);    \
+  }                                                          \
+  inline PCRE::Arg Octal(type* ptr) {                        \
+    return PCRE::Arg(ptr, PCRE::Arg::parse_##name##_octal);  \
+  }                                                          \
+  inline PCRE::Arg CRadix(type* ptr) {                       \
+    return PCRE::Arg(ptr, PCRE::Arg::parse_##name##_cradix); \
+  }
 
-MAKE_INTEGER_PARSER(short,              short);
-MAKE_INTEGER_PARSER(unsigned short,     ushort);
-MAKE_INTEGER_PARSER(int,                int);
-MAKE_INTEGER_PARSER(unsigned int,       uint);
-MAKE_INTEGER_PARSER(long,               long);
-MAKE_INTEGER_PARSER(unsigned long,      ulong);
-MAKE_INTEGER_PARSER(long long,          longlong);
+MAKE_INTEGER_PARSER(short, short);
+MAKE_INTEGER_PARSER(unsigned short, ushort);
+MAKE_INTEGER_PARSER(int, int);
+MAKE_INTEGER_PARSER(unsigned int, uint);
+MAKE_INTEGER_PARSER(long, long);
+MAKE_INTEGER_PARSER(unsigned long, ulong);
+MAKE_INTEGER_PARSER(long long, longlong);
 MAKE_INTEGER_PARSER(unsigned long long, ulonglong);
 
 #undef MAKE_INTEGER_PARSER

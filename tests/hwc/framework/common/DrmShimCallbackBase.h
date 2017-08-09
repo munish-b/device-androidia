@@ -20,31 +20,26 @@
 
 #define HWCVAL_DRMSHIMCALLBACKBASE_VERSION 2
 
-class DrmShimCallbackBase
-{
-    public:
-        virtual ~DrmShimCallbackBase();
+class DrmShimCallbackBase {
+ public:
+  virtual ~DrmShimCallbackBase();
 
-        bool CheckVersion();
-        uint32_t GetVersion();
+  bool CheckVersion();
+  uint32_t GetVersion();
 
-        // Callbacks that can be overriden in subclass
-        virtual void VSync(uint32_t disp);
-        virtual void PageFlipComplete(uint32_t disp);
+  // Callbacks that can be overriden in subclass
+  virtual void VSync(uint32_t disp);
+  virtual void PageFlipComplete(uint32_t disp);
 };
 
-inline bool DrmShimCallbackBase::CheckVersion()
-{
-    bool result = (GetVersion() == HWCVAL_DRMSHIMCALLBACKBASE_VERSION);
+inline bool DrmShimCallbackBase::CheckVersion() {
+  bool result = (GetVersion() == HWCVAL_DRMSHIMCALLBACKBASE_VERSION);
 
-    if (!result)
-    {
-        HWCERROR(eCheckDrmShimFail, "Incompatible shims");
-    }
+  if (!result) {
+    HWCERROR(eCheckDrmShimFail, "Incompatible shims");
+  }
 
-    return result;
+  return result;
 }
 
-
-
-#endif // __DrmShimCallbackBase_h__
+#endif  // __DrmShimCallbackBase_h__

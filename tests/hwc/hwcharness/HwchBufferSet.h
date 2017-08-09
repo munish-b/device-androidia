@@ -22,7 +22,6 @@
 #include <string.h>
 #include <unistd.h>
 
-
 #include <utils/Vector.h>
 #include <utils/RefBase.h>
 #include <utils/String8.h>
@@ -32,109 +31,98 @@
 #include "HwchPattern.h"
 #include "HwchDefs.h"
 
+namespace Hwch {
+class BufferSet : public android::RefBase {
+ private:
+  struct FencedBuffer {
+    android::sp<android::GraphicBuffer> mBuf;
+    int mReleaseFenceFd;
+    uint32_t mParam;
 
-namespace Hwch
-{
-    class BufferSet : public android::RefBase
-    {
-        private:
+    FencedBuffer(android::GraphicBuffer* buf = 0, int fenceFd = -1)
+        : mBuf(buf),
+          mReleaseFenceFd(fenceFd),
+          mParam(HWCH_BUFFERPARAM_UNDEFINED) {
+    }
+  };
 
-            struct FencedBuffer
-            {
-                android::sp<android::GraphicBuffer> mBuf;
-                int mReleaseFenceFd;
-                uint32_t mParam;
+  uint32_t mNumBuffers;
+  uint32_t mCurrentBuffer;
+  uint32_t mNextBuffer;
+  uint32_t mWidth;
+  uint32_t mHeight;
+  uint32_t mFormat;
+  uint32_t mUsage;
+  uint64_t mLastTimestamp;
 
-                FencedBuffer(android::GraphicBuffer* buf=0, int fenceFd=-1)
-                  : mBuf(buf),
-                    mReleaseFenceFd(fenceFd),
-                    mParam(HWCH_BUFFERPARAM_UNDEFINED)
-                {
-                }
-            };
-
-            uint32_t mNumBuffers;
-            uint32_t mCurrentBuffer;
-            uint32_t mNextBuffer;
-            uint32_t mWidth;
-            uint32_t mHeight;
-            uint32_t mFormat;
-            uint32_t mUsage;
-            uint64_t mLastTimestamp;
-
-            // Protection State
-            bool mEncrypted;
+  // Protection State
+  bool mEncrypted;
 #ifdef HWCVAL_BUILD_PAVP
-            uint32_t mSessionId;
-            uint32_t mInstance;
+  uint32_t mSessionId;
+  uint32_t mInstance;
 #endif
 
-            FencedBuffer* mFencedB;   // current buffer
-            android::Vector<FencedBuffer> mBuffers;
+  FencedBuffer* mFencedB;  // current buffer
+  android::Vector<FencedBuffer> mBuffers;
 
-            bool mBuffersUpdatedThisFrame;
-            bool mBuffersFilledAtLeastOnce;
+  bool mBuffersUpdatedThisFrame;
+  bool mBuffersFilledAtLeastOnce;
 
-        public:
+ public:
+  BufferSet(uint32_t width, uint32_t height, uint32_t format,
+            int32_t numBuffers = -1,
+            uint32_t usage = GRALLOC_USAGE_HW_COMPOSER |
+                             GRALLOC_USAGE_HW_TEXTURE |
+                             GRALLOC_USAGE_HW_RENDER);
+  ~BufferSet();
 
-            BufferSet(uint32_t width, uint32_t height, uint32_t format, int32_t numBuffers = -1,
-                uint32_t usage = GRALLOC_USAGE_HW_COMPOSER | GRALLOC_USAGE_HW_TEXTURE | GRALLOC_USAGE_HW_RENDER);
-            ~BufferSet();
+  android::sp<android::GraphicBuffer> Get();
+  buffer_handle_t GetHandle();
+  buffer_handle_t GetNextBuffer();
+  bool NeedsUpdating();
+  bool BuffersFilledAtLeastOnce();
+  uint32_t& GetInstanceParam();
+  bool SetNextBufferInstance(uint32_t index);
+  void AdvanceTimestamp(uint64_t delta);
+  void PostFrame(int fenceFd);
 
-            android::sp<android::GraphicBuffer> Get();
-            buffer_handle_t GetHandle();
-            buffer_handle_t GetNextBuffer();
-            bool NeedsUpdating();
-            bool BuffersFilledAtLeastOnce();
-            uint32_t& GetInstanceParam();
-            bool SetNextBufferInstance(uint32_t index);
-            void AdvanceTimestamp(uint64_t delta);
-            void PostFrame(int fenceFd);
+  void SetReleaseFence(int fenceFd);
+  int WaitReleaseFence(uint32_t timeoutMs, const android::String8& str);
+  void CloseAllFences();
 
-            void SetReleaseFence(int fenceFd);
-            int WaitReleaseFence(uint32_t timeoutMs, const android::String8& str);
-            void CloseAllFences();
+  uint32_t GetWidth();
+  uint32_t GetHeight();
 
-            uint32_t GetWidth();
-            uint32_t GetHeight();
+  void SetProtectionState(bool encrypted);
+  void SetProtectionState(bool encrypted, uint32_t sessionId,
+                          uint32_t instance);
 
-            void SetProtectionState(bool encrypted);
-            void SetProtectionState(bool encrypted, uint32_t sessionId, uint32_t instance);
-
-            // Number of buffers so far created
-            static uint32_t GetBufferCount();
-
-    };
-
-    class BufferSetPtr : public android::sp<Hwch::BufferSet>
-    {
-        public:
-             virtual ~BufferSetPtr();
-             BufferSetPtr& operator=(android::sp<Hwch::BufferSet> rhs);
-    };
+  // Number of buffers so far created
+  static uint32_t GetBufferCount();
 };
 
-inline uint32_t Hwch::BufferSet::GetWidth()
-{
-    return mWidth;
+class BufferSetPtr : public android::sp<Hwch::BufferSet> {
+ public:
+  virtual ~BufferSetPtr();
+  BufferSetPtr& operator=(android::sp<Hwch::BufferSet> rhs);
+};
+};
+
+inline uint32_t Hwch::BufferSet::GetWidth() {
+  return mWidth;
 }
 
-inline uint32_t Hwch::BufferSet::GetHeight()
-{
-    return mHeight;
+inline uint32_t Hwch::BufferSet::GetHeight() {
+  return mHeight;
 }
 
-inline bool Hwch::BufferSet::BuffersFilledAtLeastOnce()
-{
-    if (!mBuffersFilledAtLeastOnce)
-    {
-        mBuffersFilledAtLeastOnce = true;
-        return false;
-    }
-    else
-    {
-        return true;
-    }
+inline bool Hwch::BufferSet::BuffersFilledAtLeastOnce() {
+  if (!mBuffersFilledAtLeastOnce) {
+    mBuffersFilledAtLeastOnce = true;
+    return false;
+  } else {
+    return true;
+  }
 }
 
-#endif // __HwchBufferSet_h__
+#endif  // __HwchBufferSet_h__

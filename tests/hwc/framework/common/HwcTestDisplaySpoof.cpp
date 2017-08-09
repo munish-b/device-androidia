@@ -18,18 +18,13 @@
 #include "HwcTestState.h"
 #include "HwcTestUtil.h"
 
-
-HwcTestDisplaySpoof::~HwcTestDisplaySpoof()
-{
+HwcTestDisplaySpoof::~HwcTestDisplaySpoof() {
 }
 
-HwcTestNullDisplaySpoof::~HwcTestNullDisplaySpoof()
-{
+HwcTestNullDisplaySpoof::~HwcTestNullDisplaySpoof() {
 }
 
-void HwcTestNullDisplaySpoof::ModifyStatus(uint32_t frameNo, int& status)
-{
-    HWCVAL_UNUSED(frameNo);
-    HWCVAL_UNUSED(status);
+void HwcTestNullDisplaySpoof::ModifyStatus(uint32_t frameNo, int& status) {
+  HWCVAL_UNUSED(frameNo);
+  HWCVAL_UNUSED(status);
 }
-

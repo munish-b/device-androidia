@@ -18,60 +18,43 @@
 #define __diffVec_h__
 
 // Remove from BOTH vectors any items found in both.
-template<class T>
-void diffVec (android::SortedVector<T>& va, android::SortedVector<T>& vb)
-{
-    // remove all items in both arrays
-    size_t aIx = 0;
-    size_t bIx = 0;
+template <class T>
+void diffVec(android::SortedVector<T>& va, android::SortedVector<T>& vb) {
+  // remove all items in both arrays
+  size_t aIx = 0;
+  size_t bIx = 0;
 
-    for (; aIx < va.size() && bIx < vb.size();)
-    {
-        T a = va[aIx];
-        T b = vb[bIx];
+  for (; aIx < va.size() && bIx < vb.size();) {
+    T a = va[aIx];
+    T b = vb[bIx];
 
-        if (a == b)
-        {
-            va.removeAt(aIx);
-            vb.removeAt(bIx);
-        }
-        else if (a < b)
-        {
-            ++aIx;
-        }
-        else
-        {
-            ++bIx;
-        }
+    if (a == b) {
+      va.removeAt(aIx);
+      vb.removeAt(bIx);
+    } else if (a < b) {
+      ++aIx;
+    } else {
+      ++bIx;
     }
+  }
 }
 
-template<class T>
-android::SortedVector<T>& operator+= (android::SortedVector<T>& va, const android::SortedVector<T>& vb)
-{
-    for (size_t bIx = 0; bIx < vb.size(); ++bIx)
-    {
-        va.add(vb[bIx]);
-    }
-    return va;
+template <class T>
+android::SortedVector<T>& operator+=(android::SortedVector<T>& va,
+                                     const android::SortedVector<T>& vb) {
+  for (size_t bIx = 0; bIx < vb.size(); ++bIx) {
+    va.add(vb[bIx]);
+  }
+  return va;
 }
 
-template<class T>
-android::SortedVector<T>& operator-= (android::SortedVector<T>& va, const android::SortedVector<T>& vb)
-{
-    for (size_t bIx = 0; bIx < vb.size(); ++bIx)
-    {
-        va.remove(vb[bIx]);
-    }
-    return va;
+template <class T>
+android::SortedVector<T>& operator-=(android::SortedVector<T>& va,
+                                     const android::SortedVector<T>& vb) {
+  for (size_t bIx = 0; bIx < vb.size(); ++bIx) {
+    va.remove(vb[bIx]);
+  }
+  return va;
 }
 
-
-
-
-
-
-#endif // __HWC_SHIM_DEFS_H__
-
-
-
+#endif  // __HWC_SHIM_DEFS_H__

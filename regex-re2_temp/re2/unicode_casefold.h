@@ -46,7 +46,7 @@ namespace re2 {
 enum {
   EvenOdd = 1,
   OddEven = -1,
-  EvenOddSkip = 1<<30,
+  EvenOddSkip = 1 << 30,
   OddEvenSkip,
 };
 
@@ -68,7 +68,7 @@ extern int num_unicode_tolower;
 extern CaseFold* LookupCaseFold(CaseFold*, int, Rune rune);
 
 // Returns the result of applying the fold f to the rune r.
-extern Rune ApplyFold(CaseFold *f, Rune r);
+extern Rune ApplyFold(CaseFold* f, Rune r);
 
 }  // namespace re2
 

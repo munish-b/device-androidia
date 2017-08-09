@@ -27,499 +27,409 @@
 
 HwcTestBase* HwcTestBase::mTheTestBase = 0;
 
-HwcTestBase::HwcTestBase(int argc, char ** argv)
-  : mpDisplay(0),
-    mNoShims(false),
-    mValHwc(true),
-    mValSf(false),
-    mValDisplays(false),
-    mValBuffers(false),
-    mValHwcComposition(false),
-    mValIvpComposition(false)
-{
-    HWCLOGI("Start of HwcTestBase ctor");
-    mTheTestBase = this;
+HwcTestBase::HwcTestBase(int argc, char** argv)
+    : mpDisplay(0),
+      mNoShims(false),
+      mValHwc(true),
+      mValSf(false),
+      mValDisplays(false),
+      mValBuffers(false),
+      mValHwcComposition(false),
+      mValIvpComposition(false) {
+  HWCLOGI("Start of HwcTestBase ctor");
+  mTheTestBase = this;
 
+  mStartTime = 0;
+  mCurrentTime = 0;
+  mTestFrameCount = 0;
+  mTestRunTime = 0;
+  mTestRunTimeOverridden = false;
+  mTestEndCondition = etetNone;
 
-    mStartTime = 0;
-    mCurrentTime = 0;
-    mTestFrameCount = 0;
-    mTestRunTime = 0;
-    mTestRunTimeOverridden = false;
-    mTestEndCondition = etetNone;
+  SetArgs(argc, argv);
+  if (!mNoShims) {
+    HWCLOGI("Binder of HwcTestBase ctor");
+    ConnectToShimBinder();
+  }
 
-    SetArgs(argc, argv);
-    if (!mNoShims)
-    {
-        HWCLOGI("Binder of HwcTestBase ctor");
-        ConnectToShimBinder();
-    }
+  mpDisplay = new Display();
 
-    mpDisplay = new Display();
-
-    HWCLOGI("End of HwcTestBase ctor");
+  HWCLOGI("End of HwcTestBase ctor");
 }
 
-HwcTestBase::~HwcTestBase()
-{
-    mTheTestBase = 0;
+HwcTestBase::~HwcTestBase() {
+  mTheTestBase = 0;
 }
 
+void HwcTestBase::SetDefaultChecks(void) {
+  mConfig.Initialise(
+      mValHwc, mValDisplays, mValBuffers, mValSf,
+      mValHwc,  // IVP validation enabled if HWC validation enabled
+      mValHwcComposition, mValIvpComposition);
 
-void HwcTestBase::SetDefaultChecks(void)
-{
-    mConfig.Initialise(mValHwc, mValDisplays, mValBuffers, mValSf,
-        mValHwc,     // IVP validation enabled if HWC validation enabled
-        mValHwcComposition, mValIvpComposition);
-
-    // Don't enable UX checks by default
+  // Don't enable UX checks by default
 }
 
-int HwcTestBase::CreateSurface(SurfaceSender::SurfaceSenderProperties sSSP)
-{
-    // This is done here so SurfaceSender does not need to worry about the
-    // display once created
-    if (sSSP.GetUseScreenWidth() == true)
-    {
-        sSSP.SetWidth(mpDisplay->GetWidth());
-    }
+int HwcTestBase::CreateSurface(SurfaceSender::SurfaceSenderProperties sSSP) {
+  // This is done here so SurfaceSender does not need to worry about the
+  // display once created
+  if (sSSP.GetUseScreenWidth() == true) {
+    sSSP.SetWidth(mpDisplay->GetWidth());
+  }
 
-    if (sSSP.GetUseScreenHeight() == true)
-    {
-        sSSP.SetHeight(mpDisplay->GetHeight());
-    }
+  if (sSSP.GetUseScreenHeight() == true) {
+    sSSP.SetHeight(mpDisplay->GetHeight());
+  }
 
-    SurfaceSender * sender = new SurfaceSender(sSSP);
-    android::sp<SurfaceSender> * spSender = new android::sp<SurfaceSender>(sender);
+  SurfaceSender* sender = new SurfaceSender(sSSP);
+  android::sp<SurfaceSender>* spSender = new android::sp<SurfaceSender>(sender);
 
-    SurfaceSenders.push_back(spSender);
+  SurfaceSenders.push_back(spSender);
 
-    // TODO
-    return 0;
+  // TODO
+  return 0;
 }
 
-bool HwcTestBase::ContinueTest(void)
-{
-    if (mTestEndCondition == etetRunTime)
-    {
-        // Get current time
+bool HwcTestBase::ContinueTest(void) {
+  if (mTestEndCondition == etetRunTime) {
+    // Get current time
 
-        mCurrentTime = GetTime();
+    mCurrentTime = GetTime();
 
-        if( (mCurrentTime - mStartTime) > mTestRunTime)
-        {
-            return false;
-        }
+    if ((mCurrentTime - mStartTime) > mTestRunTime) {
+      return false;
     }
-    else if (mTestEndCondition == etetFrameCount && (mTestFrameCount > mFrameCount))
-    {
-        return false;
-    }
-    else
-    {
-        return false;
-    }
+  } else if (mTestEndCondition == etetFrameCount &&
+             (mTestFrameCount > mFrameCount)) {
+    return false;
+  } else {
+    return false;
+  }
 
-    return true;
+  return true;
 }
 
+void HwcTestBase::LogTestResult(HwcTestConfig& config) {
+  // Copy priorities from config to result
+  mResult.CopyPriorities(config);
 
-void HwcTestBase::LogTestResult(HwcTestConfig& config)
-{
-    // Copy priorities from config to result
-    mResult.CopyPriorities(config);
+  // Print the results
+  mResult.Log(config, mTestName.string(), false);
 
-    // Print the results
-    mResult.Log(config, mTestName.string(), false);
-
-    if (!mResult.IsGlobalFail())
-    {
-        // TODO: Do we need to retain this format for some reason or can we discard the unnecessary logging?
-        HWCLOGI("Passed : 1");
-        HWCLOGI("Failed : 0");
-        HWCLOGI("Skipped: 0");
-        HWCLOGI("Error  : 0");
-    }
-    else
-    {
-        HWCLOGI("Passed : 0");
-        HWCLOGI("Failed : 1");
-        HWCLOGI("Skipped: 0");
-        HWCLOGI("Error  : 0");
-    }
+  if (!mResult.IsGlobalFail()) {
+    // TODO: Do we need to retain this format for some reason or can we discard
+    // the unnecessary logging?
+    HWCLOGI("Passed : 1");
+    HWCLOGI("Failed : 0");
+    HWCLOGI("Skipped: 0");
+    HWCLOGI("Error  : 0");
+  } else {
+    HWCLOGI("Passed : 0");
+    HWCLOGI("Failed : 1");
+    HWCLOGI("Skipped: 0");
+    HWCLOGI("Error  : 0");
+  }
 }
 
-void HwcTestBase::LogTestResult()
-{
-    LogTestResult(mConfig);
+void HwcTestBase::LogTestResult() {
+  LogTestResult(mConfig);
 }
 
-void HwcTestBase::SetTestEndType(eTestEndType type)
-{
-    if (type == etetRunTime && mTestRunTime == 0)
-    {
-        HWCERROR(eCheckSessionFail, "Test runtime not set %d", (int32_t)mTestRunTime);
-    }
+void HwcTestBase::SetTestEndType(eTestEndType type) {
+  if (type == etetRunTime && mTestRunTime == 0) {
+    HWCERROR(eCheckSessionFail, "Test runtime not set %d",
+             (int32_t)mTestRunTime);
+  }
 
-    if (type >= etetNumberOfTestTypes)
-    {
-        HWCERROR(eCheckSessionFail, "Invalid Test type %d", (uint32_t)type);
-    }
+  if (type >= etetNumberOfTestTypes) {
+    HWCERROR(eCheckSessionFail, "Invalid Test type %d", (uint32_t)type);
+  }
 
-    mTestEndCondition = type;
-    HWCLOGI("SetTestRunType %x", (uint32_t)mTestEndCondition);
+  mTestEndCondition = type;
+  HWCLOGI("SetTestRunType %x", (uint32_t)mTestEndCondition);
 }
 
-HwcTestBase::eTestEndType HwcTestBase::GetTestEndType(void)
-{
-    return mTestEndCondition;
+HwcTestBase::eTestEndType HwcTestBase::GetTestEndType(void) {
+  return mTestEndCondition;
 }
 
-void HwcTestBase::ConnectToShimBinder(void)
-{
-    android::sp<android::IServiceManager> sm =
-                                        android::defaultServiceManager();
+void HwcTestBase::ConnectToShimBinder(void) {
+  android::sp<android::IServiceManager> sm = android::defaultServiceManager();
 
-    // TODO handle in a less forceful manner. Maybe return an error from
-    // this function.
-    if (sm == 0)
-    {
-        HWCERROR(eCheckSessionFail, "Could not connect to service manager");
-        printf("TEST FAIL: COULD NOT CONNECT TO SERVICE MANAGER\n");
-        exit(1);
-    }
+  // TODO handle in a less forceful manner. Maybe return an error from
+  // this function.
+  if (sm == 0) {
+    HWCERROR(eCheckSessionFail, "Could not connect to service manager");
+    printf("TEST FAIL: COULD NOT CONNECT TO SERVICE MANAGER\n");
+    exit(1);
+  }
 
-    android::sp<IBinder> binder =
-                                sm->getService(String16("HwcShimService"));
-    assert(binder!=0);
+  android::sp<IBinder> binder = sm->getService(String16("HwcShimService"));
+  assert(binder != 0);
 
-    mHwcService = interface_cast<IHwcShimService>(
-        defaultServiceManager()->getService(String16("HwcShimService")));
+  mHwcService = interface_cast<IHwcShimService>(
+      defaultServiceManager()->getService(String16("HwcShimService")));
 
-    if(mHwcService == NULL)
-    {
-        HWCERROR(eCheckSessionFail, "Error getting mHwcService");
-        printf("TEST FAIL: SHIMS NOT INSTALLED\n");
-        exit(1);
-    }
+  if (mHwcService == NULL) {
+    HWCERROR(eCheckSessionFail, "Error getting mHwcService");
+    printf("TEST FAIL: SHIMS NOT INSTALLED\n");
+    exit(1);
+  }
 }
 
-void HwcTestBase::CheckTestEndType()
-{
-    if (mTestEndCondition == etetFrameCount)
-    {
-        if (mTestFrameCount == 0)
-        {
-           HWCERROR(eCheckSessionFail, "No frame count");
-        }
+void HwcTestBase::CheckTestEndType() {
+  if (mTestEndCondition == etetFrameCount) {
+    if (mTestFrameCount == 0) {
+      HWCERROR(eCheckSessionFail, "No frame count");
     }
-    else if (mTestEndCondition == etetRunTime)
-    {
-        if (mTestRunTime == 0)
-        {
-           HWCERROR(eCheckSessionFail, "No test run time set");
-        }
+  } else if (mTestEndCondition == etetRunTime) {
+    if (mTestRunTime == 0) {
+      HWCERROR(eCheckSessionFail, "No test run time set");
     }
-    else if (mTestEndCondition == etetUserDriven)
-    {
-        // No parameter needed
-    }
-    else
-    {
-        // No valid test type
-        HWCERROR(eCheckSessionFail, "Invalid test type: %d", (uint32_t)mTestEndCondition);
-    }
-
+  } else if (mTestEndCondition == etetUserDriven) {
+    // No parameter needed
+  } else {
+    // No valid test type
+    HWCERROR(eCheckSessionFail, "Invalid test type: %d",
+             (uint32_t)mTestEndCondition);
+  }
 }
 
-void HwcTestBase::SetTestRunTime(int64_t runTimeMs)
-{
-    if(mTestRunTimeOverridden)
-    {
-        HWCLOGI("HwcTestBase::SetTestRunTime - request to run %lldms ignored, using command line override of %lldms", runTimeMs, mTestRunTime);
-    }
-    else
-    {
-        mTestRunTime = runTimeMs;
-    }
+void HwcTestBase::SetTestRunTime(int64_t runTimeMs) {
+  if (mTestRunTimeOverridden) {
+    HWCLOGI(
+        "HwcTestBase::SetTestRunTime - request to run %lldms ignored, using "
+        "command line override of %lldms",
+        runTimeMs, mTestRunTime);
+  } else {
+    mTestRunTime = runTimeMs;
+  }
 }
 
-int64_t HwcTestBase::GetTime()
-{
-   return android::elapsedRealtime();
+int64_t HwcTestBase::GetTime() {
+  return android::elapsedRealtime();
 }
 
-status_t HwcTestBase::InitialiseChecks()
-{
-    if (!mNoShims)
-        SetChecks();
-    CheckTestEndType();
+status_t HwcTestBase::InitialiseChecks() {
+  if (!mNoShims)
+    SetChecks();
+  CheckTestEndType();
 
-    status_t initOK = android::NO_ERROR;
+  status_t initOK = android::NO_ERROR;
 
-    HWCLOGI("HwcTestBase::InitialiseChecks mNoShims=%u", mNoShims);
-    if (!mNoShims)
-    {
-        // Send test configuration to shims and reset failure counts
-        initOK = mHwcService->SetHwcTestConfig(mConfig, true);
-    }
+  HWCLOGI("HwcTestBase::InitialiseChecks mNoShims=%u", mNoShims);
+  if (!mNoShims) {
+    // Send test configuration to shims and reset failure counts
+    initOK = mHwcService->SetHwcTestConfig(mConfig, true);
+  }
 
-    return initOK;
+  return initOK;
 }
 
-void HwcTestBase::DebriefChecks(bool disableAllChecks)
-{
-    HWCLOGI("HwcTestBase::DebriefChecks()");
-    if (!mNoShims)
-    {
-        HwcTestResult testResult;
+void HwcTestBase::DebriefChecks(bool disableAllChecks) {
+  HWCLOGI("HwcTestBase::DebriefChecks()");
+  if (!mNoShims) {
+    HwcTestResult testResult;
 
-        // Get test result and turn off all checks
-        HWCLOGI("HwcTestBase::DebriefChecks() - retrieving results");
-        mHwcService->GetHwcTestResult(testResult, disableAllChecks);
+    // Get test result and turn off all checks
+    HWCLOGI("HwcTestBase::DebriefChecks() - retrieving results");
+    mHwcService->GetHwcTestResult(testResult, disableAllChecks);
 
-        // Combine remote errors with local failures
-        mResult += testResult;
-    }
+    // Combine remote errors with local failures
+    mResult += testResult;
+  }
 }
 
-void HwcTestBase::GetOldConfig(HwcTestConfig& config)
-{
-    if (!mNoShims)
-    {
-        mHwcService->GetHwcTestConfig(config);
-    }
+void HwcTestBase::GetOldConfig(HwcTestConfig& config) {
+  if (!mNoShims) {
+    mHwcService->GetHwcTestConfig(config);
+  }
 }
 
-void HwcTestBase::SetLoggingLevelToDefault()
-{
-    mHwcService->GetHwcTestConfig(mConfig);
-    mConfig.mMinLogPriority = ANDROID_LOG_WARN;
-    mHwcService->SetHwcTestConfig(mConfig, false);
+void HwcTestBase::SetLoggingLevelToDefault() {
+  mHwcService->GetHwcTestConfig(mConfig);
+  mConfig.mMinLogPriority = ANDROID_LOG_WARN;
+  mHwcService->SetHwcTestConfig(mConfig, false);
 }
 
-int HwcTestBase::StartTest(void)
-{
-    HWCLOGI("HwcTestBase::StartTest() mTestName=%s",mTestName.string());
+int HwcTestBase::StartTest(void) {
+  HWCLOGI("HwcTestBase::StartTest() mTestName=%s", mTestName.string());
 
-    status_t initOK = InitialiseChecks();
+  status_t initOK = InitialiseChecks();
 
-    if (initOK != android::NO_ERROR)
-    {
-        HWCERROR(eCheckSessionFail, "Binder error: %d", initOK);
-        LogTestResult();
-        return 1;
-    }
-
-    // If some  error occurred in the setup do not run the test
-    if (!mResult.IsGlobalFail())
-    {
-        mStartTime = GetTime();
-
-        for (uint32_t i=0; i<SurfaceSenders.size(); ++i)
-        {
-            SurfaceSender* ss = SurfaceSenders[i]->get();
-
-            ss->Start();
-        }
-
-        // If setup was ok start test loop
-        // TODO remove
-        bool keepGoing = true;
-
-        // Start surfaces
-        while(keepGoing)
-        {
-
-            for (uint32_t i=0; i<SurfaceSenders.size(); ++i)
-            {
-                SurfaceSender* ss = SurfaceSenders[i]->get();
-
-                if(!ss->Iterate())
-                {
-                    HWCERROR(eCheckSurfaceSender, "HwcTestBase::StartTest - ERROR: test aborted");
-                    keepGoing = false;
-                    break;
-                }
-            }
-
-
-            // ChecktoSee if the test should continue
-            // Could this to the frame count increment
-            if(keepGoing)
-            {
-                keepGoing = ContinueTest();
-            }
-        }
-
-        HWCLOGD("Disabling surface sender");
-        for (uint32_t i=0; i<SurfaceSenders.size(); ++i)
-        {
-            SurfaceSender* ss = SurfaceSenders[i]->get();
-
-            ss->End();
-        }
-
-        HWCLOGD("Getting debrief");
-        DebriefChecks();
-    }
-    else
-    {
-        // The flow only got here if a error was already set so there is no need
-        // to record the error again.
-        printf("Setup error occurred TEST NOT RUN.");
-    }
-
-    // If the control flow got here everything was super
+  if (initOK != android::NO_ERROR) {
+    HWCERROR(eCheckSessionFail, "Binder error: %d", initOK);
     LogTestResult();
-    return mResult.IsGlobalFail() ? 1 : 0;
-}
+    return 1;
+  }
 
-void HwcTestBase::SetArgs(int argc, char ** argv)
-{
-    mArgc = argc;
-    mArgv = argv;
+  // If some  error occurred in the setup do not run the test
+  if (!mResult.IsGlobalFail()) {
+    mStartTime = GetTime();
 
-    for (int i = 1; i <argc; ++i)
-    {
-        if(strcmp(argv[i], "-no_shims") == 0)
-        {
-            mNoShims = true;
-        }
-        else if(strncmp(argv[i], "-t=", 3) == 0)
-        {
-            int s = atoi(&argv[i][3]);
-            if(s > 0)
-            {
-                mTestRunTime = int64_t(s) * 1000;
-                mTestRunTimeOverridden = true;
-            }
-        }
-        else if(strcmp(argv[i], "-crc") == 0)
-        {
-            mConfig.SetCheck(eCheckCRC);
-        }
-        else if (strcmp(argv[i], "-val_hwc_composition") == 0)
-        {
-            mValHwcComposition = true;
-        }
-        else if (strcmp(argv[i], "-val_ivp_composition") == 0)
-        {
-            mValIvpComposition = true;
-        }
-        else if (strcmp(argv[i], "-no_val_hwc") == 0)
-        {
-            mValHwc = false;
-        }
-        else if (strcmp(argv[i], "-val_sf") == 0)
-        {
-            mValSf = true;
-        }
-        else if (strcmp(argv[i], "-val_displays") == 0)
-        {
-            mValDisplays = true;
-        }
-        else if (strcmp(argv[i], "-val_buffer_allocation") == 0)
-        {
-            mValBuffers = true;
-        }
-        else if (strncmp(argv[i], "-log_pri=", 9) == 0)
-        {
-            const char* logPri = argv[i]+9;
-            int priority;
+    for (uint32_t i = 0; i < SurfaceSenders.size(); ++i) {
+      SurfaceSender* ss = SurfaceSenders[i]->get();
 
-            switch (toupper(*logPri))
-            {
-                case 'V':
-                    priority = ANDROID_LOG_VERBOSE;
-                    break;
-
-                case 'D':
-                    priority = ANDROID_LOG_DEBUG;
-                    break;
-
-                case 'I':
-                    priority = ANDROID_LOG_INFO;
-                    break;
-
-                case 'W':
-                    priority = ANDROID_LOG_WARN;
-                    break;
-
-                case 'E':
-                    priority = ANDROID_LOG_ERROR;
-                    break;
-
-                case 'F':
-                    priority = ANDROID_LOG_FATAL;
-                    break;
-
-                default:
-                    priority = ANDROID_LOG_ERROR;
-            }
-
-            mConfig.mMinLogPriority = priority;
-        }
-
+      ss->Start();
     }
+
+    // If setup was ok start test loop
+    // TODO remove
+    bool keepGoing = true;
+
+    // Start surfaces
+    while (keepGoing) {
+      for (uint32_t i = 0; i < SurfaceSenders.size(); ++i) {
+        SurfaceSender* ss = SurfaceSenders[i]->get();
+
+        if (!ss->Iterate()) {
+          HWCERROR(eCheckSurfaceSender,
+                   "HwcTestBase::StartTest - ERROR: test aborted");
+          keepGoing = false;
+          break;
+        }
+      }
+
+      // ChecktoSee if the test should continue
+      // Could this to the frame count increment
+      if (keepGoing) {
+        keepGoing = ContinueTest();
+      }
+    }
+
+    HWCLOGD("Disabling surface sender");
+    for (uint32_t i = 0; i < SurfaceSenders.size(); ++i) {
+      SurfaceSender* ss = SurfaceSenders[i]->get();
+
+      ss->End();
+    }
+
+    HWCLOGD("Getting debrief");
+    DebriefChecks();
+  } else {
+    // The flow only got here if a error was already set so there is no need
+    // to record the error again.
+    printf("Setup error occurred TEST NOT RUN.");
+  }
+
+  // If the control flow got here everything was super
+  LogTestResult();
+  return mResult.IsGlobalFail() ? 1 : 0;
 }
 
-void HwcTestBase::PrintArgs() const
-{
-    printf("command line arguments:-\n");
-    printf("-no_shims            # disables the shims during the test\n");
-    printf("-t=<s>               # overrides the test run time to <s> seconds\n");
-    printf("-val_hwc_composition # Enable validtion of HWC composition against reference composer using SSIM\n");
-    printf("-val_ivp_composition # Enable validtion of iVP composition against reference composer using SSIM\n");
-    printf("-log_pri=<p>         # Sets the minimum priority to appear in the log. <p>=V|D|I|W|E|F\n");
-    printf("\n");
+void HwcTestBase::SetArgs(int argc, char** argv) {
+  mArgc = argc;
+  mArgv = argv;
+
+  for (int i = 1; i < argc; ++i) {
+    if (strcmp(argv[i], "-no_shims") == 0) {
+      mNoShims = true;
+    } else if (strncmp(argv[i], "-t=", 3) == 0) {
+      int s = atoi(&argv[i][3]);
+      if (s > 0) {
+        mTestRunTime = int64_t(s) * 1000;
+        mTestRunTimeOverridden = true;
+      }
+    } else if (strcmp(argv[i], "-crc") == 0) {
+      mConfig.SetCheck(eCheckCRC);
+    } else if (strcmp(argv[i], "-val_hwc_composition") == 0) {
+      mValHwcComposition = true;
+    } else if (strcmp(argv[i], "-val_ivp_composition") == 0) {
+      mValIvpComposition = true;
+    } else if (strcmp(argv[i], "-no_val_hwc") == 0) {
+      mValHwc = false;
+    } else if (strcmp(argv[i], "-val_sf") == 0) {
+      mValSf = true;
+    } else if (strcmp(argv[i], "-val_displays") == 0) {
+      mValDisplays = true;
+    } else if (strcmp(argv[i], "-val_buffer_allocation") == 0) {
+      mValBuffers = true;
+    } else if (strncmp(argv[i], "-log_pri=", 9) == 0) {
+      const char* logPri = argv[i] + 9;
+      int priority;
+
+      switch (toupper(*logPri)) {
+        case 'V':
+          priority = ANDROID_LOG_VERBOSE;
+          break;
+
+        case 'D':
+          priority = ANDROID_LOG_DEBUG;
+          break;
+
+        case 'I':
+          priority = ANDROID_LOG_INFO;
+          break;
+
+        case 'W':
+          priority = ANDROID_LOG_WARN;
+          break;
+
+        case 'E':
+          priority = ANDROID_LOG_ERROR;
+          break;
+
+        case 'F':
+          priority = ANDROID_LOG_FATAL;
+          break;
+
+        default:
+          priority = ANDROID_LOG_ERROR;
+      }
+
+      mConfig.mMinLogPriority = priority;
+    }
+  }
 }
 
-void HwcTestBase::DumpSurfaces(SurfaceSender::SurfaceSenderProperties surfaceProperties)
-{
-    HWCLOGI("Surface %s layer %d",
-                surfaceProperties.GetSurfaceName(),
-                surfaceProperties.GetLayer());
-    HWCLOGI("  Use screen w:%d h:%d",
-                surfaceProperties.GetUseScreenWidth(),
-                surfaceProperties.GetUseScreenHeight());
-    HWCLOGI("  wxh: %dx%d, offset: %dx%d",
-                surfaceProperties.GetWidth(),
-                surfaceProperties.GetHeight(),
-                surfaceProperties.GetXOffset(),
-                surfaceProperties.GetYOffset());
-    HWCLOGI(" cs %d, colour %x",
-                surfaceProperties.GetColorSpace(),
-                surfaceProperties.GetRGBAColor());
+void HwcTestBase::PrintArgs() const {
+  printf("command line arguments:-\n");
+  printf("-no_shims            # disables the shims during the test\n");
+  printf("-t=<s>               # overrides the test run time to <s> seconds\n");
+  printf(
+      "-val_hwc_composition # Enable validtion of HWC composition against "
+      "reference composer using SSIM\n");
+  printf(
+      "-val_ivp_composition # Enable validtion of iVP composition against "
+      "reference composer using SSIM\n");
+  printf(
+      "-log_pri=<p>         # Sets the minimum priority to appear in the log. "
+      "<p>=V|D|I|W|E|F\n");
+  printf("\n");
+}
+
+void HwcTestBase::DumpSurfaces(
+    SurfaceSender::SurfaceSenderProperties surfaceProperties) {
+  HWCLOGI("Surface %s layer %d", surfaceProperties.GetSurfaceName(),
+          surfaceProperties.GetLayer());
+  HWCLOGI("  Use screen w:%d h:%d", surfaceProperties.GetUseScreenWidth(),
+          surfaceProperties.GetUseScreenHeight());
+  HWCLOGI("  wxh: %dx%d, offset: %dx%d", surfaceProperties.GetWidth(),
+          surfaceProperties.GetHeight(), surfaceProperties.GetXOffset(),
+          surfaceProperties.GetYOffset());
+  HWCLOGI(" cs %d, colour %x", surfaceProperties.GetColorSpace(),
+          surfaceProperties.GetRGBAColor());
 }
 
 HwcTestConfig defaultTestConfig;
 HwcTestResult defaultTestResult;
 
-HwcTestResult* HwcGetTestResult()
-{
-    HwcTestBase* testBase=HwcTestBase::GetTestBase();
-    if (testBase)
-    {
-        return &(testBase->GetResult());
-    }
-    else
-    {
-        return &defaultTestResult;
-    }
+HwcTestResult* HwcGetTestResult() {
+  HwcTestBase* testBase = HwcTestBase::GetTestBase();
+  if (testBase) {
+    return &(testBase->GetResult());
+  } else {
+    return &defaultTestResult;
+  }
 }
 
-HwcTestConfig* HwcGetTestConfig()
-{
-    HwcTestBase* testBase=HwcTestBase::GetTestBase();
-    if (testBase)
-    {
-        return &(testBase->GetConfig());
-    }
-    else
-    {
-        return &defaultTestConfig;
-    }
+HwcTestConfig* HwcGetTestConfig() {
+  HwcTestBase* testBase = HwcTestBase::GetTestBase();
+  if (testBase) {
+    return &(testBase->GetConfig());
+  } else {
+    return &defaultTestConfig;
+  }
 }
 
 // Include logging

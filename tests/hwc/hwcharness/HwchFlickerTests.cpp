@@ -23,39 +23,35 @@
 
 REGISTER_TEST(Flicker1)
 Hwch::Flicker1Test::Flicker1Test(Hwch::Interface& interface)
-  : Hwch::Test(interface)
-{
+    : Hwch::Test(interface) {
 }
 
 // Alternate between full-screen 16-bit and full-screen 32-bit layers.
-int Hwch::Flicker1Test::RunScenario()
-{
-    Hwch::Frame frame(mInterface);
+int Hwch::Flicker1Test::RunScenario() {
+  Hwch::Frame frame(mInterface);
 
-    // 16-bit layer
-    Hwch::GameFullScreenLayer game(MaxRel(0), MaxRel(0));
+  // 16-bit layer
+  Hwch::GameFullScreenLayer game(MaxRel(0), MaxRel(0));
 
-    // 32-bit layer
-    Hwch::RGBALayer rgba(MaxRel(0), MaxRel(0));
+  // 32-bit layer
+  Hwch::RGBALayer rgba(MaxRel(0), MaxRel(0));
 
-    for (uint32_t i=0; i<20; ++i)
-    {
-        frame.Add(game);
-        frame.Send(10);
-        frame.Remove(game);
+  for (uint32_t i = 0; i < 20; ++i) {
+    frame.Add(game);
+    frame.Send(10);
+    frame.Remove(game);
 
-        frame.Add(rgba);
-        frame.Send(10);
-        frame.Remove(rgba);
-    }
+    frame.Add(rgba);
+    frame.Send(10);
+    frame.Remove(rgba);
+  }
 
-    return 0;
+  return 0;
 }
 
 REGISTER_TEST(Flicker2)
 Hwch::Flicker2Test::Flicker2Test(Hwch::Interface& interface)
-  : Hwch::Test(interface)
-{
+    : Hwch::Test(interface) {
 }
 
 // Generate Max Fifo flicker by:
@@ -63,61 +59,54 @@ Hwch::Flicker2Test::Flicker2Test(Hwch::Interface& interface)
 //   Wait for >0.6ms so kernel goes into idle mode
 //   Then send just a 32-bit layer to the screen.
 
-int Hwch::Flicker2Test::RunScenario()
-{
-    Hwch::Frame frame(mInterface);
+int Hwch::Flicker2Test::RunScenario() {
+  Hwch::Frame frame(mInterface);
 
-    // 16-bit layer
-    Hwch::GameFullScreenLayer game(MaxRel(0), MaxRel(0));
+  // 16-bit layer
+  Hwch::GameFullScreenLayer game(MaxRel(0), MaxRel(0));
 
-    // 32-bit layers
-    Hwch::NavigationBarLayer nav;
-    Hwch::StatusBarLayer status;
+  // 32-bit layers
+  Hwch::NavigationBarLayer nav;
+  Hwch::StatusBarLayer status;
 
-    for (uint32_t i=0; i<20; ++i)
-    {
-        frame.Add(game);
-        frame.Add(nav);
-        frame.Add(status);
-        frame.Send();
+  for (uint32_t i = 0; i < 20; ++i) {
+    frame.Add(game);
+    frame.Add(nav);
+    frame.Add(status);
+    frame.Send();
 
-        // 0.8ms delay - stimulate idle mode
-        usleep(800*1000);
+    // 0.8ms delay - stimulate idle mode
+    usleep(800 * 1000);
 
-        frame.Remove(game);
-        frame.Send(3);
-        frame.Remove(nav);
-        frame.Remove(status);
-    }
+    frame.Remove(game);
+    frame.Send(3);
+    frame.Remove(nav);
+    frame.Remove(status);
+  }
 
-    return 0;
+  return 0;
 }
 
 REGISTER_TEST(Flicker3)
 Hwch::Flicker3Test::Flicker3Test(Hwch::Interface& interface)
-  : Hwch::Test(interface)
-{
+    : Hwch::Test(interface) {
 }
 
 // Send a 16-bit layer to the screen 3 times
 // then wait >0.6ms for kernel to go into idle mode.
 
-int Hwch::Flicker3Test::RunScenario()
-{
-    Hwch::Frame frame(mInterface);
+int Hwch::Flicker3Test::RunScenario() {
+  Hwch::Frame frame(mInterface);
 
-    Hwch::GameFullScreenLayer game(MaxRel(0), MaxRel(0));
-    frame.Add(game);
+  Hwch::GameFullScreenLayer game(MaxRel(0), MaxRel(0));
+  frame.Add(game);
 
-    for (uint32_t i=0; i<20; ++i)
-    {
-        frame.Send(3);
+  for (uint32_t i = 0; i < 20; ++i) {
+    frame.Send(3);
 
-        // 0.8ms delay - stimulate idle mode
-        usleep(800*1000);
-    }
+    // 0.8ms delay - stimulate idle mode
+    usleep(800 * 1000);
+  }
 
-    return 0;
+  return 0;
 }
-
-

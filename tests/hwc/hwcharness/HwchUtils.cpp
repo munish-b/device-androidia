@@ -24,40 +24,33 @@
 
 // Check to see if a process is running on the Android system
 // Pass in the binary name is a pattern e.g. "surfaceflinger"
-bool processRunning(char *pattern)
-{
-    regex_t number;
-    regex_t name;
-    regcomp(&number, "^[0-9]+$", REG_EXTENDED);
-    regcomp(&name, pattern, 0);
+bool processRunning(char *pattern) {
+  regex_t number;
+  regex_t name;
+  regcomp(&number, "^[0-9]+$", REG_EXTENDED);
+  regcomp(&name, pattern, 0);
 
-    if (chdir("/proc") == 0)
-    {
-        DIR* proc = opendir("/proc");
+  if (chdir("/proc") == 0) {
+    DIR *proc = opendir("/proc");
 
-        // Look for all the directories in /proc
-        struct dirent *dp;
-        while ((dp = readdir(proc)))
-        {
-
-            // Match those which are numerical
-            if ((regexec(&number, dp->d_name, 0, 0, 0)) == 0)
-            {
-                chdir(dp->d_name);
-                char buf[4096];
-                int fd = open("cmdline", O_RDONLY);
-                buf[read(fd, buf, (sizeof buf)-1)] = '\0';
-                if (regexec(&name, buf, 0, 0, 0) == 0)
-                {
-                    return true;
-                }
-                close(fd);
-                chdir("..");
-            }
+    // Look for all the directories in /proc
+    struct dirent *dp;
+    while ((dp = readdir(proc))) {
+      // Match those which are numerical
+      if ((regexec(&number, dp->d_name, 0, 0, 0)) == 0) {
+        chdir(dp->d_name);
+        char buf[4096];
+        int fd = open("cmdline", O_RDONLY);
+        buf[read(fd, buf, (sizeof buf) - 1)] = '\0';
+        if (regexec(&name, buf, 0, 0, 0) == 0) {
+          return true;
         }
-        closedir(proc);
+        close(fd);
+        chdir("..");
+      }
     }
+    closedir(proc);
+  }
 
-    return false;
+  return false;
 }
-

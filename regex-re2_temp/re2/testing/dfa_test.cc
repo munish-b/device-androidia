@@ -23,7 +23,8 @@ namespace re2 {
 // Helper thread: builds entire DFA for prog.
 class BuildThread : public Thread {
  public:
-  BuildThread(Prog* prog) : prog_(prog) {}
+  BuildThread(Prog* prog) : prog_(prog) {
+  }
   virtual void Run() {
     CHECK(prog_->BuildEntireDFA(Prog::kFirstMatch));
   }
@@ -41,7 +42,7 @@ TEST(Multithreaded, BuildEntireDFA) {
 
   // Check that single-threaded code works.
   {
-    //LOG(INFO) << s;
+    // LOG(INFO) << s;
     Regexp* re = Regexp::Parse(s.c_str(), Regexp::LikePerl, NULL);
     CHECK(re);
     Prog* prog = re->CompileToProg(0);
@@ -64,7 +65,7 @@ TEST(Multithreaded, BuildEntireDFA) {
 
     vector<BuildThread*> threads;
     for (int j = 0; j < FLAGS_threads; j++) {
-      BuildThread *t = new BuildThread(prog);
+      BuildThread* t = new BuildThread(prog);
       t->SetJoinable(true);
       threads.push_back(t);
     }
@@ -92,20 +93,20 @@ TEST(SingleThreaded, BuildEntireDFA) {
     s += "[ab]";
   s += "b";
 
-  //LOG(INFO) << s;
+  // LOG(INFO) << s;
   Regexp* re = Regexp::Parse(s.c_str(), Regexp::LikePerl, NULL);
   CHECK(re);
   int max = 24;
   for (int i = 17; i < max; i++) {
-    int limit = 1<<i;
+    int limit = 1 << i;
     int usage;
-    //int progusage, dfamem;
+    // int progusage, dfamem;
     {
       testing::MallocCounter m(testing::MallocCounter::THIS_THREAD_ONLY);
       Prog* prog = re->CompileToProg(limit);
       CHECK(prog);
-      //progusage = m.HeapGrowth();
-      //dfamem = prog->dfa_mem();
+      // progusage = m.HeapGrowth();
+      // dfamem = prog->dfa_mem();
       prog->BuildEntireDFA(Prog::kFirstMatch);
       prog->BuildEntireDFA(Prog::kLongestMatch);
       usage = m.HeapGrowth();
@@ -113,10 +114,11 @@ TEST(SingleThreaded, BuildEntireDFA) {
     }
     if (!UsingMallocCounter)
       continue;
-    //LOG(INFO) << StringPrintf("Limit %d: prog used %d, DFA budget %d, total %d\n",
+    // LOG(INFO) << StringPrintf("Limit %d: prog used %d, DFA budget %d, total
+    // %d\n",
     //                          limit, progusage, dfamem, usage);
-    CHECK_GT(usage, limit*9/10);
-    CHECK_LT(usage, limit + (16<<10));  // 16kB of slop okay
+    CHECK_GT(usage, limit * 9 / 10);
+    CHECK_LT(usage, limit + (16 << 10));  // 16kB of slop okay
   }
   re->Decref();
 }
@@ -132,22 +134,22 @@ TEST(SingleThreaded, BuildEntireDFA) {
 // position in the input, never reusing any states until it gets to the
 // end of the string.  This is the worst possible case for DFA execution.
 static string DeBruijnString(int n) {
-  CHECK_LT(n, 8*sizeof(int));
+  CHECK_LT(n, 8 * sizeof(int));
   CHECK_GT(n, 0);
 
-  vector<bool> did(1<<n);
-  for (int i = 0; i < 1<<n; i++)
+  vector<bool> did(1 << n);
+  for (int i = 0; i < 1 << n; i++)
     did[i] = false;
 
   string s;
-  for (int i = 0; i < n-1; i++)
+  for (int i = 0; i < n - 1; i++)
     s.append("0");
   int bits = 0;
-  int mask = (1<<n) - 1;
-  for (int i = 0; i < (1<<n); i++) {
+  int mask = (1 << n) - 1;
+  for (int i = 0; i < (1 << n); i++) {
     bits <<= 1;
     bits &= mask;
-    if (!did[bits|1]) {
+    if (!did[bits | 1]) {
       bits |= 1;
       s.append("1");
     } else {
@@ -181,8 +183,8 @@ TEST(SingleThreaded, SearchDFA) {
   // Empirically, n = 18 is a good compromise between the two.
   const int n = 18;
 
-  Regexp* re = Regexp::Parse(StringPrintf("0[01]{%d}$", n),
-                             Regexp::LikePerl, NULL);
+  Regexp* re =
+      Regexp::Parse(StringPrintf("0[01]{%d}$", n), Regexp::LikePerl, NULL);
   CHECK(re);
 
   // The De Bruijn string for n ends with a 1 followed by n 0s in a row,
@@ -202,18 +204,16 @@ TEST(SingleThreaded, SearchDFA) {
   int64 peak_usage;
   {
     testing::MallocCounter m(testing::MallocCounter::THIS_THREAD_ONLY);
-    Prog* prog = re->CompileToProg(1<<n);
+    Prog* prog = re->CompileToProg(1 << n);
     CHECK(prog);
     for (int i = 0; i < 10; i++) {
       bool matched, failed = false;
-      matched = prog->SearchDFA(match, NULL,
-                                Prog::kUnanchored, Prog::kFirstMatch,
-                                NULL, &failed, NULL);
+      matched = prog->SearchDFA(match, NULL, Prog::kUnanchored,
+                                Prog::kFirstMatch, NULL, &failed, NULL);
       CHECK(!failed);
       CHECK(matched);
-      matched = prog->SearchDFA(no_match, NULL,
-                                Prog::kUnanchored, Prog::kFirstMatch,
-                                NULL, &failed, NULL);
+      matched = prog->SearchDFA(no_match, NULL, Prog::kUnanchored,
+                                Prog::kFirstMatch, NULL, &failed, NULL);
       CHECK(!failed);
       CHECK(!matched);
     }
@@ -225,9 +225,9 @@ TEST(SingleThreaded, SearchDFA) {
 
   if (!UsingMallocCounter)
     return;
-  //LOG(INFO) << "usage " << usage << " " << peak_usage;
-  CHECK_LT(usage, 1<<n);
-  CHECK_LT(peak_usage, 1<<n);
+  // LOG(INFO) << "usage " << usage << " " << peak_usage;
+  CHECK_LT(usage, 1 << n);
+  CHECK_LT(peak_usage, 1 << n);
 }
 
 // Helper thread: searches for match, which should match,
@@ -236,19 +236,18 @@ class SearchThread : public Thread {
  public:
   SearchThread(Prog* prog, const StringPiece& match,
                const StringPiece& no_match)
-    : prog_(prog), match_(match), no_match_(no_match) {}
+      : prog_(prog), match_(match), no_match_(no_match) {
+  }
 
   virtual void Run() {
     for (int i = 0; i < 2; i++) {
       bool matched, failed = false;
-      matched = prog_->SearchDFA(match_, NULL,
-                                 Prog::kUnanchored, Prog::kFirstMatch,
-                                 NULL, &failed, NULL);
+      matched = prog_->SearchDFA(match_, NULL, Prog::kUnanchored,
+                                 Prog::kFirstMatch, NULL, &failed, NULL);
       CHECK(!failed);
       CHECK(matched);
-      matched = prog_->SearchDFA(no_match_, NULL,
-                                 Prog::kUnanchored, Prog::kFirstMatch,
-                                 NULL, &failed, NULL);
+      matched = prog_->SearchDFA(no_match_, NULL, Prog::kUnanchored,
+                                 Prog::kFirstMatch, NULL, &failed, NULL);
       CHECK(!failed);
       CHECK(!matched);
     }
@@ -263,8 +262,8 @@ class SearchThread : public Thread {
 TEST(Multithreaded, SearchDFA) {
   // Same as single-threaded test above.
   const int n = 18;
-  Regexp* re = Regexp::Parse(StringPrintf("0[01]{%d}$", n),
-                             Regexp::LikePerl, NULL);
+  Regexp* re =
+      Regexp::Parse(StringPrintf("0[01]{%d}$", n), Regexp::LikePerl, NULL);
   CHECK(re);
   string no_match = DeBruijnString(n);
   string match = no_match + "0";
@@ -272,7 +271,7 @@ TEST(Multithreaded, SearchDFA) {
 
   // Check that single-threaded code works.
   {
-    Prog* prog = re->CompileToProg(1<<n);
+    Prog* prog = re->CompileToProg(1 << n);
     CHECK(prog);
     SearchThread* t = new SearchThread(prog, match, no_match);
     t->SetJoinable(true);
@@ -285,13 +284,13 @@ TEST(Multithreaded, SearchDFA) {
   // Run the search simultaneously in a bunch of threads.
   // Reuse same flags for Multithreaded.BuildDFA above.
   for (int i = 0; i < FLAGS_repeat; i++) {
-    //LOG(INFO) << "Search " << i;
-    Prog* prog = re->CompileToProg(1<<n);
+    // LOG(INFO) << "Search " << i;
+    Prog* prog = re->CompileToProg(1 << n);
     CHECK(prog);
 
     vector<SearchThread*> threads;
     for (int j = 0; j < FLAGS_threads; j++) {
-      SearchThread *t = new SearchThread(prog, match, no_match);
+      SearchThread* t = new SearchThread(prog, match, no_match);
       t->SetJoinable(true);
       threads.push_back(t);
     }
@@ -307,18 +306,18 @@ TEST(Multithreaded, SearchDFA) {
 }
 
 struct ReverseTest {
-  const char *regexp;
-  const char *text;
+  const char* regexp;
+  const char* text;
   bool match;
 };
 
 // Test that reverse DFA handles anchored/unanchored correctly.
 // It's in the DFA interface but not used by RE2.
 ReverseTest reverse_tests[] = {
-  { "\\A(a|b)", "abc", true },
-  { "(a|b)\\z", "cba", true },
-  { "\\A(a|b)", "cba", false },
-  { "(a|b)\\z", "abc", false },
+    {"\\A(a|b)", "abc", true},
+    {"(a|b)\\z", "cba", true},
+    {"\\A(a|b)", "cba", false},
+    {"(a|b)\\z", "abc", false},
 };
 
 TEST(DFA, ReverseMatch) {
@@ -327,10 +326,11 @@ TEST(DFA, ReverseMatch) {
     const ReverseTest& t = reverse_tests[i];
     Regexp* re = Regexp::Parse(t.regexp, Regexp::LikePerl, NULL);
     CHECK(re);
-    Prog *prog = re->CompileToReverseProg(0);
+    Prog* prog = re->CompileToReverseProg(0);
     CHECK(prog);
     bool failed = false;
-    bool matched = prog->SearchDFA(t.text, NULL, Prog::kUnanchored, Prog::kFirstMatch, NULL, &failed, NULL);
+    bool matched = prog->SearchDFA(t.text, NULL, Prog::kUnanchored,
+                                   Prog::kFirstMatch, NULL, &failed, NULL);
     if (matched != t.match) {
       LOG(ERROR) << t.regexp << " on " << t.text << ": want " << t.match;
       nfail++;

@@ -43,58 +43,59 @@
 //      EscapeCb(...) or OsThunkDDIEscape(...) call.
 //------------------------------------------------------------------------------
 
-typedef enum
-{
-    // IMPORTANT:- When adding new escape code, add it at the end of the list,
-    // just before GFX_MAX_ESCAPE_CODES. the reason is that external test apps
-    // depend on the current order.
+typedef enum {
+  // IMPORTANT:- When adding new escape code, add it at the end of the list,
+  // just before GFX_MAX_ESCAPE_CODES. the reason is that external test apps
+  // depend on the current order.
 
-    // DO NOT ADD NEGATIVE ENUMERATORS
-    GFX_ESCAPE_CODE_DEBUG_CONTROL = 0L, // DO NOT CHANGE
-    GFX_ESCAPE_CUICOM_CONTROL,
-    GFX_ESCAPE_GMM_CONTROL,
-    GFX_ESCAPE_CAMARILLO_CONTROL,
-    GFX_ESCAPE_ROTATION_CONTROL,
-    GFX_ESCAPE_PAVP_CONTROL,
-    GFX_ESCAPE_UMD_GENERAL_CONTROL,
-    GFX_ESCAPE_RESOURCE_CONTROL,
-    GFX_ESCAPE_SOFTBIOS_CONTROL,
-    GFX_ESCAPE_ACPI_CONTROL,
-    GFX_ESCAPE_CODE_KM_DAF,
-    GFX_ESCAPE_CODE_PERF_CONTROL,
-    GFX_ESCAPE_IGPA_INSTRUMENTATION_CONTROL,
-    GFX_ESCAPE_CODE_OCA_TEST_CONTROL,
-    GFX_ESCAPE_AUTHCHANNEL,
-    GFX_ESCAPE_SHARED_RESOURCE,
-    GFX_ESCAPE_PWRCONS_CONTROL,
-    GFX_ESCAPE_KMD,
-    GFX_ESCAPE_DDE,
-    GFX_ESCAPE_IFFS,
-    GFX_ESCAPE_TOOLS_CONTROL, //Escape for Tools
-    GFX_ESCAPE_ULT_FW,
-    GFX_ESCAPE_HDCP_SRVC,
-    GFX_ESCAPE_KM_GUC,
-    GFX_ESCAPE_EVENT_PROFILING,
-    GFX_ESCAPE_WAFTR,
-    GFX_ESCAPE_KM_GUC_INTERNAL,
+  // DO NOT ADD NEGATIVE ENUMERATORS
+  GFX_ESCAPE_CODE_DEBUG_CONTROL = 0L,  // DO NOT CHANGE
+  GFX_ESCAPE_CUICOM_CONTROL,
+  GFX_ESCAPE_GMM_CONTROL,
+  GFX_ESCAPE_CAMARILLO_CONTROL,
+  GFX_ESCAPE_ROTATION_CONTROL,
+  GFX_ESCAPE_PAVP_CONTROL,
+  GFX_ESCAPE_UMD_GENERAL_CONTROL,
+  GFX_ESCAPE_RESOURCE_CONTROL,
+  GFX_ESCAPE_SOFTBIOS_CONTROL,
+  GFX_ESCAPE_ACPI_CONTROL,
+  GFX_ESCAPE_CODE_KM_DAF,
+  GFX_ESCAPE_CODE_PERF_CONTROL,
+  GFX_ESCAPE_IGPA_INSTRUMENTATION_CONTROL,
+  GFX_ESCAPE_CODE_OCA_TEST_CONTROL,
+  GFX_ESCAPE_AUTHCHANNEL,
+  GFX_ESCAPE_SHARED_RESOURCE,
+  GFX_ESCAPE_PWRCONS_CONTROL,
+  GFX_ESCAPE_KMD,
+  GFX_ESCAPE_DDE,
+  GFX_ESCAPE_IFFS,
+  GFX_ESCAPE_TOOLS_CONTROL,  // Escape for Tools
+  GFX_ESCAPE_ULT_FW,
+  GFX_ESCAPE_HDCP_SRVC,
+  GFX_ESCAPE_KM_GUC,
+  GFX_ESCAPE_EVENT_PROFILING,
+  GFX_ESCAPE_WAFTR,
+  GFX_ESCAPE_KM_GUC_INTERNAL,
 
-    GFX_ESCAPE_PERF_STATS = 100,
+  GFX_ESCAPE_PERF_STATS = 100,
 
+  GFX_ESCAPE_SW_DECRYPTION,
 
-    GFX_ESCAPE_SW_DECRYPTION,
+  GFX_ESCAPE_CHECK_PRESENT_DURATION_SUPPORT = 102,
+  GFX_ESCAPE_GET_DISPLAYINFO_ESCAPE,
+  // NOTE: WHEN YOU ADD NEW ENUMERATOR, PLEASE UPDATE
+  //       InitializeEscapeCodeTable in miniport\LHDM\Display\AdapterEscape.c
 
-    GFX_ESCAPE_CHECK_PRESENT_DURATION_SUPPORT = 102,
-    GFX_ESCAPE_GET_DISPLAYINFO_ESCAPE,
-    // NOTE: WHEN YOU ADD NEW ENUMERATOR, PLEASE UPDATE
-    //       InitializeEscapeCodeTable in miniport\LHDM\Display\AdapterEscape.c
-
-    GFX_MAX_ESCAPE_CODES // MUST BE LAST
+  GFX_MAX_ESCAPE_CODES  // MUST BE LAST
 } GFX_ESCAPE_CODE_T;
 
-C_ASSERT(GFX_ESCAPE_CODE_KM_DAF == 10); // If you're getting an error here, please...
+C_ASSERT(GFX_ESCAPE_CODE_KM_DAF ==
+         10);  // If you're getting an error here, please...
 // (1) IMPORTANT--Increment the KM_DAF_REV_ID #define in kmDaf.h--IMPORTANT!!!
-// (2) Change the "10" in the above C_ASSERT to the new GFX_ESCAPE_CODE_KM_DAF enum index.
-// (3) Change the "10" in both the above comment and this comment to the new index, also.  ;)
+// (2) Change the "10" in the above C_ASSERT to the new GFX_ESCAPE_CODE_KM_DAF
+// enum index.
+// (3) Change the "10" in both the above comment and this comment to the new
+// index, also.  ;)
 
 //==============================================================================
 //
@@ -105,29 +106,28 @@ C_ASSERT(GFX_ESCAPE_CODE_KM_DAF == 10); // If you're getting an error here, plea
 //
 //------------------------------------------------------------------------------
 
-typedef struct GFX_ESCAPE_HEADER
-{
-    union
-    {
-        struct
-        {
-            unsigned int        Size;       // Size of operation specific data arguments
-            unsigned int        CheckSum;   // ulong based sum of data arguments
-            GFX_ESCAPE_CODE_T   EscapeCode; // code defined for each independent
+typedef struct GFX_ESCAPE_HEADER {
+  union {
+    struct {
+      unsigned int Size;      // Size of operation specific data arguments
+      unsigned int CheckSum;  // ulong based sum of data arguments
+      GFX_ESCAPE_CODE_T EscapeCode;  // code defined for each independent
+                                     // component
+      unsigned int ulReserved;
+    };
+    // The new HEADER definition below is being added for the escape codes
+    // in GFX_ESCAPE_CUICOM_CONTROL & GFX_ESCAPE_TOOLS_CONTROL
+    struct {
+      unsigned int ulReserved1;
+      unsigned int ulMinorInterfaceVersion;  // Currently this field is used
+                                             // only by SB Tool Escapes. For the
+                                             // rest, its don't care field
+      GFX_ESCAPE_CODE_T ulMajorEscapeCode;  // code defined for each independent
                                             // component
-            unsigned int        ulReserved;
-        };
-        //The new HEADER definition below is being added for the escape codes
-        //in GFX_ESCAPE_CUICOM_CONTROL & GFX_ESCAPE_TOOLS_CONTROL
-        struct
-        {
-            unsigned int        ulReserved1;
-            unsigned int        ulMinorInterfaceVersion; // Currently this field is used only by SB Tool Escapes. For the rest, its don't care field
-            GFX_ESCAPE_CODE_T   ulMajorEscapeCode; // code defined for each independent
-                                            // component
-            unsigned int        uiMinorEscapeCode; // Code defined for each sub component contained in the component
-        };
-    };        // ensure sizeof struct divisible by 8 to prevent padding on 64-bit builds
+      unsigned int uiMinorEscapeCode;  // Code defined for each sub component
+                                       // contained in the component
+    };
+  };  // ensure sizeof struct divisible by 8 to prevent padding on 64-bit builds
 } GFX_ESCAPE_HEADER_T;
 
 //==============================================================================
@@ -139,4 +139,4 @@ typedef struct GFX_ESCAPE_HEADER
 //      First element of this structure must be GFX_ESCAPE_HEADER_T.
 //------------------------------------------------------------------------------
 
-#endif // _GFXESCAPE_H_
+#endif  // _GFXESCAPE_H_

@@ -14,46 +14,46 @@ struct PCRETest {
 };
 
 static PCRETest tests[] = {
-  // Most things should behave exactly.
-  { "abc",       true  },
-  { "(a|b)c",    true  },
-  { "(a*|b)c",   true  },
-  { "(a|b*)c",   true  },
-  { "a(b|c)d",   true  },
-  { "a(()|())c", true  },
-  { "ab*c",      true  },
-  { "ab+c",      true  },
-  { "a(b*|c*)d", true  },
-  { "\\W",       true  },
-  { "\\W{1,2}",  true  },
-  { "\\d",       true  },
+    // Most things should behave exactly.
+    {"abc", true},
+    {"(a|b)c", true},
+    {"(a*|b)c", true},
+    {"(a|b*)c", true},
+    {"a(b|c)d", true},
+    {"a(()|())c", true},
+    {"ab*c", true},
+    {"ab+c", true},
+    {"a(b*|c*)d", true},
+    {"\\W", true},
+    {"\\W{1,2}", true},
+    {"\\d", true},
 
-  // Check that repeated empty strings do not.
-  { "(a*)*",     false },
-  { "x(a*)*y",   false },
-  { "(a*)+",     false },
-  { "(a+)*",     true  },
-  { "(a+)+",     true  },
-  { "(a+)+",     true  },
+    // Check that repeated empty strings do not.
+    {"(a*)*", false},
+    {"x(a*)*y", false},
+    {"(a*)+", false},
+    {"(a+)*", true},
+    {"(a+)+", true},
+    {"(a+)+", true},
 
-  // \v is the only character class that shouldn't.
-  { "\\b",       true  },
-  { "\\v",       false },
-  { "\\d",       true  },
+    // \v is the only character class that shouldn't.
+    {"\\b", true},
+    {"\\v", false},
+    {"\\d", true},
 
-  // The handling of ^ in multi-line mode is different, as is
-  // the handling of $ in single-line mode.  (Both involve
-  // boundary cases if the string ends with \n.)
-  { "\\A",       true  },
-  { "\\z",       true  },
-  { "(?m)^",     false },
-  { "(?m)$",     true  },
-  { "(?-m)^",    true  },
-  { "(?-m)$",    false },  // In PCRE, == \Z
-  { "(?m)\\A",   true  },
-  { "(?m)\\z",   true  },
-  { "(?-m)\\A",  true  },
-  { "(?-m)\\z",  true  },
+    // The handling of ^ in multi-line mode is different, as is
+    // the handling of $ in single-line mode.  (Both involve
+    // boundary cases if the string ends with \n.)
+    {"\\A", true},
+    {"\\z", true},
+    {"(?m)^", false},
+    {"(?m)$", true},
+    {"(?-m)^", true},
+    {"(?-m)$", false},  // In PCRE, == \Z
+    {"(?m)\\A", true},
+    {"(?m)\\z", true},
+    {"(?-m)\\A", true},
+    {"(?-m)\\z", true},
 };
 
 TEST(MimicsPCRE, SimpleTests) {
@@ -65,9 +65,8 @@ TEST(MimicsPCRE, SimpleTests) {
         flags = flags | Regexp::Latin1;
       Regexp* re = Regexp::Parse(t.regexp, flags, NULL);
       CHECK(re) << " " << t.regexp;
-      CHECK_EQ(t.should_match, re->MimicsPCRE())
-        << " " << t.regexp << " "
-        << (j==0 ? "latin1" : "utf");
+      CHECK_EQ(t.should_match, re->MimicsPCRE()) << " " << t.regexp << " "
+                                                 << (j == 0 ? "latin1" : "utf");
       re->Decref();
     }
   }

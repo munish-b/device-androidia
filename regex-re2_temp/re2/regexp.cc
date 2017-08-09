@@ -14,12 +14,12 @@ namespace re2 {
 
 // Constructor.  Allocates vectors as appropriate for operator.
 Regexp::Regexp(RegexpOp op, ParseFlags parse_flags)
-  : op_(op),
-    simple_(false),
-    parse_flags_(static_cast<uint16>(parse_flags)),
-    ref_(1),
-    nsub_(0),
-    down_(NULL) {
+    : op_(op),
+      simple_(false),
+      parse_flags_(static_cast<uint16>(parse_flags)),
+      ref_(1),
+      nsub_(0),
+      down_(NULL) {
   subone_ = NULL;
   memset(the_union_, 0, sizeof the_union_);
 }
@@ -59,7 +59,7 @@ bool Regexp::QuickDestroy() {
   return false;
 }
 
-static map<Regexp*, int> *ref_map;
+static map<Regexp*, int>* ref_map;
 GLOBAL_MUTEX(ref_mutex);
 
 int Regexp::Ref() {
@@ -77,7 +77,7 @@ int Regexp::Ref() {
 
 // Increments reference count, returns object as convenience.
 Regexp* Regexp::Incref() {
-  if (ref_ >= kMaxRef-1) {
+  if (ref_ >= kMaxRef - 1) {
     // Store ref count in overflow map.
     GLOBAL_MUTEX_LOCK(ref_mutex);
     if (ref_map == NULL) {
@@ -163,7 +163,7 @@ void Regexp::AddRuneToString(Rune r) {
     runes_ = new Rune[8];
   } else if (nrunes_ >= 8 && (nrunes_ & (nrunes_ - 1)) == 0) {
     // double on powers of two
-    Rune *old = runes_;
+    Rune* old = runes_;
     runes_ = new Rune[nrunes_ * 2];
     for (int i = 0; i < nrunes_; i++)
       runes_[i] = old[i];
@@ -214,7 +214,7 @@ Regexp* Regexp::ConcatOrAlternate(RegexpOp op, Regexp** sub, int nsub,
   Regexp** subcopy = NULL;
   if (op == kRegexpAlternate && can_factor) {
     // Going to edit sub; make a copy so we don't step on caller.
-    subcopy = new Regexp*[nsub];
+    subcopy = new Regexp* [nsub];
     memmove(subcopy, sub, nsub * sizeof sub[0]);
     sub = subcopy;
     nsub = FactorAlternation(sub, nsub, flags);
@@ -228,15 +228,16 @@ Regexp* Regexp::ConcatOrAlternate(RegexpOp op, Regexp** sub, int nsub,
   if (nsub > kMaxNsub) {
     // Too many subexpressions to fit in a single Regexp.
     // Make a two-level tree.  Two levels gets us to 65535^2.
-    int nbigsub = (nsub+kMaxNsub-1)/kMaxNsub;
+    int nbigsub = (nsub + kMaxNsub - 1) / kMaxNsub;
     Regexp* re = new Regexp(op, flags);
     re->AllocSub(nbigsub);
     Regexp** subs = re->sub();
     for (int i = 0; i < nbigsub - 1; i++)
-      subs[i] = ConcatOrAlternate(op, sub+i*kMaxNsub, kMaxNsub, flags, false);
-    subs[nbigsub - 1] = ConcatOrAlternate(op, sub+(nbigsub-1)*kMaxNsub,
-                                          nsub - (nbigsub-1)*kMaxNsub, flags,
-                                          false);
+      subs[i] =
+          ConcatOrAlternate(op, sub + i * kMaxNsub, kMaxNsub, flags, false);
+    subs[nbigsub - 1] =
+        ConcatOrAlternate(op, sub + (nbigsub - 1) * kMaxNsub,
+                          nsub - (nbigsub - 1) * kMaxNsub, flags, false);
     delete[] subcopy;
     return re;
   }
@@ -355,8 +356,7 @@ static bool TopEqual(Regexp* a, Regexp* b) {
 
     case kRegexpRepeat:
       return ((a->parse_flags() ^ b->parse_flags()) & Regexp::NonGreedy) == 0 &&
-             a->min() == b->min() &&
-             a->max() == b->max();
+             a->min() == b->min() && a->max() == b->max();
 
     case kRegexpCapture:
       return a->cap() == b->cap() && a->name() == b->name();
@@ -449,30 +449,23 @@ bool Regexp::Equal(Regexp* a, Regexp* b) {
     if (n == 0)
       break;
 
-    a = stk[n-2];
-    b = stk[n-1];
-    stk.resize(n-2);
+    a = stk[n - 2];
+    b = stk[n - 1];
+    stk.resize(n - 2);
   }
 
   return true;
 }
 
 // Keep in sync with enum RegexpStatusCode in regexp.h
-static const char *kErrorStrings[] = {
-  "no error",
-  "unexpected error",
-  "invalid escape sequence",
-  "invalid character class",
-  "invalid character class range",
-  "missing ]",
-  "missing )",
-  "trailing \\",
-  "no argument for repetition operator",
-  "invalid repetition size",
-  "bad repetition operator",
-  "invalid perl operator",
-  "invalid UTF-8",
-  "invalid named capture group",
+static const char* kErrorStrings[] = {
+    "no error",                            "unexpected error",
+    "invalid escape sequence",             "invalid character class",
+    "invalid character class range",       "missing ]",
+    "missing )",                           "trailing \\",
+    "no argument for repetition operator", "invalid repetition size",
+    "bad repetition operator",             "invalid perl operator",
+    "invalid UTF-8",                       "invalid named capture group",
 };
 
 string RegexpStatus::CodeText(enum RegexpStatusCode code) {
@@ -501,8 +494,11 @@ typedef int Ignored;  // Walker<void> doesn't exist
 // Walker subclass to count capturing parens in regexp.
 class NumCapturesWalker : public Regexp::Walker<Ignored> {
  public:
-  NumCapturesWalker() : ncapture_(0) {}
-  int ncapture() { return ncapture_; }
+  NumCapturesWalker() : ncapture_(0) {
+  }
+  int ncapture() {
+    return ncapture_;
+  }
 
   virtual Ignored PreVisit(Regexp* re, Ignored ignored, bool* stop) {
     if (re->op() == kRegexpCapture)
@@ -529,8 +525,11 @@ int Regexp::NumCaptures() {
 // Walker class to build map of named capture groups and their indices.
 class NamedCapturesWalker : public Regexp::Walker<Ignored> {
  public:
-  NamedCapturesWalker() : map_(NULL) {}
-  ~NamedCapturesWalker() { delete map_; }
+  NamedCapturesWalker() : map_(NULL) {
+  }
+  ~NamedCapturesWalker() {
+    delete map_;
+  }
 
   map<string, int>* TakeMap() {
     map<string, int>* m = map_;
@@ -573,8 +572,11 @@ map<string, int>* Regexp::NamedCaptures() {
 // Walker class to build map from capture group indices to their names.
 class CaptureNamesWalker : public Regexp::Walker<Ignored> {
  public:
-  CaptureNamesWalker() : map_(NULL) {}
-  ~CaptureNamesWalker() { delete map_; }
+  CaptureNamesWalker() : map_(NULL) {
+  }
+  ~CaptureNamesWalker() {
+    delete map_;
+  }
 
   map<int, string>* TakeMap() {
     map<int, string>* m = map_;
@@ -614,7 +616,7 @@ map<int, string>* Regexp::CaptureNames() {
 // with a fixed string prefix.  If so, returns the prefix and
 // the regexp that remains after the prefix.  The prefix might
 // be ASCII case-insensitive.
-bool Regexp::RequiredPrefix(string *prefix, bool *foldcase, Regexp** suffix) {
+bool Regexp::RequiredPrefix(string* prefix, bool* foldcase, Regexp** suffix) {
   // No need for a walker: the regexp must be of the form
   // 1. some number of ^ anchors
   // 2. a literal char or string
@@ -648,7 +650,7 @@ bool Regexp::RequiredPrefix(string *prefix, bool *foldcase, Regexp** suffix) {
         // Convert to UTF-8 in place.
         // Assume worst-case space and then trim.
         prefix->resize(re->nrunes_ * UTFmax);
-        char *p = &(*prefix)[0];
+        char* p = &(*prefix)[0];
         for (int j = 0; j < re->nrunes_; j++) {
           Rune r = re->runes_[j];
           if (r < Runeself)
@@ -724,7 +726,7 @@ bool CharClassBuilder::AddRange(Rune lo, Rune hi) {
   // Look for a range abutting lo on the left.
   // If it exists, take it out and increase our range.
   if (lo > 0) {
-    iterator it = ranges_.find(RuneRange(lo-1, lo-1));
+    iterator it = ranges_.find(RuneRange(lo - 1, lo - 1));
     if (it != end()) {
       lo = it->lo;
       if (it->hi > hi)
@@ -737,7 +739,7 @@ bool CharClassBuilder::AddRange(Rune lo, Rune hi) {
   // Look for a range abutting hi on the right.
   // If it exists, take it out and increase our range.
   if (hi < Runemax) {
-    iterator it = ranges_.find(RuneRange(hi+1, hi+1));
+    iterator it = ranges_.find(RuneRange(hi + 1, hi + 1));
     if (it != end()) {
       hi = it->hi;
       nrunes_ -= it->hi - it->lo + 1;
@@ -763,7 +765,7 @@ bool CharClassBuilder::AddRange(Rune lo, Rune hi) {
   return true;
 }
 
-void CharClassBuilder::AddCharClass(CharClassBuilder *cc) {
+void CharClassBuilder::AddCharClass(CharClassBuilder* cc) {
   for (iterator it = cc->begin(); it != cc->end(); ++it)
     AddRange(it->lo, it->hi);
 }
@@ -787,8 +789,6 @@ CharClassBuilder* CharClassBuilder::Copy() {
   return cc;
 }
 
-
-
 void CharClassBuilder::RemoveAbove(Rune r) {
   if (r >= Runemax)
     return;
@@ -808,7 +808,6 @@ void CharClassBuilder::RemoveAbove(Rune r) {
   }
 
   for (;;) {
-
     iterator it = ranges_.find(RuneRange(r + 1, Runemax));
     if (it == end())
       break;
@@ -854,7 +853,7 @@ void CharClassBuilder::Negate() {
 
   upper_ = AlphaMask & ~upper_;
   lower_ = AlphaMask & ~lower_;
-  nrunes_ = Runemax+1 - nrunes_;
+  nrunes_ = Runemax + 1 - nrunes_;
 }
 
 // Character class is a sorted list of ranges.
@@ -863,7 +862,7 @@ void CharClassBuilder::Negate() {
 
 CharClass* CharClass::New(int maxranges) {
   CharClass* cc;
-  uint8* data = new uint8[sizeof *cc + maxranges*sizeof cc->ranges_[0]];
+  uint8* data = new uint8[sizeof *cc + maxranges * sizeof cc->ranges_[0]];
   cc = reinterpret_cast<CharClass*>(data);
   cc->ranges_ = reinterpret_cast<RuneRange*>(data + sizeof *cc);
   cc->nranges_ = 0;
@@ -875,12 +874,12 @@ CharClass* CharClass::New(int maxranges) {
 void CharClass::Delete() {
   if (this == NULL)
     return;
-  uint8 *data = reinterpret_cast<uint8*>(this);
+  uint8* data = reinterpret_cast<uint8*>(this);
   delete[] data;
 }
 
 CharClass* CharClass::Negate() {
-  CharClass* cc = CharClass::New(nranges_+1);
+  CharClass* cc = CharClass::New(nranges_ + 1);
   cc->folds_ascii_ = folds_ascii_;
   cc->nrunes_ = Runemax + 1 - nrunes_;
   int n = 0;
@@ -903,10 +902,10 @@ bool CharClass::Contains(Rune r) {
   RuneRange* rr = ranges_;
   int n = nranges_;
   while (n > 0) {
-    int m = n/2;
+    int m = n / 2;
     if (rr[m].hi < r) {
-      rr += m+1;
-      n -= m+1;
+      rr += m + 1;
+      n -= m + 1;
     } else if (r < rr[m].lo) {
       n = m;
     } else {  // rr[m].lo <= r && r <= rr[m].hi

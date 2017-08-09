@@ -24,7 +24,6 @@
 
 #include <unistd.h>
 
-
 #include "test_base.h"
 
 /** \addtogroup HwcTestNV12FullScreenVideo NV12 Full ScreenVideo
@@ -36,73 +35,60 @@
 
 using namespace android;
 
-class HwcNv12vpTestTest : public HwcTestBase
-{
+class HwcNv12vpTestTest : public HwcTestBase {
+ public:
+  // Constructor
+  HwcNv12vpTestTest(int argc, char** argv);
 
-public:
-    // Constructor
-    HwcNv12vpTestTest(int argc, char ** argv);
-
-    /// Create surfaces and start test
-    int Run(void);
-    /// Set checks required by the shims
-    int SetChecks(void);
-
+  /// Create surfaces and start test
+  int Run(void);
+  /// Set checks required by the shims
+  int SetChecks(void);
 };
 
-HwcNv12vpTestTest::HwcNv12vpTestTest(int argc, char ** argv)
-: HwcTestBase(argc, argv)
-{
-    mTestName = "hwc_nv12_video_part_test";
+HwcNv12vpTestTest::HwcNv12vpTestTest(int argc, char** argv)
+    : HwcTestBase(argc, argv) {
+  mTestName = "hwc_nv12_video_part_test";
 }
 
-int HwcNv12vpTestTest::SetChecks(void)
-{
-    SetDefaultChecks();
-    return 0;
+int HwcNv12vpTestTest::SetChecks(void) {
+  SetDefaultChecks();
+  return 0;
 }
 
-int HwcNv12vpTestTest::Run(void)
-{
-    SurfaceSender::SurfaceSenderProperties
-        sSSP1(SurfaceSender::epsWallpaper);
-    CreateSurface(sSSP1);
+int HwcNv12vpTestTest::Run(void) {
+  SurfaceSender::SurfaceSenderProperties sSSP1(SurfaceSender::epsWallpaper);
+  CreateSurface(sSSP1);
 
-    SurfaceSender::SurfaceSenderProperties
-        sSSP2(SurfaceSender::epsLauncher);
-    CreateSurface(sSSP2);
+  SurfaceSender::SurfaceSenderProperties sSSP2(SurfaceSender::epsLauncher);
+  CreateSurface(sSSP2);
 
-    // this corresponds to the SurfaceView layer in SurfaceFlinger dumpsys
-    SurfaceSender::SurfaceSenderProperties
-        sSSP3(SurfaceSender::epsVideoPartScreenNV12);
-    CreateSurface(sSSP3);
+  // this corresponds to the SurfaceView layer in SurfaceFlinger dumpsys
+  SurfaceSender::SurfaceSenderProperties sSSP3(
+      SurfaceSender::epsVideoPartScreenNV12);
+  CreateSurface(sSSP3);
 
-    SurfaceSender::SurfaceSenderProperties
-        sSSP4(SurfaceSender::epsStatusBar);
-    CreateSurface(sSSP4);
+  SurfaceSender::SurfaceSenderProperties sSSP4(SurfaceSender::epsStatusBar);
+  CreateSurface(sSSP4);
 
-    SurfaceSender::SurfaceSenderProperties
-        sSSP5(SurfaceSender::epsNavigationBar);
-    CreateSurface(sSSP5);
+  SurfaceSender::SurfaceSenderProperties sSSP5(SurfaceSender::epsNavigationBar);
+  CreateSurface(sSSP5);
 
-    // Set test mode frame or time
-    SetTestRunTime(HwcTestBase::etlTenSeconds);
-    SetTestEndType(etetRunTime);
+  // Set test mode frame or time
+  SetTestRunTime(HwcTestBase::etlTenSeconds);
+  SetTestEndType(etetRunTime);
 
-    StartTest();
+  StartTest();
 
-    return mResult.IsGlobalFail() ? 1 : 0;
+  return mResult.IsGlobalFail() ? 1 : 0;
 }
 
-int main (int argc, char ** argv)
-{
-    HwcNv12vpTestTest test(argc, argv);
+int main(int argc, char** argv) {
+  HwcNv12vpTestTest test(argc, argv);
 
-    if(argc == 2 && strcmp(argv[1], "-h") == 0)
-    {
-        test.PrintArgs();
-        return 1;
-    }
-    return test.Run();
+  if (argc == 2 && strcmp(argv[1], "-h") == 0) {
+    test.PrintArgs();
+    return 1;
+  }
+  return test.Run();
 }
-

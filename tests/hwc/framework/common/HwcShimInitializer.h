@@ -17,47 +17,41 @@
 #ifndef __HwcShimInitializer_h__
 #define __HwcShimInitializer_h__
 
-class HwcShimInitializer
-{
-    public:
-        /// struct of pointer to drm shim function as hwc is linked against real
-        /// drm
-        typedef struct
-        {
-            /// pointer to drm shim drmShimInit
-            void (*fpDrmShimInit)(bool isHwc, bool isDrm);
-            void (*fpDrmShimEnableVSyncInterception)(bool intercept);
-            void (*fpDrmShimRegisterCallback)(void* cbk);
+class HwcShimInitializer {
+ public:
+  /// struct of pointer to drm shim function as hwc is linked against real
+  /// drm
+  typedef struct {
+    /// pointer to drm shim drmShimInit
+    void (*fpDrmShimInit)(bool isHwc, bool isDrm);
+    void (*fpDrmShimEnableVSyncInterception)(bool intercept);
+    void (*fpDrmShimRegisterCallback)(void* cbk);
 
-        } drmShimFunctionsType;
+  } drmShimFunctionsType;
 
-        /// struct of pointer to real drm functions
-        drmShimFunctionsType drmShimFunctions;
+  /// struct of pointer to real drm functions
+  drmShimFunctionsType drmShimFunctions;
 
-        /// struct of pointer to iVP shim function as hwc is linked against real iVP
-        typedef struct
-        {
-            /// pointer to iVP shim iVPShimInit
-            void (*fpiVPShimInit)();
-            /// pointer to iVP shim iVPShimCleanup
-            void (*fpiVPShimCleanup)(void);
-        } iVPShimFunctionsType;
+  /// struct of pointer to iVP shim function as hwc is linked against real iVP
+  typedef struct {
+    /// pointer to iVP shim iVPShimInit
+    void (*fpiVPShimInit)();
+    /// pointer to iVP shim iVPShimCleanup
+    void (*fpiVPShimCleanup)(void);
+  } iVPShimFunctionsType;
 
-        /// struct of pointer to real iVP functions
-        iVPShimFunctionsType iVPShimFunctions;
+  /// struct of pointer to real iVP functions
+  iVPShimFunctionsType iVPShimFunctions;
 
-    public:
-        virtual ~HwcShimInitializer()
-        {
-        }
+ public:
+  virtual ~HwcShimInitializer() {
+  }
 
-        // pointer to HWC State
-        HwcTestState* state;
+  // pointer to HWC State
+  HwcTestState* state;
 
-        /// Complete initialization of shim in DRM mode
-        virtual void HwcShimInitDrm(void) = 0;
-
+  /// Complete initialization of shim in DRM mode
+  virtual void HwcShimInitDrm(void) = 0;
 };
 
-#endif // __HwcShimInitializer_h__
-
+#endif  // __HwcShimInitializer_h__

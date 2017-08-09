@@ -26,72 +26,73 @@
 #include <hardware/hwcomposer_defs.h>
 #include "HwcvalContent.h"
 
-class HwcTestCompValThread : public android::Thread
-{
-public:
-    HwcTestCompValThread();
-    virtual ~HwcTestCompValThread();
+class HwcTestCompValThread : public android::Thread {
+ public:
+  HwcTestCompValThread();
+  virtual ~HwcTestCompValThread();
 
-    // Request reference composition of the given layer list
-    // and store the result in the reference composition buffer attached to the DrmShimBuffer.
-    bool Compose(android::sp<DrmShimBuffer> buf, Hwcval::LayerList& sources, Hwcval::ValLayer& dest);
-    void Compare(android::sp<DrmShimBuffer> buf);
-    void KillThread();
+  // Request reference composition of the given layer list
+  // and store the result in the reference composition buffer attached to the
+  // DrmShimBuffer.
+  bool Compose(android::sp<DrmShimBuffer> buf, Hwcval::LayerList& sources,
+               Hwcval::ValLayer& dest);
+  void Compare(android::sp<DrmShimBuffer> buf);
+  void KillThread();
 
-    bool IsBusy();
-    void WaitUntilIdle();
+  bool IsBusy();
+  void WaitUntilIdle();
 
-    // Non-threaded
-    void TakeCopy(android::sp<DrmShimBuffer> buf);
-    void TakeTransformedCopy(const hwcval_layer_t *layer,
-                             android::sp<DrmShimBuffer> buf, uint32_t width,
-                             uint32_t height);
-    android::sp<android::GraphicBuffer> CopyBuf(android::sp<DrmShimBuffer> buf);
+  // Non-threaded
+  void TakeCopy(android::sp<DrmShimBuffer> buf);
+  void TakeTransformedCopy(const hwcval_layer_t* layer,
+                           android::sp<DrmShimBuffer> buf, uint32_t width,
+                           uint32_t height);
+  android::sp<android::GraphicBuffer> CopyBuf(android::sp<DrmShimBuffer> buf);
 
+ private:
+  // Thread functions
+  virtual bool threadLoop();
+  virtual android::status_t readyToRun();
 
-private:
-    //Thread functions
-    virtual bool threadLoop();
-    virtual android::status_t readyToRun();
+  // In-thread local functions
+  bool GetWork();
+  void DoCompare();
 
-    // In-thread local functions
-    bool GetWork();
-    void DoCompare();
+  void ClearLocked(android::sp<DrmShimBuffer>& buf);
+  void SkipComp(android::sp<DrmShimBuffer>& buf);
+  void QueueFenceForClosure(int fence);
 
-    void ClearLocked(android::sp<DrmShimBuffer>& buf);
-    void SkipComp(android::sp<DrmShimBuffer>& buf);
-    void QueueFenceForClosure(int fence);
+  // Composition data
+  hwcval_layer_t mDest;
 
-    // Composition data
-    hwcval_layer_t mDest;
+  // Buffer we will, are, or just have composed
+  android::sp<DrmShimBuffer> mBuf;
 
-    // Buffer we will, are, or just have composed
-    android::sp<DrmShimBuffer> mBuf;
+  // Buffer we should compose
+  android::sp<DrmShimBuffer> mBufToCompose;
 
-    // Buffer we should compose
-    android::sp<DrmShimBuffer> mBufToCompose;
+  // Comparison data
+  android::sp<DrmShimBuffer> mBufToCompare;
 
-    // Comparison data
-    android::sp<DrmShimBuffer> mBufToCompare;
+  // We don't need to compare the whole buffer: Just the part HWC was using as a
+  // composition target
+  hwc_rect_t mRectToCompare;
 
-    // We don't need to compare the whole buffer: Just the part HWC was using as a composition target
-    hwc_rect_t mRectToCompare;
+  // Should we use alpha in the comparison (assuming the format supports it)
+  bool mUseAlpha;
 
-    // Should we use alpha in the comparison (assuming the format supports it)
-    bool mUseAlpha;
+  // Thread management
+  Hwcval::Condition mCondition;
+  Hwcval::Mutex mMutex;
 
-    // Thread management
-    Hwcval::Condition mCondition;
-    Hwcval::Mutex mMutex;
+  volatile uint32_t mValSeq;  // Validation sequence
 
-    volatile uint32_t mValSeq;     // Validation sequence
+  volatile int mFenceForClosure;
 
-    volatile int mFenceForClosure;
+  uint32_t mConsecutiveAbortedCompareCount;
 
-    uint32_t mConsecutiveAbortedCompareCount;
-
-    // The reference composition engine
-    HwcTestReferenceComposer mComposer;
+  // The reference composition engine
+  HwcTestReferenceComposer mComposer;
 };
 
-#endif // __HwcTestCompValThread_h__
+#endif  // __HwcTestCompValThread_h__

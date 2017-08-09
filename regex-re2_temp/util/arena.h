@@ -32,12 +32,12 @@ class UnsafeArena {
 
   void Reset();
 
-  // This should be the worst-case alignment for any type.  This is
-  // good for IA-32, SPARC version 7 (the last one I know), and
-  // supposedly Alpha.  i386 would be more time-efficient with a
-  // default alignment of 8, but ::operator new() uses alignment of 4,
-  // and an assertion will fail below after the call to MakeNewBlock()
-  // if you try to use a larger alignment.
+// This should be the worst-case alignment for any type.  This is
+// good for IA-32, SPARC version 7 (the last one I know), and
+// supposedly Alpha.  i386 would be more time-efficient with a
+// default alignment of 8, but ::operator new() uses alignment of 4,
+// and an assertion will fail below after the call to MakeNewBlock()
+// if you try to use a larger alignment.
 #ifdef __i386__
   static const int kDefaultAlignment = 4;
 #else
@@ -49,7 +49,7 @@ class UnsafeArena {
 
  public:
   void* GetMemory(const size_t size, const int align) {
-    if ( size > 0 && size < remaining_ && align == 1 ) {       // common case
+    if (size > 0 && size < remaining_ && align == 1) {  // common case
       last_alloc_ = freestart_;
       freestart_ += size;
       remaining_ -= size;
@@ -60,28 +60,28 @@ class UnsafeArena {
 
  private:
   struct AllocatedBlock {
-    char *mem;
+    char* mem;
     size_t size;
   };
 
   // The returned AllocatedBlock* is valid until the next call to AllocNewBlock
   // or Reset (i.e. anything that might affect overflow_blocks_).
-  AllocatedBlock *AllocNewBlock(const size_t block_size);
+  AllocatedBlock* AllocNewBlock(const size_t block_size);
 
-  const AllocatedBlock *IndexToBlock(int index) const;
+  const AllocatedBlock* IndexToBlock(int index) const;
 
   const size_t block_size_;
-  char* freestart_;         // beginning of the free space in most recent block
+  char* freestart_;  // beginning of the free space in most recent block
   char* freestart_when_empty_;  // beginning of the free space when we're empty
-  char* last_alloc_;         // used to make sure ReturnBytes() is safe
+  char* last_alloc_;            // used to make sure ReturnBytes() is safe
   size_t remaining_;
   // STL vector isn't as efficient as it could be, so we use an array at first
-  int blocks_alloced_;       // how many of the first_blocks_ have been alloced
-  AllocatedBlock first_blocks_[16];   // the length of this array is arbitrary
+  int blocks_alloced_;  // how many of the first_blocks_ have been alloced
+  AllocatedBlock first_blocks_[16];  // the length of this array is arbitrary
   // if the first_blocks_ aren't enough, expand into overflow_blocks_.
   vector<AllocatedBlock>* overflow_blocks_;
 
-  void FreeBlocks();         // Frees all except first block
+  void FreeBlocks();  // Frees all except first block
 
   DISALLOW_EVIL_CONSTRUCTORS(UnsafeArena);
 };
@@ -93,11 +93,9 @@ enum AllocateInArenaType { AllocateInArena };
 
 }  // namespace re2
 
-inline void* operator new(size_t size,
-                          re2::AllocateInArenaType /* unused */,
-                          re2::UnsafeArena *arena) {
+inline void* operator new(size_t size, re2::AllocateInArenaType /* unused */,
+                          re2::UnsafeArena* arena) {
   return reinterpret_cast<char*>(arena->GetMemory(size, 1));
 }
 
 #endif  // RE2_UTIL_ARENA_H_
-

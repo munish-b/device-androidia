@@ -19,19 +19,13 @@
 
 #include "HwchTest.h"
 
-namespace Hwch
-{
-    class VideoModesTest  : public Test
-    {
-        public:
+namespace Hwch {
+class VideoModesTest : public Test {
+ public:
+  VideoModesTest(Hwch::Interface& interface);
 
-            VideoModesTest(Hwch::Interface& interface);
-
-            virtual int RunScenario();
-
-    };
-
+  virtual int RunScenario();
+};
 }
 
-#endif // __HwchModeTests_h__
-
+#endif  // __HwchModeTests_h__

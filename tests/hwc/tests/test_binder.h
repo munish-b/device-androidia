@@ -29,24 +29,23 @@ class HwcTestResult;
 
 using namespace android;
 
-namespace android
-{
+namespace android {
 
-    class BpHwcShimService : public BpInterface<IHwcShimService>
-    {
-        public:
-            /// TODO comment
-            BpHwcShimService(const sp<IBinder>& impl);
+class BpHwcShimService : public BpInterface<IHwcShimService> {
+ public:
+  /// TODO comment
+  BpHwcShimService(const sp<IBinder>& impl);
 
-            ~BpHwcShimService();
+  ~BpHwcShimService();
 
-            /// Get result of all checks
-            virtual status_t GetHwcTestResult(HwcTestResult& result, bool disableAllChecks);
-            /// Set test configuration including all check enables
-            virtual status_t SetHwcTestConfig(const HwcTestConfig& config, bool resetResult);
-            /// Get test configuration
-            virtual status_t GetHwcTestConfig(HwcTestConfig& config);
-    };
-
+  /// Get result of all checks
+  virtual status_t GetHwcTestResult(HwcTestResult& result,
+                                    bool disableAllChecks);
+  /// Set test configuration including all check enables
+  virtual status_t SetHwcTestConfig(const HwcTestConfig& config,
+                                    bool resetResult);
+  /// Get test configuration
+  virtual status_t GetHwcTestConfig(HwcTestConfig& config);
+};
 }
-#endif // __TEST_BINDER_H__
+#endif  // __TEST_BINDER_H__

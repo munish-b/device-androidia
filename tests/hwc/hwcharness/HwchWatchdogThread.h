@@ -23,37 +23,36 @@
 
 class HwcTestRunner;
 
-namespace Hwch
-{
-    class WatchdogThread : public android::Thread, public Hwcval::ValCallbacks
-    {
-    public:
-        WatchdogThread(HwcTestRunner* runner);
-        virtual ~WatchdogThread();
+namespace Hwch {
+class WatchdogThread : public android::Thread, public Hwcval::ValCallbacks {
+ public:
+  WatchdogThread(HwcTestRunner* runner);
+  virtual ~WatchdogThread();
 
-        void Set(uint32_t minMinutes, float minFps);
-        void Start();
-        void Stop();
-        void Exit();
+  void Set(uint32_t minMinutes, float minFps);
+  void Start();
+  void Stop();
+  void Exit();
 
-    private:
-        //Thread functions
-        virtual bool threadLoop();
-        virtual android::status_t readyToRun();
+ private:
+  // Thread functions
+  virtual bool threadLoop();
+  virtual android::status_t readyToRun();
 
-        // Private data
-        // Minimum run time in ns before checks start
-        uint64_t mMinNs;
+  // Private data
+  // Minimum run time in ns before checks start
+  uint64_t mMinNs;
 
-        // Minimum frame rate in fps to be achieved after the minimum test run time has expired
-        float mMinFps;
+  // Minimum frame rate in fps to be achieved after the minimum test run time
+  // has expired
+  float mMinFps;
 
-        // Time the test started
-        volatile int64_t mStartTime;
+  // Time the test started
+  volatile int64_t mStartTime;
 
-        // The test runner
-        HwcTestRunner* mRunner;
-    };
+  // The test runner
+  HwcTestRunner* mRunner;
+};
 }
 
-#endif // __HwchWatchdogThread_h__
+#endif  // __HwchWatchdogThread_h__

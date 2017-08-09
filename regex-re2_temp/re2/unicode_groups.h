@@ -22,20 +22,17 @@
 
 namespace re2 {
 
-struct URange16
-{
+struct URange16 {
   uint16 lo;
   uint16 hi;
 };
 
-struct URange32
-{
+struct URange32 {
   uint32 lo;
   uint32 hi;
 };
 
-struct UGroup
-{
+struct UGroup {
   const char *name;
   int sign;  // +1 for [abc], -1 for [^abc]
   URange16 *r16;

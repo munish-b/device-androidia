@@ -22,18 +22,16 @@
 #include <utils/StrongPointer.h>
 #include "HwchDefs.h"
 
+namespace Hwch {
+class BufferDestroyer
+    : public EventThread<android::sp<android::GraphicBuffer>, 256> {
+ public:
+  BufferDestroyer();
+  virtual ~BufferDestroyer();
 
-namespace Hwch
-{
-    class BufferDestroyer : public EventThread<android::sp<android::GraphicBuffer>, 256 >
-    {
-        public:
-            BufferDestroyer();
-            virtual ~BufferDestroyer();
-
-        protected:
-            virtual bool threadLoop();
-    };
+ protected:
+  virtual bool threadLoop();
+};
 }
 
-#endif // __HwchBufferDestroyer_h__
+#endif  // __HwchBufferDestroyer_h__

@@ -8,12 +8,12 @@
 #include "util/util.h"
 #include "util/flags.h"
 
-#define TEST(x, y) \
-	void x##y(void); \
-	TestRegisterer r##x##y(x##y, # x "." # y); \
-	void x##y(void)
+#define TEST(x, y)                         \
+  void x##y(void);                         \
+  TestRegisterer r##x##y(x##y, #x "." #y); \
+  void x##y(void)
 
-void RegisterTest(void (*)(void), const char*);
+void RegisterTest(void (*)(void), const char *);
 
 class TestRegisterer {
  public:
@@ -42,16 +42,22 @@ const bool UsingMallocCounter = false;
 namespace testing {
 class MallocCounter {
  public:
-  MallocCounter(int x) { }
+  MallocCounter(int x) {
+  }
   static const int THIS_THREAD_ONLY = 0;
-  long long HeapGrowth() { return 0; }
-  long long PeakHeapGrowth() { return 0; }
-  void Reset() { }
+  long long HeapGrowth() {
+    return 0;
+  }
+  long long PeakHeapGrowth() {
+    return 0;
+  }
+  void Reset() {
+  }
 };
 }  // namespace testing
 
 namespace re2 {
 int64 VirtualProcessSize();
-} // namespace re2
+}  // namespace re2
 
 #endif  // RE2_UTIL_TEST_H__

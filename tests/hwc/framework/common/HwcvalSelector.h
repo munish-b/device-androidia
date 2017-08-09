@@ -23,54 +23,44 @@
 #include <utils/String8.h>
 #include <utils/RefBase.h>
 
-namespace Hwcval
-{
-    // Abstract selector class
-    // Implementation should give a true or false which is dependent on the numeric input.
-    // (This may not be entirely true for randomly based selectors).
-    class Selector : public android::RefBase
-    {
-    public:
-        Selector()
-          : mValue(0)
-        {
-        }
+namespace Hwcval {
+// Abstract selector class
+// Implementation should give a true or false which is dependent on the numeric
+// input.
+// (This may not be entirely true for randomly based selectors).
+class Selector : public android::RefBase {
+ public:
+  Selector() : mValue(0) {
+  }
 
-        Selector(const Selector& rhs)
-          : RefBase(),
-            mValue(0)
-        {
-            HWCVAL_UNUSED(rhs);
-        }
+  Selector(const Selector& rhs) : RefBase(), mValue(0) {
+    HWCVAL_UNUSED(rhs);
+  }
 
-        Selector& operator=(const Selector& rhs)
-        {
-            // Value is not copied. Only the selection criteria which are in the subclass.
-            HWCVAL_UNUSED(rhs);
+  Selector& operator=(const Selector& rhs) {
+    // Value is not copied. Only the selection criteria which are in the
+    // subclass.
+    HWCVAL_UNUSED(rhs);
 
-            return *this;
-        }
+    return *this;
+  }
 
-        // return true if the number is in the range
-        virtual bool Test(int32_t n) = 0;
+  // return true if the number is in the range
+  virtual bool Test(int32_t n) = 0;
 
-        // increment a counter, and return true if it is in the range
-        bool Next();
+  // increment a counter, and return true if it is in the range
+  bool Next();
 
-    protected:
-        // current value to test
-        uint32_t mValue;
-    };
+ protected:
+  // current value to test
+  uint32_t mValue;
+};
 
+// increment a counter, and return true if it is in the range
+inline bool Selector::Next() {
+  return Test(mValue++);
+}
 
-    // increment a counter, and return true if it is in the range
-    inline bool Selector::Next()
-    {
-        return Test(mValue++);
-    }
+}  // namespace Hwcval
 
-} // namespace Hwcval
-
-
-
-#endif // __HwcvalSelector_h__
+#endif  // __HwcvalSelector_h__

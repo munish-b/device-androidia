@@ -46,7 +46,7 @@ typedef struct hwcval_layer {
       int32_t blending;
       union {
         hwc_rect_t sourceCropi;
-        hwc_rect_t sourceCrop; // just for source compatibility
+        hwc_rect_t sourceCrop;  // just for source compatibility
         hwc_frect_t sourceCropf;
       };
       hwc_rect_t displayFrame;
@@ -61,7 +61,6 @@ typedef struct hwcval_layer {
 } hwcval_layer_t;
 
 typedef struct hwcval_display_contents {
-
   /* These fields are used for virtual displays when the h/w composer
    * version is at least HWC_DEVICE_VERSION_1_3. */
   struct {

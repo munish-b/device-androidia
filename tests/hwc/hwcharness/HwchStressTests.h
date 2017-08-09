@@ -19,30 +19,24 @@
 
 #include "HwchTest.h"
 
-namespace Hwch
-{
-    class BufferAllocator : public android::Thread
-    {
-        public:
-            BufferAllocator();
-            virtual ~BufferAllocator();
+namespace Hwch {
+class BufferAllocator : public android::Thread {
+ public:
+  BufferAllocator();
+  virtual ~BufferAllocator();
 
-        private:
-            // Thread functions
-            virtual bool threadLoop();
-            virtual android::status_t readyToRun();
-    };
+ private:
+  // Thread functions
+  virtual bool threadLoop();
+  virtual android::status_t readyToRun();
+};
 
-    class BufferStressTest  : public Hwch::OptionalTest
-    {
-        public:
+class BufferStressTest : public Hwch::OptionalTest {
+ public:
+  BufferStressTest(Hwch::Interface& interface);
 
-            BufferStressTest(Hwch::Interface& interface);
-
-            virtual int RunScenario();
-
-    };
+  virtual int RunScenario();
+};
 }
 
-#endif // __HwchStressTests_h__
-
+#endif  // __HwchStressTests_h__

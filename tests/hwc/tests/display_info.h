@@ -34,22 +34,23 @@
 
 using namespace android;
 
-class Display
-{
+class Display {
+ private:
+  uint32_t width;
+  uint32_t height;
 
-    private:
-        uint32_t width;
-        uint32_t height;
+ public:
+  Display();
 
-    public:
-        Display();
+  /// Get display height
+  uint32_t GetWidth(void) {
+    return width;
+  }
 
-        /// Get display height
-        uint32_t GetWidth(void) { return width; }
-
-        /// Get display width
-        uint32_t GetHeight(void) { return height; }
+  /// Get display width
+  uint32_t GetHeight(void) {
+    return height;
+  }
 };
 
-#endif // __DISPLAY_INFO_H__
-
+#endif  // __DISPLAY_INFO_H__

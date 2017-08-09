@@ -30,108 +30,101 @@
 #include "png.h"
 #include "HwchGlInterface.h"
 
+namespace Hwch {
+class PngImage;
 
-namespace Hwch
-{
-    class PngImage;
+class GlPattern : public Pattern {
+ public:
+  GlPattern(float updateFreq = 0);
+  virtual ~GlPattern();
 
-    class GlPattern : public Pattern
-    {
-        public:
-            GlPattern(float updateFreq = 0);
-            virtual ~GlPattern();
-
-        protected:
-            GlInterface& mGlInterface;
-    };
-
-
-    class HorizontalLineGlPtn : public GlPattern
-    {
-        public:
-            HorizontalLineGlPtn();
-            HorizontalLineGlPtn(float updateFreq, uint32_t fgColour, uint32_t bgColour);
-            virtual ~HorizontalLineGlPtn();
-
-            virtual int Fill(android::sp<android::GraphicBuffer> buf, const hwc_rect_t& rect, uint32_t& bufferParam);
-            virtual void Advance();
-
-        protected:
-
-            uint32_t mFgColour;
-            uint32_t mBgColour;
-
-            uint32_t mLine;
-    };
-
-    class MatrixGlPtn : public HorizontalLineGlPtn
-    {
-        public:
-            MatrixGlPtn();
-            MatrixGlPtn(float updateFreq, uint32_t fgColour, uint32_t matrixColour, uint32_t bgColour);
-            virtual ~MatrixGlPtn();
-
-            virtual int Fill(android::sp<android::GraphicBuffer> buf, const hwc_rect_t& rect, uint32_t& bufferParam);
-
-        protected:
-
-            uint32_t mMatrixColour;
-    };
-
-    class PngGlPtn : public GlPattern
-    {
-        public:
-            PngGlPtn();
-            PngGlPtn(float updateFreq, uint32_t lineColour, uint32_t bgColour=0, bool bIgnore=true);
-            virtual ~PngGlPtn();
-
-            // Connect to an image, ownership of the image stays with the caller
-            void Set(Hwch::PngImage& image);
-
-            // Connect to an image, we get ownership
-            void Set(android::sp<Hwch::PngImage> spImage);
-
-            virtual int Fill(android::sp<android::GraphicBuffer> buf, const hwc_rect_t& rect, uint32_t& bufferParam);
-            virtual void Advance();
-
-        protected:
-
-            uint32_t mFgColour;
-            uint32_t mBgColour;
-            bool mIgnore;
-
-            uint32_t mLine;
-            PngImage* mpImage;
-
-            // Only for ownership
-            android::sp<Hwch::PngImage> mspImage;
-
-            // Convenience pointer to the texture in mpImage.
-            // PngGlPtn does NOT own this texture, so it must not be freed by the pattern destructor, only
-            // by the destructor in Hwch::PngImage.
-            TexturePtr mpTexture;
-    };
-
-    class ClearGlPtn : public GlPattern
-    {
-        public:
-            ClearGlPtn();
-            ClearGlPtn(float updateFreq, uint32_t fgColour, uint32_t bgColour);
-            virtual ~ClearGlPtn();
-
-            virtual int Fill(android::sp<android::GraphicBuffer> buf, const hwc_rect_t& rect, uint32_t& bufferParam);
-            virtual void Advance();
-            virtual bool IsAllTransparent();
-
-        protected:
-
-            uint32_t mFgColour;
-            uint32_t mBgColour;
-
-            uint32_t mLine;
-    };
-
+ protected:
+  GlInterface& mGlInterface;
 };
 
+class HorizontalLineGlPtn : public GlPattern {
+ public:
+  HorizontalLineGlPtn();
+  HorizontalLineGlPtn(float updateFreq, uint32_t fgColour, uint32_t bgColour);
+  virtual ~HorizontalLineGlPtn();
 
-#endif // __HwchGlPattern_h__
+  virtual int Fill(android::sp<android::GraphicBuffer> buf,
+                   const hwc_rect_t& rect, uint32_t& bufferParam);
+  virtual void Advance();
+
+ protected:
+  uint32_t mFgColour;
+  uint32_t mBgColour;
+
+  uint32_t mLine;
+};
+
+class MatrixGlPtn : public HorizontalLineGlPtn {
+ public:
+  MatrixGlPtn();
+  MatrixGlPtn(float updateFreq, uint32_t fgColour, uint32_t matrixColour,
+              uint32_t bgColour);
+  virtual ~MatrixGlPtn();
+
+  virtual int Fill(android::sp<android::GraphicBuffer> buf,
+                   const hwc_rect_t& rect, uint32_t& bufferParam);
+
+ protected:
+  uint32_t mMatrixColour;
+};
+
+class PngGlPtn : public GlPattern {
+ public:
+  PngGlPtn();
+  PngGlPtn(float updateFreq, uint32_t lineColour, uint32_t bgColour = 0,
+           bool bIgnore = true);
+  virtual ~PngGlPtn();
+
+  // Connect to an image, ownership of the image stays with the caller
+  void Set(Hwch::PngImage& image);
+
+  // Connect to an image, we get ownership
+  void Set(android::sp<Hwch::PngImage> spImage);
+
+  virtual int Fill(android::sp<android::GraphicBuffer> buf,
+                   const hwc_rect_t& rect, uint32_t& bufferParam);
+  virtual void Advance();
+
+ protected:
+  uint32_t mFgColour;
+  uint32_t mBgColour;
+  bool mIgnore;
+
+  uint32_t mLine;
+  PngImage* mpImage;
+
+  // Only for ownership
+  android::sp<Hwch::PngImage> mspImage;
+
+  // Convenience pointer to the texture in mpImage.
+  // PngGlPtn does NOT own this texture, so it must not be freed by the pattern
+  // destructor, only
+  // by the destructor in Hwch::PngImage.
+  TexturePtr mpTexture;
+};
+
+class ClearGlPtn : public GlPattern {
+ public:
+  ClearGlPtn();
+  ClearGlPtn(float updateFreq, uint32_t fgColour, uint32_t bgColour);
+  virtual ~ClearGlPtn();
+
+  virtual int Fill(android::sp<android::GraphicBuffer> buf,
+                   const hwc_rect_t& rect, uint32_t& bufferParam);
+  virtual void Advance();
+  virtual bool IsAllTransparent();
+
+ protected:
+  uint32_t mFgColour;
+  uint32_t mBgColour;
+
+  uint32_t mLine;
+};
+};
+
+#endif  // __HwchGlPattern_h__

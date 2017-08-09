@@ -96,7 +96,7 @@
 
 namespace re2 {
 
-template<typename Value>
+template <typename Value>
 class SparseArray {
  public:
   SparseArray();
@@ -229,23 +229,35 @@ class SparseArray {
   DISALLOW_EVIL_CONSTRUCTORS(SparseArray);
 };
 
-template<typename Value>
+template <typename Value>
 SparseArray<Value>::SparseArray()
-    : size_(0), max_size_(0), sparse_to_dense_(NULL), dense_(), valgrind_(RunningOnValgrind()) {}
+    : size_(0),
+      max_size_(0),
+      sparse_to_dense_(NULL),
+      dense_(),
+      valgrind_(RunningOnValgrind()) {
+}
 
 // IndexValue pairs: exposed in SparseArray::iterator.
-template<typename Value>
+template <typename Value>
 class SparseArray<Value>::IndexValue {
   friend class SparseArray;
+
  public:
   typedef int first_type;
   typedef Value second_type;
 
-  IndexValue() {}
-  IndexValue(int index, const Value& value) : second(value), index_(index) {}
+  IndexValue() {
+  }
+  IndexValue(int index, const Value& value) : second(value), index_(index) {
+  }
 
-  int index() const { return index_; }
-  Value value() const { return second; }
+  int index() const {
+    return index_;
+  }
+  Value value() const {
+    return second;
+  }
 
   // Provide the data in the 'second' member so that the utilities
   // in map-util work.
@@ -255,9 +267,9 @@ class SparseArray<Value>::IndexValue {
   int index_;
 };
 
-template<typename Value>
-const typename SparseArray<Value>::IndexValue&
-SparseArray<Value>::iv(int i) const {
+template <typename Value>
+const typename SparseArray<Value>::IndexValue& SparseArray<Value>::iv(
+    int i) const {
   DCHECK_GE(i, 0);
   DCHECK_LT(i, size_);
   return dense_[i];
@@ -265,13 +277,13 @@ SparseArray<Value>::iv(int i) const {
 
 // Change the maximum size of the array.
 // Invalidates all iterators.
-template<typename Value>
+template <typename Value>
 void SparseArray<Value>::resize(int new_max_size) {
   DebugCheckInvariants();
   if (new_max_size > max_size_) {
     int* a = new int[new_max_size];
     if (sparse_to_dense_) {
-      memmove(a, sparse_to_dense_, max_size_*sizeof a[0]);
+      memmove(a, sparse_to_dense_, max_size_ * sizeof a[0]);
       // Don't need to zero the memory but appease Valgrind.
       if (valgrind_) {
         for (int i = max_size_; i < new_max_size; i++)
@@ -290,7 +302,7 @@ void SparseArray<Value>::resize(int new_max_size) {
 }
 
 // Check whether index i is in the array.
-template<typename Value>
+template <typename Value>
 bool SparseArray<Value>::has_index(int i) const {
   DCHECK_GE(i, 0);
   DCHECK_LT(i, max_size_);
@@ -299,11 +311,11 @@ bool SparseArray<Value>::has_index(int i) const {
   }
   // Unsigned comparison avoids checking sparse_to_dense_[i] < 0.
   return (uint)sparse_to_dense_[i] < (uint)size_ &&
-    dense_[sparse_to_dense_[i]].index_ == i;
+         dense_[sparse_to_dense_[i]].index_ == i;
 }
 
 // Set the value at index i to v.
-template<typename Value>
+template <typename Value>
 typename SparseArray<Value>::iterator SparseArray<Value>::set(int i, Value v) {
   DebugCheckInvariants();
   if (static_cast<uint>(i) >= max_size_) {
@@ -317,7 +329,7 @@ typename SparseArray<Value>::iterator SparseArray<Value>::set(int i, Value v) {
   return set_existing(i, v);
 }
 
-template<typename Value>
+template <typename Value>
 pair<typename SparseArray<Value>::iterator, bool> SparseArray<Value>::insert(
     const value_type& new_value) {
   DebugCheckInvariants();
@@ -331,32 +343,32 @@ pair<typename SparseArray<Value>::iterator, bool> SparseArray<Value>::insert(
   return p;
 }
 
-template<typename Value>
+template <typename Value>
 Value SparseArray<Value>::get(int i, Value defaultv) const {
   if (!has_index(i))
     return defaultv;
   return get_existing(i);
 }
 
-template<typename Value>
+template <typename Value>
 typename SparseArray<Value>::iterator SparseArray<Value>::find(int i) {
   if (has_index(i))
     return dense_.begin() + sparse_to_dense_[i];
   return end();
 }
 
-template<typename Value>
-typename SparseArray<Value>::const_iterator
-SparseArray<Value>::find(int i) const {
+template <typename Value>
+typename SparseArray<Value>::const_iterator SparseArray<Value>::find(
+    int i) const {
   if (has_index(i)) {
     return dense_.begin() + sparse_to_dense_[i];
   }
   return end();
 }
 
-template<typename Value>
-typename SparseArray<Value>::iterator
-SparseArray<Value>::set_existing(int i, Value v) {
+template <typename Value>
+typename SparseArray<Value>::iterator SparseArray<Value>::set_existing(
+    int i, Value v) {
   DebugCheckInvariants();
   DCHECK(has_index(i));
   dense_[sparse_to_dense_[i]].second = v;
@@ -364,9 +376,9 @@ SparseArray<Value>::set_existing(int i, Value v) {
   return dense_.begin() + sparse_to_dense_[i];
 }
 
-template<typename Value>
-typename SparseArray<Value>::iterator
-SparseArray<Value>::set_new(int i, Value v) {
+template <typename Value>
+typename SparseArray<Value>::iterator SparseArray<Value>::set_new(int i,
+                                                                  Value v) {
   DebugCheckInvariants();
   if (static_cast<uint>(i) >= max_size_) {
     // Semantically, end() would be better here, but we already know
@@ -379,13 +391,13 @@ SparseArray<Value>::set_new(int i, Value v) {
   return set_existing(i, v);
 }
 
-template<typename Value>
+template <typename Value>
 Value SparseArray<Value>::get_existing(int i) const {
   DCHECK(has_index(i));
   return dense_[sparse_to_dense_[i]].second;
 }
 
-template<typename Value>
+template <typename Value>
 void SparseArray<Value>::erase(int i) {
   DebugCheckInvariants();
   if (has_index(i))
@@ -393,7 +405,7 @@ void SparseArray<Value>::erase(int i) {
   DebugCheckInvariants();
 }
 
-template<typename Value>
+template <typename Value>
 void SparseArray<Value>::erase_existing(int i) {
   DebugCheckInvariants();
   DCHECK(has_index(i));
@@ -406,7 +418,7 @@ void SparseArray<Value>::erase_existing(int i) {
   DebugCheckInvariants();
 }
 
-template<typename Value>
+template <typename Value>
 void SparseArray<Value>::create_index(int i) {
   DCHECK(!has_index(i));
   DCHECK_LT(size_, max_size_);
@@ -415,7 +427,8 @@ void SparseArray<Value>::create_index(int i) {
   size_++;
 }
 
-template<typename Value> SparseArray<Value>::SparseArray(int max_size) {
+template <typename Value>
+SparseArray<Value>::SparseArray(int max_size) {
   max_size_ = max_size;
   sparse_to_dense_ = new int[max_size];
   valgrind_ = RunningOnValgrind();
@@ -431,20 +444,22 @@ template<typename Value> SparseArray<Value>::SparseArray(int max_size) {
   DebugCheckInvariants();
 }
 
-template<typename Value> SparseArray<Value>::~SparseArray() {
+template <typename Value>
+SparseArray<Value>::~SparseArray() {
   DebugCheckInvariants();
   delete[] sparse_to_dense_;
 }
 
-template<typename Value> void SparseArray<Value>::DebugCheckInvariants() const {
+template <typename Value>
+void SparseArray<Value>::DebugCheckInvariants() const {
   DCHECK_LE(0, size_);
   DCHECK_LE(size_, max_size_);
   DCHECK(size_ == 0 || sparse_to_dense_ != NULL);
 }
 
 // Comparison function for sorting.
-template<typename Value> bool SparseArray<Value>::less(const IndexValue& a,
-                                                       const IndexValue& b) {
+template <typename Value>
+bool SparseArray<Value>::less(const IndexValue& a, const IndexValue& b) {
   return a.index_ < b.index_;
 }
 

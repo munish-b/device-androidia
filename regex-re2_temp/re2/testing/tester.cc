@@ -2,7 +2,8 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-// Regular expression engine tester -- test all the implementations against each other.
+// Regular expression engine tester -- test all the implementations against each
+// other.
 
 #include "util/util.h"
 #include "util/flags.h"
@@ -23,20 +24,12 @@ DEFINE_string(regexp_engines, "", "pattern to select regexp engines to test");
 namespace re2 {
 
 enum {
-  kMaxSubmatch = 1+16,  // $0...$16
+  kMaxSubmatch = 1 + 16,  // $0...$16
 };
 
 const char* engine_types[kEngineMax] = {
-  "Backtrack",
-  "NFA",
-  "DFA",
-  "DFA1",
-  "OnePass",
-  "BitState",
-  "RE2",
-  "RE2a",
-  "RE2b",
-  "PCRE",
+    "Backtrack", "NFA", "DFA",  "DFA1", "OnePass",
+    "BitState",  "RE2", "RE2a", "RE2b", "PCRE",
 };
 
 // Returns the name string for the type t.
@@ -60,15 +53,15 @@ static uint32 Engines() {
   } else {
     for (Engine i = static_cast<Engine>(0); i < kEngineMax; i++)
       if (strstr(EngineString(i).c_str(), FLAGS_regexp_engines.c_str()))
-        cached_engines |= 1<<i;
+        cached_engines |= 1 << i;
   }
 
   if (cached_engines == 0)
     LOG(INFO) << "Warning: no engines enabled.";
   if (!UsingPCRE)
-    cached_engines &= ~(1<<kEnginePCRE);
+    cached_engines &= ~(1 << kEnginePCRE);
   for (Engine i = static_cast<Engine>(0); i < kEngineMax; i++) {
-    if (cached_engines & (1<<i))
+    if (cached_engines & (1 << i))
       LOG(INFO) << EngineString(i) << " enabled";
   }
   did_parse = true;
@@ -92,8 +85,7 @@ typedef TestInstance::Result Result;
 static string FormatCapture(const StringPiece& text, const StringPiece& s) {
   if (s.begin() == NULL)
     return "(?,?)";
-  return StringPrintf("(%d,%d)",
-                      static_cast<int>(s.begin() - text.begin()),
+  return StringPrintf("(%d,%d)", static_cast<int>(s.begin() - text.begin()),
                       static_cast<int>(s.end() - text.begin()));
 }
 
@@ -136,17 +128,16 @@ struct ParseMode {
   string desc;
 };
 
-static const Regexp::ParseFlags single_line =
-  Regexp::LikePerl;
+static const Regexp::ParseFlags single_line = Regexp::LikePerl;
 static const Regexp::ParseFlags multi_line =
-  static_cast<Regexp::ParseFlags>(Regexp::LikePerl & ~Regexp::OneLine);
+    static_cast<Regexp::ParseFlags>(Regexp::LikePerl & ~Regexp::OneLine);
 
 static ParseMode parse_modes[] = {
-  { single_line,                   "single-line"          },
-  { single_line|Regexp::Latin1,    "single-line, latin1"  },
-  { multi_line,                    "multiline"            },
-  { multi_line|Regexp::NonGreedy,  "multiline, nongreedy" },
-  { multi_line|Regexp::Latin1,     "multiline, latin1"    },
+    {single_line, "single-line"},
+    {single_line | Regexp::Latin1, "single-line, latin1"},
+    {multi_line, "multiline"},
+    {multi_line | Regexp::NonGreedy, "multiline, nongreedy"},
+    {multi_line | Regexp::Latin1, "multiline, latin1"},
 };
 
 static string FormatMode(Regexp::ParseFlags flags) {
@@ -160,17 +151,16 @@ static string FormatMode(Regexp::ParseFlags flags) {
 // will be required for the given tests.
 TestInstance::TestInstance(const StringPiece& regexp_str, Prog::MatchKind kind,
                            Regexp::ParseFlags flags)
-  : regexp_str_(regexp_str),
-    kind_(kind),
-    flags_(flags),
-    error_(false),
-    regexp_(NULL),
-    num_captures_(0),
-    prog_(NULL),
-    rprog_(NULL),
-    re_(NULL),
-    re2_(NULL) {
-
+    : regexp_str_(regexp_str),
+      kind_(kind),
+      flags_(flags),
+      error_(false),
+      regexp_(NULL),
+      num_captures_(0),
+      prog_(NULL),
+      rprog_(NULL),
+      re_(NULL),
+      re2_(NULL) {
   VLOG(1) << CEscape(regexp_str);
 
   // Compile regexp to prog.
@@ -192,16 +182,12 @@ TestInstance::TestInstance(const StringPiece& regexp_str, Prog::MatchKind kind,
   }
   if (FLAGS_dump_prog) {
     LOG(INFO) << "Prog for "
-              << " regexp "
-              << CEscape(regexp_str_)
-              << " (" << FormatKind(kind_)
-              << ", " << FormatMode(flags_)
-              << ")\n"
-              << prog_->Dump();
+              << " regexp " << CEscape(regexp_str_) << " (" << FormatKind(kind_)
+              << ", " << FormatMode(flags_) << ")\n" << prog_->Dump();
   }
 
   // Compile regexp to reversed prog.  Only needed for DFA engines.
-  if (Engines() & ((1<<kEngineDFA)|(1<<kEngineDFA1))) {
+  if (Engines() & ((1 << kEngineDFA) | (1 << kEngineDFA1))) {
     rprog_ = regexp_->CompileToReverseProg(0);
     if (rprog_ == NULL) {
       LOG(INFO) << "Cannot reverse compile: " << CEscape(regexp_str_);
@@ -224,7 +210,8 @@ TestInstance::TestInstance(const StringPiece& regexp_str, Prog::MatchKind kind,
     re = "(?s)" + re;
 
   // Compile regexp to RE2.
-  if (Engines() & ((1<<kEngineRE2)|(1<<kEngineRE2a)|(1<<kEngineRE2b))) {
+  if (Engines() &
+      ((1 << kEngineRE2) | (1 << kEngineRE2a) | (1 << kEngineRE2b))) {
     RE2::Options options;
     if (flags & Regexp::Latin1)
       options.set_encoding(RE2::Options::EncodingLatin1);
@@ -247,7 +234,7 @@ TestInstance::TestInstance(const StringPiece& regexp_str, Prog::MatchKind kind,
   //    or before the \n at the end of the string.
   // 3. It doesn't implement POSIX leftmost-longest matching.
   // MimicsPCRE() detects 1 and 2.
-  if ((Engines() & (1<<kEnginePCRE)) && regexp_->MimicsPCRE() &&
+  if ((Engines() & (1 << kEnginePCRE)) && regexp_->MimicsPCRE() &&
       kind_ != Prog::kLongestMatch) {
     PCRE_Options o;
     o.set_option(PCRE::UTF8);
@@ -255,7 +242,7 @@ TestInstance::TestInstance(const StringPiece& regexp_str, Prog::MatchKind kind,
       o.set_option(PCRE::None);
     // PCRE has interface bug keeping us from finding $0, so
     // add one more layer of parens.
-    re_ = new PCRE("("+re+")", o);
+    re_ = new PCRE("(" + re + ")", o);
     if (!re_->error().empty()) {
       LOG(INFO) << "Cannot PCRE: " << CEscape(re);
       error_ = true;
@@ -276,11 +263,9 @@ TestInstance::~TestInstance() {
 // Runs a single search using the named engine type.
 // This interface hides all the irregularities of the various
 // engine interfaces from the rest of this file.
-void TestInstance::RunSearch(Engine type,
-                             const StringPiece& orig_text,
+void TestInstance::RunSearch(Engine type, const StringPiece& orig_text,
                              const StringPiece& orig_context,
-                             Prog::Anchor anchor,
-                             Result *result) {
+                             Prog::Anchor anchor, Result* result) {
   memset(result, 0, sizeof *result);
   if (regexp_ == NULL) {
     result->skipped = true;
@@ -302,9 +287,8 @@ void TestInstance::RunSearch(Engine type,
         result->skipped = true;
         break;
       }
-      result->matched =
-        prog_->UnsafeSearchBacktrack(text, context, anchor, kind_,
-                                     result->submatch, nsubmatch);
+      result->matched = prog_->UnsafeSearchBacktrack(
+          text, context, anchor, kind_, result->submatch, nsubmatch);
       result->have_submatch = true;
       break;
 
@@ -313,9 +297,8 @@ void TestInstance::RunSearch(Engine type,
         result->skipped = true;
         break;
       }
-      result->matched =
-        prog_->SearchNFA(text, context, anchor, kind_,
-                        result->submatch, nsubmatch);
+      result->matched = prog_->SearchNFA(text, context, anchor, kind_,
+                                         result->submatch, nsubmatch);
       result->have_submatch = true;
       break;
 
@@ -334,14 +317,13 @@ void TestInstance::RunSearch(Engine type,
         break;
       }
       result->matched =
-        prog_->SearchDFA(text, context, anchor, kind_, result->submatch,
-                         &result->skipped, NULL);
+          prog_->SearchDFA(text, context, anchor, kind_, result->submatch,
+                           &result->skipped, NULL);
       // If anchored, no need for second run,
       // but do it anyway to find more bugs.
       if (result->matched) {
-        if (!rprog_->SearchDFA(result->submatch[0], context,
-                               Prog::kAnchored, Prog::kLongestMatch,
-                               result->submatch,
+        if (!rprog_->SearchDFA(result->submatch[0], context, Prog::kAnchored,
+                               Prog::kLongestMatch, result->submatch,
                                &result->skipped, NULL)) {
           LOG(ERROR) << "Reverse DFA inconsistency: " << CEscape(regexp_str_)
                      << " on " << CEscape(text);
@@ -352,15 +334,13 @@ void TestInstance::RunSearch(Engine type,
       break;
 
     case kEngineOnePass:
-      if (prog_ == NULL ||
-          anchor == Prog::kUnanchored ||
-          !prog_->IsOnePass() ||
+      if (prog_ == NULL || anchor == Prog::kUnanchored || !prog_->IsOnePass() ||
           nsubmatch > Prog::kMaxOnePassCapture) {
         result->skipped = true;
         break;
       }
       result->matched = prog_->SearchOnePass(text, context, anchor, kind_,
-                                      result->submatch, nsubmatch);
+                                             result->submatch, nsubmatch);
       result->have_submatch = true;
       break;
 
@@ -390,10 +370,9 @@ void TestInstance::RunSearch(Engine type,
       if (kind_ == Prog::kFullMatch)
         re_anchor = RE2::ANCHOR_BOTH;
 
-      result->matched = re2_->Match(context,
-                                    text.begin() - context.begin(),
-                                    text.end() - context.begin(),
-                                    re_anchor, result->submatch, nsubmatch);
+      result->matched = re2_->Match(context, text.begin() - context.begin(),
+                                    text.end() - context.begin(), re_anchor,
+                                    result->submatch, nsubmatch);
       result->have_submatch = nsubmatch > 0;
       break;
     }
@@ -405,8 +384,8 @@ void TestInstance::RunSearch(Engine type,
         break;
       }
 
-      const PCRE::Arg **argptr = new const PCRE::Arg*[nsubmatch];
-      PCRE::Arg *a = new PCRE::Arg[nsubmatch];
+      const PCRE::Arg** argptr = new const PCRE::Arg* [nsubmatch];
+      PCRE::Arg* a = new PCRE::Arg[nsubmatch];
       for (int i = 0; i < nsubmatch; i++) {
         a[i] = PCRE::Arg(&result->submatch[i]);
         argptr[i] = &a[i];
@@ -421,10 +400,7 @@ void TestInstance::RunSearch(Engine type,
         pcre_anchor = PCRE::ANCHOR_BOTH;
       re_->ClearHitLimit();
       result->matched =
-        re_->DoMatch(text,
-                     pcre_anchor,
-                     &consumed,
-                     argptr, nsubmatch);
+          re_->DoMatch(text, pcre_anchor, &consumed, argptr, nsubmatch);
       if (re_->HitLimit()) {
         result->untrusted = true;
         delete[] argptr;
@@ -479,21 +455,18 @@ bool TestInstance::RunCase(const StringPiece& text, const StringPiece& context,
   if (correct.skipped) {
     if (regexp_ == NULL)
       return true;
-    LOG(ERROR) << "Skipped backtracking! " << CEscape(regexp_str_)
-               << " " << FormatMode(flags_);
+    LOG(ERROR) << "Skipped backtracking! " << CEscape(regexp_str_) << " "
+               << FormatMode(flags_);
     return false;
   }
-  VLOG(1) << "Try: regexp " << CEscape(regexp_str_)
-          << " text " << CEscape(text)
-          << " (" << FormatKind(kind_)
-          << ", " << FormatAnchor(anchor)
-          << ", " << FormatMode(flags_)
-          << ")";
+  VLOG(1) << "Try: regexp " << CEscape(regexp_str_) << " text " << CEscape(text)
+          << " (" << FormatKind(kind_) << ", " << FormatAnchor(anchor) << ", "
+          << FormatMode(flags_) << ")";
 
   // Compare the others.
   bool all_okay = true;
-  for (Engine i = kEngineBacktrack+1; i < kEngineMax; i++) {
-    if (!(Engines() & (1<<i)))
+  for (Engine i = kEngineBacktrack + 1; i < kEngineMax; i++) {
+    if (!(Engines() & (1 << i)))
       continue;
 
     Result r;
@@ -525,18 +498,16 @@ bool TestInstance::RunCase(const StringPiece& text, const StringPiece& context,
         continue;
       }
     }
-    for (int i = 0; i < 1+num_captures_; i++) {
+    for (int i = 0; i < 1 + num_captures_; i++) {
       if (r.submatch[i].begin() != correct.submatch[i].begin() ||
           r.submatch[i].end() != correct.submatch[i].end()) {
-        LOG(INFO) <<
-          StringPrintf("   $%d: should be %s is %s",
-                       i,
-                       FormatCapture(text, correct.submatch[i]).c_str(),
-                       FormatCapture(text, r.submatch[i]).c_str());
+        LOG(INFO) << StringPrintf(
+            "   $%d: should be %s is %s", i,
+            FormatCapture(text, correct.submatch[i]).c_str(),
+            FormatCapture(text, r.submatch[i]).c_str());
       } else {
-        LOG(INFO) <<
-          StringPrintf("   $%d: %s ok", i,
-                       FormatCapture(text, r.submatch[i]).c_str());
+        LOG(INFO) << StringPrintf("   $%d: %s ok", i,
+                                  FormatCapture(text, r.submatch[i]).c_str());
       }
     }
   }
@@ -552,30 +523,16 @@ bool TestInstance::RunCase(const StringPiece& text, const StringPiece& context,
 void TestInstance::LogMatch(const char* prefix, Engine e,
                             const StringPiece& text, const StringPiece& context,
                             Prog::Anchor anchor) {
-  LOG(INFO) << prefix
-    << EngineString(e)
-    << " regexp "
-    << CEscape(regexp_str_)
-    << " "
-    << CEscape(regexp_->ToString())
-    << " text "
-    << CEscape(text)
-    << " ("
-    << text.begin() - context.begin()
-    << ","
-    << text.end() - context.begin()
-    << ") of context "
-    << CEscape(context)
-    << " (" << FormatKind(kind_)
-    << ", " << FormatAnchor(anchor)
-    << ", " << FormatMode(flags_)
-    << ")";
+  LOG(INFO) << prefix << EngineString(e) << " regexp " << CEscape(regexp_str_)
+            << " " << CEscape(regexp_->ToString()) << " text " << CEscape(text)
+            << " (" << text.begin() - context.begin() << ","
+            << text.end() - context.begin() << ") of context "
+            << CEscape(context) << " (" << FormatKind(kind_) << ", "
+            << FormatAnchor(anchor) << ", " << FormatMode(flags_) << ")";
 }
 
 static Prog::MatchKind kinds[] = {
-  Prog::kFirstMatch,
-  Prog::kLongestMatch,
-  Prog::kFullMatch,
+    Prog::kFirstMatch, Prog::kLongestMatch, Prog::kFullMatch,
 };
 
 // Test all possible match kinds and parse modes.
@@ -583,8 +540,8 @@ Tester::Tester(const StringPiece& regexp) {
   error_ = false;
   for (int i = 0; i < arraysize(kinds); i++) {
     for (int j = 0; j < arraysize(parse_modes); j++) {
-      TestInstance* t = new TestInstance(regexp, kinds[i],
-                                         parse_modes[j].parse_flags);
+      TestInstance* t =
+          new TestInstance(regexp, kinds[i], parse_modes[j].parse_flags);
       error_ |= t->error();
       v_.push_back(t);
     }
@@ -597,17 +554,14 @@ Tester::~Tester() {
 }
 
 bool Tester::TestCase(const StringPiece& text, const StringPiece& context,
-                         Prog::Anchor anchor) {
+                      Prog::Anchor anchor) {
   bool okay = true;
   for (int i = 0; i < v_.size(); i++)
     okay &= (!v_[i]->error() && v_[i]->RunCase(text, context, anchor));
   return okay;
 }
 
-static Prog::Anchor anchors[] = {
-  Prog::kAnchored,
-  Prog::kUnanchored
-};
+static Prog::Anchor anchors[] = {Prog::kAnchored, Prog::kUnanchored};
 
 bool Tester::TestInput(const StringPiece& text) {
   bool okay = TestInputInContext(text, text);
@@ -631,8 +585,7 @@ bool Tester::TestInputInContext(const StringPiece& text,
   return okay;
 }
 
-bool TestRegexpOnText(const StringPiece& regexp,
-                      const StringPiece& text) {
+bool TestRegexpOnText(const StringPiece& regexp, const StringPiece& text) {
   Tester t(regexp);
   return t.TestInput(text);
 }

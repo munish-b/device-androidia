@@ -26,27 +26,21 @@
 
 #define WIDI_WINDOW_OFFSET 100
 
-class HwchLayerWindowed :
-    public Hwch::Layer,
-    public android::RefBase
-{
-    private:
+class HwchLayerWindowed : public Hwch::Layer, public android::RefBase {
+ private:
+  buffer_handle_t mHandle;
 
-    buffer_handle_t mHandle;
+ public:
+  HwchLayerWindowed(uint32_t width, uint32_t height, buffer_handle_t handle);
 
-    public:
+  // Getter to return handle
+  buffer_handle_t GetHandle(void) {
+    return mHandle;
+  }
 
-    HwchLayerWindowed(uint32_t width, uint32_t height, buffer_handle_t handle);
-
-    // Getter to return handle
-    buffer_handle_t GetHandle(void)
-    {
-        return mHandle;
-    }
-
-    void Send(hwc2_layer_t &hwLayer, hwc_rect_t *visibleRegions,
-              uint32_t &visibleRegionCount) override;
-    void CalculateRects(Hwch::Display& display) override;
+  void Send(hwc2_layer_t &hwLayer, hwc_rect_t *visibleRegions,
+            uint32_t &visibleRegionCount) override;
+  void CalculateRects(Hwch::Display &display) override;
 };
 
-#endif // __HwchLayerWindowed_h__
+#endif  // __HwchLayerWindowed_h__

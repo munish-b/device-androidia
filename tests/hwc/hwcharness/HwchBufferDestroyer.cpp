@@ -18,44 +18,38 @@
 #include "HwchSystem.h"
 #include "HwcTestState.h"
 
-Hwch::BufferDestroyer::BufferDestroyer()
-  : EventThread("BufferDestroyer")
-{
-    HWCLOGD("Starting BufferDestroyer thread");
-    EnsureRunning();
+Hwch::BufferDestroyer::BufferDestroyer() : EventThread("BufferDestroyer") {
+  HWCLOGD("Starting BufferDestroyer thread");
+  EnsureRunning();
 }
 
-Hwch::BufferDestroyer::~BufferDestroyer()
-{
+Hwch::BufferDestroyer::~BufferDestroyer() {
 }
 
-bool Hwch::BufferDestroyer::threadLoop()
-{
-    // Just pull each buffer from the event queue and allow it to be destroyed.
+bool Hwch::BufferDestroyer::threadLoop() {
+  // Just pull each buffer from the event queue and allow it to be destroyed.
 
-    while (true)
-    {
-        buffer_handle_t handle = 0;
-        HWCLOGD("Size=%d", Size());
+  while (true) {
+    buffer_handle_t handle = 0;
+    HWCLOGD("Size=%d", Size());
 
-        HWCLOGD("Waiting for onSet and 10 buffers in queue before destroying buffers...");
-        while (Size() < 10)
-        {
-            HwcTestState::getInstance()->WaitOnSetCondition();
-        }
-
-        HWCLOGD("Start destroying buffers, now %d in queue", Size());
-
-        while (Size() > 0)
-        {
-            android::sp<android::GraphicBuffer> buf;
-            if (ReadWait(buf))
-            {
-                handle = buf->handle;
-                HWCLOGD("Destroying buffer handle %p", handle);
-            }
-        }
+    HWCLOGD(
+        "Waiting for onSet and 10 buffers in queue before destroying "
+        "buffers...");
+    while (Size() < 10) {
+      HwcTestState::getInstance()->WaitOnSetCondition();
     }
 
-    return true;
+    HWCLOGD("Start destroying buffers, now %d in queue", Size());
+
+    while (Size() > 0) {
+      android::sp<android::GraphicBuffer> buf;
+      if (ReadWait(buf)) {
+        handle = buf->handle;
+        HWCLOGD("Destroying buffer handle %p", handle);
+      }
+    }
+  }
+
+  return true;
 }

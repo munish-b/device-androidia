@@ -22,321 +22,285 @@
 // Forward reference
 class HwcTestCrtc;
 
-class DrmShimPlane
-{
-public:
+class DrmShimPlane {
+ public:
+  // Tiling enumeration to store tiling type decoded from modifier
+  enum PlaneTiling {
+    ePlaneXTiled = 0,
+    ePlaneYTiled,
+    ePlaneYfTiled,
+    ePlaneLinear
+  };
 
-    // Tiling enumeration to store tiling type decoded from modifier
-    enum PlaneTiling
-    {
-      ePlaneXTiled = 0,
-      ePlaneYTiled,
-      ePlaneYfTiled,
-      ePlaneLinear
-    };
+ protected:
+  // Plane Id
+  uint32_t mPlaneId;
 
-protected:
+  // Plane index within CRTC. 0 for main plane.
+  uint32_t mPlaneIx;
 
-    // Plane Id
-    uint32_t mPlaneId;
+  // Current Device-Specific buffer Id (FB ID if DRM)
+  int64_t mDsId;
 
-    // Plane index within CRTC. 0 for main plane.
-    uint32_t mPlaneIx;
+  /// CRTC for this plane
+  HwcTestCrtc* mCrtc;
 
-    // Current Device-Specific buffer Id (FB ID if DRM)
-    int64_t mDsId;
+  /// Framebuffer and hardware transformation that will be set at page flip
+  /// event
+  DrmShimTransform mTransform;
 
-    /// CRTC for this plane
-    HwcTestCrtc* mCrtc;
+  /// Framebuffer that was set at last page flip event
+  android::sp<DrmShimBuffer> mFlippedBuffer;
 
-    /// Framebuffer and hardware transformation that will be set at page flip event
-    DrmShimTransform mTransform;
+  /// Redraw is expected this frame
+  bool mRedrawExpected;
 
-    /// Framebuffer that was set at last page flip event
-    android::sp<DrmShimBuffer> mFlippedBuffer;
+  /// Did the last attempt to set the buffer to be displayed fail?
+  bool mSetDisplayFailed;
 
-    /// Redraw is expected this frame
-    bool mRedrawExpected;
+  // Buffer bits per pixel
+  uint32_t mBpp;
 
-    /// Did the last attempt to set the buffer to be displayed fail?
-    bool mSetDisplayFailed;
+  // Pixel format
+  uint32_t mPixelFormat;
 
-    // Buffer bits per pixel
-    uint32_t mBpp;
+  // Aux buffer data members
+  bool mHasAuxBuffer;
+  uint32_t mAuxPitch;
+  uint32_t mAuxOffset;
 
-    // Pixel format
-    uint32_t mPixelFormat;
+  // Data member to hold tiling information
+  PlaneTiling mTiling;
 
-    // Aux buffer data members
-    bool mHasAuxBuffer;
-    uint32_t mAuxPitch;
-    uint32_t mAuxOffset;
+  int64_t mDrmCallStartTime;
 
-    // Data member to hold tiling information
-    PlaneTiling mTiling;
+  // ADF additions
+  bool mBufferUpdated;
 
-    int64_t mDrmCallStartTime;
+ public:
+  //-----------------------------------------------------------------------------
+  // Constructor & Destructor
+  DrmShimPlane(uint32_t planeId);
 
-    // ADF additions
-    bool mBufferUpdated;
+  DrmShimPlane(uint32_t planeId, HwcTestCrtc* crtc);
 
-public:
+  virtual ~DrmShimPlane();
 
-    //-----------------------------------------------------------------------------
-    // Constructor & Destructor
-    DrmShimPlane(uint32_t planeId);
+  /// Accessors
+  HwcTestCrtc* GetCrtc();
+  void SetCrtc(HwcTestCrtc* crtc);
 
-    DrmShimPlane(uint32_t planeId, HwcTestCrtc* crtc);
+  uint32_t GetPlaneId();
+  uint32_t GetDrmPlaneId();
+  bool IsMainPlane();
 
-    virtual ~DrmShimPlane();
+  void SetPlaneIndex(uint32_t ix);
+  uint32_t GetPlaneIndex();
 
+  void SetHwTransform(uint32_t hwTransform);
 
-    /// Accessors
-    HwcTestCrtc* GetCrtc();
-    void SetCrtc(HwcTestCrtc* crtc);
+  void SetDecrypt(bool decrypt);
+  bool IsDecrypted();
 
-    uint32_t GetPlaneId();
-    uint32_t GetDrmPlaneId();
-    bool IsMainPlane();
+  void SetRedrawExpected(bool redrawExpected);
+  bool IsRedrawExpected();
 
-    void SetPlaneIndex(uint32_t ix);
-    uint32_t GetPlaneIndex();
+  // Is the stated buffer in use by this plane?
+  bool IsUsing(android::sp<DrmShimBuffer> buf);
 
-    void SetHwTransform(uint32_t hwTransform);
+  // Drm Only: access Framebuffer Id
+  void SetCurrentDsId(int64_t dsId);
+  int64_t GetCurrentDsId();
 
-    void SetDecrypt(bool decrypt);
-    bool IsDecrypted();
+  DrmShimTransform& GetTransform();
+  void SetBuf(android::sp<DrmShimBuffer>& buf);
+  void ClearBuf();
+  android::sp<DrmShimBuffer> GetCurrentBuf();
 
-    void SetRedrawExpected(bool redrawExpected);
-    bool IsRedrawExpected();
+  uint32_t GetZOrder();
 
-    // Is the stated buffer in use by this plane?
-    bool IsUsing(android::sp<DrmShimBuffer> buf);
+  void SetDisplayFrame(int32_t x, int32_t y, uint32_t w, uint32_t h);
+  void SetSourceCrop(float left, float top, float width, float height);
 
-    // Drm Only: access Framebuffer Id
-    void SetCurrentDsId(int64_t dsId);
-    int64_t GetCurrentDsId();
+  // Bits-per-pixel for current buffer
+  void SetBpp(uint32_t bpp);
+  uint32_t GetBpp();
 
-    DrmShimTransform& GetTransform();
-    void SetBuf(android::sp<DrmShimBuffer>& buf);
-    void ClearBuf();
-    android::sp<DrmShimBuffer> GetCurrentBuf();
+  // Pixel format
+  void SetPixelFormat(uint32_t pixelFormat);
+  uint32_t GetPixelFormat();
 
-    uint32_t GetZOrder();
+  // Aux buffer accessors
+  void SetHasAuxBuffer(bool hasAux);
+  bool GetHasAuxBuffer();
+  void SetAuxPitch(uint32_t auxPitch);
+  uint32_t GetAuxPitch();
+  void SetAuxOffset(uint32_t auxOffset);
+  uint32_t GetAuxOffset();
 
-    void SetDisplayFrame(int32_t x, int32_t y, uint32_t w, uint32_t h);
-    void SetSourceCrop(float left, float top, float width, float height);
+  // Tiling related accessors
+  void SetTilingFromModifier(__u64 modifier);
+  PlaneTiling GetTiling();
 
-    // Bits-per-pixel for current buffer
-    void SetBpp(uint32_t bpp);
-    uint32_t GetBpp();
+  // Failure of last attempt to set the buffer on the plane
+  void SetDisplayFailed(bool failed);
+  bool DidSetDisplayFail();
 
-    // Pixel format
-    void SetPixelFormat(uint32_t pixelFormat);
-    uint32_t GetPixelFormat();
+  // Drm call duration evaluation
+  void DrmCallStart();
+  int64_t GetDrmCallDuration();
 
-    // Aux buffer accessors
-    void SetHasAuxBuffer(bool hasAux);
-    bool GetHasAuxBuffer();
-    void SetAuxPitch(uint32_t auxPitch);
-    uint32_t GetAuxPitch();
-    void SetAuxOffset(uint32_t auxOffset);
-    uint32_t GetAuxOffset();
+  // Page Flip event processing
+  void Flip();
 
-    // Tiling related accessors
-    void SetTilingFromModifier(__u64 modifier);
-    PlaneTiling GetTiling();
+  // Checks
+  void ProtectionCheck(android::sp<DrmShimBuffer>& buf);
+  void Expand(DrmShimSortedTransformVector& transforms);
+  bool FormatHasPixelAlpha();
+  void ValidateFormat();
 
-    // Failure of last attempt to set the buffer on the plane
-    void SetDisplayFailed(bool failed);
-    bool DidSetDisplayFail();
+  // ADF additions
+  void SetBufferUpdated(bool updated);
+  bool IsBufferUpdated();
 
-    // Drm call duration evaluation
-    void DrmCallStart();
-    int64_t GetDrmCallDuration();
-
-    // Page Flip event processing
-    void Flip();
-
-    // Checks
-    void ProtectionCheck(android::sp<DrmShimBuffer>& buf);
-    void Expand(DrmShimSortedTransformVector& transforms);
-    bool FormatHasPixelAlpha();
-    void ValidateFormat();
-
-    // ADF additions
-    void SetBufferUpdated(bool updated);
-    bool IsBufferUpdated();
-
-    // Logging
-    void Log(int priority);
+  // Logging
+  void Log(int priority);
 };
 
 /// Accessors
-inline HwcTestCrtc* DrmShimPlane::GetCrtc()
-{
-    return mCrtc;
+inline HwcTestCrtc* DrmShimPlane::GetCrtc() {
+  return mCrtc;
 }
 
-inline void DrmShimPlane::SetCrtc(HwcTestCrtc* crtc)
-{
-    mCrtc = crtc;
+inline void DrmShimPlane::SetCrtc(HwcTestCrtc* crtc) {
+  mCrtc = crtc;
 }
 
-inline uint32_t DrmShimPlane::GetPlaneId()
-{
-    return mPlaneId;
+inline uint32_t DrmShimPlane::GetPlaneId() {
+  return mPlaneId;
 }
 
-inline void DrmShimPlane::SetPlaneIndex(uint32_t ix)
-{
-    mPlaneIx = ix;
-    HWCLOGD("Plane %d index set to %d", mPlaneId, mPlaneIx);
+inline void DrmShimPlane::SetPlaneIndex(uint32_t ix) {
+  mPlaneIx = ix;
+  HWCLOGD("Plane %d index set to %d", mPlaneId, mPlaneIx);
 }
 
-inline uint32_t DrmShimPlane::GetPlaneIndex()
-{
-    return mPlaneIx;
+inline uint32_t DrmShimPlane::GetPlaneIndex() {
+  return mPlaneIx;
 }
 
-inline bool DrmShimPlane::IsMainPlane()
-{
-    //HWCLOGI("IsMainPlane: Plane %d Crtc %p Id %d",GetPlaneId(), mCrtc, mCrtc?(mCrtc->GetCrtcId()):0);
-    return (mPlaneIx == 0);
+inline bool DrmShimPlane::IsMainPlane() {
+  // HWCLOGI("IsMainPlane: Plane %d Crtc %p Id %d",GetPlaneId(), mCrtc,
+  // mCrtc?(mCrtc->GetCrtcId()):0);
+  return (mPlaneIx == 0);
 }
 
-inline void DrmShimPlane::SetHwTransform(uint32_t hwTransform)
-{
-    mTransform.SetTransform(hwTransform);
+inline void DrmShimPlane::SetHwTransform(uint32_t hwTransform) {
+  mTransform.SetTransform(hwTransform);
 }
 
-inline void DrmShimPlane::SetDecrypt(bool decrypt)
-{
-    mTransform.SetDecrypt(decrypt);
+inline void DrmShimPlane::SetDecrypt(bool decrypt) {
+  mTransform.SetDecrypt(decrypt);
 }
 
-inline bool DrmShimPlane::IsDecrypted()
-{
-    return mTransform.IsDecrypted();
+inline bool DrmShimPlane::IsDecrypted() {
+  return mTransform.IsDecrypted();
 }
 
-inline void DrmShimPlane::SetRedrawExpected(bool redrawExpected)
-{
-    mRedrawExpected = redrawExpected;
+inline void DrmShimPlane::SetRedrawExpected(bool redrawExpected) {
+  mRedrawExpected = redrawExpected;
 }
 
-inline bool DrmShimPlane::IsRedrawExpected()
-{
-    bool ret =  mRedrawExpected;
-    mRedrawExpected = false;
-    return ret;
+inline bool DrmShimPlane::IsRedrawExpected() {
+  bool ret = mRedrawExpected;
+  mRedrawExpected = false;
+  return ret;
 }
 
-inline void DrmShimPlane::SetCurrentDsId(int64_t dsId)
-{
-    mDsId = dsId;
+inline void DrmShimPlane::SetCurrentDsId(int64_t dsId) {
+  mDsId = dsId;
 }
 
-inline int64_t DrmShimPlane::GetCurrentDsId()
-{
-    return mDsId;
+inline int64_t DrmShimPlane::GetCurrentDsId() {
+  return mDsId;
 }
 
-inline DrmShimTransform& DrmShimPlane::GetTransform()
-{
-    return mTransform;
+inline DrmShimTransform& DrmShimPlane::GetTransform() {
+  return mTransform;
 }
 
-inline void DrmShimPlane::SetBuf(android::sp<DrmShimBuffer>& buf)
-{
-    mTransform.SetBuf(buf);
-    mBufferUpdated = true;
+inline void DrmShimPlane::SetBuf(android::sp<DrmShimBuffer>& buf) {
+  mTransform.SetBuf(buf);
+  mBufferUpdated = true;
 }
 
-inline void DrmShimPlane::ClearBuf()
-{
-    mTransform.ClearBuf();
-    mDsId = 0;
+inline void DrmShimPlane::ClearBuf() {
+  mTransform.ClearBuf();
+  mDsId = 0;
 }
 
-inline android::sp<DrmShimBuffer> DrmShimPlane::GetCurrentBuf()
-{
-    return mTransform.GetBuf();
+inline android::sp<DrmShimBuffer> DrmShimPlane::GetCurrentBuf() {
+  return mTransform.GetBuf();
 }
 
-inline void DrmShimPlane::SetBpp(uint32_t bpp)
-{
-    mBpp = bpp;
+inline void DrmShimPlane::SetBpp(uint32_t bpp) {
+  mBpp = bpp;
 }
 
-inline uint32_t DrmShimPlane::GetBpp()
-{
-    return mBpp;
+inline uint32_t DrmShimPlane::GetBpp() {
+  return mBpp;
 }
 
-inline void DrmShimPlane::SetPixelFormat(uint32_t pixelFormat)
-{
-    mPixelFormat = pixelFormat;
+inline void DrmShimPlane::SetPixelFormat(uint32_t pixelFormat) {
+  mPixelFormat = pixelFormat;
 }
 
-inline uint32_t DrmShimPlane::GetPixelFormat()
-{
-    return mPixelFormat;
+inline uint32_t DrmShimPlane::GetPixelFormat() {
+  return mPixelFormat;
 }
 
-inline void DrmShimPlane::SetHasAuxBuffer(bool hasAux)
-{
-    mHasAuxBuffer = hasAux;
+inline void DrmShimPlane::SetHasAuxBuffer(bool hasAux) {
+  mHasAuxBuffer = hasAux;
 }
 
-inline bool DrmShimPlane::GetHasAuxBuffer()
-{
-    return mHasAuxBuffer;
+inline bool DrmShimPlane::GetHasAuxBuffer() {
+  return mHasAuxBuffer;
 }
 
-inline void DrmShimPlane::SetAuxPitch(uint32_t auxPitch)
-{
-    mAuxPitch = auxPitch;
+inline void DrmShimPlane::SetAuxPitch(uint32_t auxPitch) {
+  mAuxPitch = auxPitch;
 }
 
-inline uint32_t DrmShimPlane::GetAuxPitch()
-{
-    return mAuxPitch;
+inline uint32_t DrmShimPlane::GetAuxPitch() {
+  return mAuxPitch;
 }
 
-inline void DrmShimPlane::SetAuxOffset(uint32_t auxOffset)
-{
-    mAuxOffset = auxOffset;
+inline void DrmShimPlane::SetAuxOffset(uint32_t auxOffset) {
+  mAuxOffset = auxOffset;
 }
 
-inline uint32_t DrmShimPlane::GetAuxOffset()
-{
-    return mAuxOffset;
+inline uint32_t DrmShimPlane::GetAuxOffset() {
+  return mAuxOffset;
 }
 
-inline DrmShimPlane::PlaneTiling DrmShimPlane::GetTiling()
-{
-    return mTiling;
+inline DrmShimPlane::PlaneTiling DrmShimPlane::GetTiling() {
+  return mTiling;
 }
 
-inline void DrmShimPlane::SetBufferUpdated(bool updated)
-{
-    mBufferUpdated = updated;
+inline void DrmShimPlane::SetBufferUpdated(bool updated) {
+  mBufferUpdated = updated;
 }
 
-inline bool DrmShimPlane::IsBufferUpdated()
-{
-    return mBufferUpdated;
+inline bool DrmShimPlane::IsBufferUpdated() {
+  return mBufferUpdated;
 }
 
-inline void DrmShimPlane::SetDisplayFailed(bool failed)
-{
-    mSetDisplayFailed = failed;
+inline void DrmShimPlane::SetDisplayFailed(bool failed) {
+  mSetDisplayFailed = failed;
 }
 
-inline bool DrmShimPlane::DidSetDisplayFail()
-{
-    return mSetDisplayFailed;
+inline bool DrmShimPlane::DidSetDisplayFail() {
+  return mSetDisplayFailed;
 }
 
-#endif // __DrmShimPlane_h__
+#endif  // __DrmShimPlane_h__

@@ -29,14 +29,15 @@
 namespace re2 {
 
 // Returns whether re might match an empty string.
-static bool CanBeEmptyString(Regexp *re);
+static bool CanBeEmptyString(Regexp* re);
 
 // Walker class to compute whether library handles a regexp
 // exactly as PCRE would.  See comment at top for conditions.
 
 class PCREWalker : public Regexp::Walker<bool> {
  public:
-  PCREWalker() {}
+  PCREWalker() {
+  }
   bool PostVisit(Regexp* re, bool parent_arg, bool pre_arg, bool* child_args,
                  int nchild_args);
 
@@ -103,7 +104,6 @@ bool Regexp::MimicsPCRE() {
   return w.Walk(this, true);
 }
 
-
 // Walker class to compute whether a Regexp can match an empty string.
 // It is okay to overestimate.  For example, \b\B cannot match an empty
 // string, because \b and \B are mutually exclusive, but this isn't
@@ -113,9 +113,10 @@ bool Regexp::MimicsPCRE() {
 
 class EmptyStringWalker : public Regexp::Walker<bool> {
  public:
-  EmptyStringWalker() { }
-  bool PostVisit(Regexp* re, bool parent_arg, bool pre_arg,
-                 bool* child_args, int nchild_args);
+  EmptyStringWalker() {
+  }
+  bool PostVisit(Regexp* re, bool parent_arg, bool pre_arg, bool* child_args,
+                 int nchild_args);
 
   bool ShortVisit(Regexp* re, bool a) {
     // Should never be called: we use Walk not WalkExponential.
@@ -134,7 +135,7 @@ class EmptyStringWalker : public Regexp::Walker<bool> {
 bool EmptyStringWalker::PostVisit(Regexp* re, bool parent_arg, bool pre_arg,
                                   bool* child_args, int nchild_args) {
   switch (re->op()) {
-    case kRegexpNoMatch:               // never empty
+    case kRegexpNoMatch:  // never empty
     case kRegexpLiteral:
     case kRegexpAnyChar:
     case kRegexpAnyByte:
@@ -142,35 +143,35 @@ bool EmptyStringWalker::PostVisit(Regexp* re, bool parent_arg, bool pre_arg,
     case kRegexpLiteralString:
       return false;
 
-    case kRegexpEmptyMatch:            // always empty
-    case kRegexpBeginLine:             // always empty, when they match
+    case kRegexpEmptyMatch:  // always empty
+    case kRegexpBeginLine:   // always empty, when they match
     case kRegexpEndLine:
     case kRegexpNoWordBoundary:
     case kRegexpWordBoundary:
     case kRegexpBeginText:
     case kRegexpEndText:
-    case kRegexpStar:                  // can always be empty
+    case kRegexpStar:  // can always be empty
     case kRegexpQuest:
     case kRegexpHaveMatch:
       return true;
 
-    case kRegexpConcat:                // can be empty if all children can
+    case kRegexpConcat:  // can be empty if all children can
       for (int i = 0; i < nchild_args; i++)
         if (!child_args[i])
           return false;
       return true;
 
-    case kRegexpAlternate:             // can be empty if any child can
+    case kRegexpAlternate:  // can be empty if any child can
       for (int i = 0; i < nchild_args; i++)
         if (child_args[i])
           return true;
       return false;
 
-    case kRegexpPlus:                  // can be empty if the child can
+    case kRegexpPlus:  // can be empty if the child can
     case kRegexpCapture:
       return child_args[0];
 
-    case kRegexpRepeat:                // can be empty if child can or is x{0}
+    case kRegexpRepeat:  // can be empty if child can or is x{0}
       return child_args[0] || re->min() == 0;
   }
   return false;

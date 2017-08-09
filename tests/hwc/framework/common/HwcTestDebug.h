@@ -21,72 +21,74 @@
 #include "HwcTestState.h"
 #include "DrmShimBuffer.h"
 
-enum
-{
-    DUMP_BUFFER_TO_RAW = (1<<0),
-    DUMP_BUFFER_TO_TGA = (1<<1)
-};
+enum { DUMP_BUFFER_TO_RAW = (1 << 0), DUMP_BUFFER_TO_TGA = (1 << 1) };
 
-bool HwcTestDumpGrallocBufferToDisk( const char* pchFilename,
-                                     uint32_t num,
-                                     buffer_handle_t grallocHandle,
-                                     uint32_t outputDumpMask );
+bool HwcTestDumpGrallocBufferToDisk(const char* pchFilename, uint32_t num,
+                                    buffer_handle_t grallocHandle,
+                                    uint32_t outputDumpMask);
 
-bool HwcTestDumpAuxBufferToDisk( const char* pchFilename,
-                                 uint32_t num,
-                                 buffer_handle_t grallocHandle );
+bool HwcTestDumpAuxBufferToDisk(const char* pchFilename, uint32_t num,
+                                buffer_handle_t grallocHandle);
 
-bool HwcTestDumpMemBufferToDisk( const char* pchFilename,
-                                 uint32_t num,
-                                 const void* handle,
-                                 Hwcval::buffer_details_t& bufferInfo,
-                                 uint32_t stride,
-                                 uint32_t outputDumpMask,
-                                 uint8_t* pData );
+bool HwcTestDumpMemBufferToDisk(const char* pchFilename, uint32_t num,
+                                const void* handle,
+                                Hwcval::buffer_details_t& bufferInfo,
+                                uint32_t stride, uint32_t outputDumpMask,
+                                uint8_t* pData);
 
 #if HWCVAL_LOCK_DEBUG || defined(HWCVAL_LOCK_TRACE)
 #include <utils/Mutex.h>
-class HwcvalLock
-{
-    public:
-        HwcvalLock(const char* funcName, const char* mutexName, Hwcval::Mutex& mutex) : mLock(mutex)
+class HwcvalLock {
+ public:
+  HwcvalLock(const char* funcName, const char* mutexName, Hwcval::Mutex& mutex)
+      : mLock(mutex)
 #ifdef HWCVAL_LOCK_TRACE
-          , mTracer(ATRACE_TAG, funcName)
+        ,
+        mTracer(ATRACE_TAG, funcName)
 #endif
-        {
-            HWCLOGD_IF(HWCVAL_LOCK_DEBUG, "Thread %d Request lock mutex %s @ %p : %s", gettid(), mutexName, &mutex, funcName);
-            mLock.lock();
-            HWCLOGD_IF(HWCVAL_LOCK_DEBUG, "Thread %d Gained lock mutex %s @ %p : %s", gettid(), mutexName, &mutex, funcName);
-        }
+  {
+    HWCLOGD_IF(HWCVAL_LOCK_DEBUG, "Thread %d Request lock mutex %s @ %p : %s",
+               gettid(), mutexName, &mutex, funcName);
+    mLock.lock();
+    HWCLOGD_IF(HWCVAL_LOCK_DEBUG, "Thread %d Gained lock mutex %s @ %p : %s",
+               gettid(), mutexName, &mutex, funcName);
+  }
 
-        HwcvalLock(const char* funcName, const char* mutexName, Hwcval::Mutex* mutex) : mLock(*mutex)
+  HwcvalLock(const char* funcName, const char* mutexName, Hwcval::Mutex* mutex)
+      : mLock(*mutex)
 #ifdef HWCVAL_LOCK_TRACE
-          , mTracer(ATRACE_TAG, funcName)
+        ,
+        mTracer(ATRACE_TAG, funcName)
 #endif
-        {
-            HWCLOGD_IF(HWCVAL_LOCK_DEBUG, "Thread %d Request lock mutex %s @ %p : %s", gettid(), mutexName, mutex, funcName);
-            mLock.lock();
-            HWCLOGD_IF(HWCVAL_LOCK_DEBUG, "Thread %d Gained lock mutex %s @ %p : %s", gettid(), mutexName, mutex, funcName);
-        }
+  {
+    HWCLOGD_IF(HWCVAL_LOCK_DEBUG, "Thread %d Request lock mutex %s @ %p : %s",
+               gettid(), mutexName, mutex, funcName);
+    mLock.lock();
+    HWCLOGD_IF(HWCVAL_LOCK_DEBUG, "Thread %d Gained lock mutex %s @ %p : %s",
+               gettid(), mutexName, mutex, funcName);
+  }
 
-        ~HwcvalLock()
-        {
-            HWCLOGD_IF(HWCVAL_LOCK_DEBUG, "Thread %d Unlocking mutex @ %p", gettid(), &mLock);
-            mLock.unlock();
-        }
+  ~HwcvalLock() {
+    HWCLOGD_IF(HWCVAL_LOCK_DEBUG, "Thread %d Unlocking mutex @ %p", gettid(),
+               &mLock);
+    mLock.unlock();
+  }
 
-    private:
-        Hwcval::Mutex& mLock;
+ private:
+  Hwcval::Mutex& mLock;
 #ifdef HWCVAL_LOCK_TRACE
-        android::ScopedTrace mTracer;
+  android::ScopedTrace mTracer;
 #endif
 };
 
-#define HWCVAL_LOCK(L,M) char L##name[1024]; strcpy(L##name, __PRETTY_FUNCTION__); strcat(L##name,"-Mtx"); HwcvalLock L(L##name, #M, M)
+#define HWCVAL_LOCK(L, M)               \
+  char L##name[1024];                   \
+  strcpy(L##name, __PRETTY_FUNCTION__); \
+  strcat(L##name, "-Mtx");              \
+  HwcvalLock L(L##name, #M, M)
 
 #else
-#define HWCVAL_LOCK(L,M) Hwcval::Mutex::Autolock L(M)
+#define HWCVAL_LOCK(L, M) Hwcval::Mutex::Autolock L(M)
 #endif
 
-
-#endif // __HwcTestDebug_h__
+#endif  // __HwcTestDebug_h__

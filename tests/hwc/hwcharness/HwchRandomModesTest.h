@@ -20,44 +20,40 @@
 #include "HwchRandomTest.h"
 #include "HwchLayers.h"
 
-namespace Hwch
-{
-    class RandomModesTest  : public RandomTest
-    {
-    public:
+namespace Hwch {
+class RandomModesTest : public RandomTest {
+ public:
+  RandomModesTest(Hwch::Interface& interface);
+  virtual ~RandomModesTest();
 
-        RandomModesTest(Hwch::Interface& interface);
-        virtual ~RandomModesTest();
+  void ChooseExtendedMode();
+  void DetermineExtendedModeExpectation();
+  virtual void ClearVideo();
+  virtual int RunScenario();
 
-        void ChooseExtendedMode();
-        void DetermineExtendedModeExpectation();
-        virtual void ClearVideo();
-        virtual int RunScenario();
+ private:
+  Choice mExtendedModeChooser;
+  MultiChoice<uint32_t> mVideoRateChoice;
 
-    private:
-        Choice mExtendedModeChooser;
-        MultiChoice<uint32_t> mVideoRateChoice;
+  // True if full-screen video layer is showing
+  bool mVideoPresent;
 
-        // True if full-screen video layer is showing
-        bool mVideoPresent;
+  // True if MDS will report video playing
+  bool mVideoPlaying;
 
-        // True if MDS will report video playing
-        bool mVideoPlaying;
+  // True if MDS will report input timeout
+  bool mInputTimeout;
 
-        // True if MDS will report input timeout
-        bool mInputTimeout;
+  // Enable flag for workaround:
+  // If we say "video is playing" during mode change or resume, this
+  // may cause errors in validation of extended mode state.
+  // To prevent this (not particularly realistic) condition happening, we have
+  // this flag to stop the harness from doing this.
+  bool mAvoidVideoOnResumeOrModeChange;
+  uint32_t mDontStartExtendedModeBefore;
 
-        // Enable flag for workaround:
-        // If we say "video is playing" during mode change or resume, this
-        // may cause errors in validation of extended mode state.
-        // To prevent this (not particularly realistic) condition happening, we have
-        // this flag to stop the harness from doing this.
-        bool mAvoidVideoOnResumeOrModeChange;
-        uint32_t mDontStartExtendedModeBefore;
-
-        NV12VideoLayer* mVideoLayer;
-    };
+  NV12VideoLayer* mVideoLayer;
+};
 }
 
-#endif // __HwchRandomModesTest_h__
-
+#endif  // __HwchRandomModesTest_h__

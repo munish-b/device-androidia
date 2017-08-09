@@ -31,36 +31,36 @@ using namespace hwcomposer;
 
 class HwcTestProtectionChecker;
 
-class HwcServiceShim : public BxService, public Hwcval::Singleton<HwcServiceShim>
-{
-public:
+class HwcServiceShim : public BxService,
+                       public Hwcval::Singleton<HwcServiceShim> {
+ public:
+  // Only override the functions we really want a shim implementation of.
+  // Other functions will be passed straight through at binder level.
+  //
+  // WARNING: If you want to override more functions, you have to
+  // 1. add the transact code in BxService.cpp
+  // 2. add the binder id to the enum in BxService.h
+  // 3. add the pure virtual function declaration to
+  // HwcvalAbstractHwcServiceSubset.h.
+  virtual sp<IDisplayControl> getDisplayControl(uint32_t display);
+  virtual sp<IVideoControl> getVideoControl();
 
-    // Only override the functions we really want a shim implementation of.
-    // Other functions will be passed straight through at binder level.
-    //
-    // WARNING: If you want to override more functions, you have to
-    // 1. add the transact code in BxService.cpp
-    // 2. add the binder id to the enum in BxService.h
-    // 3. add the pure virtual function declaration to HwcvalAbstractHwcServiceSubset.h.
-    virtual sp<IDisplayControl>     getDisplayControl(uint32_t display);
-    virtual sp<IVideoControl>       getVideoControl();
+  bool Start();
 
-    bool Start();
+  HwcServiceShim();
+  virtual ~HwcServiceShim();
 
-    HwcServiceShim();
-    virtual ~HwcServiceShim();
+  static const android::String16 descriptor;
+  virtual const android::String16& getInterfaceDescriptor() const;
 
-    static const android::String16 descriptor;
-    virtual const android::String16& getInterfaceDescriptor() const;
-
-private:
-    friend class Hwcval::Singleton<HwcServiceShim>;
-    sp<IDisplayControl> mDisplayControls[HWCVAL_MAX_CRTCS];
-    sp<IVideoControl> mVideoControl;
+ private:
+  friend class Hwcval::Singleton<HwcServiceShim>;
+  sp<IDisplayControl> mDisplayControls[HWCVAL_MAX_CRTCS];
+  sp<IVideoControl> mVideoControl;
 #ifdef HWCVAL_MDSEXTMODECONTROL
-    sp<IMDSExtModeControl> mMDSExtModeControl;
+  sp<IMDSExtModeControl> mMDSExtModeControl;
 #endif
 };
-#endif // HWCVAL_BUILD_SHIM_HWCSERVICE
+#endif  // HWCVAL_BUILD_SHIM_HWCSERVICE
 
-#endif // __HwcServiceShim_h__
+#endif  // __HwcServiceShim_h__

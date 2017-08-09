@@ -24,43 +24,42 @@
 
 // BxService forwards most messages straight on
 // to the real service.
-class BxService : public android::BBinder, Hwcval::AbstractHwcServiceSubset
-{
-public:
-    BxService();
+class BxService : public android::BBinder, Hwcval::AbstractHwcServiceSubset {
+ public:
+  BxService();
 
-    IBinder* onAsBinder();
+  IBinder* onAsBinder();
 
-    virtual android::status_t onTransact(uint32_t, const android::Parcel&, android::Parcel*, uint32_t);
+  virtual android::status_t onTransact(uint32_t, const android::Parcel&,
+                                       android::Parcel*, uint32_t);
 
-    android::sp<hwcomposer::IService> Real();
+  android::sp<hwcomposer::IService> Real();
 
-private:
-    enum {
-        // ==============================================
-        // Public APIs - try not to reorder these
+ private:
+  enum {
+    // ==============================================
+    // Public APIs - try not to reorder these
 
-        GET_HWC_VERSION = IBinder::FIRST_CALL_TRANSACTION,
+    GET_HWC_VERSION = IBinder::FIRST_CALL_TRANSACTION,
 
-        // Dump options and current settings to logcat.
-        DUMP_OPTIONS,
+    // Dump options and current settings to logcat.
+    DUMP_OPTIONS,
 
-        // Override an option.
-        SET_OPTION,
+    // Override an option.
+    SET_OPTION,
 
-        // Enable hwclogviewer output to logcat
-        ENABLE_LOG_TO_LOGCAT = 99,
+    // Enable hwclogviewer output to logcat
+    ENABLE_LOG_TO_LOGCAT = 99,
 
-        // accessor for IBinder interface functions
-        TRANSACT_GET_DIAGNOSTIC = 100,
-        TRANSACT_GET_DISPLAY_CONTROL,
-        TRANSACT_GET_VIDEO_CONTROL
-    };
+    // accessor for IBinder interface functions
+    TRANSACT_GET_DIAGNOSTIC = 100,
+    TRANSACT_GET_DISPLAY_CONTROL,
+    TRANSACT_GET_VIDEO_CONTROL
+  };
 
-    void GetRealService();
-    android::sp<android::IBinder> mRealBinder;
-    android::sp<hwcomposer::IService> mRealService;
+  void GetRealService();
+  android::sp<android::IBinder> mRealBinder;
+  android::sp<hwcomposer::IService> mRealService;
 };
 
-
-#endif // __BxService_h__
+#endif  // __BxService_h__

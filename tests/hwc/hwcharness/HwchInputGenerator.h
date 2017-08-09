@@ -20,46 +20,44 @@
 #include "utils/Thread.h"
 #include "HwchDefs.h"
 
-namespace Hwch
-{
-    class InputGenerator : public android::Thread
-    {
-    public:
-        InputGenerator();
-        virtual ~InputGenerator();
+namespace Hwch {
+class InputGenerator : public android::Thread {
+ public:
+  InputGenerator();
+  virtual ~InputGenerator();
 
-        // Open and configure the ui device
-        void Open();
+  // Open and configure the ui device
+  void Open();
 
-        // Start or stop keypress generation
-        void SetActive(bool active);
+  // Start or stop keypress generation
+  void SetActive(bool active);
 
-        // Wait until previous active/inactive request is complete
-        void Stabilize();
+  // Wait until previous active/inactive request is complete
+  void Stabilize();
 
-        // Start or stop keypress generation.
-        // If stopping, wait for input to time out.
-        void SetActiveAndWait(bool active);
+  // Start or stop keypress generation.
+  // If stopping, wait for input to time out.
+  void SetActiveAndWait(bool active);
 
-    private:
-        // Thread functions
-        virtual bool threadLoop();
-        virtual android::status_t readyToRun();
+ private:
+  // Thread functions
+  virtual bool threadLoop();
+  virtual android::status_t readyToRun();
 
-        void Keypress();
-        int WriteEvent(int type, int code, int value);
+  void Keypress();
+  int WriteEvent(int type, int code, int value);
 
-        int mFd;
-        bool mRunning;
-        bool mActive;
-        bool mKeypressFailed;
+  int mFd;
+  bool mRunning;
+  bool mActive;
+  bool mKeypressFailed;
 
-        // Time at which input will have timed out
-        int64_t mInactiveTime;
+  // Time at which input will have timed out
+  int64_t mInactiveTime;
 
-        static const uint32_t mKeypressIntervalUs;
-        static const uint32_t mTimeoutPeriodUs;
-    };
+  static const uint32_t mKeypressIntervalUs;
+  static const uint32_t mTimeoutPeriodUs;
+};
 }
 
-#endif // __HwchInputGenerator_h__
+#endif  // __HwchInputGenerator_h__

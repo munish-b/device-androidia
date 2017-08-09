@@ -20,9 +20,9 @@ TEST(SparseArray, BasicOperations) {
   for (int i = 0; i < n; i++)
     order[i] = i;
   for (int i = 0; i < n; i++)
-    value[i] = rand()%1000 + 1;
+    value[i] = rand() % 1000 + 1;
   for (int i = 1; i < n; i++) {
-    int j = rand()%i;
+    int j = rand() % i;
     int t = order[i];
     order[i] = order[j];
     order[j] = t;
@@ -57,8 +57,7 @@ TEST(SparseArray, BasicOperations) {
 
 class SparseArrayStringTest : public testing::Test {
  protected:
-  SparseArrayStringTest()
-      : str_map_(10) {
+  SparseArrayStringTest() : str_map_(10) {
     InsertOrUpdate(&str_map_, 1, "a");
     InsertOrUpdate(&str_map_, 5, "b");
     InsertOrUpdate(&str_map_, 2, "c");
@@ -131,13 +130,15 @@ TEST_F(SparseArrayStringSurvivesInvalidIndexTest, SetNew_Negative) {
 
 TEST_F(SparseArrayStringSurvivesInvalidIndexTest, SetNew_Existing) {
   EXPECT_DEBUG_DEATH({
-    str_map_.set_new(2, "hi");
-    EXPECT_EQ("hi", FindWithDefault(str_map_, 2, kNotFound));
+                       str_map_.set_new(2, "hi");
+                       EXPECT_EQ("hi", FindWithDefault(str_map_, 2, kNotFound));
 
-    // The old value for 2 is still present, but can never be removed.
-    // This risks crashing later, if the map fills up.
-    EXPECT_EQ(5, str_map_.size());
-  }, "Check failed: !has_index\\(i\\)");
+                       // The old value for 2 is still present, but can never be
+                       // removed.
+                       // This risks crashing later, if the map fills up.
+                       EXPECT_EQ(5, str_map_.size());
+                     },
+                     "Check failed: !has_index\\(i\\)");
 }
 
 TEST_F(SparseArrayStringSurvivesInvalidIndexTest, SetNew_TooBig) {

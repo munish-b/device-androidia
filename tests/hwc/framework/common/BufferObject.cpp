@@ -24,57 +24,53 @@
 static uint32_t bufferObjectCount = 0;
 #endif
 
-static void Count()
-{
+static void Count() {
 #ifdef HWCVAL_RESOURCE_LEAK_CHECKING
-    if (++bufferObjectCount > 500)
-    {
-        HWCLOGW("%d buffer objects created.", bufferObjectCount);
-    }
+  if (++bufferObjectCount > 500) {
+    HWCLOGW("%d buffer objects created.", bufferObjectCount);
+  }
 #endif
 }
 
 HwcTestBufferObject::HwcTestBufferObject(int fd, uint32_t boHandle)
-  : mFd(fd),
-    mBoHandle(boHandle)
-{
-    Count();
-    HWCLOGD_COND(eLogBuffer, "HwcTestBufferObject::HwcTestBufferObject() Created bo@%p", this);
+    : mFd(fd), mBoHandle(boHandle) {
+  Count();
+  HWCLOGD_COND(eLogBuffer,
+               "HwcTestBufferObject::HwcTestBufferObject() Created bo@%p",
+               this);
 }
 
 HwcTestBufferObject::HwcTestBufferObject(const HwcTestBufferObject& rhs)
-  : android::RefBase(),
-    mBuf(rhs.mBuf),
-    mFd(rhs.mFd),
-    mBoHandle(rhs.mBoHandle)
-{
-    Count();
-    HWCLOGD_COND(eLogBuffer, "HwcTestBufferObject::HwcTestBufferObject(&rhs) Created bo@%p", this);
+    : android::RefBase(),
+      mBuf(rhs.mBuf),
+      mFd(rhs.mFd),
+      mBoHandle(rhs.mBoHandle) {
+  Count();
+  HWCLOGD_COND(eLogBuffer,
+               "HwcTestBufferObject::HwcTestBufferObject(&rhs) Created bo@%p",
+               this);
 }
 
-HwcTestBufferObject::~HwcTestBufferObject()
-{
+HwcTestBufferObject::~HwcTestBufferObject() {
 #ifdef HWCVAL_RESOURCE_LEAK_CHECKING
-    --bufferObjectCount;
+  --bufferObjectCount;
 #endif
-    HWCLOGD_COND(eLogBuffer, "HwcTestBufferObject::~HwcTestBufferObject Deleted bo@%p", this);
+  HWCLOGD_COND(eLogBuffer,
+               "HwcTestBufferObject::~HwcTestBufferObject Deleted bo@%p", this);
 }
 
-char* HwcTestBufferObject::IdStr(char* str, uint32_t len)
-{
-    FullIdStr(str, len);
-    return str;
+char* HwcTestBufferObject::IdStr(char* str, uint32_t len) {
+  FullIdStr(str, len);
+  return str;
 }
 
-int HwcTestBufferObject::FullIdStr(char* str, uint32_t len)
-{
-    uint32_t n = snprintf(str, len, "bo@%p fd %d boHandle 0x%x", this, mFd, mBoHandle);
+int HwcTestBufferObject::FullIdStr(char* str, uint32_t len) {
+  uint32_t n =
+      snprintf(str, len, "bo@%p fd %d boHandle 0x%x", this, mFd, mBoHandle);
 
-    return n;
+  return n;
 }
 
-HwcTestBufferObject* HwcTestBufferObject::Dup()
-{
-    return new HwcTestBufferObject(*this);
+HwcTestBufferObject* HwcTestBufferObject::Dup() {
+  return new HwcTestBufferObject(*this);
 }
-

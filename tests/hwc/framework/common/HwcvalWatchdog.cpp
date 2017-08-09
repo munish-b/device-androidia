@@ -17,105 +17,92 @@
 #include "HwcvalWatchdog.h"
 
 Hwcval::Watchdog::Watchdog(uint64_t ns, HwcTestCheckType check, const char* str)
-  : mTimeoutNs(ns),
-    mHaveTimer(false),
-    mRunning(false),
-    mStartTime(0),
-    mCheck(check),
-    mMessage(str)
-{
+    : mTimeoutNs(ns),
+      mHaveTimer(false),
+      mRunning(false),
+      mStartTime(0),
+      mCheck(check),
+      mMessage(str) {
 }
 
 // Copy constructor
-// Only copy state, ie. start time, actual timer will not be running in the copy.
+// Only copy state, ie. start time, actual timer will not be running in the
+// copy.
 Hwcval::Watchdog::Watchdog(Hwcval::Watchdog& rhs)
-  : android::RefBase(),
-    mTimeoutNs(rhs.mTimeoutNs),
-    mHaveTimer(false),
-    mRunning(false),
-    mStartTime(rhs.mStartTime),
-    mCheck(rhs.mCheck)
-{
+    : android::RefBase(),
+      mTimeoutNs(rhs.mTimeoutNs),
+      mHaveTimer(false),
+      mRunning(false),
+      mStartTime(rhs.mStartTime),
+      mCheck(rhs.mCheck) {
 }
 
-void Hwcval::Watchdog::SetMessage(const android::String8& str)
-{
-    mMessage = str;
+void Hwcval::Watchdog::SetMessage(const android::String8& str) {
+  mMessage = str;
 }
 
-void Hwcval::Watchdog::Start()
-{
-    Stop();
+void Hwcval::Watchdog::Start() {
+  Stop();
 
-    mStartTime = systemTime(SYSTEM_TIME_MONOTONIC);
+  mStartTime = systemTime(SYSTEM_TIME_MONOTONIC);
 
-    if (!mHaveTimer)
-    {
-        struct sigevent timerEvent;
-        memset(&timerEvent, 0, sizeof(timerEvent));
-        timerEvent.sigev_notify = SIGEV_THREAD;
-        timerEvent.sigev_notify_function = TimerHandler;
-        timerEvent.sigev_value.sival_ptr = this;
+  if (!mHaveTimer) {
+    struct sigevent timerEvent;
+    memset(&timerEvent, 0, sizeof(timerEvent));
+    timerEvent.sigev_notify = SIGEV_THREAD;
+    timerEvent.sigev_notify_function = TimerHandler;
+    timerEvent.sigev_value.sival_ptr = this;
 
-        if ( 0 != timer_create(CLOCK_MONOTONIC, &timerEvent, &mDelayTimer) )
-        {
-            HWCLOGW("Watchdog: Failed to create timer for %s", mMessage.string());
-        }
-        else
-        {
-            mHaveTimer = true;
-            mRunning = true;
-            HWCCHECK(mCheck);
-        }
+    if (0 != timer_create(CLOCK_MONOTONIC, &timerEvent, &mDelayTimer)) {
+      HWCLOGW("Watchdog: Failed to create timer for %s", mMessage.string());
+    } else {
+      mHaveTimer = true;
+      mRunning = true;
+      HWCCHECK(mCheck);
     }
+  }
 
-    // Reset the timer
-    if ( mHaveTimer )
-    {
-        struct itimerspec timerSpec;
-        timerSpec.it_value.tv_sec     = mTimeoutNs / HWCVAL_SEC_TO_NS;
-        timerSpec.it_value.tv_nsec    = mTimeoutNs % HWCVAL_SEC_TO_NS;
-        timerSpec.it_interval.tv_sec  = 0; // This is a one-hit timer so no interval
-        timerSpec.it_interval.tv_nsec = 0;
+  // Reset the timer
+  if (mHaveTimer) {
+    struct itimerspec timerSpec;
+    timerSpec.it_value.tv_sec = mTimeoutNs / HWCVAL_SEC_TO_NS;
+    timerSpec.it_value.tv_nsec = mTimeoutNs % HWCVAL_SEC_TO_NS;
+    timerSpec.it_interval.tv_sec = 0;  // This is a one-hit timer so no interval
+    timerSpec.it_interval.tv_nsec = 0;
 
-        if ( 0 != timer_settime(mDelayTimer, 0, &timerSpec, NULL) )
-        {
-            ALOGE("Watchdog: Failed to set timer for %s", mMessage.string());
-            Stop();
-        }
+    if (0 != timer_settime(mDelayTimer, 0, &timerSpec, NULL)) {
+      ALOGE("Watchdog: Failed to set timer for %s", mMessage.string());
+      Stop();
     }
+  }
 }
 
-void Hwcval::Watchdog::StartIfNotRunning()
-{
-    if (!mRunning)
-    {
-        Start();
-    }
+void Hwcval::Watchdog::StartIfNotRunning() {
+  if (!mRunning) {
+    Start();
+  }
 }
 
-void Hwcval::Watchdog::TimerHandler(sigval_t value)
-{
-    ALOG_ASSERT( value.sival_ptr );
-    static_cast<Hwcval::Watchdog*>(value.sival_ptr)->TimerHandler();
+void Hwcval::Watchdog::TimerHandler(sigval_t value) {
+  ALOG_ASSERT(value.sival_ptr);
+  static_cast<Hwcval::Watchdog*>(value.sival_ptr)->TimerHandler();
 }
 
-void Hwcval::Watchdog::TimerHandler()
-{
+void Hwcval::Watchdog::TimerHandler() {
+  mRunning = false;
+  HWCERROR(mCheck, "%s timed out after %fms. Start time %f", mMessage.string(),
+           (double(mTimeoutNs) / HWCVAL_MS_TO_NS),
+           double(mStartTime) / HWCVAL_SEC_TO_NS);
+}
+
+void Hwcval::Watchdog::Stop() {
+  if (mHaveTimer) {
+    HWCLOGV_COND(eLogEventHandler, "%s: Cancelled after %fms",
+                 mMessage.string(),
+                 double(systemTime(SYSTEM_TIME_MONOTONIC) - mStartTime) /
+                     HWCVAL_MS_TO_NS);
+    timer_delete(mDelayTimer);
+    mHaveTimer = false;
     mRunning = false;
-    HWCERROR(mCheck, "%s timed out after %fms. Start time %f",
-        mMessage.string(), (double(mTimeoutNs) / HWCVAL_MS_TO_NS), double(mStartTime) / HWCVAL_SEC_TO_NS);
+  }
 }
-
-void Hwcval::Watchdog::Stop()
-{
-    if ( mHaveTimer )
-    {
-        HWCLOGV_COND(eLogEventHandler, "%s: Cancelled after %fms", mMessage.string(),
-            double(systemTime(SYSTEM_TIME_MONOTONIC) - mStartTime) / HWCVAL_MS_TO_NS);
-        timer_delete(mDelayTimer);
-        mHaveTimer = false;
-        mRunning = false;
-    }
-}
-

@@ -19,117 +19,84 @@
 
 #include "HwchTest.h"
 
+namespace Hwch {
+class PngGlLayer : public Layer {
+ public:
+  PngGlLayer(){};
+  PngGlLayer(Hwch::PngImage& png, float updateFreq = 60.0,
+             uint32_t lineColour = eWhite, uint32_t bgColour = 0,
+             bool bIgnore = false);
+};
 
-namespace Hwch
-{
-    class PngGlLayer : public Layer
-    {
-        public:
-            PngGlLayer(){};
-            PngGlLayer(Hwch::PngImage& png, float updateFreq = 60.0, uint32_t lineColour = eWhite, uint32_t bgColour=0, bool bIgnore=false);
-    };
+class GlBasicLineTest : public OptionalTest {
+ public:
+  GlBasicLineTest(Hwch::Interface& interface);
 
-    class GlBasicLineTest  : public OptionalTest
-    {
-        public:
+  virtual int RunScenario();
+};
 
-            GlBasicLineTest(Hwch::Interface& interface);
+class GlBasicClearTest : public OptionalTest {
+ public:
+  GlBasicClearTest(Hwch::Interface& interface);
 
-            virtual int RunScenario();
+  virtual int RunScenario();
+};
 
-    };
+class GlBasicTextureTest : public OptionalTest {
+ public:
+  GlBasicTextureTest(Hwch::Interface& interface);
 
-    class GlBasicClearTest  : public OptionalTest
-    {
-        public:
+  virtual int RunScenario();
+};
 
-            GlBasicClearTest(Hwch::Interface& interface);
+class GlBasicCombo1Test : public OptionalTest {
+ public:
+  GlBasicCombo1Test(Hwch::Interface& interface);
 
-            virtual int RunScenario();
+  virtual int RunScenario();
+};
 
-    };
+class GlBasicCombo2Test : public OptionalTest {
+ public:
+  GlBasicCombo2Test(Hwch::Interface& interface);
 
-    class GlBasicTextureTest  : public OptionalTest
-    {
-        public:
+  virtual int RunScenario();
+};
 
-            GlBasicTextureTest(Hwch::Interface& interface);
+class GlBasicCombo3Test : public OptionalTest {
+ public:
+  GlBasicCombo3Test(Hwch::Interface& interface);
 
-            virtual int RunScenario();
+  virtual int RunScenario();
+};
 
-    };
+class GlBasicPixelDiscardTest : public OptionalTest {
+ public:
+  GlBasicPixelDiscardTest(Hwch::Interface& interface);
 
-    class GlBasicCombo1Test  : public OptionalTest
-    {
-        public:
+  virtual int RunScenario();
+};
 
-            GlBasicCombo1Test(Hwch::Interface& interface);
+class GlBasicViewportTest : public OptionalTest {
+ public:
+  GlBasicViewportTest(Hwch::Interface& interface);
 
-            virtual int RunScenario();
+  virtual int RunScenario();
+};
 
-    };
+class GlBasicMovingLineTest : public OptionalTest {
+ public:
+  GlBasicMovingLineTest(Hwch::Interface& interface);
 
-    class GlBasicCombo2Test  : public OptionalTest
-    {
-        public:
+  virtual int RunScenario();
+};
 
-            GlBasicCombo2Test(Hwch::Interface& interface);
+class GlBasicPixelDiscardNOPTest : public OptionalTest {
+ public:
+  GlBasicPixelDiscardNOPTest(Hwch::Interface& interface);
 
-            virtual int RunScenario();
-
-    };
-
-    class GlBasicCombo3Test  : public OptionalTest
-    {
-        public:
-
-            GlBasicCombo3Test(Hwch::Interface& interface);
-
-            virtual int RunScenario();
-
-    };
-
-    class GlBasicPixelDiscardTest  : public OptionalTest
-    {
-        public:
-
-            GlBasicPixelDiscardTest(Hwch::Interface& interface);
-
-            virtual int RunScenario();
-
-    };
-
-    class GlBasicViewportTest  : public OptionalTest
-    {
-        public:
-
-            GlBasicViewportTest(Hwch::Interface& interface);
-
-            virtual int RunScenario();
-
-    };
-
-    class GlBasicMovingLineTest  : public OptionalTest
-    {
-        public:
-
-            GlBasicMovingLineTest(Hwch::Interface& interface);
-
-            virtual int RunScenario();
-
-    };
-
-    class GlBasicPixelDiscardNOPTest  : public OptionalTest
-    {
-        public:
-
-            GlBasicPixelDiscardNOPTest(Hwch::Interface& interface);
-
-            virtual int RunScenario();
-
-    };
-
+  virtual int RunScenario();
+};
 }
 
-#endif // __HwchGlTests_h__
-
+#endif  // __HwchGlTests_h__

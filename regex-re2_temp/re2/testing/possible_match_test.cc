@@ -28,76 +28,78 @@ struct PrefixTest {
 };
 
 static PrefixTest tests[] = {
-  { "",                  10,  "",           "",        },
-  { "Abcdef",            10,  "Abcdef",     "Abcdef"   },
-  { "abc(def|ghi)",      10,  "abcdef",     "abcghi"   },
-  { "a+hello",           10,  "aa",         "ahello"   },
-  { "a*hello",           10,  "a",          "hello"    },
-  { "def|abc",           10,  "abc",        "def"      },
-  { "a(b)(c)[d]",        10,  "abcd",       "abcd"     },
-  { "ab(cab|cat)",       10,  "abcab",      "abcat"    },
-  { "ab(cab|ca)x",       10,  "abcabx",     "abcax"    },
-  { "(ab|x)(c|de)",      10,  "abc",        "xde"      },
-  { "(ab|x)?(c|z)?",     10,  "",           "z"        },
-  { "[^\\s\\S]",         10,  "",           ""         },
-  { "(abc)+",             5,  "abc",        "abcac"    },
-  { "(abc)+",             2,  "ab",         "ac"       },
-  { "(abc)+",             1,  "a",          "b"        },
-  { "[a\xC3\xA1]",        4,  "a",          "\xC3\xA1" },
-  { "a*",                10,  "",           "ab"       },
+    {
+     "", 10, "", "",
+    },
+    {"Abcdef", 10, "Abcdef", "Abcdef"},
+    {"abc(def|ghi)", 10, "abcdef", "abcghi"},
+    {"a+hello", 10, "aa", "ahello"},
+    {"a*hello", 10, "a", "hello"},
+    {"def|abc", 10, "abc", "def"},
+    {"a(b)(c)[d]", 10, "abcd", "abcd"},
+    {"ab(cab|cat)", 10, "abcab", "abcat"},
+    {"ab(cab|ca)x", 10, "abcabx", "abcax"},
+    {"(ab|x)(c|de)", 10, "abc", "xde"},
+    {"(ab|x)?(c|z)?", 10, "", "z"},
+    {"[^\\s\\S]", 10, "", ""},
+    {"(abc)+", 5, "abc", "abcac"},
+    {"(abc)+", 2, "ab", "ac"},
+    {"(abc)+", 1, "a", "b"},
+    {"[a\xC3\xA1]", 4, "a", "\xC3\xA1"},
+    {"a*", 10, "", "ab"},
 
-  { "(?i)Abcdef",        10,  "ABCDEF",     "abcdef"   },
-  { "(?i)abc(def|ghi)",  10,  "ABCDEF",     "abcghi"   },
-  { "(?i)a+hello",       10,  "AA",         "ahello"   },
-  { "(?i)a*hello",       10,  "A",          "hello"    },
-  { "(?i)def|abc",       10,  "ABC",        "def"      },
-  { "(?i)a(b)(c)[d]",    10,  "ABCD",       "abcd"     },
-  { "(?i)ab(cab|cat)",   10,  "ABCAB",      "abcat"    },
-  { "(?i)ab(cab|ca)x",   10,  "ABCABX",     "abcax"    },
-  { "(?i)(ab|x)(c|de)",  10,  "ABC",        "xde"      },
-  { "(?i)(ab|x)?(c|z)?", 10,  "",           "z"        },
-  { "(?i)[^\\s\\S]",     10,  "",           ""         },
-  { "(?i)(abc)+",         5,  "ABC",        "abcac"    },
-  { "(?i)(abc)+",         2,  "AB",         "ac"       },
-  { "(?i)(abc)+",         1,  "A",          "b"        },
-  { "(?i)[a\xC3\xA1]",    4,  "A",          "\xC3\xA1" },
-  { "(?i)a*",            10,  "",           "ab"       },
-  { "(?i)A*",            10,  "",           "ab"       },
+    {"(?i)Abcdef", 10, "ABCDEF", "abcdef"},
+    {"(?i)abc(def|ghi)", 10, "ABCDEF", "abcghi"},
+    {"(?i)a+hello", 10, "AA", "ahello"},
+    {"(?i)a*hello", 10, "A", "hello"},
+    {"(?i)def|abc", 10, "ABC", "def"},
+    {"(?i)a(b)(c)[d]", 10, "ABCD", "abcd"},
+    {"(?i)ab(cab|cat)", 10, "ABCAB", "abcat"},
+    {"(?i)ab(cab|ca)x", 10, "ABCABX", "abcax"},
+    {"(?i)(ab|x)(c|de)", 10, "ABC", "xde"},
+    {"(?i)(ab|x)?(c|z)?", 10, "", "z"},
+    {"(?i)[^\\s\\S]", 10, "", ""},
+    {"(?i)(abc)+", 5, "ABC", "abcac"},
+    {"(?i)(abc)+", 2, "AB", "ac"},
+    {"(?i)(abc)+", 1, "A", "b"},
+    {"(?i)[a\xC3\xA1]", 4, "A", "\xC3\xA1"},
+    {"(?i)a*", 10, "", "ab"},
+    {"(?i)A*", 10, "", "ab"},
 
-  { "\\AAbcdef",         10,  "Abcdef",     "Abcdef"   },
-  { "\\Aabc(def|ghi)",   10,  "abcdef",     "abcghi"   },
-  { "\\Aa+hello",        10,  "aa",         "ahello"   },
-  { "\\Aa*hello",        10,  "a",          "hello"    },
-  { "\\Adef|abc",        10,  "abc",        "def"      },
-  { "\\Aa(b)(c)[d]",     10,  "abcd",       "abcd"     },
-  { "\\Aab(cab|cat)",    10,  "abcab",      "abcat"    },
-  { "\\Aab(cab|ca)x",    10,  "abcabx",     "abcax"    },
-  { "\\A(ab|x)(c|de)",   10,  "abc",        "xde"      },
-  { "\\A(ab|x)?(c|z)?",  10,  "",           "z"        },
-  { "\\A[^\\s\\S]",      10,  "",           ""         },
-  { "\\A(abc)+",          5,  "abc",        "abcac"    },
-  { "\\A(abc)+",          2,  "ab",         "ac"       },
-  { "\\A(abc)+",          1,  "a",          "b"        },
-  { "\\A[a\xC3\xA1]",     4,  "a",          "\xC3\xA1" },
-  { "\\Aa*",             10,  "",           "ab"       },
+    {"\\AAbcdef", 10, "Abcdef", "Abcdef"},
+    {"\\Aabc(def|ghi)", 10, "abcdef", "abcghi"},
+    {"\\Aa+hello", 10, "aa", "ahello"},
+    {"\\Aa*hello", 10, "a", "hello"},
+    {"\\Adef|abc", 10, "abc", "def"},
+    {"\\Aa(b)(c)[d]", 10, "abcd", "abcd"},
+    {"\\Aab(cab|cat)", 10, "abcab", "abcat"},
+    {"\\Aab(cab|ca)x", 10, "abcabx", "abcax"},
+    {"\\A(ab|x)(c|de)", 10, "abc", "xde"},
+    {"\\A(ab|x)?(c|z)?", 10, "", "z"},
+    {"\\A[^\\s\\S]", 10, "", ""},
+    {"\\A(abc)+", 5, "abc", "abcac"},
+    {"\\A(abc)+", 2, "ab", "ac"},
+    {"\\A(abc)+", 1, "a", "b"},
+    {"\\A[a\xC3\xA1]", 4, "a", "\xC3\xA1"},
+    {"\\Aa*", 10, "", "ab"},
 
-  { "(?i)\\AAbcdef",         10,  "ABCDEF",     "abcdef"   },
-  { "(?i)\\Aabc(def|ghi)",   10,  "ABCDEF",     "abcghi"   },
-  { "(?i)\\Aa+hello",        10,  "AA",         "ahello"   },
-  { "(?i)\\Aa*hello",        10,  "A",          "hello"    },
-  { "(?i)\\Adef|abc",        10,  "ABC",        "def"      },
-  { "(?i)\\Aa(b)(c)[d]",     10,  "ABCD",       "abcd"     },
-  { "(?i)\\Aab(cab|cat)",    10,  "ABCAB",      "abcat"    },
-  { "(?i)\\Aab(cab|ca)x",    10,  "ABCABX",     "abcax"    },
-  { "(?i)\\A(ab|x)(c|de)",   10,  "ABC",        "xde"      },
-  { "(?i)\\A(ab|x)?(c|z)?",  10,  "",           "z"        },
-  { "(?i)\\A[^\\s\\S]",      10,  "",           ""         },
-  { "(?i)\\A(abc)+",          5,  "ABC",        "abcac"    },
-  { "(?i)\\A(abc)+",          2,  "AB",         "ac"       },
-  { "(?i)\\A(abc)+",          1,  "A",          "b"        },
-  { "(?i)\\A[a\xC3\xA1]",     4,  "A",          "\xC3\xA1" },
-  { "(?i)\\Aa*",             10,  "",           "ab"       },
-  { "(?i)\\AA*",             10,  "",           "ab"       },
+    {"(?i)\\AAbcdef", 10, "ABCDEF", "abcdef"},
+    {"(?i)\\Aabc(def|ghi)", 10, "ABCDEF", "abcghi"},
+    {"(?i)\\Aa+hello", 10, "AA", "ahello"},
+    {"(?i)\\Aa*hello", 10, "A", "hello"},
+    {"(?i)\\Adef|abc", 10, "ABC", "def"},
+    {"(?i)\\Aa(b)(c)[d]", 10, "ABCD", "abcd"},
+    {"(?i)\\Aab(cab|cat)", 10, "ABCAB", "abcat"},
+    {"(?i)\\Aab(cab|ca)x", 10, "ABCABX", "abcax"},
+    {"(?i)\\A(ab|x)(c|de)", 10, "ABC", "xde"},
+    {"(?i)\\A(ab|x)?(c|z)?", 10, "", "z"},
+    {"(?i)\\A[^\\s\\S]", 10, "", ""},
+    {"(?i)\\A(abc)+", 5, "ABC", "abcac"},
+    {"(?i)\\A(abc)+", 2, "AB", "ac"},
+    {"(?i)\\A(abc)+", 1, "A", "b"},
+    {"(?i)\\A[a\xC3\xA1]", 4, "A", "\xC3\xA1"},
+    {"(?i)\\Aa*", 10, "", "ab"},
+    {"(?i)\\AA*", 10, "", "ab"},
 };
 
 TEST(PossibleMatchRange, HandWritten) {
@@ -111,8 +113,8 @@ TEST(PossibleMatchRange, HandWritten) {
         CHECK(re);
         Prog* prog = re->CompileToProg(0);
         CHECK(prog);
-        CHECK(prog->PossibleMatchRange(&min, &max, t.maxlen))
-          << " " << t.regexp;
+        CHECK(prog->PossibleMatchRange(&min, &max, t.maxlen)) << " "
+                                                              << t.regexp;
         delete prog;
         re->Decref();
       } else {
@@ -134,28 +136,23 @@ TEST(PossibleMatchRange, Failures) {
   // Fails because there is no max -- any non-empty string matches
   // or begins a match.  Have to use Latin-1 input, because there
   // are no valid UTF-8 strings beginning with byte 0xFF.
-  EXPECT_FALSE(RE2("[\\s\\S]+", RE2::Latin1).
-               PossibleMatchRange(&min, &max, 10))
-    << "min=" << CEscape(min) << ", max=" << CEscape(max);
-  EXPECT_FALSE(RE2("[\\0-\xFF]+", RE2::Latin1).
-               PossibleMatchRange(&min, &max, 10))
-    << "min=" << CEscape(min) << ", max=" << CEscape(max);
-  EXPECT_FALSE(RE2(".+hello", RE2::Latin1).
-               PossibleMatchRange(&min, &max, 10))
-    << "min=" << CEscape(min) << ", max=" << CEscape(max);
-  EXPECT_FALSE(RE2(".*hello", RE2::Latin1).
-               PossibleMatchRange(&min, &max, 10))
-    << "min=" << CEscape(min) << ", max=" << CEscape(max);
-  EXPECT_FALSE(RE2(".*", RE2::Latin1).
-               PossibleMatchRange(&min, &max, 10))
-    << "min=" << CEscape(min) << ", max=" << CEscape(max);
-  EXPECT_FALSE(RE2("\\C*").
-               PossibleMatchRange(&min, &max, 10))
-    << "min=" << CEscape(min) << ", max=" << CEscape(max);
+  EXPECT_FALSE(RE2("[\\s\\S]+", RE2::Latin1).PossibleMatchRange(&min, &max, 10))
+      << "min=" << CEscape(min) << ", max=" << CEscape(max);
+  EXPECT_FALSE(
+      RE2("[\\0-\xFF]+", RE2::Latin1).PossibleMatchRange(&min, &max, 10))
+      << "min=" << CEscape(min) << ", max=" << CEscape(max);
+  EXPECT_FALSE(RE2(".+hello", RE2::Latin1).PossibleMatchRange(&min, &max, 10))
+      << "min=" << CEscape(min) << ", max=" << CEscape(max);
+  EXPECT_FALSE(RE2(".*hello", RE2::Latin1).PossibleMatchRange(&min, &max, 10))
+      << "min=" << CEscape(min) << ", max=" << CEscape(max);
+  EXPECT_FALSE(RE2(".*", RE2::Latin1).PossibleMatchRange(&min, &max, 10))
+      << "min=" << CEscape(min) << ", max=" << CEscape(max);
+  EXPECT_FALSE(RE2("\\C*").PossibleMatchRange(&min, &max, 10))
+      << "min=" << CEscape(min) << ", max=" << CEscape(max);
 
   // Fails because it's a malformed regexp.
   EXPECT_FALSE(RE2("*hello").PossibleMatchRange(&min, &max, 10))
-    << "min=" << CEscape(min) << ", max=" << CEscape(max);
+      << "min=" << CEscape(min) << ", max=" << CEscape(max);
 }
 
 // Exhaustive test: generate all regexps within parameters,
@@ -164,18 +161,21 @@ TEST(PossibleMatchRange, Failures) {
 // the regexp matches each of the strings.
 class PossibleMatchTester : public RegexpGenerator {
  public:
-  PossibleMatchTester(int maxatoms,
-                      int maxops,
-                      const vector<string>& alphabet,
-                      const vector<string>& ops,
-                      int maxstrlen,
+  PossibleMatchTester(int maxatoms, int maxops, const vector<string>& alphabet,
+                      const vector<string>& ops, int maxstrlen,
                       const vector<string>& stralphabet)
-    : RegexpGenerator(maxatoms, maxops, alphabet, ops),
-      strgen_(maxstrlen, stralphabet),
-      regexps_(0), tests_(0) { }
+      : RegexpGenerator(maxatoms, maxops, alphabet, ops),
+        strgen_(maxstrlen, stralphabet),
+        regexps_(0),
+        tests_(0) {
+  }
 
-  int regexps()  { return regexps_; }
-  int tests()    { return tests_; }
+  int regexps() {
+    return regexps_;
+  }
+  int tests() {
+    return tests_;
+  }
 
   // Needed for RegexpGenerator interface.
   void HandleRegexp(const string& regexp);
@@ -183,8 +183,8 @@ class PossibleMatchTester : public RegexpGenerator {
  private:
   StringGenerator strgen_;
 
-  int regexps_;   // Number of HandleRegexp calls
-  int tests_;     // Number of regexp tests.
+  int regexps_;  // Number of HandleRegexp calls
+  int tests_;    // Number of regexp tests.
 
   DISALLOW_EVIL_CONSTRUCTORS(PossibleMatchTester);
 };
@@ -200,11 +200,11 @@ void PossibleMatchTester::HandleRegexp(const string& regexp) {
   CHECK_EQ(re.error(), "");
 
   string min, max;
-  if(!re.PossibleMatchRange(&min, &max, 10)) {
+  if (!re.PossibleMatchRange(&min, &max, 10)) {
     // There's no good max for "\\C*".  Can't use strcmp
     // because sometimes it gets embedded in more
     // complicated expressions.
-    if(strstr(regexp.c_str(), "\\C*"))
+    if (strstr(regexp.c_str(), "\\C*"))
       return;
     LOG(QFATAL) << "PossibleMatchRange failed on: " << CEscape(regexp);
   }
@@ -230,11 +230,9 @@ TEST(PossibleMatchRange, Exhaustive) {
     stringlen = 3;
   }
   PossibleMatchTester t(natom, noperator, Split(" ", "a b [0-9]"),
-                 RegexpGenerator::EgrepOps(),
-                 stringlen, Explode("ab4"));
+                        RegexpGenerator::EgrepOps(), stringlen, Explode("ab4"));
   t.Generate();
-  LOG(INFO) << t.regexps() << " regexps, "
-            << t.tests() << " tests";
+  LOG(INFO) << t.regexps() << " regexps, " << t.tests() << " tests";
 }
 
 }  // namespace re2

@@ -69,7 +69,6 @@
 #include <utils/Atomic.h>
 #include <utils/Thread.h>
 
-
 extern int (*fpDrmWaitVBlank)(int fd, drmVBlankPtr vbl);
 extern int (*fpDrmHandleEvent)(int fd, drmEventContextPtr evctx);
 extern DrmShimCallbackBase* drmShimCallback;
@@ -77,457 +76,431 @@ extern DrmShimCallbackBase* drmShimCallback;
 DrmShimEventHandler* DrmShimEventHandler::mInstance = 0;
 
 DrmShimEventHandler::DrmShimEventHandler(DrmShimChecks* checks)
-  : EventThread("DrmShimEventHandler"),
-    mChecks(checks),
-    mDrmFd(0)
-{
-    mInstance = this;
-    memset(&mUserEvctx, 0, sizeof(mUserEvctx));
+    : EventThread("DrmShimEventHandler"), mChecks(checks), mDrmFd(0) {
+  mInstance = this;
+  memset(&mUserEvctx, 0, sizeof(mUserEvctx));
 
-    // Set up event context
-    memset(&mRealEvctx, 0, sizeof mRealEvctx);
-    mRealEvctx.version = DRM_EVENT_CONTEXT_VERSION;
-    mRealEvctx.vblank_handler = vblank_handler;
-    mRealEvctx.page_flip_handler = page_flip_handler;
+  // Set up event context
+  memset(&mRealEvctx, 0, sizeof mRealEvctx);
+  mRealEvctx.version = DRM_EVENT_CONTEXT_VERSION;
+  mRealEvctx.vblank_handler = vblank_handler;
+  mRealEvctx.page_flip_handler = page_flip_handler;
 
-    // No saved page flip event
+  // No saved page flip event
+  mSavedPF.eventType = DrmEventData::eNone;
+}
+
+DrmShimEventHandler::~DrmShimEventHandler() {
+  mInstance = 0;
+}
+
+void DrmShimEventHandler::QueueCaptureVBlank(int fd, uint32_t crtcId) {
+  HWCLOGD_COND(
+      eLogEventHandler,
+      "DrmShimEventHandler::QueueCaptureVBlank @ %p: mChecks=%p, crtcId=%d",
+      this, mChecks, crtcId);
+  mDrmFd = fd;
+
+  DrmShimCrtc* crtc = mChecks->GetCrtc(crtcId);
+
+  if (!crtc) {
+    HWCLOGW("DrmShimEventHandler::QueueCaptureVBlank: no CRTC %d", crtcId);
+    return;
+  }
+
+  crtc->QueueCaptureVBlank(fd, this);
+}
+
+void DrmShimEventHandler::CaptureVBlank(int fd, uint32_t crtcId) {
+  HWCLOGD_COND(eLogEventHandler,
+               "DrmShimEventHandler::CaptureVBlank @ %p: mChecks=%p, crtcId=%d",
+               this, mChecks, crtcId);
+  mDrmFd = fd;
+
+  DrmShimCrtc* crtc = mChecks->GetCrtc(crtcId);
+
+  if (!crtc) {
+    HWCLOGW("DrmShimEventHandler::CaptureVBlank: no CRTC %d", crtcId);
+    return;
+  }
+
+  crtc->EnableVSync(true);
+
+  if (!crtc->VBlankActive(true)) {
+    ALOG_ASSERT(fpDrmWaitVBlank);
+
+    // Request first event.
+    drmVBlankPtr vbl = crtc->SetupVBlank();
+
+    if (fd == 0) {
+      HWCLOGW("DrmShimEventHandler::CaptureVBlank: crtc %d, No fd available",
+              crtcId);
+      return;
+    }
+
+    HWCLOGV_COND(eLogEventHandler,
+                 "DrmShimEventHandler::CaptureVBlank: fd=0x%x", fd);
+    int ret = fpDrmWaitVBlank(fd, vbl);
+
+    if (ret != 0) {
+      HWCLOGW("DrmShimEventHandler::CaptureVBlank drmWaitVBlank FAILED (%d)",
+              ret);
+      crtc->EnableVSync(false);  // VSync capture not enabled on this CRTC.
+      crtc->VBlankActive(
+          false);  // We don't have a current drmWaitVBlank active.
+    } else {
+      EnsureRunning();
+    }
+  }
+
+  HwcTestState::getInstance()->SetVSyncRestorer(this);
+}
+
+void DrmShimEventHandler::CancelEvent(uint32_t crtcId) {
+  HWCLOGD_COND(eLogEventHandler, "DrmShimEventHandler::CancelEvent CRTC %d",
+               crtcId);
+  DrmShimCrtc* crtc = mChecks->GetCrtc(crtcId);
+
+  if (crtc) {
+    bool enabled = crtc->IsVSyncEnabled();
+
+    if (enabled) {
+      crtc->EnableVSync(false);
+
+      // Wait for long enough for one more VBlank to happen
+      if (crtc->WaitInactiveVBlank(100)) {
+        HWCLOGW(
+            "DrmShimEventHandler::CancelEvent crtc %d, wait for last VBlank "
+            "timed out.",
+            crtcId);
+      }
+    }
+
+    HWCLOGD_COND(eLogEventHandler,
+                 "DrmShimEventHandler::CancelEvent crtc %d complete.", crtcId);
+  }
+}
+
+int DrmShimEventHandler::WaitVBlank(drmVBlankPtr vbl) {
+  ATRACE_CALL();
+  uint32_t displayIx = 0;
+  uint32_t pipeIx = 0;
+
+  if (vbl->request.type & DRM_VBLANK_SECONDARY) {
+    pipeIx = 1;
+  } else {
+    pipeIx = (vbl->request.type & DRM_VBLANK_HIGH_CRTC_MASK) >>
+             DRM_VBLANK_HIGH_CRTC_SHIFT;
+  }
+
+  HWCLOGV_COND(
+      eLogEventHandler,
+      "DrmShimEventHandler::WaitVBlank request.type 0x%x pipe %d displayIx %d",
+      vbl->request.type, pipeIx, displayIx);
+
+  DrmShimCrtc* crtc = mChecks->GetCrtcByPipe(pipeIx);
+  displayIx = crtc->GetDisplayIx();
+
+  if (crtc) {
+    crtc->SetUserVBlank(vbl);
+
+    if ((vbl->request.type & DRM_VBLANK_EVENT) == 0) {
+      // Wait for VBlank actually to occur
+      HWCLOGV_COND(eLogEventHandler,
+                   "DrmShimEventHandler::WaitVBlank: waiting for VBlank "
+                   "actually to occur on display %d",
+                   displayIx);
+      Hwcval::Mutex::Autolock lock(mMutex);
+      if (mCondition.waitRelative(mMutex, 100000000)) {
+        HWCLOGD(
+            "DrmShimEventHandler::WaitVBlank: No VBlank event within 100ms on "
+            "display %d",
+            displayIx);
+        mCondition.wait(mMutex);
+      }
+
+      RaiseEventFromQueue();
+    } else {
+      HWCLOGV_COND(
+          eLogEventHandler,
+          "DrmShimEventHandler::WaitVBlank: Setup async vblank display %d",
+          displayIx);
+    }
+  } else {
+    HWCLOGW("DrmShimEventHandler::WaitVBlank: no display %d", displayIx);
+  }
+
+  return 0;
+}
+
+int DrmShimEventHandler::HandleEvent(int fd, drmEventContextPtr evctx) {
+  ATRACE_CALL();
+  HWCLOGV_COND(eLogEventHandler, "DrmShimEventHandler::HandleEvent fd=%d entry",
+               fd);
+  mUserEvctx = *evctx;
+  mContinueHandleEvent = true;
+
+  RaiseEventFromQueue();
+
+  HWCLOGV_COND(eLogEventHandler, "DrmShimEventHandler::HandleEvent fd=%d exit",
+               fd);
+  return 0;
+}
+
+bool DrmShimEventHandler::RaiseEventFromQueue() {
+  DrmEventData event;
+
+  if ((mSavedPF.eventType == DrmEventData::ePageFlip) &&
+      (systemTime(SYSTEM_TIME_MONOTONIC) > mSavedPFTime)) {
+    event = mSavedPF;
     mSavedPF.eventType = DrmEventData::eNone;
-}
+  } else if (!ReadWait(event)) {
+    return false;
+  }
 
-DrmShimEventHandler::~DrmShimEventHandler()
-{
-    mInstance = 0;
-}
+  ATRACE_CALL();
+  if (event.eventType == DrmEventData::eVBlank) {
+    int64_t timeAfterVBlank = event.crtc->GetTimeSinceVBlank();
 
-void DrmShimEventHandler::QueueCaptureVBlank(int fd, uint32_t crtcId)
-{
-    HWCLOGD_COND(eLogEventHandler, "DrmShimEventHandler::QueueCaptureVBlank @ %p: mChecks=%p, crtcId=%d", this, mChecks, crtcId);
-    mDrmFd = fd;
+    if (event.crtc->IsVBlankRequested(event.seq)) {
+      HWCCHECK(eCheckVSyncTiming);
+      if (timeAfterVBlank > 25000000)  // 25ms. Enough for 48Hz panel.
+      {
+        int32_t ms = timeAfterVBlank / 1000000;
 
-    DrmShimCrtc* crtc = mChecks->GetCrtc(crtcId);
+        HWCERROR(eCheckVSyncTiming,
+                 "VSync occurred %dms after HWC called drmWaitVBlank", ms);
+      }
 
-    if (!crtc)
-    {
-        HWCLOGW("DrmShimEventHandler::QueueCaptureVBlank: no CRTC %d", crtcId);
-        return;
+      HWCLOGD_COND(eLogEventHandler,
+                   "RaiseEventFromQueue: calling user VBlank handler");
+      (mUserEvctx.vblank_handler)(event.fd, event.seq, event.sec, event.usec,
+                                  (void*)event.crtc->GetVBlankUserData());
+    } else {
+      HWCLOGV_COND(eLogEventHandler,
+                   "Discarding VBlank event CRTC %d for frame:%d as it was not "
+                   "requested",
+                   event.crtc->GetCrtcId(), event.seq);
     }
-
-    crtc->QueueCaptureVBlank(fd, this);
-}
-
-void DrmShimEventHandler::CaptureVBlank(int fd, uint32_t crtcId)
-{
-    HWCLOGD_COND(eLogEventHandler, "DrmShimEventHandler::CaptureVBlank @ %p: mChecks=%p, crtcId=%d", this, mChecks, crtcId);
-    mDrmFd = fd;
-
-    DrmShimCrtc* crtc = mChecks->GetCrtc(crtcId);
-
-    if (!crtc)
-    {
-        HWCLOGW("DrmShimEventHandler::CaptureVBlank: no CRTC %d", crtcId);
-        return;
-    }
-
-    crtc->EnableVSync(true);
-
-    if (!crtc->VBlankActive(true))
-    {
-        ALOG_ASSERT(fpDrmWaitVBlank);
-
-        // Request first event.
-        drmVBlankPtr vbl = crtc->SetupVBlank();
-
-        if (fd == 0)
-        {
-            HWCLOGW("DrmShimEventHandler::CaptureVBlank: crtc %d, No fd available", crtcId);
-            return;
-        }
-
-        HWCLOGV_COND(eLogEventHandler, "DrmShimEventHandler::CaptureVBlank: fd=0x%x",fd);
-        int ret = fpDrmWaitVBlank(fd, vbl);
-
-        if (ret != 0)
-        {
-            HWCLOGW( "DrmShimEventHandler::CaptureVBlank drmWaitVBlank FAILED (%d)", ret );
-            crtc->EnableVSync(false);   // VSync capture not enabled on this CRTC.
-            crtc->VBlankActive(false);  // We don't have a current drmWaitVBlank active.
-        }
-        else
-        {
-            EnsureRunning();
-        }
-    }
-
-    HwcTestState::getInstance()->SetVSyncRestorer(this);
-}
-
-void DrmShimEventHandler::CancelEvent(uint32_t crtcId)
-{
-    HWCLOGD_COND(eLogEventHandler, "DrmShimEventHandler::CancelEvent CRTC %d", crtcId);
-    DrmShimCrtc* crtc = mChecks->GetCrtc(crtcId);
-
-    if (crtc)
-    {
-        bool enabled = crtc->IsVSyncEnabled();
-
-        if (enabled)
-        {
-            crtc->EnableVSync(false);
-
-            // Wait for long enough for one more VBlank to happen
-            if (crtc->WaitInactiveVBlank(100))
-            {
-                HWCLOGW("DrmShimEventHandler::CancelEvent crtc %d, wait for last VBlank timed out.", crtcId);
-            }
-        }
-
-        HWCLOGD_COND(eLogEventHandler, "DrmShimEventHandler::CancelEvent crtc %d complete.", crtcId);
-    }
-}
-
-int DrmShimEventHandler::WaitVBlank(drmVBlankPtr vbl)
-{
-    ATRACE_CALL();
-    uint32_t displayIx = 0;
-    uint32_t pipeIx = 0;
-
-    if (vbl->request.type & DRM_VBLANK_SECONDARY)
-    {
-        pipeIx = 1;
-    }
-    else
-    {
-        pipeIx = (vbl->request.type & DRM_VBLANK_HIGH_CRTC_MASK) >> DRM_VBLANK_HIGH_CRTC_SHIFT;
-    }
-
-    HWCLOGV_COND(eLogEventHandler, "DrmShimEventHandler::WaitVBlank request.type 0x%x pipe %d displayIx %d",
-        vbl->request.type, pipeIx, displayIx);
-
-    DrmShimCrtc* crtc = mChecks->GetCrtcByPipe(pipeIx);
-    displayIx = crtc->GetDisplayIx();
-
-    if (crtc)
-    {
-        crtc->SetUserVBlank(vbl);
-
-        if ((vbl->request.type & DRM_VBLANK_EVENT) == 0)
-        {
-            // Wait for VBlank actually to occur
-            HWCLOGV_COND(eLogEventHandler, "DrmShimEventHandler::WaitVBlank: waiting for VBlank actually to occur on display %d", displayIx);
-            Hwcval::Mutex::Autolock lock(mMutex);
-            if (mCondition.waitRelative(mMutex, 100000000))
-            {
-                HWCLOGD("DrmShimEventHandler::WaitVBlank: No VBlank event within 100ms on display %d", displayIx);
-                mCondition.wait(mMutex);
-            }
-
-            RaiseEventFromQueue();
-        }
-        else
-        {
-            HWCLOGV_COND(eLogEventHandler, "DrmShimEventHandler::WaitVBlank: Setup async vblank display %d", displayIx);
-        }
-    }
-    else
-    {
-        HWCLOGW("DrmShimEventHandler::WaitVBlank: no display %d",displayIx);
-    }
-
-    return 0;
-}
-
-int DrmShimEventHandler::HandleEvent(int fd, drmEventContextPtr evctx)
-{
-    ATRACE_CALL();
-    HWCLOGV_COND(eLogEventHandler, "DrmShimEventHandler::HandleEvent fd=%d entry", fd);
-    mUserEvctx = *evctx;
-    mContinueHandleEvent = true;
-
-    RaiseEventFromQueue();
-
-    HWCLOGV_COND(eLogEventHandler, "DrmShimEventHandler::HandleEvent fd=%d exit", fd);
-    return 0;
-}
-
-bool DrmShimEventHandler::RaiseEventFromQueue()
-{
-    DrmEventData event;
-
-    if ((mSavedPF.eventType == DrmEventData::ePageFlip) && (systemTime(SYSTEM_TIME_MONOTONIC) > mSavedPFTime))
-    {
-        event = mSavedPF;
-        mSavedPF.eventType = DrmEventData::eNone;
-    }
-    else if (!ReadWait(event))
-    {
-        return false;
-    }
-
-    ATRACE_CALL();
-    if (event.eventType == DrmEventData::eVBlank)
-    {
-        int64_t timeAfterVBlank = event.crtc->GetTimeSinceVBlank();
-
-        if (event.crtc->IsVBlankRequested(event.seq))
-        {
-            HWCCHECK(eCheckVSyncTiming);
-            if ( timeAfterVBlank > 25000000 ) // 25ms. Enough for 48Hz panel.
-            {
-                int32_t ms = timeAfterVBlank / 1000000;
-
-                HWCERROR(eCheckVSyncTiming, "VSync occurred %dms after HWC called drmWaitVBlank", ms);
-            }
-
-            HWCLOGD_COND(eLogEventHandler, "RaiseEventFromQueue: calling user VBlank handler");
-            (mUserEvctx.vblank_handler)(event.fd,
-                                        event.seq,
-                                        event.sec,
-                                        event.usec,
-                                        (void*)event.crtc->GetVBlankUserData());
-        }
-        else
-        {
-            HWCLOGV_COND(eLogEventHandler, "Discarding VBlank event CRTC %d for frame:%d as it was not requested",
-                event.crtc->GetCrtcId(), event.seq);
-        }
-    }
-    else if (event.eventType == DrmEventData::ePageFlip)
-    {
-        HWCLOGI_COND(eLogEventHandler, "RaiseEventFromQueue: calling user page_flip handler CRTC %d data %p",
-            event.crtc->GetCrtcId(), event.data);
+  } else if (event.eventType == DrmEventData::ePageFlip) {
+    HWCLOGI_COND(
+        eLogEventHandler,
+        "RaiseEventFromQueue: calling user page_flip handler CRTC %d data %p",
+        event.crtc->GetCrtcId(), event.data);
 
 #ifndef HWCVAL_LOGFRAME_PRIORITY
-        // Save state on entry to the page flip.
-        // This is the state that the checks invoked by NotifyPageFlipHandlerExit will use.
-        HwcTestCrtc crtc(*event.crtc);
-        event.crtc->ResetDrawCount();
+    // Save state on entry to the page flip.
+    // This is the state that the checks invoked by NotifyPageFlipHandlerExit
+    // will use.
+    HwcTestCrtc crtc(*event.crtc);
+    event.crtc->ResetDrawCount();
 #endif
 
-        (mUserEvctx.page_flip_handler)(event.fd,
-                                    event.seq,
-                                    event.sec,
-                                    event.usec,
-                                    (void*)event.data);
+    (mUserEvctx.page_flip_handler)(event.fd, event.seq, event.sec, event.usec,
+                                   (void*)event.data);
 
 #ifndef HWCVAL_LOGFRAME_PRIORITY
-        mChecks->NotifyPageFlipHandlerExit(&crtc, -999); // let the function find the first unsignalled retire fence
+    mChecks->NotifyPageFlipHandlerExit(
+        &crtc,
+        -999);  // let the function find the first unsignalled retire fence
 #else
-        mChecks->NotifyPageFlipHandlerExit(event.crtc, -999);
+    mChecks->NotifyPageFlipHandlerExit(event.crtc, -999);
 #endif
-    }
-    else
-    {
-        HWCERROR(eCheckInternalError, "Unsupported DRM Event type %d", event.eventType);
-    }
+  } else {
+    HWCERROR(eCheckInternalError, "Unsupported DRM Event type %d",
+             event.eventType);
+  }
 
-    return true;
+  return true;
 }
 
-void DrmShimEventHandler::vblank_handler(int fd, unsigned int frame, unsigned int sec, unsigned int usec, void *data)
-{
-    // VBlank event is handled
-    mInstance->FwdVBlank(fd, frame, sec, usec, data);
+void DrmShimEventHandler::vblank_handler(int fd, unsigned int frame,
+                                         unsigned int sec, unsigned int usec,
+                                         void* data) {
+  // VBlank event is handled
+  mInstance->FwdVBlank(fd, frame, sec, usec, data);
 }
 
-void DrmShimEventHandler::FwdVBlank(int fd, unsigned int frame, unsigned int sec, unsigned int usec, void *data)
-{
-    ATRACE_CALL();
-    // VBlank event is handled
-    void* userData;
-    uint32_t crtcId = (uint32_t) (uintptr_t) data;
+void DrmShimEventHandler::FwdVBlank(int fd, unsigned int frame,
+                                    unsigned int sec, unsigned int usec,
+                                    void* data) {
+  ATRACE_CALL();
+  // VBlank event is handled
+  void* userData;
+  uint32_t crtcId = (uint32_t)(uintptr_t) data;
 
-    HWCLOGD_COND(eLogVBlank, "DrmShimEventHandler: Real VBlank, crtc %d", crtcId);
-    DrmShimCrtc* crtc = mChecks->GetCrtc(crtcId);
+  HWCLOGD_COND(eLogVBlank, "DrmShimEventHandler: Real VBlank, crtc %d", crtcId);
+  DrmShimCrtc* crtc = mChecks->GetCrtc(crtcId);
 
-    if (crtc == 0)
-    {
-        HWCERROR(eCheckInternalError, "Invalid CRTC id %d in VBlank event", crtcId);
+  if (crtc == 0) {
+    HWCERROR(eCheckInternalError, "Invalid CRTC id %d in VBlank event", crtcId);
+  } else {
+    if (mUserEvctx.vblank_handler != 0) {
+      if (crtc->IssueVBlank(frame, sec, usec, userData)) {
+        {
+          DrmEventData eventData;
+          eventData.eventType = DrmEventData::eVBlank;
+          eventData.fd = fd;
+          eventData.seq = frame;
+          eventData.sec = sec;
+          eventData.usec = usec;
+          eventData.data = (uint64_t)userData;
+          eventData.crtc = crtc;
+
+          Push(eventData);
+        }
+      }
+    } else {
+      HWCLOGV_COND(eLogEventHandler,
+                   "FwdVBlank ignoring VBlank because no handler");
+
+      crtc->SetCurrentFrame(frame);
     }
-    else
-    {
-        if (mUserEvctx.vblank_handler != 0)
-        {
-            if (crtc->IssueVBlank(frame, sec, usec, userData))
-            {
-                {
-                    DrmEventData eventData;
-                    eventData.eventType = DrmEventData::eVBlank;
-                    eventData.fd = fd;
-                    eventData.seq = frame;
-                    eventData.sec = sec;
-                    eventData.usec = usec;
-                    eventData.data = (uint64_t) userData;
-                    eventData.crtc = crtc;
 
-                    Push(eventData);
-                }
-            }
-        }
-        else
-        {
-            HWCLOGV_COND(eLogEventHandler, "FwdVBlank ignoring VBlank because no handler");
-
-            crtc->SetCurrentFrame(frame);
-        }
-
-        HWCLOGV_COND(eLogEventHandler, "FwdVBlank drmShimCallback=%p",drmShimCallback);
-        // Callback could include a sleep at this point, so long as it is << frame duration
-        if (drmShimCallback != 0)
-        {
-            drmShimCallback->VSync(crtc->GetDisplayIx());
-        }
-
-        if (crtc->IsVSyncEnabled(true))
-        {
-            // Request next event.
-            drmVBlankPtr vbl = crtc->SetupVBlank();
-
-            int ret = fpDrmWaitVBlank(fd, vbl);
-
-            if (ret != 0)
-            {
-                HWCLOGW( "DrmShimEventHandler::FwdVBlank drmWaitVBlank FAILED (%d)", ret );
-
-                // disable VSync until next enabled after mode change
-                crtc->EnableVSync(false);
-                crtc->VBlankActive(false);
-            }
-        }
-        else
-        {
-            HWCLOGD_COND(eLogEventHandler,"DrmShimEventHandler::FwdVBlank: disabled, VBlanks not forwarded");
-        }
+    HWCLOGV_COND(eLogEventHandler, "FwdVBlank drmShimCallback=%p",
+                 drmShimCallback);
+    // Callback could include a sleep at this point, so long as it is << frame
+    // duration
+    if (drmShimCallback != 0) {
+      drmShimCallback->VSync(crtc->GetDisplayIx());
     }
+
+    if (crtc->IsVSyncEnabled(true)) {
+      // Request next event.
+      drmVBlankPtr vbl = crtc->SetupVBlank();
+
+      int ret = fpDrmWaitVBlank(fd, vbl);
+
+      if (ret != 0) {
+        HWCLOGW("DrmShimEventHandler::FwdVBlank drmWaitVBlank FAILED (%d)",
+                ret);
+
+        // disable VSync until next enabled after mode change
+        crtc->EnableVSync(false);
+        crtc->VBlankActive(false);
+      }
+    } else {
+      HWCLOGD_COND(
+          eLogEventHandler,
+          "DrmShimEventHandler::FwdVBlank: disabled, VBlanks not forwarded");
+    }
+  }
 }
 
-void DrmShimEventHandler::Restore(uint32_t disp)
-{
-    DrmShimCrtc* crtc = mChecks->GetCrtcByDisplayIx(disp);
+void DrmShimEventHandler::Restore(uint32_t disp) {
+  DrmShimCrtc* crtc = mChecks->GetCrtcByDisplayIx(disp);
 
-    if (crtc)
-    {
+  if (crtc) {
+    if (crtc->IsVSyncEnabled(true)) {
+      // Request next event.
+      drmVBlankPtr vbl = crtc->SetupVBlank();
 
-        if (crtc->IsVSyncEnabled(true))
-        {
-            // Request next event.
-            drmVBlankPtr vbl = crtc->SetupVBlank();
+      int ret = fpDrmWaitVBlank(mDrmFd, vbl);
 
-            int ret = fpDrmWaitVBlank(mDrmFd, vbl);
+      if (ret != 0) {
+        HWCLOGW(
+            "DrmShimEventHandler::RestoreVBlank drmWaitVBlank display crtc %d "
+            "FAILED (%d)",
+            crtc->GetCrtcId(), ret);
 
-            if (ret != 0)
-            {
-                HWCLOGW( "DrmShimEventHandler::RestoreVBlank drmWaitVBlank display crtc %d FAILED (%d)", crtc->GetCrtcId(), ret );
-
-                // disable VSync until next enabled after mode change
-                crtc->EnableVSync(false);
-                crtc->VBlankActive(false);
-            }
-            else
-            {
-                HWCLOGI("RestoreVBlank: VBlank handling restored to display %d", disp);
-            }
-        }
-        else
-        {
-            HWCLOGD_COND(eLogEventHandler,"DrmShimEventHandler::RestoreVBlank: disabled, VBlanks not forwarded");
-        }
+        // disable VSync until next enabled after mode change
+        crtc->EnableVSync(false);
+        crtc->VBlankActive(false);
+      } else {
+        HWCLOGI("RestoreVBlank: VBlank handling restored to display %d", disp);
+      }
+    } else {
+      HWCLOGD_COND(eLogEventHandler,
+                   "DrmShimEventHandler::RestoreVBlank: disabled, VBlanks not "
+                   "forwarded");
     }
-    else
-    {
-        HWCLOGW("Can't restore VSync to display %d, it doesn't exist (yet?)", disp);
-    }
+  } else {
+    HWCLOGW("Can't restore VSync to display %d, it doesn't exist (yet?)", disp);
+  }
 }
 
 void DrmShimEventHandler::page_flip_handler(int fd, unsigned int sequence,
-    unsigned int tv_sec, unsigned int tv_usec, void *data)
-{
-    HWCLOGV_COND(eLogEventHandler, "DrmShimEventHandler::page_flip_handler data=%p",data);
-    mInstance->FwdPageFlip(fd, sequence, tv_sec, tv_usec, data);
+                                            unsigned int tv_sec,
+                                            unsigned int tv_usec, void* data) {
+  HWCLOGV_COND(eLogEventHandler,
+               "DrmShimEventHandler::page_flip_handler data=%p", data);
+  mInstance->FwdPageFlip(fd, sequence, tv_sec, tv_usec, data);
 }
 
 void DrmShimEventHandler::FwdPageFlip(int fd, unsigned int sequence,
-    unsigned int tv_sec, unsigned int tv_usec, void *data)
-{
-    ATRACE_CALL();
-    uint32_t crtcId = (uint32_t) (uintptr_t) data;
-    // TODO: We are not locked, so probably shouldn't use the android KeyedVector.
-    // change to use display index which is just a conventional array lookup.
-    DrmShimCrtc* crtc = mChecks->GetCrtc(crtcId);
+                                      unsigned int tv_sec, unsigned int tv_usec,
+                                      void* data) {
+  ATRACE_CALL();
+  uint32_t crtcId = (uint32_t)(uintptr_t) data;
+  // TODO: We are not locked, so probably shouldn't use the android KeyedVector.
+  // change to use display index which is just a conventional array lookup.
+  DrmShimCrtc* crtc = mChecks->GetCrtc(crtcId);
 
-    if (crtc == 0)
-    {
-        HWCERROR(eCheckInternalError, "Page Flip event on invalid crtc %d", crtcId);
-    }
-    else
-    {
-        // Stop the watchdog, we got the event we wanted
-        crtc->StopPageFlipWatchdog();
+  if (crtc == 0) {
+    HWCERROR(eCheckInternalError, "Page Flip event on invalid crtc %d", crtcId);
+  } else {
+    // Stop the watchdog, we got the event we wanted
+    crtc->StopPageFlipWatchdog();
 
-        if (mUserEvctx.page_flip_handler != 0)
-        {
-            if (crtc->GetPageFlipUserData() == 0)
-            {
-                HWCLOGV_COND(eLogEventHandler, "FwdPageFlip ignoring PF because no user data");
-            }
-            else
-            {
-                DrmEventData eventData;
-                eventData.eventType = DrmEventData::ePageFlip;
-                eventData.fd = fd;
-                eventData.seq = sequence;
-                eventData.sec = tv_sec;
-                eventData.usec = tv_usec;
-                eventData.crtc = crtc;
-                eventData.data = crtc->GetPageFlipUserData();
+    if (mUserEvctx.page_flip_handler != 0) {
+      if (crtc->GetPageFlipUserData() == 0) {
+        HWCLOGV_COND(eLogEventHandler,
+                     "FwdPageFlip ignoring PF because no user data");
+      } else {
+        DrmEventData eventData;
+        eventData.eventType = DrmEventData::ePageFlip;
+        eventData.fd = fd;
+        eventData.seq = sequence;
+        eventData.sec = tv_sec;
+        eventData.usec = tv_usec;
+        eventData.crtc = crtc;
+        eventData.data = crtc->GetPageFlipUserData();
 
-                // We have the ability to delay 1 in 5 of the page flip events on D0 by 500ms.
-                // This tests HWC's ability to cope with fences in their buffer queue being
-                // signalled out of order.
-                // When not handled well, this is likely to cause a number of "composed to on-screen
-                // buffer" errors.
-                if (HwcTestState::getInstance()->IsCheckEnabled(eOptDelayPF)
-                    && (crtc->GetDisplayIx() == 0)
-                    && ((sequence % 5) == 0) )
-                {
-                    mSavedPF = eventData;
-                    mSavedPFTime = systemTime(SYSTEM_TIME_MONOTONIC) + (500 * HWCVAL_MS_TO_NS); // 500ms from now
-                }
-                else
-                {
-                    ATRACE_NAME("Push");
+        // We have the ability to delay 1 in 5 of the page flip events on D0 by
+        // 500ms.
+        // This tests HWC's ability to cope with fences in their buffer queue
+        // being
+        // signalled out of order.
+        // When not handled well, this is likely to cause a number of "composed
+        // to on-screen
+        // buffer" errors.
+        if (HwcTestState::getInstance()->IsCheckEnabled(eOptDelayPF) &&
+            (crtc->GetDisplayIx() == 0) && ((sequence % 5) == 0)) {
+          mSavedPF = eventData;
+          mSavedPFTime = systemTime(SYSTEM_TIME_MONOTONIC) +
+                         (500 * HWCVAL_MS_TO_NS);  // 500ms from now
+        } else {
+          ATRACE_NAME("Push");
 
-                    Push(eventData);
-                }
-
-                mChecks->GetCrcReader().NotifyPageFlip(crtc);
-            }
-        }
-        else
-        {
-            HWCLOGV_COND(eLogEventHandler, "FwdPageFlip ignoring PF because no page flip handler");
+          Push(eventData);
         }
 
-        if (drmShimCallback != 0)
-        {
-            drmShimCallback->PageFlipComplete(crtc->GetDisplayIx());
-        }
+        mChecks->GetCrcReader().NotifyPageFlip(crtc);
+      }
+    } else {
+      HWCLOGV_COND(eLogEventHandler,
+                   "FwdPageFlip ignoring PF because no page flip handler");
     }
-}
 
-void DrmShimEventHandler::onFirstRef()
-{
-}
-
-bool DrmShimEventHandler::threadLoop()
-{
-    // Handle all events
-    //HWCLOGV_COND(eLogEventHandler, "DrmShimEventHandler::threadLoop: waiting for event (fd %d)", mDrmFd);
-    if (fpDrmHandleEvent(mDrmFd, &mRealEvctx))
-    {
-        HWCLOGD_COND(eLogEventHandler, "DrmShimEventHandler::threadLoop: event not handled");
+    if (drmShimCallback != 0) {
+      drmShimCallback->PageFlipComplete(crtc->GetDisplayIx());
     }
-    //HWCLOGV_COND(eLogEventHandler, "DrmShimEventHandler::threadLoop: exiting exitPending()=%d", exitPending());
-
-    return true;
+  }
 }
 
+void DrmShimEventHandler::onFirstRef() {
+}
+
+bool DrmShimEventHandler::threadLoop() {
+  // Handle all events
+  // HWCLOGV_COND(eLogEventHandler, "DrmShimEventHandler::threadLoop: waiting
+  // for event (fd %d)", mDrmFd);
+  if (fpDrmHandleEvent(mDrmFd, &mRealEvctx)) {
+    HWCLOGD_COND(eLogEventHandler,
+                 "DrmShimEventHandler::threadLoop: event not handled");
+  }
+  // HWCLOGV_COND(eLogEventHandler, "DrmShimEventHandler::threadLoop: exiting
+  // exitPending()=%d", exitPending());
+
+  return true;
+}

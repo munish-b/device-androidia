@@ -17,21 +17,19 @@
 #ifndef __HwcvalThreadTable_h__
 #define __HwcvalThreadTable_h__
 
-namespace Hwcval
-{
-    void InitThreadStates();
-    const char* SetThreadState(const char* str);
-    void ReportThreadStates();
+namespace Hwcval {
+void InitThreadStates();
+const char* SetThreadState(const char* str);
+void ReportThreadStates();
 
-    class PushThreadState
-    {
-    public:
-        PushThreadState(const char* threadState);
-        ~PushThreadState();
+class PushThreadState {
+ public:
+  PushThreadState(const char* threadState);
+  ~PushThreadState();
 
-    private:
-        const char* mOldThreadState;
-    };
+ private:
+  const char* mOldThreadState;
+};
 }
 
-#endif // __HwcvalThreadTable_h__
+#endif  // __HwcvalThreadTable_h__

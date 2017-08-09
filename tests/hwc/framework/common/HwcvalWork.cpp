@@ -21,157 +21,115 @@
 static uint32_t itemCount = 0;
 #endif
 
-Hwcval::Work::Item::Item(int fd)
-  : mFd(fd)
-{
+Hwcval::Work::Item::Item(int fd) : mFd(fd) {
 #ifdef HWCVAL_RESOURCE_LEAK_CHECKING
-    if (++itemCount > 500)
-    {
-        HWCLOGW("%d work items in transit", itemCount);
-    }
+  if (++itemCount > 500) {
+    HWCLOGW("%d work items in transit", itemCount);
+  }
 #endif
 }
 
-Hwcval::Work::Item::~Item()
-{
+Hwcval::Work::Item::~Item() {
 #ifdef HWCVAL_RESOURCE_LEAK_CHECKING
-    --itemCount;
+  --itemCount;
 #endif
 }
 
 // GemOpenItem
 Hwcval::Work::GemOpenItem::GemOpenItem(int fd, int id, uint32_t boHandle)
-  : Item(fd),
-    mId(id),
-    mBoHandle(boHandle)
-{
+    : Item(fd), mId(id), mBoHandle(boHandle) {
 }
 
-Hwcval::Work::GemOpenItem:: ~GemOpenItem()
-{
+Hwcval::Work::GemOpenItem::~GemOpenItem() {
 }
 
-void Hwcval::Work::GemOpenItem::Process()
-{
-    HwcTestState::getInstance()->GetTestKernel()->DoGem(*this);
+void Hwcval::Work::GemOpenItem::Process() {
+  HwcTestState::getInstance()->GetTestKernel()->DoGem(*this);
 }
 
 // GemCloseItem
 Hwcval::Work::GemCloseItem::GemCloseItem(int fd, uint32_t boHandle)
-  : Item(fd),
-    mBoHandle(boHandle)
-{
+    : Item(fd), mBoHandle(boHandle) {
 }
 
-Hwcval::Work::GemCloseItem:: ~GemCloseItem()
-{
+Hwcval::Work::GemCloseItem::~GemCloseItem() {
 }
 
-void Hwcval::Work::GemCloseItem::Process()
-{
-    HwcTestState::getInstance()->GetTestKernel()->DoGem(*this);
+void Hwcval::Work::GemCloseItem::Process() {
+  HwcTestState::getInstance()->GetTestKernel()->DoGem(*this);
 }
 
 // GemCreateItem
 Hwcval::Work::GemCreateItem::GemCreateItem(int fd, uint32_t boHandle)
-  : Item(fd),
-    mBoHandle(boHandle)
-{
+    : Item(fd), mBoHandle(boHandle) {
 }
 
-Hwcval::Work::GemCreateItem:: ~GemCreateItem()
-{
+Hwcval::Work::GemCreateItem::~GemCreateItem() {
 }
 
-void Hwcval::Work::GemCreateItem::Process()
-{
-    HwcTestState::getInstance()->GetTestKernel()->DoGem(*this);
+void Hwcval::Work::GemCreateItem::Process() {
+  HwcTestState::getInstance()->GetTestKernel()->DoGem(*this);
 }
 
 // GemFlinkItem
 Hwcval::Work::GemFlinkItem::GemFlinkItem(int fd, int id, uint32_t boHandle)
-  : Item(fd),
-    mId(id),
-    mBoHandle(boHandle)
-{
+    : Item(fd), mId(id), mBoHandle(boHandle) {
 }
 
-Hwcval::Work::GemFlinkItem:: ~GemFlinkItem()
-{
+Hwcval::Work::GemFlinkItem::~GemFlinkItem() {
 }
 
-void Hwcval::Work::GemFlinkItem::Process()
-{
-    HwcTestState::getInstance()->GetTestKernel()->DoGem(*this);
+void Hwcval::Work::GemFlinkItem::Process() {
+  HwcTestState::getInstance()->GetTestKernel()->DoGem(*this);
 }
 
-Hwcval::Work::GemWaitItem::GemWaitItem(int fd, uint32_t boHandle, int32_t status, int64_t delayNs)
-  : Item(fd),
-    mBoHandle(boHandle),
-    mStatus(status),
-    mDelayNs(delayNs)
-{
+Hwcval::Work::GemWaitItem::GemWaitItem(int fd, uint32_t boHandle,
+                                       int32_t status, int64_t delayNs)
+    : Item(fd), mBoHandle(boHandle), mStatus(status), mDelayNs(delayNs) {
 }
 
-Hwcval::Work::GemWaitItem::~GemWaitItem()
-{
+Hwcval::Work::GemWaitItem::~GemWaitItem() {
 }
 
-void Hwcval::Work::GemWaitItem::Process()
-{
-    HwcTestState::getInstance()->GetTestKernel()->DoGem(*this);
+void Hwcval::Work::GemWaitItem::Process() {
+  HwcTestState::getInstance()->GetTestKernel()->DoGem(*this);
 }
-
 
 // PrimeItem
 Hwcval::Work::PrimeItem::PrimeItem(int fd, uint32_t boHandle, int dmaHandle)
-  : Item(fd),
-    mBoHandle(boHandle),
-    mDmaHandle(dmaHandle)
-{
+    : Item(fd), mBoHandle(boHandle), mDmaHandle(dmaHandle) {
 }
 
-Hwcval::Work::PrimeItem:: ~PrimeItem()
-{
+Hwcval::Work::PrimeItem::~PrimeItem() {
 }
 
-void Hwcval::Work::PrimeItem::Process()
-{
-    HwcTestState::getInstance()->GetTestKernel()->DoPrime(*this);
+void Hwcval::Work::PrimeItem::Process() {
+  HwcTestState::getInstance()->GetTestKernel()->DoPrime(*this);
 }
 
 // Queue
-Hwcval::Work::Queue::Queue()
-  : EventQueue("Hwcval::Work::Queue")
-{
+Hwcval::Work::Queue::Queue() : EventQueue("Hwcval::Work::Queue") {
 }
 
 Hwcval::Work::BufferFreeItem::BufferFreeItem(buffer_handle_t handle)
-  : Item(0),
-    mHandle(handle)
-{
+    : Item(0), mHandle(handle) {
 }
 
-Hwcval::Work::BufferFreeItem::~BufferFreeItem()
-{
+Hwcval::Work::BufferFreeItem::~BufferFreeItem() {
 }
 
-void Hwcval::Work::BufferFreeItem::Process()
-{
-    HwcTestState::getInstance()->GetTestKernel()->DoBufferFree(*this);
+void Hwcval::Work::BufferFreeItem::Process() {
+  HwcTestState::getInstance()->GetTestKernel()->DoBufferFree(*this);
 }
 
-Hwcval::Work::Queue::~Queue()
-{
+Hwcval::Work::Queue::~Queue() {
 }
 
-void Hwcval::Work::Queue::Process()
-{
-    ATRACE_CALL();
-    android::sp<Item> item;
+void Hwcval::Work::Queue::Process() {
+  ATRACE_CALL();
+  android::sp<Item> item;
 
-    while (Pop(item))
-    {
-        item->Process();
-    }
+  while (Pop(item)) {
+    item->Process();
+  }
 };

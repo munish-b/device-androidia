@@ -19,40 +19,35 @@
 #include "Hwcval.h"
 #include "HwcvalContent.h"
 
-namespace Hwcval
-{
-    // Conversion functions
-    Hwcval::CompositionType Hwc1CompositionTypeToHwcval(uint32_t compositionType);
-    Hwcval::BlendingType Hwc1BlendingTypeToHwcval(uint32_t blendingType);
-    uint32_t HwcvalBlendingTypeToHwc1(Hwcval::BlendingType blendingType);
-    void HwcvalLayerToHwc1(const char *str, uint32_t ix, hwcval_layer_t &out,
-                           Hwcval::ValLayer &in, hwc_rect_t *pRect,
-                           uint32_t &rectsRemaining);
+namespace Hwcval {
+// Conversion functions
+Hwcval::CompositionType Hwc1CompositionTypeToHwcval(uint32_t compositionType);
+Hwcval::BlendingType Hwc1BlendingTypeToHwcval(uint32_t blendingType);
+uint32_t HwcvalBlendingTypeToHwc1(Hwcval::BlendingType blendingType);
+void HwcvalLayerToHwc1(const char *str, uint32_t ix, hwcval_layer_t &out,
+                       Hwcval::ValLayer &in, hwc_rect_t *pRect,
+                       uint32_t &rectsRemaining);
 
-    class Hwc1Layer : public ValLayer
-    {
-    public:
-      Hwc1Layer(const hwcval_layer_t *sfLayer, android::sp<DrmShimBuffer> &buf);
-    };
+class Hwc1Layer : public ValLayer {
+ public:
+  Hwc1Layer(const hwcval_layer_t *sfLayer, android::sp<DrmShimBuffer> &buf);
+};
 
-    // Hwc1Layer should add only methods
-    //static_assert(sizeof(Hwc1Layer) == sizeof(ValLayer));
+// Hwc1Layer should add only methods
+// static_assert(sizeof(Hwc1Layer) == sizeof(ValLayer));
 
-
-    /*
-     * Description of the contents to output on a display.
-     *
-     * This is the top-level structure passed to the prepare and set calls to
-     * negotiate and commit the composition of a display image.
-     */
-    class Hwc1LayerList : public LayerList
-    {
-    public:
-        // Constructor
-        // Only copies the header, not the layers, these must be added separtely
-      Hwc1LayerList(const hwcval_display_contents_t *sfDisplay);
-    };
-
+/*
+ * Description of the contents to output on a display.
+ *
+ * This is the top-level structure passed to the prepare and set calls to
+ * negotiate and commit the composition of a display image.
+ */
+class Hwc1LayerList : public LayerList {
+ public:
+  // Constructor
+  // Only copies the header, not the layers, these must be added separtely
+  Hwc1LayerList(const hwcval_display_contents_t *sfDisplay);
+};
 }
 
-#endif // __HwcvalHwc1Content_h__
+#endif  // __HwcvalHwc1Content_h__

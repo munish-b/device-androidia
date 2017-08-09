@@ -17,62 +17,45 @@
 #ifndef __HwcvalGeom_h__
 #define __HwcvalGeom_h__
 
-namespace Hwcval
+namespace Hwcval {
+template <class T>
+inline bool IsOverlapping(T l1, T t1, T r1, T b1, T l2, T t2, T r2, T b2)
+// Do two rectangles overlap?
+// Top-left is inclusive; bottom-right is exclusive
 {
-    template<class T>
-    inline bool IsOverlapping(T l1, T t1, T r1, T b1, T l2, T t2, T r2, T b2)
-    // Do two rectangles overlap?
-    // Top-left is inclusive; bottom-right is exclusive
-    {
-        return ( (l1 < r2 && r1 > l2) &&
-                 (t1 < b2 && b1 > t2) );
-    }
-
-    inline bool IsOverlapping(const hwc_rect_t& rect1, const hwc_rect_t& rect2)
-    {
-        return IsOverlapping(rect1.left, rect1.top, rect1.right, rect1.bottom, rect2.left, rect2.top, rect2.right, rect2.bottom);
-    }
-
-    template<class T>
-    inline bool IsEnclosedBy(T l1, T t1, T r1, T b1, T l2, T t2, T r2, T b2)
-    // Do two rectangles overlap?
-    // Top-left is inclusive; bottom-right is exclusive
-    {
-        return ( (l1 >= l2 && t1 >= t2) &&
-                 (r1 <= r2 && b1 <= b2) );
-    }
-
-    inline bool IsEnclosedBy(const hwc_rect_t& rect1, const hwc_rect_t& rect2)
-    {
-        return IsEnclosedBy(rect1.left, rect1.top, rect1.right, rect1.bottom, rect2.left, rect2.top, rect2.right, rect2.bottom);
-    }
-
-    enum OverlapType
-    {
-        eEnclosed = 0,
-        eOverlapping,
-        eOutside
-    };
-
-    inline OverlapType AnalyseOverlap(const hwc_rect_t& rect, const hwc_rect_t& bounds)
-    {
-        if (IsEnclosedBy(rect, bounds))
-        {
-            return eEnclosed;
-        }
-        else if (IsOverlapping(rect, bounds))
-        {
-            return eOverlapping;
-        }
-        else
-        {
-            return eOutside;
-        }
-    }
+  return ((l1 < r2 && r1 > l2) && (t1 < b2 && b1 > t2));
 }
 
+inline bool IsOverlapping(const hwc_rect_t& rect1, const hwc_rect_t& rect2) {
+  return IsOverlapping(rect1.left, rect1.top, rect1.right, rect1.bottom,
+                       rect2.left, rect2.top, rect2.right, rect2.bottom);
+}
 
-#endif // __HwcvalGeom_h__
+template <class T>
+inline bool IsEnclosedBy(T l1, T t1, T r1, T b1, T l2, T t2, T r2, T b2)
+// Do two rectangles overlap?
+// Top-left is inclusive; bottom-right is exclusive
+{
+  return ((l1 >= l2 && t1 >= t2) && (r1 <= r2 && b1 <= b2));
+}
 
+inline bool IsEnclosedBy(const hwc_rect_t& rect1, const hwc_rect_t& rect2) {
+  return IsEnclosedBy(rect1.left, rect1.top, rect1.right, rect1.bottom,
+                      rect2.left, rect2.top, rect2.right, rect2.bottom);
+}
 
+enum OverlapType { eEnclosed = 0, eOverlapping, eOutside };
 
+inline OverlapType AnalyseOverlap(const hwc_rect_t& rect,
+                                  const hwc_rect_t& bounds) {
+  if (IsEnclosedBy(rect, bounds)) {
+    return eEnclosed;
+  } else if (IsOverlapping(rect, bounds)) {
+    return eOverlapping;
+  } else {
+    return eOutside;
+  }
+}
+}
+
+#endif  // __HwcvalGeom_h__

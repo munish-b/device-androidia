@@ -28,33 +28,28 @@ class HwcTestResult;
 
 namespace android {
 
-    class IHwcShimService : public IInterface
-    {
-        public:
-            /// binder transaction types
-            enum
-            {
-                eALERT =IBinder::FIRST_CALL_TRANSACTION,
-                eSET_HWC_TEST_CONFIG,
-                eGET_HWC_TEST_CONFIG,
-                eGET_HWC_TEST_RESULT
-            };
+class IHwcShimService : public IInterface {
+ public:
+  /// binder transaction types
+  enum {
+    eALERT = IBinder::FIRST_CALL_TRANSACTION,
+    eSET_HWC_TEST_CONFIG,
+    eGET_HWC_TEST_CONFIG,
+    eGET_HWC_TEST_RESULT
+  };
 
-            /// Get result of all checks
-            virtual status_t GetHwcTestResult(HwcTestResult& result, bool disableAllChecks) = 0;
-            /// Set test configuration including all check enables
-            virtual status_t SetHwcTestConfig(const HwcTestConfig& config, bool resetResult) = 0;
-            /// Get test configuration
-            virtual status_t GetHwcTestConfig(HwcTestConfig& config) = 0;
+  /// Get result of all checks
+  virtual status_t GetHwcTestResult(HwcTestResult& result,
+                                    bool disableAllChecks) = 0;
+  /// Set test configuration including all check enables
+  virtual status_t SetHwcTestConfig(const HwcTestConfig& config,
+                                    bool resetResult) = 0;
+  /// Get test configuration
+  virtual status_t GetHwcTestConfig(HwcTestConfig& config) = 0;
 
-            /// Android macro
-            DECLARE_META_INTERFACE(HwcShimService);
-    };
-
+  /// Android macro
+  DECLARE_META_INTERFACE(HwcShimService);
+};
 }
 
-
-#endif // _HWC_SHIM_SERVICE_H__
-
-
-
+#endif  // _HWC_SHIM_SERVICE_H__

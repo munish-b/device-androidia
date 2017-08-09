@@ -30,7 +30,8 @@ static void AppendCCRange(string* t, Rune lo, Rune hi);
 // The child_args are always NULL.
 class ToStringWalker : public Regexp::Walker<int> {
  public:
-  explicit ToStringWalker(string* t) : t_(t) {}
+  explicit ToStringWalker(string* t) : t_(t) {
+  }
 
   virtual int PreVisit(Regexp* re, int parent_arg, bool* stop);
   virtual int PostVisit(Regexp* re, int parent_arg, int pre_arg,
@@ -117,7 +118,7 @@ int ToStringWalker::PreVisit(Regexp* re, int parent_arg, bool* stop) {
   return nprec;
 }
 
-static void AppendLiteral(string *t, Rune r, bool foldcase) {
+static void AppendLiteral(string* t, Rune r, bool foldcase) {
   if (r != 0 && r < 0x80 && strchr("(){}[]*+?|.^$\\", r)) {
     t->append(1, '\\');
     t->append(1, r);
@@ -172,8 +173,8 @@ int ToStringWalker::PostVisit(Regexp* re, int parent_arg, int pre_arg,
     case kRegexpAlternate:
       // Clumsy but workable: the children all appended |
       // at the end of their strings, so just remove the last one.
-      if ((*t_)[t_->size()-1] == '|')
-        t_->erase(t_->size()-1);
+      if ((*t_)[t_->size() - 1] == '|')
+        t_->erase(t_->size() - 1);
       else
         LOG(DFATAL) << "Bad final char: " << t_;
       if (prec < PrecAlternate)

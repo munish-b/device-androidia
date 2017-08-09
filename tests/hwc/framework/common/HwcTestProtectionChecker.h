@@ -26,43 +26,41 @@
 
 class HwcTestKernel;
 
-class HwcTestProtectionChecker
-{
-public:
-    HwcTestProtectionChecker(HwcTestKernel* testKernel);
+class HwcTestProtectionChecker {
+ public:
+  HwcTestProtectionChecker(HwcTestKernel* testKernel);
 
-    Hwcval::ValidityType IsValid(const hwc_buffer_media_details_t &details,
-                                 uint32_t hwcFrame);
+  Hwcval::ValidityType IsValid(const hwc_buffer_media_details_t& details,
+                               uint32_t hwcFrame);
 
-    // Called from the intercepted IVideoControl implementation
-    void EnableEncryptedSession( uint32_t sessionID, uint32_t instanceID );
-    void DisableEncryptedSessionEntry( uint32_t sessionID );
-    void DisableEncryptedSessionExit( uint32_t sessionID, int64_t startTime, int64_t timestamp);
-    void DisableAllEncryptedSessionsEntry( );
-    void DisableAllEncryptedSessionsExit( );
-    void SelfTeardown( );
-    void ExpectSelfTeardown( );
-    void ValidateSelfTeardownTime();
-    void RestartSelfTeardown();
-    void InvalidateOnModeChange( );
-    void TimestampChange();
+  // Called from the intercepted IVideoControl implementation
+  void EnableEncryptedSession(uint32_t sessionID, uint32_t instanceID);
+  void DisableEncryptedSessionEntry(uint32_t sessionID);
+  void DisableEncryptedSessionExit(uint32_t sessionID, int64_t startTime,
+                                   int64_t timestamp);
+  void DisableAllEncryptedSessionsEntry();
+  void DisableAllEncryptedSessionsExit();
+  void SelfTeardown();
+  void ExpectSelfTeardown();
+  void ValidateSelfTeardownTime();
+  void RestartSelfTeardown();
+  void InvalidateOnModeChange();
+  void TimestampChange();
 
-private:
-    // Key is session ID
-    // Value is instance ID
-    struct InstanceInfo
-    {
-        uint32_t mInstance;
-        Hwcval::ValidityType mValidity;
+ private:
+  // Key is session ID
+  // Value is instance ID
+  struct InstanceInfo {
+    uint32_t mInstance;
+    Hwcval::ValidityType mValidity;
 
-        const char* ValidityStr();
-    };
+    const char* ValidityStr();
+  };
 
-    android::KeyedVector<uint32_t, InstanceInfo> mSessionInstances;
-    Hwcval::FrameNums mTeardownFrame;
-    int64_t mHotPlugTime;
-    HwcTestKernel* mTestKernel;
+  android::KeyedVector<uint32_t, InstanceInfo> mSessionInstances;
+  Hwcval::FrameNums mTeardownFrame;
+  int64_t mHotPlugTime;
+  HwcTestKernel* mTestKernel;
 };
 
-
-#endif // __HwcTestProtectionChecker_h__
+#endif  // __HwcTestProtectionChecker_h__

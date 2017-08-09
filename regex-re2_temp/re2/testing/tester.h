@@ -20,16 +20,16 @@ class Regexp;
 
 // All the supported regexp engines.
 enum Engine {
-  kEngineBacktrack = 0,    // Prog::BadSearchBacktrack
-  kEngineNFA,              // Prog::SearchNFA
-  kEngineDFA,              // Prog::SearchDFA, only ask whether it matched
-  kEngineDFA1,             // Prog::SearchDFA, ask for match[0]
-  kEngineOnePass,          // Prog::SearchOnePass, if applicable
-  kEngineBitState,         // Prog::SearchBitState
-  kEngineRE2,              // RE2, all submatches
-  kEngineRE2a,             // RE2, only ask for match[0]
-  kEngineRE2b,             // RE2, only ask whether it matched
-  kEnginePCRE,             // PCRE (util/pcre.h)
+  kEngineBacktrack = 0,  // Prog::BadSearchBacktrack
+  kEngineNFA,            // Prog::SearchNFA
+  kEngineDFA,            // Prog::SearchDFA, only ask whether it matched
+  kEngineDFA1,           // Prog::SearchDFA, ask for match[0]
+  kEngineOnePass,        // Prog::SearchOnePass, if applicable
+  kEngineBitState,       // Prog::SearchBitState
+  kEngineRE2,            // RE2, all submatches
+  kEngineRE2a,           // RE2, only ask for match[0]
+  kEngineRE2b,           // RE2, only ask whether it matched
+  kEnginePCRE,           // PCRE (util/pcre.h)
 
   kEngineMax,
 };
@@ -37,11 +37,11 @@ enum Engine {
 // Make normal math on the enum preserve the type.
 // By default, C++ doesn't define ++ on enum, and e+1 has type int.
 static inline void operator++(Engine& e, int unused) {
-  e = static_cast<Engine>(e+1);
+  e = static_cast<Engine>(e + 1);
 }
 
 static inline Engine operator+(Engine e, int i) {
-  return static_cast<Engine>(static_cast<int>(e)+i);
+  return static_cast<Engine>(static_cast<int>(e) + i);
 }
 
 // A TestInstance caches per-regexp state for a given
@@ -54,8 +54,12 @@ class TestInstance {
   TestInstance(const StringPiece& regexp, Prog::MatchKind kind,
                Regexp::ParseFlags flags);
   ~TestInstance();
-  Regexp::ParseFlags flags() { return flags_; }
-  bool error() { return error_; }
+  Regexp::ParseFlags flags() {
+    return flags_;
+  }
+  bool error() {
+    return error_;
+  }
 
   // Runs a single test case: search in text, which is in context,
   // using the given anchoring.
@@ -64,25 +68,24 @@ class TestInstance {
 
  private:
   // Runs a single search using the named engine type.
-  void RunSearch(Engine type,
-                 const StringPiece& text, const StringPiece& context,
-                 Prog::Anchor anchor,
-                 Result *result);
+  void RunSearch(Engine type, const StringPiece& text,
+                 const StringPiece& context, Prog::Anchor anchor,
+                 Result* result);
 
   void LogMatch(const char* prefix, Engine e, const StringPiece& text,
                 const StringPiece& context, Prog::Anchor anchor);
 
-  const StringPiece& regexp_str_;   // regexp being tested
-  Prog::MatchKind kind_;            // kind of match
-  Regexp::ParseFlags flags_;        // flags for parsing regexp_str_
-  bool error_;                      // error during constructor?
+  const StringPiece& regexp_str_;  // regexp being tested
+  Prog::MatchKind kind_;           // kind of match
+  Regexp::ParseFlags flags_;       // flags for parsing regexp_str_
+  bool error_;                     // error during constructor?
 
-  Regexp* regexp_;                  // parsed regexp
-  int num_captures_;                // regexp_->NumCaptures() cached
-  Prog* prog_;                      // compiled program
-  Prog* rprog_;                     // compiled reverse program
-  PCRE* re_;                        // PCRE implementation
-  RE2* re2_;                        // RE2 implementation
+  Regexp* regexp_;    // parsed regexp
+  int num_captures_;  // regexp_->NumCaptures() cached
+  Prog* prog_;        // compiled program
+  Prog* rprog_;       // compiled reverse program
+  PCRE* re_;          // PCRE implementation
+  RE2* re2_;          // RE2 implementation
 
   DISALLOW_EVIL_CONSTRUCTORS(TestInstance);
 };
@@ -93,7 +96,9 @@ class Tester {
   explicit Tester(const StringPiece& regexp);
   ~Tester();
 
-  bool error() { return error_; }
+  bool error() {
+    return error_;
+  }
 
   // Runs a single test case: search in text, which is in context,
   // using the given anchoring.

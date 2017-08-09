@@ -31,13 +31,8 @@ namespace re2 {
 
 // Returns a vector of the egrep regexp operators.
 const vector<string>& RegexpGenerator::EgrepOps() {
-  static const char *ops[] = {
-    "%s%s",
-    "%s|%s",
-    "%s*",
-    "%s+",
-    "%s?",
-    "%s\\C*",
+  static const char* ops[] = {
+      "%s%s", "%s|%s", "%s*", "%s+", "%s?", "%s\\C*",
   };
   static vector<string> v(ops, ops + arraysize(ops));
   return v;
@@ -76,7 +71,7 @@ void RegexpGenerator::GenerateRandom(int32 seed, int n) {
 
 // Counts and returns the number of occurrences of "%s" in s.
 static int CountArgs(const string& s) {
-  const char *p = s.c_str();
+  const char* p = s.c_str();
   int n = 0;
   while ((p = strstr(p, "%s")) != NULL) {
     p += 2;
@@ -98,8 +93,8 @@ static int CountArgs(const string& s) {
 //
 // The initial call should be GeneratePostfix([empty vector], 0, 0, 0).
 //
-void RegexpGenerator::GeneratePostfix(vector<string>* post, int nstk,
-                                      int ops, int atoms) {
+void RegexpGenerator::GeneratePostfix(vector<string>* post, int nstk, int ops,
+                                      int atoms) {
   if (nstk == 1)
     RunPostfix(*post);
 
@@ -134,7 +129,7 @@ void RegexpGenerator::GeneratePostfix(vector<string>* post, int nstk,
 
 // Generates a random postfix command sequence.
 // Stops and returns true once a single sequence has been generated.
-bool RegexpGenerator::GenerateRandomPostfix(vector<string> *post, int nstk,
+bool RegexpGenerator::GenerateRandomPostfix(vector<string>* post, int nstk,
                                             int ops, int atoms) {
   for (;;) {
     // Stop if we get to a single element, but only sometimes.
@@ -155,8 +150,8 @@ bool RegexpGenerator::GenerateRandomPostfix(vector<string> *post, int nstk,
       int nargs = CountArgs(fmt);
       if (nargs <= nstk) {
         post->push_back(fmt);
-        bool ret = GenerateRandomPostfix(post, nstk - nargs + 1,
-                                         ops + 1, atoms);
+        bool ret =
+            GenerateRandomPostfix(post, nstk - nargs + 1, ops + 1, atoms);
         post->pop_back();
         if (ret)
           return true;
@@ -198,8 +193,7 @@ void RegexpGenerator::RunPostfix(const vector<string>& post) {
         string a = regexps.top();
         regexps.pop();
         regexps.push("(?:" +
-                     StringPrintf(post[i].c_str(), a.c_str(), b.c_str()) +
-                     ")");
+                     StringPrintf(post[i].c_str(), a.c_str(), b.c_str()) + ")");
         break;
       }
     }
@@ -229,7 +223,7 @@ void RegexpGenerator::RunPostfix(const vector<string>& post) {
 vector<string> Explode(const StringPiece& s) {
   vector<string> v;
 
-  for (const char *q = s.begin(); q < s.end(); ) {
+  for (const char* q = s.begin(); q < s.end();) {
     const char* p = q;
     Rune r;
     q += chartorune(&r, q);
@@ -247,8 +241,8 @@ vector<string> Split(const StringPiece& sep, const StringPiece& s) {
   if (sep.size() == 0)
     return Explode(s);
 
-  const char *p = s.begin();
-  for (const char *q = s.begin(); q + sep.size() <= s.end(); q++) {
+  const char* p = s.begin();
+  for (const char* q = s.begin(); q + sep.size() <= s.end(); q++) {
     if (StringPiece(q, sep.size()) == sep) {
       v.push_back(string(p, q - p));
       p = q + sep.size();

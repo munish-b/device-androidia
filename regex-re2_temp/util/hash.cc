@@ -40,7 +40,7 @@ on 1 byte), but shoehorning those bytes into integers efficiently is messy.
 
 #include "util/util.h"
 
-#define rot(x,k) (((x)<<(k)) | ((x)>>(32-(k))))
+#define rot(x, k) (((x) << (k)) | ((x) >> (32 - (k))))
 
 /*
 -------------------------------------------------------------------------------
@@ -86,15 +86,27 @@ on, and rotates are much kinder to the top and bottom bits, so I used
 rotates.
 -------------------------------------------------------------------------------
 */
-#define mix(a,b,c) \
-{ \
-  a -= c;  a ^= rot(c, 4);  c += b; \
-  b -= a;  b ^= rot(a, 6);  a += c; \
-  c -= b;  c ^= rot(b, 8);  b += a; \
-  a -= c;  a ^= rot(c,16);  c += b; \
-  b -= a;  b ^= rot(a,19);  a += c; \
-  c -= b;  c ^= rot(b, 4);  b += a; \
-}
+#define mix(a, b, c) \
+  {                  \
+    a -= c;          \
+    a ^= rot(c, 4);  \
+    c += b;          \
+    b -= a;          \
+    b ^= rot(a, 6);  \
+    a += c;          \
+    c -= b;          \
+    c ^= rot(b, 8);  \
+    b += a;          \
+    a -= c;          \
+    a ^= rot(c, 16); \
+    c += b;          \
+    b -= a;          \
+    b ^= rot(a, 19); \
+    a += c;          \
+    c -= b;          \
+    c ^= rot(b, 4);  \
+    b += a;          \
+  }
 
 /*
 -------------------------------------------------------------------------------
@@ -121,16 +133,23 @@ and these came close:
  11  8 15 26 3 22 24
 -------------------------------------------------------------------------------
 */
-#define final(a,b,c) \
-{ \
-  c ^= b; c -= rot(b,14); \
-  a ^= c; a -= rot(c,11); \
-  b ^= a; b -= rot(a,25); \
-  c ^= b; c -= rot(b,16); \
-  a ^= c; a -= rot(c,4);  \
-  b ^= a; b -= rot(a,14); \
-  c ^= b; c -= rot(b,24); \
-}
+#define final(a, b, c) \
+  {                    \
+    c ^= b;            \
+    c -= rot(b, 14);   \
+    a ^= c;            \
+    a -= rot(c, 11);   \
+    b ^= a;            \
+    b -= rot(a, 25);   \
+    c ^= b;            \
+    c -= rot(b, 16);   \
+    a ^= c;            \
+    a -= rot(c, 4);    \
+    b ^= a;            \
+    b -= rot(a, 14);   \
+    c ^= b;            \
+    c -= rot(b, 24);   \
+  }
 
 namespace re2 {
 
@@ -147,41 +166,41 @@ namespace re2 {
  hashlittle() has to dance around fitting the key bytes into registers.
 --------------------------------------------------------------------
 */
-uint32 hashword(
-const uint32 *k,                   /* the key, an array of uint32_t values */
-size_t          length,               /* the length of the key, in uint32_ts */
-uint32        initval)         /* the previous hash, or an arbitrary value */
+uint32 hashword(const uint32 *k, /* the key, an array of uint32_t values */
+                size_t length,   /* the length of the key, in uint32_ts */
+                uint32 initval)  /* the previous hash, or an arbitrary value */
 {
-  uint32_t a,b,c;
+  uint32_t a, b, c;
 
   /* Set up the internal state */
-  a = b = c = 0xdeadbeef + (((uint32_t)length)<<2) + initval;
+  a = b = c = 0xdeadbeef + (((uint32_t)length) << 2) + initval;
 
   /*------------------------------------------------- handle most of the key */
-  while (length > 3)
-  {
+  while (length > 3) {
     a += k[0];
     b += k[1];
     c += k[2];
-    mix(a,b,c);
+    mix(a, b, c);
     length -= 3;
     k += 3;
   }
 
   /*------------------------------------------- handle the last 3 uint32_t's */
-  switch(length)                     /* all the case statements fall through */
+  switch (length) /* all the case statements fall through */
   {
-  case 3 : c+=k[2];
-  case 2 : b+=k[1];
-  case 1 : a+=k[0];
-    final(a,b,c);
-  case 0:     /* case 0: nothing left to add */
-    break;
+    case 3:
+      c += k[2];
+    case 2:
+      b += k[1];
+    case 1:
+      a += k[0];
+      final(a, b, c);
+    case 0: /* case 0: nothing left to add */
+      break;
   }
   /*------------------------------------------------------ report the result */
   return c;
 }
-
 
 /*
 --------------------------------------------------------------------
@@ -191,41 +210,43 @@ both be initialized with seeds.  If you pass in (*pb)==0, the output
 (*pc) will be the same as the return value from hashword().
 --------------------------------------------------------------------
 */
-void hashword2 (
-const uint32 *k,                   /* the key, an array of uint32_t values */
-size_t          length,               /* the length of the key, in uint32_ts */
-uint32       *pc,                      /* IN: seed OUT: primary hash value */
-uint32       *pb)               /* IN: more seed OUT: secondary hash value */
+void hashword2(const uint32 *k, /* the key, an array of uint32_t values */
+               size_t length,   /* the length of the key, in uint32_ts */
+               uint32 *pc,      /* IN: seed OUT: primary hash value */
+               uint32 *pb)      /* IN: more seed OUT: secondary hash value */
 {
-  uint32_t a,b,c;
+  uint32_t a, b, c;
 
   /* Set up the internal state */
-  a = b = c = 0xdeadbeef + ((uint32_t)(length<<2)) + *pc;
+  a = b = c = 0xdeadbeef + ((uint32_t)(length << 2)) + *pc;
   c += *pb;
 
   /*------------------------------------------------- handle most of the key */
-  while (length > 3)
-  {
+  while (length > 3) {
     a += k[0];
     b += k[1];
     c += k[2];
-    mix(a,b,c);
+    mix(a, b, c);
     length -= 3;
     k += 3;
   }
 
   /*------------------------------------------- handle the last 3 uint32_t's */
-  switch(length)                     /* all the case statements fall through */
+  switch (length) /* all the case statements fall through */
   {
-  case 3 : c+=k[2];
-  case 2 : b+=k[1];
-  case 1 : a+=k[0];
-    final(a,b,c);
-  case 0:     /* case 0: nothing left to add */
-    break;
+    case 3:
+      c += k[2];
+    case 2:
+      b += k[1];
+    case 1:
+      a += k[0];
+      final(a, b, c);
+    case 0: /* case 0: nothing left to add */
+      break;
   }
   /*------------------------------------------------------ report the result */
-  *pc=c; *pb=b;
+  *pc = c;
+  *pb = b;
 }
 
 }  // namespace re2

@@ -23,4 +23,3 @@ class Thread {
 };
 
 #endif  // RE2_UTIL_THREAD_H__
-

@@ -14,9 +14,8 @@ namespace re2 {
 
 // Test empty string matches (aka "(?:)")
 TEST(EmptyString, Exhaustive) {
-  ExhaustiveTest(2, 2, Split(" ", "(?:) a"),
-                 RegexpGenerator::EgrepOps(),
-                 5, Split("", "ab"), "", "");
+  ExhaustiveTest(2, 2, Split(" ", "(?:) a"), RegexpGenerator::EgrepOps(), 5,
+                 Split("", "ab"), "", "");
 }
 
 // Test escaped versions of regexp syntax.
@@ -25,8 +24,8 @@ TEST(Punctuation, Literals) {
   vector<string> escaped = alphabet;
   for (int i = 0; i < escaped.size(); i++)
     escaped[i] = "\\" + escaped[i];
-  ExhaustiveTest(1, 1, escaped, RegexpGenerator::EgrepOps(),
-                 2, alphabet, "", "");
+  ExhaustiveTest(1, 1, escaped, RegexpGenerator::EgrepOps(), 2, alphabet, "",
+                 "");
 }
 
 // Test ^ $ . \A \z in presence of line endings.
@@ -34,8 +33,7 @@ TEST(Punctuation, Literals) {
 // they can be repeated -- PCRE rejects ^* but allows (?:^)*
 TEST(LineEnds, Exhaustive) {
   ExhaustiveTest(2, 2, Split(" ", "(?:^) (?:$) . a \\n (?:\\A) (?:\\z)"),
-                 RegexpGenerator::EgrepOps(),
-                 4, Explode("ab\n"), "", "");
+                 RegexpGenerator::EgrepOps(), 4, Explode("ab\n"), "", "");
 }
 
 // Test what does and does not match \n.
@@ -67,4 +65,3 @@ TEST(LineEnds, Exhaustive) {
 // }
 
 }  // namespace re2
-

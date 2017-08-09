@@ -18,17 +18,11 @@
 #include "HwcTestState.h"
 
 Hwch::AbstractPavpSession::AbstractPavpSession()
-              : mQuiet(false),
-                mPavpSessionId(0),
-                mPavpInstance(0)
-{
-    ALOGI("Hwch::AbstractPavpSession::AbstractPavpSession()");
+    : mQuiet(false), mPavpSessionId(0), mPavpInstance(0) {
+  ALOGI("Hwch::AbstractPavpSession::AbstractPavpSession()");
 }
 
-Hwch::AbstractPavpSession::~AbstractPavpSession()
-{
-    ALOGI("Hwch::AbstractPavpSession::~AbstractPavpSession()");
-    ALOG_ASSERT(0);
+Hwch::AbstractPavpSession::~AbstractPavpSession() {
+  ALOGI("Hwch::AbstractPavpSession::~AbstractPavpSession()");
+  ALOG_ASSERT(0);
 }
-
-

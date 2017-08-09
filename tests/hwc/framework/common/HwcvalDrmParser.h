@@ -22,45 +22,44 @@
 
 class DrmShimCrtc;
 
-namespace Hwcval
-{
-    class DrmParser : public Hwcval::LogChecker
-    {
-    private:
-        // Pointers and references to internal objects
-        DrmShimChecks* mChecks;
+namespace Hwcval {
+class DrmParser : public Hwcval::LogChecker {
+ private:
+  // Pointers and references to internal objects
+  DrmShimChecks* mChecks;
 
-        // Protection checker
-        HwcTestProtectionChecker& mProtChecker;
+  // Protection checker
+  HwcTestProtectionChecker& mProtChecker;
 
-    public:
-        // Constructor
-        DrmParser(DrmShimChecks* checks, HwcTestProtectionChecker& protChecker, Hwcval::LogChecker* nextChecker);
+ public:
+  // Constructor
+  DrmParser(DrmShimChecks* checks, HwcTestProtectionChecker& protChecker,
+            Hwcval::LogChecker* nextChecker);
 
-        // Parse "...drm releaseTo..."
-        bool ParseDrmReleaseTo(const char* str);
+  // Parse "...drm releaseTo..."
+  bool ParseDrmReleaseTo(const char* str);
 
-        // Parse "...issuing DRM updates..."
-        bool ParseDrmUpdates(const char* str);
+  // Parse "...issuing DRM updates..."
+  bool ParseDrmUpdates(const char* str);
 
-        // Parse ESD recovery events
-        bool ParseEsdRecovery(const char* str);
+  // Parse ESD recovery events
+  bool ParseEsdRecovery(const char* str);
 
-        // Parse HWC self-teardown
-        bool ParseSelfTeardown(const char* str);
+  // Parse HWC self-teardown
+  bool ParseSelfTeardown(const char* str);
 
-        // Parse logical to physical display mapping
-        bool ParseDisplayMapping(const char* str);
-        bool ParseDisplayUnmapping(const char* str);
+  // Parse logical to physical display mapping
+  bool ParseDisplayMapping(const char* str);
+  bool ParseDisplayUnmapping(const char* str);
 
-        // Parse drop frame
-        bool ParseDropFrame1(const char* str, DrmShimCrtc*& crtc, uint32_t& f);
-        bool ParseDropFrame2(const char* str, DrmShimCrtc*& crtc, uint32_t& f);
-        bool ParseDropFrame(const char* str);
+  // Parse drop frame
+  bool ParseDropFrame1(const char* str, DrmShimCrtc*& crtc, uint32_t& f);
+  bool ParseDropFrame2(const char* str, DrmShimCrtc*& crtc, uint32_t& f);
+  bool ParseDropFrame(const char* str);
 
-        // Log parser entry point
-        virtual bool DoParse(pid_t pid, int64_t timestamp, const char* str);
-    };
+  // Log parser entry point
+  virtual bool DoParse(pid_t pid, int64_t timestamp, const char* str);
+};
 }
 
-#endif // __Hwcval_DrmParser_h__
+#endif  // __Hwcval_DrmParser_h__

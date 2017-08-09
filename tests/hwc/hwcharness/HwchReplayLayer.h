@@ -25,114 +25,95 @@
 #include "HwchLayer.h"
 #include "HwchSystem.h"
 
-namespace Hwch
-{
+namespace Hwch {
 
-    class ReplayLayer :
-        public Layer,
-        public android::RefBase
-    {
-        private:
+class ReplayLayer : public Layer, public android::RefBase {
+ private:
+  /**
+   * A SortedVector of buffer handles that are associated with this
+   * layer. Provides lookup and insertion in O(log N) time.
+   */
+  android::SortedVector<uint32_t> mKnownBufs;
 
-            /**
-             * A SortedVector of buffer handles that are associated with this
-             * layer. Provides lookup and insertion in O(log N) time.
-             */
-            android::SortedVector<uint32_t> mKnownBufs;
+  /**
+   * Cache the last handle seen by this layer. This is necessary for
+   * the buffer rotation code i.e. layers that are triple-buffered
+   * have three buffer handls associated with them.
+   */
+  uint32_t mLastHandle = 0;
 
-            /**
-             * Cache the last handle seen by this layer. This is necessary for
-             * the buffer rotation code i.e. layers that are triple-buffered
-             * have three buffer handls associated with them.
-             */
-            uint32_t mLastHandle = 0;
+ public:
+  /**
+   * @name  ReplayLayer
+   * @brief Base class constructor.
+   *
+   * @param name Name of the layer e.g. StatusBar
+   * @param width Layer width (in pixels)
+   * @param height Layer height (in pixels)
+   * @param format Defines the clour space format
+   *
+   * @details Calls the parent class constructor.
+   */
+  ReplayLayer(const char* name, Coord<int32_t> width, Coord<int32_t> height,
+              uint32_t format = HAL_PIXEL_FORMAT_RGBA_8888, uint32_t bufs = 1)
+      : Layer(name, width, height, format, bufs){};
 
-        public:
+  /** Copy constructor (required for Dup). */
+  ReplayLayer(const ReplayLayer& rhs)
+      : Layer(rhs), android::RefBase(), mKnownBufs(rhs.mKnownBufs){};
 
-            /**
-             * @name  ReplayLayer
-             * @brief Base class constructor.
-             *
-             * @param name Name of the layer e.g. StatusBar
-             * @param width Layer width (in pixels)
-             * @param height Layer height (in pixels)
-             * @param format Defines the clour space format
-             *
-             * @details Calls the parent class constructor.
-             */
-            ReplayLayer(const char* name, Coord<int32_t> width,
-                            Coord<int32_t> height,
-                            uint32_t format = HAL_PIXEL_FORMAT_RGBA_8888,
-                            uint32_t bufs = 1) :
-                            Layer(name, width, height, format, bufs)
-                            {};
+  /** Associates a handle with the layer and returns its index. */
+  size_t AddKnownBuffer(uint32_t handle) {
+    return mKnownBufs.add(handle);
+  }
 
-            /** Copy constructor (required for Dup). */
-            ReplayLayer(const ReplayLayer& rhs) :
-                Layer(rhs),
-                android::RefBase(),
-                mKnownBufs(rhs.mKnownBufs) {};
+  /** Tests whether a handle is associated with the layer. */
+  bool IsKnownBuffer(uint32_t handle) const {
+    return (mKnownBufs.indexOf(handle) != android::NAME_NOT_FOUND);
+  }
 
-            /** Associates a handle with the layer and returns its index. */
-            size_t AddKnownBuffer(uint32_t handle)
-            {
-                return mKnownBufs.add(handle);
-            }
+  /** Returns the index of a handle in the vector (if it exists). */
+  size_t GetKnownBufferIndex(uint32_t handle) const {
+    return mKnownBufs.indexOf(handle);
+  }
 
-            /** Tests whether a handle is associated with the layer. */
-            bool IsKnownBuffer(uint32_t handle) const
-            {
-                return (mKnownBufs.indexOf(handle) != android::NAME_NOT_FOUND);
-            }
+  /** Returns the number of handles that are known to this layer */
+  size_t GetNumHandles() const {
+    return mKnownBufs.size();
+  }
 
-            /** Returns the index of a handle in the vector (if it exists). */
-            size_t GetKnownBufferIndex(uint32_t handle) const
-            {
-                return mKnownBufs.indexOf(handle);
-            }
+  /** Sets the last handle seen on this layer. */
+  void SetLastHandle(uint32_t handle) {
+    mLastHandle = handle;
+  }
 
-            /** Returns the number of handles that are known to this layer */
-            size_t GetNumHandles() const
-            {
-                return mKnownBufs.size();
-            }
+  /** Returns the last handle seen on this layer. */
+  uint32_t GetLastHandle() const {
+    return mLastHandle;
+  }
 
-            /** Sets the last handle seen on this layer. */
-            void SetLastHandle(uint32_t handle)
-            {
-                mLastHandle = handle;
-            }
+  /**
+   * Returns whether the layer fills the screen (e.g. Wallpaper).
+   *
+   * Note: this function uses the coordinates of the layer's logical
+   * display frame to determine whether or not it is full screen. This
+   * is fine in the Replay tool, but may be invalid in other contexts.
+   */
+  bool IsFullScreen(uint32_t display) {
+    LogDisplayRect& ldf = mLogicalDisplayFrame;
+    Display& system_display = mSystem.GetDisplay(display);
 
-            /** Returns the last handle seen on this layer. */
-            uint32_t GetLastHandle() const
-            {
-                return mLastHandle;
-            }
+    return (((ldf.bottom.mValue - ldf.top.mValue) >=
+             static_cast<int32_t>(system_display.GetHeight())) &&
+            ((ldf.right.mValue - ldf.left.mValue) >=
+             static_cast<int32_t>(system_display.GetWidth())));
+  }
 
-            /**
-             * Returns whether the layer fills the screen (e.g. Wallpaper).
-             *
-             * Note: this function uses the coordinates of the layer's logical
-             * display frame to determine whether or not it is full screen. This
-             * is fine in the Replay tool, but may be invalid in other contexts.
-             */
-            bool IsFullScreen(uint32_t display)
-            {
-                LogDisplayRect& ldf = mLogicalDisplayFrame;
-                Display& system_display = mSystem.GetDisplay(display);
-
-                return (((ldf.bottom.mValue - ldf.top.mValue) >=
-                            static_cast<int32_t>(system_display.GetHeight())) &&
-                        ((ldf.right.mValue - ldf.left.mValue) >=
-                             static_cast<int32_t>(system_display.GetWidth())));
-            }
-
-            /** Overrides Dup so that we can duplicate layers as required. */
-            ReplayLayer* Dup() override
-            {
-                return new ReplayLayer(*this);
-            }
-    };
+  /** Overrides Dup so that we can duplicate layers as required. */
+  ReplayLayer* Dup() override {
+    return new ReplayLayer(*this);
+  }
+};
 }
 
-#endif // __HwchReplayLayer_h__
+#endif  // __HwchReplayLayer_h__

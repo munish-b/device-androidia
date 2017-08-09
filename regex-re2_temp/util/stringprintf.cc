@@ -32,7 +32,7 @@ static void StringAppendV(string* dst, const char* format, va_list ap) {
       length *= 2;
     } else {
       // We need exactly "result+1" characters
-      length = result+1;
+      length = result + 1;
     }
     char* buf = new char[length];
 

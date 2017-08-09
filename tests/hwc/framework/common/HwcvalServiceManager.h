@@ -23,55 +23,56 @@ namespace Hwcval {
 
 // ----------------------------------------------------------------------
 
-class ServiceManager : public android::IServiceManager
-{
-public:
-    virtual android::IBinder* onAsBinder();
-    /**
-     * Retrieve an existing service, blocking for a few seconds
-     * if it doesn't yet exist.
-     */
-    virtual android::sp<android::IBinder>         getService( const android::String16& name) const;
+class ServiceManager : public android::IServiceManager {
+ public:
+  virtual android::IBinder* onAsBinder();
+  /**
+   * Retrieve an existing service, blocking for a few seconds
+   * if it doesn't yet exist.
+   */
+  virtual android::sp<android::IBinder> getService(
+      const android::String16& name) const;
 
-    /**
-     * Retrieve an existing service, non-blocking.
-     */
-    virtual android::sp<android::IBinder>         checkService( const android::String16& name) const;
+  /**
+   * Retrieve an existing service, non-blocking.
+   */
+  virtual android::sp<android::IBinder> checkService(
+      const android::String16& name) const;
 
-    /**
-     * Register a service.
-     */
-    virtual android::status_t            addService( const android::String16& name,
-                                            const android::sp<android::IBinder>& service,
-                                            bool allowIsolated = false);
+  /**
+   * Register a service.
+   */
+  virtual android::status_t addService(
+      const android::String16& name,
+      const android::sp<android::IBinder>& service, bool allowIsolated = false);
 
-    /**
-     * Return list of all existing services.
-     */
-    virtual android::Vector<android::String16>    listServices();
+  /**
+   * Return list of all existing services.
+   */
+  virtual android::Vector<android::String16> listServices();
 
-    //////////////////////////////////////////////////////
-    // Extras for validation
-    //////////////////////////////////////////////////////
+  //////////////////////////////////////////////////////
+  // Extras for validation
+  //////////////////////////////////////////////////////
 
-    // If an addService call is made to service name, it will be replaced with divertName
-    void Divert(const android::String16& name, const android::String16& divertName);
+  // If an addService call is made to service name, it will be replaced with
+  // divertName
+  void Divert(const android::String16& name,
+              const android::String16& divertName);
 
-    // To be used to add a validation version of a service
-    // and at the same time, register the name which HWC will use for its diverted service.
-    android::status_t OverrideService(   const android::String16& name,
-                            const android::String16& divertName,
-                            const android::sp<android::IBinder>& service,
-                            bool allowIsolated);
+  // To be used to add a validation version of a service
+  // and at the same time, register the name which HWC will use for its diverted
+  // service.
+  android::status_t OverrideService(
+      const android::String16& name, const android::String16& divertName,
+      const android::sp<android::IBinder>& service, bool allowIsolated);
 
-private:
-    android::KeyedVector<android::String16, android::String16> mDiversions;
-
+ private:
+  android::KeyedVector<android::String16, android::String16> mDiversions;
 };
 
-} // namespace Hwcval
+}  // namespace Hwcval
 
 Hwcval::ServiceManager* hwcvalServiceManager();
 
-#endif // __HwcvalServiceManager_h__
-
+#endif  // __HwcvalServiceManager_h__

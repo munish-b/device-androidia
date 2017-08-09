@@ -17,7 +17,7 @@ Thread::~Thread() {
 }
 
 void *startThread(void *v) {
-  Thread* t = (Thread*)v;
+  Thread *t = (Thread *)v;
   t->Run();
   return 0;
 }

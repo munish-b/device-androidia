@@ -19,41 +19,28 @@
 
 #include "HwchTest.h"
 
-namespace Hwch
-{
+namespace Hwch {
 
+class Flicker1Test : public Test {
+ public:
+  Flicker1Test(Hwch::Interface& interface);
 
-    class Flicker1Test  : public Test
-    {
-        public:
+  virtual int RunScenario();
+};
 
-            Flicker1Test(Hwch::Interface& interface);
+class Flicker2Test : public Test {
+ public:
+  Flicker2Test(Hwch::Interface& interface);
 
-            virtual int RunScenario();
+  virtual int RunScenario();
+};
 
-    };
+class Flicker3Test : public Test {
+ public:
+  Flicker3Test(Hwch::Interface& interface);
 
-    class Flicker2Test  : public Test
-    {
-        public:
-
-            Flicker2Test(Hwch::Interface& interface);
-
-            virtual int RunScenario();
-
-    };
-
-    class Flicker3Test  : public Test
-    {
-        public:
-
-            Flicker3Test(Hwch::Interface& interface);
-
-            virtual int RunScenario();
-
-    };
-
+  virtual int RunScenario();
+};
 }
 
-#endif // __HwchFlickerTests_h__
-
+#endif  // __HwchFlickerTests_h__

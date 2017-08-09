@@ -16,24 +16,24 @@ struct PrefixTest {
 };
 
 static PrefixTest tests[] = {
-  // If the regexp is missing a ^, there's no required prefix.
-  { "abc", false },
-  { "", false },
-  { "(?m)^", false },
+    // If the regexp is missing a ^, there's no required prefix.
+    {"abc", false},
+    {"", false},
+    {"(?m)^", false},
 
-  // If the regexp immediately goes into
-  // something not a literal match, there's no required prefix.
-  { "^(abc)", false },
-  { "^a*",  false },
+    // If the regexp immediately goes into
+    // something not a literal match, there's no required prefix.
+    {"^(abc)", false},
+    {"^a*", false},
 
-  // Otherwise, it should work.
-  { "^abc$", true, "abc", false, "(?-m:$)" },
-  { "^abc", "true", "abc", false, "" },
-  { "^(?i)abc", true, "abc", true, "" },
-  { "^abcd*", true, "abc", false, "d*" },
-  { "^[Aa][Bb]cd*", true, "ab", true, "cd*" },
-  { "^ab[Cc]d*", true, "ab", false, "[Cc]d*" },
-  { "^☺abc", true, "☺abc", false, "" },
+    // Otherwise, it should work.
+    {"^abc$", true, "abc", false, "(?-m:$)"},
+    {"^abc", "true", "abc", false, ""},
+    {"^(?i)abc", true, "abc", true, ""},
+    {"^abcd*", true, "abc", false, "d*"},
+    {"^[Aa][Bb]cd*", true, "ab", true, "cd*"},
+    {"^ab[Cc]d*", true, "ab", false, "[Cc]d*"},
+    {"^☺abc", true, "☺abc", false, ""},
 };
 
 TEST(RequiredPrefix, SimpleTests) {
@@ -49,14 +49,15 @@ TEST(RequiredPrefix, SimpleTests) {
       bool f = false;
       Regexp* s = NULL;
       CHECK_EQ(t.return_value, re->RequiredPrefix(&p, &f, &s))
-        << " " << t.regexp << " " << (j==0 ? "latin1" : "utf") << " " << re->Dump();
+          << " " << t.regexp << " " << (j == 0 ? "latin1" : "utf") << " "
+          << re->Dump();
       if (t.return_value) {
-        CHECK_EQ(p, string(t.prefix))
-          << " " << t.regexp << " " << (j==0 ? "latin1" : "utf");
-        CHECK_EQ(f, t.foldcase)
-          << " " << t.regexp << " " << (j==0 ? "latin1" : "utf");
+        CHECK_EQ(p, string(t.prefix)) << " " << t.regexp << " "
+                                      << (j == 0 ? "latin1" : "utf");
+        CHECK_EQ(f, t.foldcase) << " " << t.regexp << " "
+                                << (j == 0 ? "latin1" : "utf");
         CHECK_EQ(s->ToString(), string(t.suffix))
-          << " " << t.regexp << " " << (j==0 ? "latin1" : "utf");
+            << " " << t.regexp << " " << (j == 0 ? "latin1" : "utf");
         s->Decref();
       }
       re->Decref();

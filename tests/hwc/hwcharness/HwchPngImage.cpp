@@ -20,52 +20,45 @@
 
 #include <utils/String8.h>
 
-//////////////////////////////////// PngImage /////////////////////////////////////////////
+//////////////////////////////////// PngImage
+////////////////////////////////////////////////
 Hwch::PngImage::PngImage(const char* filename)
-  : mRowPointers(0),
-    mLoaded(false),
-    mpTexture(0)
-{
+    : mRowPointers(0), mLoaded(false), mpTexture(0) {
+  mDataBlob = NULL;
+
+  if (filename) {
+    ReadPngFile(filename);
+  }
+}
+
+Hwch::PngImage::~PngImage() {
+  // cleanup heap memory
+
+  if (mRowPointers) {
+    delete[] mRowPointers;
+  }
+
+  if (mDataBlob) {
+    delete mDataBlob;
     mDataBlob = NULL;
+  }
 
-    if (filename)
-    {
-        ReadPngFile(filename);
-    }
+  if (mpTexture) {
+    Hwch::System::getInstance().GetGl().FreeTexture(mpTexture);
+  }
 }
 
-Hwch::PngImage::~PngImage()
-{
-    // cleanup heap memory
-
-    if (mRowPointers)
-    {
-        delete [] mRowPointers;
-    }
-
-    if ( mDataBlob )
-    {
-        delete mDataBlob;
-        mDataBlob = NULL;
-    }
-
-    if (mpTexture)
-    {
-        Hwch::System::getInstance().GetGl().FreeTexture(mpTexture);
-    }
-}
-
-static void PreMultiply(png_bytep pixel)
-{
-    uint32_t alpha = pixel[3];
-    pixel[0] = (alpha * pixel[0]) / 255;
-    pixel[1] = (alpha * pixel[1]) / 255;
-    pixel[2] = (alpha * pixel[2]) / 255;
+static void PreMultiply(png_bytep pixel) {
+  uint32_t alpha = pixel[3];
+  pixel[0] = (alpha * pixel[0]) / 255;
+  pixel[1] = (alpha * pixel[1]) / 255;
+  pixel[2] = (alpha * pixel[2]) / 255;
 }
 
 //
 // ReadPngFile(const char* input_file)
-// This routine reads the input file, retrieves the pre-image information and stores that
+// This routine reads the input file, retrieves the pre-image information and
+// stores that
 // in the appropriate class image variables. Then allocates the row pointers and
 // copies in those the image itself.
 //
@@ -74,55 +67,49 @@ static void PreMultiply(png_bytep pixel)
 //
 // Returns true on success.
 //
-bool Hwch::PngImage::ReadPngFile(const char* fileName)
-{
-    // Save the unadulterated name
-    // better for identification
-    mName = fileName;
+bool Hwch::PngImage::ReadPngFile(const char* fileName) {
+  // Save the unadulterated name
+  // better for identification
+  mName = fileName;
 
-    // retrieve file path
-    const char* dirPath = getenv("HWCVAL_IMAGE_DIR");
+  // retrieve file path
+  const char* dirPath = getenv("HWCVAL_IMAGE_DIR");
 
-    if (dirPath == 0)
-    {
-        mInputFile = fileName;
-    }
-    else
-    {
-        mInputFile = android::String8::format( "%s/%s", dirPath, fileName);
-    }
+  if (dirPath == 0) {
+    mInputFile = fileName;
+  } else {
+    mInputFile = android::String8::format("%s/%s", dirPath, fileName);
+  }
 
 #ifdef HWCVAL_NO_PNG
-    // Create a dummy image without reading the file.
-    // Just to see if PNG is the problem...
-    mWidth = 256;
-    mHeight = 128;
-    uint32_t lineLength = mWidth * 4;
-    mDataBlob = new uint8_t[lineLength * mHeight];
-    mRowPointers = new uint8_t*[mHeight];
-    for (uint32_t i=0; i<mHeight; ++i)
-    {
-        mRowPointers[i] = mDataBlob + i * lineLength;
-    }
-    mColorType = PNG_COLOR_TYPE_RGB_ALPHA;
-    mLoaded = true;
-    return mLoaded;
-    // End of dummy stuff
+  // Create a dummy image without reading the file.
+  // Just to see if PNG is the problem...
+  mWidth = 256;
+  mHeight = 128;
+  uint32_t lineLength = mWidth * 4;
+  mDataBlob = new uint8_t[lineLength * mHeight];
+  mRowPointers = new uint8_t* [mHeight];
+  for (uint32_t i = 0; i < mHeight; ++i) {
+    mRowPointers[i] = mDataBlob + i * lineLength;
+  }
+  mColorType = PNG_COLOR_TYPE_RGB_ALPHA;
+  mLoaded = true;
+  return mLoaded;
+// End of dummy stuff
 #endif
 
-    PngReader reader;
-    mLoaded = reader.Read(mInputFile.string(), mRowPointers, mDataBlob, mWidth, mHeight, mColorType, mBitDepth);
-    return mLoaded;
+  PngReader reader;
+  mLoaded = reader.Read(mInputFile.string(), mRowPointers, mDataBlob, mWidth,
+                        mHeight, mColorType, mBitDepth);
+  return mLoaded;
 }
 
-const char* Hwch::PngImage::GetName()
-{
-    return mName.string();
+const char* Hwch::PngImage::GetName() {
+  return mName.string();
 }
 
-bool Hwch::PngImage::IsLoaded()
-{
-    return mLoaded;
+bool Hwch::PngImage::IsLoaded() {
+  return mLoaded;
 }
 
 //
@@ -134,168 +121,152 @@ bool Hwch::PngImage::IsLoaded()
 // Return Values:
 // 0 = success/1 = failure
 //
-bool Hwch::PngImage::ProcessFile(void)
-{
-    bool bRet = false;
+bool Hwch::PngImage::ProcessFile(void) {
+  bool bRet = false;
 
-    // Only suitable for RGB
-    for (uint32_t row = 0; row < mHeight; row++)
-    {
-        png_byte* pRow = mRowPointers[row];
+  // Only suitable for RGB
+  for (uint32_t row = 0; row < mHeight; row++) {
+    png_byte* pRow = mRowPointers[row];
 
-        for (uint32_t column = 0; column < mWidth; column++)
-        {
-            png_byte* ptr = &(pRow[column*4]);
+    for (uint32_t column = 0; column < mWidth; column++) {
+      png_byte* ptr = &(pRow[column * 4]);
 
-            //printf("Pixel at position [ %d - %d ] has RGBA values: %d - %d - %d - %d\n",
-            //       column, row, ptr[0], ptr[1], ptr[2], ptr[3]);
+      // printf("Pixel at position [ %d - %d ] has RGBA values: %d - %d - %d -
+      // %d\n",
+      //       column, row, ptr[0], ptr[1], ptr[2], ptr[3]);
 
-            // set red value to 0 and green value to the blue one
-            ptr[0] = 0;
-            ptr[1] = ptr[2];
-        }
+      // set red value to 0 and green value to the blue one
+      ptr[0] = 0;
+      ptr[1] = ptr[2];
     }
+  }
 
-    return bRet;
+  return bRet;
 }
 
 // Return image in GL-friendly form
-Hwch::TexturePtr Hwch::PngImage::GetTexture()
-{
-    if (mpTexture == 0)
-    {
-        mpTexture = Hwch::System::getInstance().GetGl().LoadTexture(*this);
-    }
+Hwch::TexturePtr Hwch::PngImage::GetTexture() {
+  if (mpTexture == 0) {
+    mpTexture = Hwch::System::getInstance().GetGl().LoadTexture(*this);
+  }
 
-    return mpTexture;
+  return mpTexture;
 }
-
 
 ///////////////////////////////////// PngReader ///////////////////////////
-Hwch::PngReader::PngReader()
-  : mpPngStruct(0),
-    mpPngInfo(0),
-    mFp(0)
-{
+Hwch::PngReader::PngReader() : mpPngStruct(0), mpPngInfo(0), mFp(0) {
 }
 
-bool Hwch::PngReader::Read(const char* path, png_bytep*& rowPointers, uint8_t* &dataBlob, uint32_t& width, uint32_t& height, uint32_t &colourType, uint32_t &bitDepth)
-{
-    png_byte header[8];
-    uint32_t num_channels;
-    uint32_t num_passes;
+bool Hwch::PngReader::Read(const char* path, png_bytep*& rowPointers,
+                           uint8_t*& dataBlob, uint32_t& width,
+                           uint32_t& height, uint32_t& colourType,
+                           uint32_t& bitDepth) {
+  png_byte header[8];
+  uint32_t num_channels;
+  uint32_t num_passes;
 
-    // open file and test if png
-    mFp = fopen(path, "rb");
-    if (!mFp)
-    {
-        fprintf(stderr, "ERROR: No such file %s.\n"
-            "Please ensure image files are on the target and that path of image directory is given by environment variable HWCVAL_IMAGE_DIR.\n",
+  // open file and test if png
+  mFp = fopen(path, "rb");
+  if (!mFp) {
+    fprintf(stderr,
+            "ERROR: No such file %s.\n"
+            "Please ensure image files are on the target and that path of "
+            "image directory is given by environment variable "
+            "HWCVAL_IMAGE_DIR.\n",
             path);
-        HWCERROR(eCheckFileError, "File %s could not be opened for reading", path);
-        return false;
+    HWCERROR(eCheckFileError, "File %s could not be opened for reading", path);
+    return false;
+  }
+
+  fread(header, 1, 8, mFp);
+  if (png_sig_cmp(header, 0, 8)) {
+    HWCERROR(eCheckFileError, "File %s is not recognized as a PNG file", path);
+    return false;
+  }
+
+  // initializations
+
+  mpPngStruct = png_create_read_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
+  if (!mpPngStruct) {
+    HWCERROR(eCheckInternalError, "png_create_read_struct failed");
+    return false;
+  }
+
+  mpPngInfo = png_create_info_struct(mpPngStruct);
+  if (!mpPngInfo) {
+    HWCERROR(eCheckInternalError, "png_create_info_struct failed");
+    return false;
+  }
+
+  // NOTE: When libpng encounters an error, it expects to longjmp back to the
+  // routine.
+  // -> need to call setjmp and pass the jmpbuf field of the png_struct.
+  // As the file is read from different routines the jmpbuf field must be
+  // updated
+  // every time a routine calls a png_ function.
+  if (setjmp(png_jmpbuf(mpPngStruct))) {
+    HWCERROR(eCheckInternalError, "Error during initialization");
+    return false;
+  }
+  png_init_io(mpPngStruct, mFp);
+  png_set_sig_bytes(mpPngStruct, 8);
+
+  // retrieve pre-image information
+
+  png_read_info(mpPngStruct, mpPngInfo);
+  mWidth = png_get_image_width(mpPngStruct, mpPngInfo);
+  mHeight = png_get_image_height(mpPngStruct, mpPngInfo);
+  mColorType = png_get_color_type(mpPngStruct, mpPngInfo);
+  mBitDepth = png_get_bit_depth(mpPngStruct, mpPngInfo);
+
+  if (mColorType == PNG_COLOR_TYPE_RGB_ALPHA) {
+    num_channels = 4;
+  } else {
+    // TODO: consider the others
+
+    HWCERROR(eCheckPngFail,
+             "Input file must be PNG_COLOR_TYPE_RGBA; mColorType=%d not %d",
+             mColorType, PNG_COLOR_TYPE_RGB_ALPHA);
+    return false;
+  }
+
+  mBytesPerPixel = (mBitDepth * num_channels) / 8;
+  mBytesPerRow = png_get_rowbytes(mpPngStruct, mpPngInfo);
+  num_passes = png_set_interlace_handling(mpPngStruct);
+  png_read_update_info(mpPngStruct, mpPngInfo);
+
+  // read image
+
+  if (setjmp(png_jmpbuf(mpPngStruct))) {
+    HWCERROR(eCheckPngFail, "Error during read_image");
+    return false;
+  }
+
+  uint32_t rowBytes = png_get_rowbytes(mpPngStruct, mpPngInfo);
+  dataBlob = new uint8_t[mHeight * rowBytes];
+
+  rowPointers = new png_bytep[mHeight]();
+  for (uint32_t row = 0; row < mHeight; row++) {
+    rowPointers[row] = (png_bytep)(dataBlob + (row * rowBytes));
+  }
+
+  png_read_image(mpPngStruct, rowPointers);
+
+  // Perform premultiplication
+  for (uint32_t row = 0; row < mHeight; ++row) {
+    png_bytep line = rowPointers[row];
+
+    for (uint32_t i = 0; i < mWidth * 4; i += 4) {
+      PreMultiply(line + i);
     }
+  }
 
-    fread(header, 1, 8, mFp);
-    if (png_sig_cmp(header, 0, 8))
-    {
-        HWCERROR(eCheckFileError, "File %s is not recognized as a PNG file", path);
-        return false;
-    }
+  width = mWidth;
+  height = mHeight;
+  colourType = mColorType;
+  bitDepth = mBitDepth;
 
-
-    // initializations
-
-    mpPngStruct = png_create_read_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
-    if (!mpPngStruct)
-    {
-        HWCERROR(eCheckInternalError, "png_create_read_struct failed");
-        return false;
-    }
-
-    mpPngInfo = png_create_info_struct(mpPngStruct);
-    if (!mpPngInfo)
-    {
-        HWCERROR(eCheckInternalError, "png_create_info_struct failed");
-        return false;
-    }
-
-    // NOTE: When libpng encounters an error, it expects to longjmp back to the routine.
-    // -> need to call setjmp and pass the jmpbuf field of the png_struct.
-    // As the file is read from different routines the jmpbuf field must be updated
-    // every time a routine calls a png_ function.
-    if (setjmp(png_jmpbuf(mpPngStruct)))
-    {
-        HWCERROR(eCheckInternalError, "Error during initialization");
-        return false;
-    }
-    png_init_io(mpPngStruct, mFp);
-    png_set_sig_bytes(mpPngStruct, 8);
-
-
-    // retrieve pre-image information
-
-    png_read_info(mpPngStruct, mpPngInfo);
-    mWidth = png_get_image_width(mpPngStruct, mpPngInfo);
-    mHeight = png_get_image_height(mpPngStruct, mpPngInfo);
-    mColorType = png_get_color_type(mpPngStruct, mpPngInfo);
-    mBitDepth = png_get_bit_depth(mpPngStruct, mpPngInfo);
-
-    if (mColorType == PNG_COLOR_TYPE_RGB_ALPHA)
-    {
-        num_channels = 4;
-    }
-    else
-    {
-        // TODO: consider the others
-
-        HWCERROR(eCheckPngFail, "Input file must be PNG_COLOR_TYPE_RGBA; mColorType=%d not %d", mColorType, PNG_COLOR_TYPE_RGB_ALPHA);
-        return false;
-    }
-
-    mBytesPerPixel = (mBitDepth * num_channels)/8;
-    mBytesPerRow = png_get_rowbytes(mpPngStruct, mpPngInfo);
-    num_passes = png_set_interlace_handling(mpPngStruct);
-    png_read_update_info(mpPngStruct, mpPngInfo);
-
-
-    // read image
-
-    if (setjmp(png_jmpbuf(mpPngStruct)))
-    {
-        HWCERROR(eCheckPngFail, "Error during read_image");
-        return false;
-    }
-
-    uint32_t rowBytes = png_get_rowbytes(mpPngStruct,mpPngInfo);
-    dataBlob = new uint8_t[mHeight * rowBytes];
-
-    rowPointers = new png_bytep[mHeight]();
-    for (uint32_t row = 0; row < mHeight; row++)
-    {
-        rowPointers[row] = (png_bytep) (dataBlob + ( row * rowBytes) );
-    }
-
-
-    png_read_image(mpPngStruct, rowPointers);
-
-    // Perform premultiplication
-    for (uint32_t row=0; row < mHeight; ++row)
-    {
-        png_bytep line = rowPointers[row];
-
-        for (uint32_t i=0; i<mWidth * 4; i += 4)
-        {
-            PreMultiply(line + i);
-        }
-    }
-
-    width = mWidth;
-    height = mHeight;
-    colourType = mColorType;
-    bitDepth = mBitDepth;
-
-    return true;
+  return true;
 }
 
 /*
@@ -324,7 +295,8 @@ bool Hwch::PngImage::WritePngFile(const char* fileName)
 
     // initializations
 
-    mpPngStruct = png_create_write_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
+    mpPngStruct = png_create_write_struct(PNG_LIBPNG_VER_STRING, NULL, NULL,
+NULL);
     if (!mpPngStruct)
     {
         HWCLOGE("png_create_write_struct failed");
@@ -358,7 +330,8 @@ bool Hwch::PngImage::WritePngFile(const char* fileName)
         return bRet;
     }
     png_set_IHDR(mpPngStruct, mpPngInfo, mWidth, mHeight, mBitDepth, mColorType,
-            PNG_INTERLACE_NONE, PNG_COMPRESSION_TYPE_BASE, PNG_FILTER_TYPE_BASE);
+            PNG_INTERLACE_NONE, PNG_COMPRESSION_TYPE_BASE,
+PNG_FILTER_TYPE_BASE);
     png_write_info(mpPngStruct, mpPngInfo);
 
 
@@ -390,9 +363,9 @@ bool Hwch::PngImage::WritePngFile(const char* fileName)
 // Destructor
 // Perform tidyup of PNG structures.
 //
-Hwch::PngReader::~PngReader()
-{
-    if (mFp != NULL) fclose(mFp);
-    if (mpPngStruct != NULL) png_destroy_read_struct(&mpPngStruct, &mpPngInfo, NULL);
+Hwch::PngReader::~PngReader() {
+  if (mFp != NULL)
+    fclose(mFp);
+  if (mpPngStruct != NULL)
+    png_destroy_read_struct(&mpPngStruct, &mpPngInfo, NULL);
 }
-

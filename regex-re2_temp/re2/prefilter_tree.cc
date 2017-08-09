@@ -8,14 +8,12 @@
 #include "re2/prefilter_tree.h"
 #include "re2/re2.h"
 
-DEFINE_int32(filtered_re2_min_atom_len,
-             3,
+DEFINE_int32(filtered_re2_min_atom_len, 3,
              "Strings less than this length are not stored as atoms");
 
 namespace re2 {
 
-PrefilterTree::PrefilterTree()
-    : compiled_(false) {
+PrefilterTree::PrefilterTree() : compiled_(false) {
 }
 
 PrefilterTree::~PrefilterTree() {
@@ -34,16 +32,14 @@ static bool KeepPart(Prefilter* prefilter, int level) {
 
   switch (prefilter->op()) {
     default:
-      LOG(DFATAL) << "Unexpected op in KeepPart: "
-                  << prefilter->op();
+      LOG(DFATAL) << "Unexpected op in KeepPart: " << prefilter->op();
       return false;
 
     case Prefilter::ALL:
       return false;
 
     case Prefilter::ATOM:
-      return prefilter->atom().size() >=
-          FLAGS_filtered_re2_min_atom_len;
+      return prefilter->atom().size() >= FLAGS_filtered_re2_min_atom_len;
 
     case Prefilter::AND: {
       int j = 0;
@@ -66,7 +62,7 @@ static bool KeepPart(Prefilter* prefilter, int level) {
   }
 }
 
-void PrefilterTree::Add(Prefilter *f) {
+void PrefilterTree::Add(Prefilter* f) {
   if (compiled_) {
     LOG(DFATAL) << "Add after Compile.";
     return;
@@ -111,11 +107,10 @@ void PrefilterTree::Compile(vector<string>* atom_vec) {
       bool have_other_guard = true;
       for (IntMap::iterator it = parents->begin(); it != parents->end(); ++it)
         have_other_guard = have_other_guard &&
-            (entries_[it->index()].propagate_up_at_count > 1);
+                           (entries_[it->index()].propagate_up_at_count > 1);
 
       if (have_other_guard) {
-        for (IntMap::iterator it = parents->begin();
-             it != parents->end(); ++it)
+        for (IntMap::iterator it = parents->begin(); it != parents->end(); ++it)
           entries_[it->index()].propagate_up_at_count -= 1;
 
         parents->clear();  // Forget the parents
@@ -146,7 +141,7 @@ string PrefilterTree::NodeString(Prefilter* node) const {
   if (node->op() == Prefilter::ATOM) {
     s += node->atom();
   } else {
-    for (int i = 0; i < node->subs()->size() ; i++) {
+    for (int i = 0; i < node->subs()->size(); i++) {
       if (i > 0)
         s += ',';
       s += Itoa((*node->subs())[i]->unique_id());
@@ -188,7 +183,7 @@ void PrefilterTree::AssignUniqueIds(vector<string>* atom_vec) {
   // Identify unique nodes.
   int unique_id = 0;
   for (int i = v.size() - 1; i >= 0; i--) {
-    Prefilter *node = v[i];
+    Prefilter* node = v[i];
     if (node == NULL)
       continue;
     node->set_unique_id(-1);
@@ -209,7 +204,7 @@ void PrefilterTree::AssignUniqueIds(vector<string>* atom_vec) {
   entries_.resize(node_map_.size());
 
   // Create parent IntMap for the entries.
-  for (int i = v.size()  - 1; i >= 0; i--) {
+  for (int i = v.size() - 1; i >= 0; i--) {
     Prefilter* prefilter = v[i];
     if (prefilter == NULL)
       continue;
@@ -222,7 +217,7 @@ void PrefilterTree::AssignUniqueIds(vector<string>* atom_vec) {
   }
 
   // Fill the entries.
-  for (int i = v.size()  - 1; i >= 0; i--) {
+  for (int i = v.size() - 1; i >= 0; i--) {
     Prefilter* prefilter = v[i];
     if (prefilter == NULL)
       continue;
@@ -245,7 +240,7 @@ void PrefilterTree::AssignUniqueIds(vector<string>* atom_vec) {
       case Prefilter::OR:
       case Prefilter::AND: {
         IntMap uniq_child(node_map_.size());
-        for (int j = 0; j < prefilter->subs()->size() ; j++) {
+        for (int j = 0; j < prefilter->subs()->size(); j++) {
           Prefilter* child = (*prefilter->subs())[j];
           Prefilter* canonical = CanonicalNode(child);
           if (canonical == NULL) {
@@ -280,9 +275,8 @@ void PrefilterTree::AssignUniqueIds(vector<string>* atom_vec) {
 }
 
 // Functions for triggering during search.
-void PrefilterTree::RegexpsGivenStrings(
-    const vector<int>& matched_atoms,
-    vector<int>* regexps) const {
+void PrefilterTree::RegexpsGivenStrings(const vector<int>& matched_atoms,
+                                        vector<int>* regexps) const {
   regexps->clear();
   if (!compiled_) {
     LOG(WARNING) << "Compile() not called";
@@ -297,8 +291,7 @@ void PrefilterTree::RegexpsGivenStrings(
         VLOG(10) << "Atom id:" << atom_index_to_id_[matched_atoms[j]];
       }
       PropagateMatch(matched_atom_ids, &regexps_map);
-      for (IntMap::iterator it = regexps_map.begin();
-           it != regexps_map.end();
+      for (IntMap::iterator it = regexps_map.begin(); it != regexps_map.end();
            ++it)
         regexps->push_back(it->index());
 
@@ -325,8 +318,7 @@ void PrefilterTree::PropagateMatch(const vector<int>& atom_ids,
     int c;
     // Pass trigger up to parents.
     for (IntMap::iterator it = entry.parents->begin();
-         it != entry.parents->end();
-         ++it) {
+         it != entry.parents->end(); ++it) {
       int j = it->index();
       const Entry& parent = entries_[j];
       VLOG(10) << " parent= " << j << " trig= " << parent.propagate_up_at_count;
@@ -361,8 +353,8 @@ void PrefilterTree::PrintDebugInfo() {
   for (int i = 0; i < entries_.size(); ++i) {
     IntMap* parents = entries_[i].parents;
     const vector<int>& regexps = entries_[i].regexps;
-    VLOG(10) << "EntryId: " << i
-            << " N: " << parents->size() << " R: " << regexps.size();
+    VLOG(10) << "EntryId: " << i << " N: " << parents->size()
+             << " R: " << regexps.size();
     for (IntMap::iterator it = parents->begin(); it != parents->end(); ++it)
       VLOG(10) << it->index();
   }
@@ -370,7 +362,7 @@ void PrefilterTree::PrintDebugInfo() {
   for (map<string, Prefilter*>::const_iterator iter = node_map_.begin();
        iter != node_map_.end(); ++iter)
     VLOG(10) << "NodeId: " << (*iter).second->unique_id()
-            << " Str: " << (*iter).first;
+             << " Str: " << (*iter).first;
 }
 
 string PrefilterTree::DebugNodeString(Prefilter* node) const {
@@ -381,9 +373,9 @@ string PrefilterTree::DebugNodeString(Prefilter* node) const {
     node_string += node->atom();
   } else {
     // Adding the operation disambiguates AND and OR nodes.
-    node_string +=  node->op() == Prefilter::AND ? "AND" : "OR";
+    node_string += node->op() == Prefilter::AND ? "AND" : "OR";
     node_string += "(";
-    for (int i = 0; i < node->subs()->size() ; i++) {
+    for (int i = 0; i < node->subs()->size(); i++) {
       if (i > 0)
         node_string += ',';
       node_string += Itoa((*node->subs())[i]->unique_id());

@@ -14,11 +14,14 @@ namespace re2 {
 // ACM minimal standard random number generator.  (re-entrant.)
 class ACMRandom {
  public:
-  ACMRandom(int32 seed) : seed_(seed) {}
+  ACMRandom(int32 seed) : seed_(seed) {
+  }
   int32 Next();
   int32 Uniform(int32);
 
-  void Reset(int32 seed) { seed_ = seed; }
+  void Reset(int32 seed) {
+    seed_ = seed;
+  }
 
  private:
   int32 seed_;

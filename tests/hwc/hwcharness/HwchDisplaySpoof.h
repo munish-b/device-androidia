@@ -21,22 +21,20 @@
 #include "HwcvalStall.h"
 #include "HwchRange.h"
 
-namespace Hwch
-{
-    class DisplaySpoof : public HwcTestDisplaySpoof
-    {
-    public:
-        DisplaySpoof();
-        virtual ~DisplaySpoof();
+namespace Hwch {
+class DisplaySpoof : public HwcTestDisplaySpoof {
+ public:
+  DisplaySpoof();
+  virtual ~DisplaySpoof();
 
-        virtual void ModifyStatus(uint32_t frameNo, int& ret);
+  virtual void ModifyStatus(uint32_t frameNo, int& ret);
 
-        // Configure failure parameters in frames
-        void Configure(const char* str);
+  // Configure failure parameters in frames
+  void Configure(const char* str);
 
-    private:
-        Range mRange;
-    };
+ private:
+  Range mRange;
+};
 }
 
-#endif // __HwchDisplaySpoof_h__
+#endif  // __HwchDisplaySpoof_h__

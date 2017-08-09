@@ -24,54 +24,52 @@
 #include "libpavp.h"
 #endif
 
-namespace Hwch
-{
-    class PavpSession : public AbstractPavpSession, public android::Thread
-    {
-        public:
-            PavpSession();
-            virtual ~PavpSession();
+namespace Hwch {
+class PavpSession : public AbstractPavpSession, public android::Thread {
+ public:
+  PavpSession();
+  virtual ~PavpSession();
 
-            virtual bool StartProtectedContent();
-            virtual bool ProtectedContentStarted();
+  virtual bool StartProtectedContent();
+  virtual bool ProtectedContentStarted();
 
-            // Start a PAVP session, returning session ID if successfully created or -1 otherwise
-            virtual int32_t StartPavpSession();
+  // Start a PAVP session, returning session ID if successfully created or -1
+  // otherwise
+  virtual int32_t StartPavpSession();
 
-        private:
-
+ private:
 #ifdef HWCVAL_BUILD_PAVP
-            // Start a CoreU session on the stated PAVP session and return the instance ID if succesfully created
-            // or -1 otherwise
-            int32_t StartCoreUSession(int32_t pavpSessionId);
-            void CloseCoreU();
+  // Start a CoreU session on the stated PAVP session and return the instance ID
+  // if succesfully created
+  // or -1 otherwise
+  int32_t StartCoreUSession(int32_t pavpSessionId);
+  void CloseCoreU();
 
-            int32_t GetPavpLibHandle(pavp_lib_session **pLibInstance);
+  int32_t GetPavpLibHandle(pavp_lib_session** pLibInstance);
 
-            // Create a PAVP session, returning status
-            int32_t CreatePavpSession(pavp_lib_session *pLibSession);
-            int32_t GetPavpSession(pavp_lib_session *pLibSession, uint32_t& id);
-            PAVP_SESSION_STATUS GetPavpSessionStatus(int32_t pavpSessionId);
+  // Create a PAVP session, returning status
+  int32_t CreatePavpSession(pavp_lib_session* pLibSession);
+  int32_t GetPavpSession(pavp_lib_session* pLibSession, uint32_t& id);
+  PAVP_SESSION_STATUS GetPavpSessionStatus(int32_t pavpSessionId);
 
-            // Get the CoreU PAVP instance id of the stated session
-            uint32_t GetSessionInstance(int32_t session);
+  // Get the CoreU PAVP instance id of the stated session
+  uint32_t GetSessionInstance(int32_t session);
 #endif
 
-            // Thread functions
-            virtual bool threadLoop();
-            virtual android::status_t readyToRun();
+  // Thread functions
+  virtual bool threadLoop();
+  virtual android::status_t readyToRun();
 
-            uint32_t mOldPavpInstance;
-            bool mProtectedContentStarted;
-            int mSessionInstance[HWCVAL_MAX_PROT_SESSIONS];
+  uint32_t mOldPavpInstance;
+  bool mProtectedContentStarted;
+  int mSessionInstance[HWCVAL_MAX_PROT_SESSIONS];
 
 #ifdef HWCVAL_BUILD_PAVP
-            void SetPavpSession(int session, PAVP_SESSION_STATUS status, const char* str);
+  void SetPavpSession(int session, PAVP_SESSION_STATUS status, const char* str);
 
-            COREUINTERFACE* mCoreu;
+  COREUINTERFACE* mCoreu;
 #endif
-    };
-
+};
 };
 
-#endif // __HwchPavpSession_h__
+#endif  // __HwchPavpSession_h__

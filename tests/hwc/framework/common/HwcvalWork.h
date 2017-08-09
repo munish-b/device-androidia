@@ -27,119 +27,105 @@ class HwcTestState;
 class DrmShimBuffer;
 class HwcTestKernel;
 
-namespace Hwcval
-{
-    namespace Work
-    {
+namespace Hwcval {
+namespace Work {
 
-        class Item : public android::RefBase
-        {
-        public:
-            int mFd;
+class Item : public android::RefBase {
+ public:
+  int mFd;
 
-        public:
-            Item (int fd);
-            virtual ~Item();
-            virtual void Process() = 0;
-        };
+ public:
+  Item(int fd);
+  virtual ~Item();
+  virtual void Process() = 0;
+};
 
-        class GemOpenItem : public Item
-        {
-        public:
-            int mId;
-            uint32_t mBoHandle;
+class GemOpenItem : public Item {
+ public:
+  int mId;
+  uint32_t mBoHandle;
 
-        public:
-            GemOpenItem(int fd, int id, uint32_t boHandle);
-            virtual ~GemOpenItem();
-            virtual void Process();
-        };
+ public:
+  GemOpenItem(int fd, int id, uint32_t boHandle);
+  virtual ~GemOpenItem();
+  virtual void Process();
+};
 
-        class GemCloseItem : public Item
-        {
-        public:
-            uint32_t mBoHandle;
+class GemCloseItem : public Item {
+ public:
+  uint32_t mBoHandle;
 
-        public:
-            GemCloseItem(int fd, uint32_t boHandle);
-            virtual ~GemCloseItem();
-            virtual void Process();
-        };
+ public:
+  GemCloseItem(int fd, uint32_t boHandle);
+  virtual ~GemCloseItem();
+  virtual void Process();
+};
 
-        class GemFlinkItem : public Item
-        {
-        public:
-            int mId;
-            uint32_t mBoHandle;
+class GemFlinkItem : public Item {
+ public:
+  int mId;
+  uint32_t mBoHandle;
 
-        public:
-            GemFlinkItem(int fd, int id, uint32_t boHandle);
-            virtual ~GemFlinkItem();
-            virtual void Process();
-        };
+ public:
+  GemFlinkItem(int fd, int id, uint32_t boHandle);
+  virtual ~GemFlinkItem();
+  virtual void Process();
+};
 
-        class GemCreateItem : public Item
-        {
-        public:
-             uint32_t mBoHandle;
+class GemCreateItem : public Item {
+ public:
+  uint32_t mBoHandle;
 
-        public:
-            GemCreateItem(int fd, uint32_t boHandle);
-            virtual ~GemCreateItem();
-            virtual void Process();
-        };
+ public:
+  GemCreateItem(int fd, uint32_t boHandle);
+  virtual ~GemCreateItem();
+  virtual void Process();
+};
 
-        class GemWaitItem : public Item
-        {
-        public:
-            uint32_t mBoHandle;
-            int32_t mStatus;
-            int64_t mDelayNs;
+class GemWaitItem : public Item {
+ public:
+  uint32_t mBoHandle;
+  int32_t mStatus;
+  int64_t mDelayNs;
 
-        public:
-            GemWaitItem(int fd, uint32_t boHandle, int32_t status, int64_t delayNs);
-            virtual ~GemWaitItem();
-            virtual void Process();
-        };
+ public:
+  GemWaitItem(int fd, uint32_t boHandle, int32_t status, int64_t delayNs);
+  virtual ~GemWaitItem();
+  virtual void Process();
+};
 
-        class PrimeItem : public Item
-        {
-        public:
-            uint32_t mBoHandle;
-            int mDmaHandle;
+class PrimeItem : public Item {
+ public:
+  uint32_t mBoHandle;
+  int mDmaHandle;
 
-        public:
-            PrimeItem(int fd, uint32_t boHandle, int dmaHandle);
-            virtual ~PrimeItem();
-            virtual void Process();
-        };
+ public:
+  PrimeItem(int fd, uint32_t boHandle, int dmaHandle);
+  virtual ~PrimeItem();
+  virtual void Process();
+};
 
-        class BufferFreeItem : public Item
-        {
-        public:
-            buffer_handle_t mHandle;
+class BufferFreeItem : public Item {
+ public:
+  buffer_handle_t mHandle;
 
-        public:
-            BufferFreeItem(buffer_handle_t handle);
-            virtual ~BufferFreeItem();
-            virtual void Process();
-        };
+ public:
+  BufferFreeItem(buffer_handle_t handle);
+  virtual ~BufferFreeItem();
+  virtual void Process();
+};
 
-        class Queue : public EventQueue<android::sp<Item>, HWCVAL_MAX_GEM_EVENTS>
-        {
-        public:
+class Queue : public EventQueue<android::sp<Item>, HWCVAL_MAX_GEM_EVENTS> {
+ public:
+  //-----------------------------------------------------------------------------
+  // Constructor & Destructor
+  Queue();
+  virtual ~Queue();
 
-            //-----------------------------------------------------------------------------
-            // Constructor & Destructor
-            Queue();
-            virtual ~Queue();
+  void Process();
+};
 
-            void Process();
-        };
+}  // namespace Work
+}  // namespace Hwcval
 
-    } // namespace Work
-} // namespace Hwcval
-
-
-
-#endif // __HwcvalWork_h__
+#endif  // __HwcvalWork_h__

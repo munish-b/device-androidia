@@ -28,31 +28,49 @@ namespace re2 {
 
 class StringPiece {
  private:
-  const char*   ptr_;
-  int           length_;
+  const char* ptr_;
+  int length_;
 
  public:
   // We provide non-explicit singleton constructors so users can pass
   // in a "const char*" or a "string" wherever a "StringPiece" is
   // expected.
-  StringPiece() : ptr_(NULL), length_(0) { }
+  StringPiece() : ptr_(NULL), length_(0) {
+  }
   StringPiece(const char* str)
-    : ptr_(str), length_((str == NULL) ? 0 : static_cast<int>(strlen(str))) { }
+      : ptr_(str), length_((str == NULL) ? 0 : static_cast<int>(strlen(str))) {
+  }
   StringPiece(const std::string& str)
-    : ptr_(str.data()), length_(static_cast<int>(str.size())) { }
-  StringPiece(const char* offset, int len) : ptr_(offset), length_(len) { }
+      : ptr_(str.data()), length_(static_cast<int>(str.size())) {
+  }
+  StringPiece(const char* offset, int len) : ptr_(offset), length_(len) {
+  }
 
   // data() may return a pointer to a buffer with embedded NULs, and the
   // returned buffer may or may not be null terminated.  Therefore it is
   // typically a mistake to pass data() to a routine that expects a NUL
   // terminated string.
-  const char* data() const { return ptr_; }
-  int size() const { return length_; }
-  int length() const { return length_; }
-  bool empty() const { return length_ == 0; }
+  const char* data() const {
+    return ptr_;
+  }
+  int size() const {
+    return length_;
+  }
+  int length() const {
+    return length_;
+  }
+  bool empty() const {
+    return length_ == 0;
+  }
 
-  void clear() { ptr_ = NULL; length_ = 0; }
-  void set(const char* data, int len) { ptr_ = data; length_ = len; }
+  void clear() {
+    ptr_ = NULL;
+    length_ = 0;
+  }
+  void set(const char* data, int len) {
+    ptr_ = data;
+    length_ = len;
+  }
   void set(const char* str) {
     ptr_ = str;
     if (str != NULL)
@@ -65,7 +83,9 @@ class StringPiece {
     length_ = len;
   }
 
-  char operator[](int i) const { return ptr_[i]; }
+  char operator[](int i) const {
+    return ptr_[i];
+  }
 
   void remove_prefix(int n) {
     ptr_ += n;
@@ -79,8 +99,10 @@ class StringPiece {
   int compare(const StringPiece& x) const {
     int r = memcmp(ptr_, x.ptr_, std::min(length_, x.length_));
     if (r == 0) {
-      if (length_ < x.length_) r = -1;
-      else if (length_ > x.length_) r = +1;
+      if (length_ < x.length_)
+        r = -1;
+      else if (length_ > x.length_)
+        r = +1;
     }
     return r;
   }
@@ -102,14 +124,13 @@ class StringPiece {
 
   // Does "this" start with "x"
   bool starts_with(const StringPiece& x) const {
-    return ((length_ >= x.length_) &&
-            (memcmp(ptr_, x.ptr_, x.length_) == 0));
+    return ((length_ >= x.length_) && (memcmp(ptr_, x.ptr_, x.length_) == 0));
   }
 
   // Does "this" end with "x"
   bool ends_with(const StringPiece& x) const {
     return ((length_ >= x.length_) &&
-            (memcmp(ptr_ + (length_-x.length_), x.ptr_, x.length_) == 0));
+            (memcmp(ptr_ + (length_ - x.length_), x.ptr_, x.length_) == 0));
   }
 
   // standard STL container boilerplate
@@ -124,8 +145,12 @@ class StringPiece {
   typedef const char* iterator;
   typedef std::reverse_iterator<const_iterator> const_reverse_iterator;
   typedef std::reverse_iterator<iterator> reverse_iterator;
-  iterator begin() const { return ptr_; }
-  iterator end() const { return ptr_ + length_; }
+  iterator begin() const {
+    return ptr_;
+  }
+  iterator end() const {
+    return ptr_ + length_;
+  }
   const_reverse_iterator rbegin() const {
     return const_reverse_iterator(ptr_ + length_);
   }
@@ -133,8 +158,12 @@ class StringPiece {
     return const_reverse_iterator(ptr_);
   }
   // STLS says return size_type, but Google says return int
-  int max_size() const { return length_; }
-  int capacity() const { return length_; }
+  int max_size() const {
+    return length_;
+  }
+  int capacity() const {
+    return length_;
+  }
 
   int copy(char* buf, size_type n, size_type pos = 0) const;
 
@@ -157,8 +186,7 @@ inline bool operator!=(const StringPiece& x, const StringPiece& y) {
 }
 
 inline bool operator<(const StringPiece& x, const StringPiece& y) {
-  const int r = memcmp(x.data(), y.data(),
-                       std::min(x.size(), y.size()));
+  const int r = memcmp(x.data(), y.data(), std::min(x.size(), y.size()));
   return ((r < 0) || ((r == 0) && (x.size() < y.size())));
 }
 

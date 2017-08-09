@@ -179,7 +179,6 @@
 //         RE2::Octal(&a), RE2::Hex(&b), RE2::CRadix(&c), RE2::CRadix(&d));
 // will leave 64 in a, b, c, and d.
 
-
 #include <stdint.h>
 #include <map>
 #include <string>
@@ -250,14 +249,14 @@ class RE2 {
   // Option class to the RE2 constructor.
   enum CannedOptions {
     DefaultOptions = 0,
-    Latin1, // treat input as Latin-1 (default UTF-8)
-    POSIX, // POSIX syntax, leftmost-longest match
-    Quiet // do not log about regexp parse errors
+    Latin1,  // treat input as Latin-1 (default UTF-8)
+    POSIX,   // POSIX syntax, leftmost-longest match
+    Quiet    // do not log about regexp parse errors
   };
 
-  // Need to have the const char* and const string& forms for implicit
-  // conversions when passing string literals to FullMatch and PartialMatch.
-  // Otherwise the StringPiece form would be sufficient.
+// Need to have the const char* and const string& forms for implicit
+// conversions when passing string literals to FullMatch and PartialMatch.
+// Otherwise the StringPiece form would be sufficient.
 #ifndef SWIG
   RE2(const char* pattern);
   RE2(const string& pattern);
@@ -267,24 +266,34 @@ class RE2 {
   ~RE2();
 
   // Returns whether RE2 was created properly.
-  bool ok() const { return error_code() == NoError; }
+  bool ok() const {
+    return error_code() == NoError;
+  }
 
   // The string specification for this RE2.  E.g.
   //   RE2 re("ab*c?d+");
   //   re.pattern();    // "ab*c?d+"
-  const string& pattern() const { return pattern_; }
+  const string& pattern() const {
+    return pattern_;
+  }
 
   // If RE2 could not be created properly, returns an error string.
   // Else returns the empty string.
-  const string& error() const { return *error_; }
+  const string& error() const {
+    return *error_;
+  }
 
   // If RE2 could not be created properly, returns an error code.
   // Else returns RE2::NoError (== 0).
-  ErrorCode error_code() const { return error_code_; }
+  ErrorCode error_code() const {
+    return error_code_;
+  }
 
   // If RE2 could not be created properly, returns the offending
   // portion of the regexp.
-  const string& error_arg() const { return error_arg_; }
+  const string& error_arg() const {
+    return error_arg_;
+  }
 
   // Returns the program size, a very approximate measure of a regexp's "cost".
   // Larger numbers are more expensive than smaller numbers.
@@ -293,7 +302,9 @@ class RE2 {
   // Returns the underlying Regexp; not for general use.
   // Returns entire_regexp_ so that callers don't need
   // to know about prefix_ and prefix_foldcase_.
-  re2::Regexp* Regexp() const { return entire_regexp_; }
+  re2::Regexp* Regexp() const {
+    return entire_regexp_;
+  }
 
   /***** The useful part: the matching interface *****/
 
@@ -327,32 +338,33 @@ class RE2 {
   //    RE2::FullMatch("abc", "[a-z]+(\\d+)?", &number);
   static bool FullMatchN(const StringPiece& text, const RE2& re,
                          const Arg* const args[], int argc);
-  static const VariadicFunction2<
-      bool, const StringPiece&, const RE2&, Arg, RE2::FullMatchN> FullMatch;
+  static const VariadicFunction2<bool, const StringPiece&, const RE2&, Arg,
+                                 RE2::FullMatchN> FullMatch;
 
   // Exactly like FullMatch(), except that "pattern" is allowed to match
   // a substring of "text".
-  static bool PartialMatchN(const StringPiece& text, const RE2& re, // 3..16 args
+  static bool PartialMatchN(const StringPiece& text,
+                            const RE2& re,  // 3..16 args
                             const Arg* const args[], int argc);
-  static const VariadicFunction2<
-      bool, const StringPiece&, const RE2&, Arg, RE2::PartialMatchN> PartialMatch;
+  static const VariadicFunction2<bool, const StringPiece&, const RE2&, Arg,
+                                 RE2::PartialMatchN> PartialMatch;
 
   // Like FullMatch() and PartialMatch(), except that pattern has to
   // match a prefix of "text", and "input" is advanced past the matched
   // text.  Note: "input" is modified iff this routine returns true.
-  static bool ConsumeN(StringPiece* input, const RE2& pattern, // 3..16 args
+  static bool ConsumeN(StringPiece* input, const RE2& pattern,  // 3..16 args
                        const Arg* const args[], int argc);
-  static const VariadicFunction2<
-      bool, StringPiece*, const RE2&, Arg, RE2::ConsumeN> Consume;
+  static const VariadicFunction2<bool, StringPiece*, const RE2&, Arg,
+                                 RE2::ConsumeN> Consume;
 
   // Like Consume(..), but does not anchor the match at the beginning of the
   // string.  That is, "pattern" need not start its match at the beginning of
   // "input".  For example, "FindAndConsume(s, "(\\w+)", &word)" finds the next
   // word in "s" and stores it in "word".
   static bool FindAndConsumeN(StringPiece* input, const RE2& pattern,
-                             const Arg* const args[], int argc);
-  static const VariadicFunction2<
-      bool, StringPiece*, const RE2&, Arg, RE2::FindAndConsumeN> FindAndConsume;
+                              const Arg* const args[], int argc);
+  static const VariadicFunction2<bool, StringPiece*, const RE2&, Arg,
+                                 RE2::FindAndConsumeN> FindAndConsume;
 
   // Replace the first match of "pattern" in "str" with "rewrite".
   // Within "rewrite", backslash-escaped digits (\1 to \9) can be
@@ -367,8 +379,7 @@ class RE2 {
   //
   // Returns true if the pattern matches and a replacement occurs,
   // false otherwise.
-  static bool Replace(string *str,
-                      const RE2& pattern,
+  static bool Replace(string* str, const RE2& pattern,
                       const StringPiece& rewrite);
 
   // Like Replace(), except replaces successive non-overlapping occurrences
@@ -384,8 +395,7 @@ class RE2 {
   // replacing "ana" within "banana" makes only one replacement, not two.
   //
   // Returns the number of replacements made.
-  static int GlobalReplace(string *str,
-                           const RE2& pattern,
+  static int GlobalReplace(string* str, const RE2& pattern,
                            const StringPiece& rewrite);
 
   // Like Replace, except that if the pattern matches, "rewrite"
@@ -394,10 +404,8 @@ class RE2 {
   //
   // Returns true iff a match occurred and the extraction happened
   // successfully;  if no match occurs, the string is left unaffected.
-  static bool Extract(const StringPiece &text,
-                      const RE2& pattern,
-                      const StringPiece &rewrite,
-                      string *out);
+  static bool Extract(const StringPiece& text, const RE2& pattern,
+                      const StringPiece& rewrite, string* out);
 
   // Escapes all potentially meaningful regexp characters in
   // 'unquoted'.  The returned string, used as a regular expression,
@@ -427,16 +435,15 @@ class RE2 {
 
   // Type of match.
   enum Anchor {
-    UNANCHORED,         // No anchoring
-    ANCHOR_START,       // Anchor at start only
-    ANCHOR_BOTH,        // Anchor at start and end
+    UNANCHORED,    // No anchoring
+    ANCHOR_START,  // Anchor at start only
+    ANCHOR_BOTH,   // Anchor at start and end
   };
 
   // Return the number of capturing subpatterns, or -1 if the
   // regexp wasn't valid on construction.  The overall match ($0)
   // does not count: if the regexp is "(a)(b)", returns 2.
   int NumberOfCapturingGroups() const;
-
 
   // Return a map from names to capturing indices.
   // The map records the index of the leftmost group
@@ -469,12 +476,8 @@ class RE2 {
   // empty string, but note that on return, it will not be possible to tell
   // whether submatch i matched the empty string or did not match:
   // either way, match[i] == NULL.
-  bool Match(const StringPiece& text,
-             int startpos,
-             int endpos,
-             Anchor anchor,
-             StringPiece *match,
-             int nmatch) const;
+  bool Match(const StringPiece& text, int startpos, int endpos, Anchor anchor,
+             StringPiece* match, int nmatch) const;
 
   // Check that the given rewrite string is suitable for use with this
   // regular expression.  It checks that:
@@ -495,9 +498,7 @@ class RE2 {
   // Returns true on success.  This method can fail because of a malformed
   // rewrite string.  CheckRewriteString guarantees that the rewrite will
   // be sucessful.
-  bool Rewrite(string *out,
-               const StringPiece &rewrite,
-               const StringPiece* vec,
+  bool Rewrite(string* out, const StringPiece& rewrite, const StringPiece* vec,
                int veclen) const;
 
   // Constructor options
@@ -552,36 +553,39 @@ class RE2 {
     // If this happens too often, RE2 falls back on the NFA implementation.
 
     // For now, make the default budget something close to Code Search.
-    static const int kDefaultMaxMem = 8<<20;
+    static const int kDefaultMaxMem = 8 << 20;
 
-    enum Encoding {
-      EncodingUTF8 = 1,
-      EncodingLatin1
-    };
+    enum Encoding { EncodingUTF8 = 1, EncodingLatin1 };
 
-    Options() :
-      encoding_(EncodingUTF8),
-      posix_syntax_(false),
-      longest_match_(false),
-      log_errors_(true),
-      max_mem_(kDefaultMaxMem),
-      literal_(false),
-      never_nl_(false),
-      never_capture_(false),
-      case_sensitive_(true),
-      perl_classes_(false),
-      word_boundary_(false),
-      one_line_(false) {
+    Options()
+        : encoding_(EncodingUTF8),
+          posix_syntax_(false),
+          longest_match_(false),
+          log_errors_(true),
+          max_mem_(kDefaultMaxMem),
+          literal_(false),
+          never_nl_(false),
+          never_capture_(false),
+          case_sensitive_(true),
+          perl_classes_(false),
+          word_boundary_(false),
+          one_line_(false) {
     }
 
     /*implicit*/ Options(CannedOptions);
 
-    Encoding encoding() const { return encoding_; }
-    void set_encoding(Encoding encoding) { encoding_ = encoding; }
+    Encoding encoding() const {
+      return encoding_;
+    }
+    void set_encoding(Encoding encoding) {
+      encoding_ = encoding;
+    }
 
     // Legacy interface to encoding.
     // TODO(rsc): Remove once clients have been converted.
-    bool utf8() const { return encoding_ == EncodingUTF8; }
+    bool utf8() const {
+      return encoding_ == EncodingUTF8;
+    }
     void set_utf8(bool b) {
       if (b) {
         encoding_ = EncodingUTF8;
@@ -590,38 +594,82 @@ class RE2 {
       }
     }
 
-    bool posix_syntax() const { return posix_syntax_; }
-    void set_posix_syntax(bool b) { posix_syntax_ = b; }
+    bool posix_syntax() const {
+      return posix_syntax_;
+    }
+    void set_posix_syntax(bool b) {
+      posix_syntax_ = b;
+    }
 
-    bool longest_match() const { return longest_match_; }
-    void set_longest_match(bool b) { longest_match_ = b; }
+    bool longest_match() const {
+      return longest_match_;
+    }
+    void set_longest_match(bool b) {
+      longest_match_ = b;
+    }
 
-    bool log_errors() const { return log_errors_; }
-    void set_log_errors(bool b) { log_errors_ = b; }
+    bool log_errors() const {
+      return log_errors_;
+    }
+    void set_log_errors(bool b) {
+      log_errors_ = b;
+    }
 
-    int max_mem() const { return max_mem_; }
-    void set_max_mem(int m) { max_mem_ = m; }
+    int max_mem() const {
+      return max_mem_;
+    }
+    void set_max_mem(int m) {
+      max_mem_ = m;
+    }
 
-    bool literal() const { return literal_; }
-    void set_literal(bool b) { literal_ = b; }
+    bool literal() const {
+      return literal_;
+    }
+    void set_literal(bool b) {
+      literal_ = b;
+    }
 
-    bool never_nl() const { return never_nl_; }
-    void set_never_nl(bool b) { never_nl_ = b; }
+    bool never_nl() const {
+      return never_nl_;
+    }
+    void set_never_nl(bool b) {
+      never_nl_ = b;
+    }
 
-    bool never_capture() const { return never_capture_; }
-    void set_never_capture(bool b) { never_capture_ = b; }
+    bool never_capture() const {
+      return never_capture_;
+    }
+    void set_never_capture(bool b) {
+      never_capture_ = b;
+    }
 
-    bool case_sensitive() const { return case_sensitive_; }
-    void set_case_sensitive(bool b) { case_sensitive_ = b; }
+    bool case_sensitive() const {
+      return case_sensitive_;
+    }
+    void set_case_sensitive(bool b) {
+      case_sensitive_ = b;
+    }
 
-    bool perl_classes() const { return perl_classes_; }
-    void set_perl_classes(bool b) { perl_classes_ = b; }
+    bool perl_classes() const {
+      return perl_classes_;
+    }
+    void set_perl_classes(bool b) {
+      perl_classes_ = b;
+    }
 
-    bool word_boundary() const { return word_boundary_; }
-    void set_word_boundary(bool b) { word_boundary_ = b; }
+    bool word_boundary() const {
+      return word_boundary_;
+    }
+    void set_word_boundary(bool b) {
+      word_boundary_ = b;
+    }
 
-    bool one_line() const { return one_line_; }
-    void set_one_line(bool b) { one_line_ = b; }
+    bool one_line() const {
+      return one_line_;
+    }
+    void set_one_line(bool b) {
+      one_line_ = b;
+    }
 
     void Copy(const Options& src) {
       encoding_ = src.encoding_;
@@ -654,13 +702,15 @@ class RE2 {
     bool word_boundary_;
     bool one_line_;
 
-    //DISALLOW_EVIL_CONSTRUCTORS(Options);
+    // DISALLOW_EVIL_CONSTRUCTORS(Options);
     Options(const Options&);
     void operator=(const Options&);
   };
 
   // Returns the options set in the constructor.
-  const Options& options() const { return options_; };
+  const Options& options() const {
+    return options_;
+  };
 
   // Argument converters; see below.
   static inline Arg CRadix(short* x);
@@ -693,29 +743,26 @@ class RE2 {
  private:
   void Init(const StringPiece& pattern, const Options& options);
 
-  bool DoMatch(const StringPiece& text,
-                   Anchor anchor,
-                   int* consumed,
-                   const Arg* const args[],
-                   int n) const;
+  bool DoMatch(const StringPiece& text, Anchor anchor, int* consumed,
+               const Arg* const args[], int n) const;
 
   re2::Prog* ReverseProg() const;
 
-  mutable Mutex*           mutex_;
-  string                   pattern_;       // string regular expression
-  Options                  options_;       // option flags
-  string        prefix_;           // required prefix (before regexp_)
-  bool          prefix_foldcase_;  // prefix is ASCII case-insensitive
-  re2::Regexp*  entire_regexp_;    // parsed regular expression
-  re2::Regexp*  suffix_regexp_;    // parsed regular expression, prefix removed
-  re2::Prog*    prog_;             // compiled program for regexp
-  mutable re2::Prog* rprog_;       // reverse program for regexp
-  bool                     is_one_pass_;   // can use prog_->SearchOnePass?
-  mutable const string*    error_;         // Error indicator
-                                           // (or points to empty string)
-  mutable ErrorCode        error_code_;    // Error code
-  mutable string           error_arg_;     // Fragment of regexp showing error
-  mutable int              num_captures_;  // Number of capturing groups
+  mutable Mutex* mutex_;
+  string pattern_;                // string regular expression
+  Options options_;               // option flags
+  string prefix_;                 // required prefix (before regexp_)
+  bool prefix_foldcase_;          // prefix is ASCII case-insensitive
+  re2::Regexp* entire_regexp_;    // parsed regular expression
+  re2::Regexp* suffix_regexp_;    // parsed regular expression, prefix removed
+  re2::Prog* prog_;               // compiled program for regexp
+  mutable re2::Prog* rprog_;      // reverse program for regexp
+  bool is_one_pass_;              // can use prog_->SearchOnePass?
+  mutable const string* error_;   // Error indicator
+                                  // (or points to empty string)
+  mutable ErrorCode error_code_;  // Error code
+  mutable string error_arg_;      // Fragment of regexp showing error
+  mutable int num_captures_;      // Number of capturing groups
 
   // Map from capture names to indices
   mutable const map<string, int>* named_groups_;
@@ -723,7 +770,7 @@ class RE2 {
   // Map from capture indices to names
   mutable const map<int, string>* group_names_;
 
-  //DISALLOW_EVIL_CONSTRUCTORS(RE2);
+  // DISALLOW_EVIL_CONSTRUCTORS(RE2);
   RE2(const RE2&);
   void operator=(const RE2&);
 };
@@ -737,7 +784,8 @@ template <class T>
 class _RE2_MatchObject {
  public:
   static inline bool Parse(const char* str, int n, void* dest) {
-    if (dest == NULL) return true;
+    if (dest == NULL)
+      return true;
     T* object = reinterpret_cast<T*>(dest);
     return object->ParseFrom(str, n);
   }
@@ -754,60 +802,64 @@ class RE2::Arg {
   typedef bool (*Parser)(const char* str, int n, void* dest);
 
 // Type-specific parsers
-#define MAKE_PARSER(type,name) \
-  Arg(type* p) : arg_(p), parser_(name) { } \
-  Arg(type* p, Parser parser) : arg_(p), parser_(parser) { } \
+#define MAKE_PARSER(type, name)                            \
+  Arg(type* p) : arg_(p), parser_(name) {                  \
+  }                                                        \
+  Arg(type* p, Parser parser) : arg_(p), parser_(parser) { \
+  }
 
-
-  MAKE_PARSER(char,               parse_char);
-  MAKE_PARSER(signed char,        parse_char);
-  MAKE_PARSER(unsigned char,      parse_uchar);
-  MAKE_PARSER(short,              parse_short);
-  MAKE_PARSER(unsigned short,     parse_ushort);
-  MAKE_PARSER(int,                parse_int);
-  MAKE_PARSER(unsigned int,       parse_uint);
-  MAKE_PARSER(long,               parse_long);
-  MAKE_PARSER(unsigned long,      parse_ulong);
-  MAKE_PARSER(long long,          parse_longlong);
+  MAKE_PARSER(char, parse_char);
+  MAKE_PARSER(signed char, parse_char);
+  MAKE_PARSER(unsigned char, parse_uchar);
+  MAKE_PARSER(short, parse_short);
+  MAKE_PARSER(unsigned short, parse_ushort);
+  MAKE_PARSER(int, parse_int);
+  MAKE_PARSER(unsigned int, parse_uint);
+  MAKE_PARSER(long, parse_long);
+  MAKE_PARSER(unsigned long, parse_ulong);
+  MAKE_PARSER(long long, parse_longlong);
   MAKE_PARSER(unsigned long long, parse_ulonglong);
-  MAKE_PARSER(float,              parse_float);
-  MAKE_PARSER(double,             parse_double);
-  MAKE_PARSER(string,             parse_string);
-  MAKE_PARSER(StringPiece,        parse_stringpiece);
+  MAKE_PARSER(float, parse_float);
+  MAKE_PARSER(double, parse_double);
+  MAKE_PARSER(string, parse_string);
+  MAKE_PARSER(StringPiece, parse_stringpiece);
 
 #undef MAKE_PARSER
 
   // Generic constructor
-  template <class T> Arg(T*, Parser parser);
+  template <class T>
+  Arg(T*, Parser parser);
   // Generic constructor template
-  template <class T> Arg(T* p)
-    : arg_(p), parser_(_RE2_MatchObject<T>::Parse) {
+  template <class T>
+  Arg(T* p)
+      : arg_(p), parser_(_RE2_MatchObject<T>::Parse) {
   }
 
   // Parse the data
   bool Parse(const char* str, int n) const;
 
  private:
-  void*         arg_;
-  Parser        parser_;
+  void* arg_;
+  Parser parser_;
 
-  static bool parse_null          (const char* str, int n, void* dest);
-  static bool parse_char          (const char* str, int n, void* dest);
-  static bool parse_uchar         (const char* str, int n, void* dest);
-  static bool parse_float         (const char* str, int n, void* dest);
-  static bool parse_double        (const char* str, int n, void* dest);
-  static bool parse_string        (const char* str, int n, void* dest);
-  static bool parse_stringpiece   (const char* str, int n, void* dest);
+  static bool parse_null(const char* str, int n, void* dest);
+  static bool parse_char(const char* str, int n, void* dest);
+  static bool parse_uchar(const char* str, int n, void* dest);
+  static bool parse_float(const char* str, int n, void* dest);
+  static bool parse_double(const char* str, int n, void* dest);
+  static bool parse_string(const char* str, int n, void* dest);
+  static bool parse_stringpiece(const char* str, int n, void* dest);
 
-#define DECLARE_INTEGER_PARSER(name)                                        \
- private:                                                                   \
-  static bool parse_ ## name(const char* str, int n, void* dest);           \
-  static bool parse_ ## name ## _radix(                                     \
-    const char* str, int n, void* dest, int radix);                         \
- public:                                                                    \
-  static bool parse_ ## name ## _hex(const char* str, int n, void* dest);   \
-  static bool parse_ ## name ## _octal(const char* str, int n, void* dest); \
-  static bool parse_ ## name ## _cradix(const char* str, int n, void* dest)
+#define DECLARE_INTEGER_PARSER(name)                                    \
+ private:                                                               \
+  static bool parse_##name(const char* str, int n, void* dest);         \
+  static bool parse_##name##_radix(const char* str, int n, void* dest,  \
+                                   int radix);                          \
+                                                                        \
+ public:                                                                \
+  static bool parse_##name##_hex(const char* str, int n, void* dest);   \
+  static bool parse_##name##_octal(const char* str, int n, void* dest); \
+  static bool parse_##name##_cradix(const char* str, int n, void* dest)
 
   DECLARE_INTEGER_PARSER(short);
   DECLARE_INTEGER_PARSER(ushort);
@@ -821,29 +873,34 @@ class RE2::Arg {
 #undef DECLARE_INTEGER_PARSER
 };
 
-inline RE2::Arg::Arg() : arg_(NULL), parser_(parse_null) { }
-inline RE2::Arg::Arg(void* p) : arg_(p), parser_(parse_null) { }
+inline RE2::Arg::Arg() : arg_(NULL), parser_(parse_null) {
+}
+inline RE2::Arg::Arg(void* p) : arg_(p), parser_(parse_null) {
+}
 
 inline bool RE2::Arg::Parse(const char* str, int n) const {
   return (*parser_)(str, n, arg_);
 }
 
 // This part of the parser, appropriate only for ints, deals with bases
-#define MAKE_INTEGER_PARSER(type, name) \
-  inline RE2::Arg RE2::Hex(type* ptr) { \
-    return RE2::Arg(ptr, RE2::Arg::parse_ ## name ## _hex); } \
-  inline RE2::Arg RE2::Octal(type* ptr) { \
-    return RE2::Arg(ptr, RE2::Arg::parse_ ## name ## _octal); } \
-  inline RE2::Arg RE2::CRadix(type* ptr) { \
-    return RE2::Arg(ptr, RE2::Arg::parse_ ## name ## _cradix); }
+#define MAKE_INTEGER_PARSER(type, name)                    \
+  inline RE2::Arg RE2::Hex(type* ptr) {                    \
+    return RE2::Arg(ptr, RE2::Arg::parse_##name##_hex);    \
+  }                                                        \
+  inline RE2::Arg RE2::Octal(type* ptr) {                  \
+    return RE2::Arg(ptr, RE2::Arg::parse_##name##_octal);  \
+  }                                                        \
+  inline RE2::Arg RE2::CRadix(type* ptr) {                 \
+    return RE2::Arg(ptr, RE2::Arg::parse_##name##_cradix); \
+  }
 
-MAKE_INTEGER_PARSER(short,              short);
-MAKE_INTEGER_PARSER(unsigned short,     ushort);
-MAKE_INTEGER_PARSER(int,                int);
-MAKE_INTEGER_PARSER(unsigned int,       uint);
-MAKE_INTEGER_PARSER(long,               long);
-MAKE_INTEGER_PARSER(unsigned long,      ulong);
-MAKE_INTEGER_PARSER(long long,          longlong);
+MAKE_INTEGER_PARSER(short, short);
+MAKE_INTEGER_PARSER(unsigned short, ushort);
+MAKE_INTEGER_PARSER(int, int);
+MAKE_INTEGER_PARSER(unsigned int, uint);
+MAKE_INTEGER_PARSER(long, long);
+MAKE_INTEGER_PARSER(unsigned long, ulong);
+MAKE_INTEGER_PARSER(long long, longlong);
 MAKE_INTEGER_PARSER(unsigned long long, ulonglong);
 
 #undef MAKE_INTEGER_PARSER

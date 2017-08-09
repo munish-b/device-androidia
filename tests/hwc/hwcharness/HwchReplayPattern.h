@@ -20,61 +20,55 @@
 #include "HwchLayer.h"
 #include "HwchPattern.h"
 
-namespace Hwch
-{
+namespace Hwch {
 
-    class ReplayPattern : public HorizontalLinePtn
-    {
-        bool mFrameNeedsUpdate = true;
+class ReplayPattern : public HorizontalLinePtn {
+  bool mFrameNeedsUpdate = true;
 
-        public:
+ public:
+  /**
+   * Default constructor - defaults to 60Hz update frequency with a black
+   * line on a white background.
+   */
+  ReplayPattern(uint32_t bgColour = eWhite, uint32_t fgColour = eBlack,
+                float mUpdateFreq = 60.0)
+      : HorizontalLinePtn(mUpdateFreq, fgColour, bgColour){};
 
-            /**
-             * Default constructor - defaults to 60Hz update frequency with a black
-             * line on a white background.
-             */
-            ReplayPattern(uint32_t bgColour = eWhite,
-                uint32_t fgColour = eBlack, float mUpdateFreq = 60.0) :
-                HorizontalLinePtn(mUpdateFreq, fgColour, bgColour) {};
+  /** Default destructor. */
+  ~ReplayPattern() = default;
 
-            /** Default destructor. */
-            ~ReplayPattern() = default;
+  /** The pattern is copyable constructible. */
+  ReplayPattern(const ReplayPattern& rhs) = default;
 
-            /** The pattern is copyable constructible. */
-            ReplayPattern(const ReplayPattern& rhs) = default;
+  /** Disable move semantics - no dynamic state. */
+  ReplayPattern(ReplayPattern&& rhs) = delete;
 
-            /** Disable move semantics - no dynamic state. */
-            ReplayPattern(ReplayPattern&& rhs) = delete;
+  /** Pattern is copy assignable. */
+  ReplayPattern& operator=(const ReplayPattern& rhs) = default;
 
-            /** Pattern is copy assignable. */
-            ReplayPattern& operator=(const ReplayPattern& rhs) = default;
+  /** Disable move semantics - no dynamic state. */
+  ReplayPattern& operator=(const ReplayPattern&& rhs) = delete;
 
-            /** Disable move semantics - no dynamic state. */
-            ReplayPattern& operator=(const ReplayPattern&& rhs) = delete;
+  /**
+   * Returns a flag to signify whether the frame should be updated (i.e.
+   * typically in response to the buffers being rotated (and so the next
+   * buffer needs filling).
+   */
+  bool FrameNeedsUpdate() {
+    if (mFrameNeedsUpdate) {
+      mUpdatedSinceFBComp = true;
+      mFrameNeedsUpdate = false;
+      return true;
+    }
 
-            /**
-             * Returns a flag to signify whether the frame should be updated (i.e.
-             * typically in response to the buffers being rotated (and so the next
-             * buffer needs filling).
-             */
-            bool FrameNeedsUpdate()
-            {
-                if (mFrameNeedsUpdate)
-                {
-                    mUpdatedSinceFBComp = true;
-                    mFrameNeedsUpdate = false;
-                    return true;
-                }
+    return false;
+  }
 
-                return false;
-            }
-
-            /** Forces an update the next time the layer is sent */
-            void ForceUpdate()
-            {
-                mFrameNeedsUpdate = true;
-            }
-    };
+  /** Forces an update the next time the layer is sent */
+  void ForceUpdate() {
+    mFrameNeedsUpdate = true;
+  }
+};
 }
 
-#endif // __HwchReplayPattern_h__
+#endif  // __HwchReplayPattern_h__

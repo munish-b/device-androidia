@@ -25,75 +25,65 @@
 #include "HwcTestMdsControl.h"
 #include "HwcTestDisplayControl.h"
 
-HwcServiceShim::HwcServiceShim()
-{
-    HWCLOGV("HwcServiceShim created @%p", this);
-    memset(mDisplayControls, 0, sizeof(mDisplayControls));
+HwcServiceShim::HwcServiceShim() {
+  HWCLOGV("HwcServiceShim created @%p", this);
+  memset(mDisplayControls, 0, sizeof(mDisplayControls));
 }
 
-HwcServiceShim::~HwcServiceShim()
-{
+HwcServiceShim::~HwcServiceShim() {
 }
 
-bool HwcServiceShim::Start()
-{
+bool HwcServiceShim::Start() {
   ALOGD("Starting %s in shim", IA_HWC_SERVICE_NAME);
   if (hwcvalServiceManager()->OverrideService(String16(IA_HWC_SERVICE_NAME),
                                               String16(IA_HWCREAL_SERVICE_NAME),
                                               this, false)) {
     HWCERROR(eCheckHwcServiceBind, "Failed to start HWC Shim Service (%s)",
              IA_HWC_SERVICE_NAME);
-        return false;
-    }
-    HWCLOGA("Started %s in shim", IA_HWC_SERVICE_NAME);
-    return true;
+    return false;
+  }
+  HWCLOGA("Started %s in shim", IA_HWC_SERVICE_NAME);
+  return true;
 }
 
 const android::String16 HwcServiceShim::descriptor("IA.IService.Shim");
-const android::String16& HwcServiceShim::getInterfaceDescriptor() const
-{
-    return descriptor;
+const android::String16& HwcServiceShim::getInterfaceDescriptor() const {
+  return descriptor;
 }
 
-sp<IDisplayControl> HwcServiceShim::getDisplayControl(uint32_t display)
-{
-    if (mDisplayControls[display] == 0)
-    {
-        HWCLOGD("HwcServiceShim::getDisplayControl(%d) creating display control", display);
-        sp<IDisplayControl> realDispControl =
-            NULL; // Real()->GetDisplayControl(display);
-        HwcTestKernel* testKernel = HwcTestState::getInstance()->GetTestKernel();
-
-        ALOG_ASSERT(realDispControl.get());
-        ALOG_ASSERT(testKernel);
-        // sp<IDisplayControl> dispControl = new HwcTestDisplayControl(display,
-        // realDispControl, testKernel);
-        // imDisplayControls[display] = dispControl;
-    }
-
-    return mDisplayControls[display];
-}
-
-sp<IVideoControl> HwcServiceShim::getVideoControl()
-{
-  sp<IVideoControl> video = NULL; // Real()->GetVideoControl();
+sp<IDisplayControl> HwcServiceShim::getDisplayControl(uint32_t display) {
+  if (mDisplayControls[display] == 0) {
+    HWCLOGD("HwcServiceShim::getDisplayControl(%d) creating display control",
+            display);
+    sp<IDisplayControl> realDispControl =
+        NULL;  // Real()->GetDisplayControl(display);
     HwcTestKernel* testKernel = HwcTestState::getInstance()->GetTestKernel();
 
-    if (testKernel)
-    {
-        // We are shimming the IVideoControl
-        if (mVideoControl.get() == 0)
-        {
-          // mVideoControl = new HwcTestVideoControl(video, testKernel);
-        }
+    ALOG_ASSERT(realDispControl.get());
+    ALOG_ASSERT(testKernel);
+    // sp<IDisplayControl> dispControl = new HwcTestDisplayControl(display,
+    // realDispControl, testKernel);
+    // imDisplayControls[display] = dispControl;
+  }
 
-        return mVideoControl;
-    }
-    else
-    {
-        // Not shimming (shims not installed)
-        return video;
-    }
+  return mDisplayControls[display];
 }
 
-#endif // HWCVAL_BUILD_SHIM_HWCSERVICE
+sp<IVideoControl> HwcServiceShim::getVideoControl() {
+  sp<IVideoControl> video = NULL;  // Real()->GetVideoControl();
+  HwcTestKernel* testKernel = HwcTestState::getInstance()->GetTestKernel();
+
+  if (testKernel) {
+    // We are shimming the IVideoControl
+    if (mVideoControl.get() == 0) {
+      // mVideoControl = new HwcTestVideoControl(video, testKernel);
+    }
+
+    return mVideoControl;
+  } else {
+    // Not shimming (shims not installed)
+    return video;
+  }
+}
+
+#endif  // HWCVAL_BUILD_SHIM_HWCSERVICE

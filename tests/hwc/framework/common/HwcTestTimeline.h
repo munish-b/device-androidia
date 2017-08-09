@@ -20,38 +20,37 @@
 #include "utils/KeyedVector.h"
 #include "HwcTestDefs.h"
 
-struct HwcTestTimelineData
-{
-    int outFence;
-    uint32_t timelineSeq;
+struct HwcTestTimelineData {
+  int outFence;
+  uint32_t timelineSeq;
 };
 
-class HwcTestTimeline
-{
-public:
-    HwcTestTimeline(uint32_t id);
-    virtual ~HwcTestTimeline();
+class HwcTestTimeline {
+ public:
+  HwcTestTimeline(uint32_t id);
+  virtual ~HwcTestTimeline();
 
-    // Create a fence on the next timeline sequence
-    // Add it to the map, so we know which input fence it represents
-    int CreateShimFence(int inFence);
+  // Create a fence on the next timeline sequence
+  // Add it to the map, so we know which input fence it represents
+  int CreateShimFence(int inFence);
 
-    // Close the input fence.
-    // Find it in the map. If it's there, prepare to add one to the shim timeline
-    // (but don't do it now as we want it to be atomic).
-    // Remove the input fence from the map.
-    void CloseFence(int inFence);
+  // Close the input fence.
+  // Find it in the map. If it's there, prepare to add one to the shim timeline
+  // (but don't do it now as we want it to be atomic).
+  // Remove the input fence from the map.
+  void CloseFence(int inFence);
 
-    // Signal all shim fences up to the last one where CloseFence was called on the input fence.
-    void SignalShimFence();
+  // Signal all shim fences up to the last one where CloseFence was called on
+  // the input fence.
+  void SignalShimFence();
 
-private:
-    // Private data
-    volatile int mTimeline;             // Timeline handle
-    volatile uint32_t mTimelineSeq;     // Timeline seq for fences we create
-    uint32_t mCurrentSeq;               // Last signalled seq
-    uint32_t mFencesClosed;             // Count of in fences closed
-    android::String8 mName;
+ private:
+  // Private data
+  volatile int mTimeline;          // Timeline handle
+  volatile uint32_t mTimelineSeq;  // Timeline seq for fences we create
+  uint32_t mCurrentSeq;            // Last signalled seq
+  uint32_t mFencesClosed;          // Count of in fences closed
+  android::String8 mName;
 };
 
-#endif // __HwcTestTimeline_h__
+#endif  // __HwcTestTimeline_h__

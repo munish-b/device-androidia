@@ -6,7 +6,7 @@
 #include "re2/filtered_re2.h"
 #include "re2/re2.h"
 
-DECLARE_int32(filtered_re2_min_atom_len); // From prefilter_tree.cc
+DECLARE_int32(filtered_re2_min_atom_len);  // From prefilter_tree.cc
 
 namespace re2 {
 
@@ -65,73 +65,39 @@ struct AtomTest {
 };
 
 AtomTest atom_tests[] = {
-  {
-    // This test checks to make sure empty patterns are allowed.
-    "CheckEmptyPattern",
-    {""},
-    {}
-  }, {
-    // This test checks that all atoms of length greater than min length
-    // are found, and no atoms that are of smaller length are found.
-    "AllAtomsGtMinLengthFound", {
-      "(abc123|def456|ghi789).*mnop[x-z]+",
-      "abc..yyy..zz",
-      "mnmnpp[a-z]+PPP"
-    }, {
-      "abc123",
-      "def456",
-      "ghi789",
-      "mnop",
-      "abc",
-      "yyy",
-      "mnmnpp",
-      "ppp"
-    }
-  }, {
-    // Test to make sure that any atoms that have another atom as a
-    // substring in an OR are removed; that is, only the shortest
-    // substring is kept.
-    "SubstrAtomRemovesSuperStrInOr", {
-      "(abc123|abc|ghi789|abc1234).*[x-z]+",
-      "abcd..yyy..yyyzzz",
-      "mnmnpp[a-z]+PPP"
-    }, {
-      "abc",
-      "ghi789",
-      "abcd",
-      "yyy",
-      "yyyzzz",
-      "mnmnpp",
-      "ppp"
-    }
-  }, {
-    // Test character class expansion.
-    "CharClassExpansion", {
-      "m[a-c][d-f]n.*[x-z]+",
-      "[x-y]bcde[ab]"
-    }, {
-      "madn", "maen", "mafn",
-      "mbdn", "mben", "mbfn",
-      "mcdn", "mcen", "mcfn",
-      "xbcdea", "xbcdeb",
-      "ybcdea", "ybcdeb"
-    }
-  }, {
-    // Test upper/lower of non-ASCII.
-    "UnicodeLower", {
-      "(?i)ΔδΠϖπΣςσ",
-      "ΛΜΝΟΠ",
-      "ψρστυ",
-    }, {
-      "δδπππσσσ",
-      "λμνοπ",
-      "ψρστυ",
+    {// This test checks to make sure empty patterns are allowed.
+     "CheckEmptyPattern",
+     {""},
+     {}},
+    {// This test checks that all atoms of length greater than min length
+     // are found, and no atoms that are of smaller length are found.
+     "AllAtomsGtMinLengthFound",
+     {"(abc123|def456|ghi789).*mnop[x-z]+", "abc..yyy..zz", "mnmnpp[a-z]+PPP"},
+     {"abc123", "def456", "ghi789", "mnop", "abc", "yyy", "mnmnpp", "ppp"}},
+    {// Test to make sure that any atoms that have another atom as a
+     // substring in an OR are removed; that is, only the shortest
+     // substring is kept.
+     "SubstrAtomRemovesSuperStrInOr",
+     {"(abc123|abc|ghi789|abc1234).*[x-z]+", "abcd..yyy..yyyzzz",
+      "mnmnpp[a-z]+PPP"},
+     {"abc", "ghi789", "abcd", "yyy", "yyyzzz", "mnmnpp", "ppp"}},
+    {// Test character class expansion.
+     "CharClassExpansion",
+     {"m[a-c][d-f]n.*[x-z]+", "[x-y]bcde[ab]"},
+     {"madn", "maen", "mafn", "mbdn", "mben", "mbfn", "mcdn", "mcen", "mcfn",
+      "xbcdea", "xbcdeb", "ybcdea", "ybcdeb"}},
+    {// Test upper/lower of non-ASCII.
+     "UnicodeLower",
+     {
+      "(?i)ΔδΠϖπΣςσ", "ΛΜΝΟΠ", "ψρστυ",
+     },
+     {
+      "δδπππσσσ", "λμνοπ", "ψρστυ",
+     },
     },
-  },
 };
 
-void AddRegexpsAndCompile(const char* regexps[],
-                          int n,
+void AddRegexpsAndCompile(const char* regexps[], int n,
                           struct FilterTestVars* v) {
   for (int i = 0; i < n; i++) {
     int id;
@@ -140,9 +106,7 @@ void AddRegexpsAndCompile(const char* regexps[],
   v->f.Compile(&v->atoms);
 }
 
-bool CheckExpectedAtoms(const char* atoms[],
-                        int n,
-                        const char* testname,
+bool CheckExpectedAtoms(const char* atoms[], int n, const char* testname,
                         struct FilterTestVars* v) {
   vector<string> expected;
   for (int i = 0; i < n; i++)
@@ -153,7 +117,7 @@ bool CheckExpectedAtoms(const char* atoms[],
   sort(v->atoms.begin(), v->atoms.end());
   sort(expected.begin(), expected.end());
   for (int i = 0; pass && i < n; i++)
-      pass = pass && expected[i] == v->atoms[i];
+    pass = pass && expected[i] == v->atoms[i];
 
   if (!pass) {
     LOG(WARNING) << "Failed " << testname;
