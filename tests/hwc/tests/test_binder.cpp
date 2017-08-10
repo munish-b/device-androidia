@@ -15,59 +15,50 @@
  */
 
 #include "test_binder.h"
-#include "HwcTestLog.h" // for logging
+#include "HwcTestLog.h"  // for logging
 
-namespace android
-{
+namespace android {
 IMPLEMENT_META_INTERFACE(HwcShimService, "HwcShimService");
 
-
 BpHwcShimService::BpHwcShimService(const sp<IBinder>& impl)
-: BpInterface<IHwcShimService>(impl)
-{
+    : BpInterface<IHwcShimService>(impl) {
 }
 
-BpHwcShimService::~BpHwcShimService()
-{
-    HWCLOGI("BpHwcShimService::~BpHwcShimService()");
+BpHwcShimService::~BpHwcShimService() {
+  HWCLOGI("BpHwcShimService::~BpHwcShimService()");
 }
 
-
-status_t BpHwcShimService::SetHwcTestConfig(const HwcTestConfig& config, bool resetResult)
-{
-    android::Parcel dataToSend, reply;
-    dataToSend.writeInterfaceToken(IHwcShimService::getInterfaceDescriptor());
-    config.WriteToParcel(dataToSend);
-    dataToSend.writeInt32(resetResult);
-    status_t ret = remote()->transact(
-                IHwcShimService::eSET_HWC_TEST_CONFIG, dataToSend, &reply);
-    if (ret == android::NO_ERROR)
-    {
-        ret = reply.readInt32();
-    }
-    return ret;
+status_t BpHwcShimService::SetHwcTestConfig(const HwcTestConfig& config,
+                                            bool resetResult) {
+  android::Parcel dataToSend, reply;
+  dataToSend.writeInterfaceToken(IHwcShimService::getInterfaceDescriptor());
+  config.WriteToParcel(dataToSend);
+  dataToSend.writeInt32(resetResult);
+  status_t ret = remote()->transact(IHwcShimService::eSET_HWC_TEST_CONFIG,
+                                    dataToSend, &reply);
+  if (ret == android::NO_ERROR) {
+    ret = reply.readInt32();
+  }
+  return ret;
 }
 
-status_t BpHwcShimService::GetHwcTestConfig(HwcTestConfig& config)
-{
-    android::Parcel dataToSend, reply;
-    dataToSend.writeInterfaceToken(IHwcShimService::getInterfaceDescriptor());
-    remote()->transact(IHwcShimService::eGET_HWC_TEST_CONFIG, dataToSend, &reply);
-    config.ReadFromParcel(reply);
-    uint32_t ret = reply.readInt32();
-    return ret;
+status_t BpHwcShimService::GetHwcTestConfig(HwcTestConfig& config) {
+  android::Parcel dataToSend, reply;
+  dataToSend.writeInterfaceToken(IHwcShimService::getInterfaceDescriptor());
+  remote()->transact(IHwcShimService::eGET_HWC_TEST_CONFIG, dataToSend, &reply);
+  config.ReadFromParcel(reply);
+  uint32_t ret = reply.readInt32();
+  return ret;
 }
 
-status_t BpHwcShimService::GetHwcTestResult(HwcTestResult& result, bool disableAllChecks)
-{
-    android::Parcel dataToSend, reply;
-    dataToSend.writeInterfaceToken(IHwcShimService::getInterfaceDescriptor());
-    dataToSend.writeInt32(disableAllChecks);
-    remote()->transact(
-            IHwcShimService::eGET_HWC_TEST_RESULT, dataToSend, &reply);
-    result.ReadFromParcel(reply);
-    uint32_t ret = reply.readInt32();
-    return ret;
+status_t BpHwcShimService::GetHwcTestResult(HwcTestResult& result,
+                                            bool disableAllChecks) {
+  android::Parcel dataToSend, reply;
+  dataToSend.writeInterfaceToken(IHwcShimService::getInterfaceDescriptor());
+  dataToSend.writeInt32(disableAllChecks);
+  remote()->transact(IHwcShimService::eGET_HWC_TEST_RESULT, dataToSend, &reply);
+  result.ReadFromParcel(reply);
+  uint32_t ret = reply.readInt32();
+  return ret;
 }
-
 }

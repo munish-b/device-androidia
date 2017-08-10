@@ -29,7 +29,8 @@ class RegexpGenerator {
  public:
   RegexpGenerator(int maxatoms, int maxops, const vector<string>& atoms,
                   const vector<string>& ops);
-  virtual ~RegexpGenerator() {}
+  virtual ~RegexpGenerator() {
+  }
 
   // Generates all the regular expressions, calling HandleRegexp(re) for each.
   void Generate();
@@ -48,11 +49,11 @@ class RegexpGenerator {
   void GeneratePostfix(vector<string>* post, int nstk, int ops, int lits);
   bool GenerateRandomPostfix(vector<string>* post, int nstk, int ops, int lits);
 
-  int maxatoms_;           // Maximum number of atoms allowed in expr.
-  int maxops_;             // Maximum number of ops allowed in expr.
-  vector<string> atoms_;   // Possible atoms.
-  vector<string> ops_;     // Possible ops.
-  ACMRandom* acm_;         // Random generator.
+  int maxatoms_;          // Maximum number of atoms allowed in expr.
+  int maxops_;            // Maximum number of ops allowed in expr.
+  vector<string> atoms_;  // Possible atoms.
+  vector<string> ops_;    // Possible ops.
+  ACMRandom* acm_;        // Random generator.
   DISALLOW_EVIL_CONSTRUCTORS(RegexpGenerator);
 };
 

@@ -20,24 +20,19 @@
 
 #include <stdlib.h>
 
-Hwch::DisplaySpoof::DisplaySpoof()
-{
+Hwch::DisplaySpoof::DisplaySpoof() {
 }
 
-Hwch::DisplaySpoof::~DisplaySpoof()
-{
+Hwch::DisplaySpoof::~DisplaySpoof() {
 }
 
-void Hwch::DisplaySpoof::ModifyStatus(uint32_t frameNo, int& ret)
-{
-    if (mRange.Test(frameNo))
-    {
-        HWCLOGI("Display fail spoof: return value %d replaced with -1", ret);
-        ret = -1;
-    }
+void Hwch::DisplaySpoof::ModifyStatus(uint32_t frameNo, int& ret) {
+  if (mRange.Test(frameNo)) {
+    HWCLOGI("Display fail spoof: return value %d replaced with -1", ret);
+    ret = -1;
+  }
 }
 
-void Hwch::DisplaySpoof::Configure(const char* str)
-{
-    mRange = Range(str);
+void Hwch::DisplaySpoof::Configure(const char* str) {
+  mRange = Range(str);
 }

@@ -39,12 +39,12 @@ static char* escape(const StringPiece& sp) {
   char* p = buf;
   *p++ = '\"';
   for (int i = 0; i < sp.size(); i++) {
-    if(p+5 >= buf+sizeof buf)
+    if (p + 5 >= buf + sizeof buf)
       LOG(FATAL) << "ExhaustiveTester escape: too long";
-    if(sp[i] == '\\' || sp[i] == '\"') {
+    if (sp[i] == '\\' || sp[i] == '\"') {
       *p++ = '\\';
       *p++ = sp[i];
-    } else if(sp[i] == '\n') {
+    } else if (sp[i] == '\n') {
       *p++ = '\\';
       *p++ = 'n';
     } else {
@@ -56,7 +56,8 @@ static char* escape(const StringPiece& sp) {
   return buf;
 }
 
-static void PrintResult(const RE2& re, const StringPiece& input, RE2::Anchor anchor, StringPiece *m, int n) {
+static void PrintResult(const RE2& re, const StringPiece& input,
+                        RE2::Anchor anchor, StringPiece* m, int n) {
   if (!re.Match(input, 0, input.size(), anchor, m, n)) {
     printf("-");
     return;
@@ -67,7 +68,8 @@ static void PrintResult(const RE2& re, const StringPiece& input, RE2::Anchor anc
     if (m[i].begin() == NULL)
       printf("-");
     else
-      printf("%d-%d", static_cast<int>(m[i].begin() - input.begin()), static_cast<int>(m[i].end() - input.begin()));
+      printf("%d-%d", static_cast<int>(m[i].begin() - input.begin()),
+             static_cast<int>(m[i].end() - input.begin()));
   }
 }
 
@@ -103,7 +105,7 @@ void ExhaustiveTester::HandleRegexp(const string& const_regexp) {
     RE2::Options longest;
     longest.set_longest_match(true);
     RE2 relongest(regexp, longest);
-    int ngroup = re.NumberOfCapturingGroups()+1;
+    int ngroup = re.NumberOfCapturingGroups() + 1;
     StringPiece* group = new StringPiece[ngroup];
 
     strgen_.Reset();
@@ -142,11 +144,9 @@ void ExhaustiveTester::HandleRegexp(const string& const_regexp) {
 }
 
 // Runs an exhaustive test on the given parameters.
-void ExhaustiveTest(int maxatoms, int maxops,
-                    const vector<string>& alphabet,
-                    const vector<string>& ops,
-                    int maxstrlen, const vector<string>& stralphabet,
-                    const string& wrapper,
+void ExhaustiveTest(int maxatoms, int maxops, const vector<string>& alphabet,
+                    const vector<string>& ops, int maxstrlen,
+                    const vector<string>& stralphabet, const string& wrapper,
                     const string& topwrapper) {
   if (DEBUG_MODE && FLAGS_quick_debug_mode) {
     if (maxatoms > 1)
@@ -156,32 +156,26 @@ void ExhaustiveTest(int maxatoms, int maxops,
     if (maxstrlen > 1)
       maxstrlen--;
   }
-  ExhaustiveTester t(maxatoms, maxops, alphabet, ops,
-                     maxstrlen, stralphabet, wrapper,
-                     topwrapper);
+  ExhaustiveTester t(maxatoms, maxops, alphabet, ops, maxstrlen, stralphabet,
+                     wrapper, topwrapper);
   t.Generate();
   if (!LOGGING) {
-    printf("%d regexps, %d tests, %d failures [%d/%d str]\n",
-           t.regexps(), t.tests(), t.failures(), maxstrlen, (int)stralphabet.size());
+    printf("%d regexps, %d tests, %d failures [%d/%d str]\n", t.regexps(),
+           t.tests(), t.failures(), maxstrlen, (int)stralphabet.size());
   }
   EXPECT_EQ(0, t.failures());
 }
 
 // Runs an exhaustive test using the given parameters and
 // the basic egrep operators.
-void EgrepTest(int maxatoms, int maxops, const string& alphabet,
-               int maxstrlen, const string& stralphabet,
-               const string& wrapper) {
-  const char* tops[] = { "", "^(?:%s)", "(?:%s)$", "^(?:%s)$" };
+void EgrepTest(int maxatoms, int maxops, const string& alphabet, int maxstrlen,
+               const string& stralphabet, const string& wrapper) {
+  const char* tops[] = {"", "^(?:%s)", "(?:%s)$", "^(?:%s)$"};
 
   for (int i = 0; i < arraysize(tops); i++) {
-    ExhaustiveTest(maxatoms, maxops,
-                   Split("", alphabet),
-                   RegexpGenerator::EgrepOps(),
-                   maxstrlen,
-                   Split("", stralphabet),
-                   wrapper,
-                   tops[i]);
+    ExhaustiveTest(maxatoms, maxops, Split("", alphabet),
+                   RegexpGenerator::EgrepOps(), maxstrlen,
+                   Split("", stralphabet), wrapper, tops[i]);
   }
 }
 

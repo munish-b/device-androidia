@@ -20,66 +20,62 @@
 #include <utils/Thread.h>
 #include "HwcvalDebug.h"
 
+namespace Hwch {
 
-namespace Hwch
-{
+class VSync {
+ public:
+  VSync();
+  virtual ~VSync();
 
-    class VSync
-    {
-        public:
-            VSync();
-            virtual ~VSync();
+  // Set the delay in microseconds between VSync and condition being signalled.
+  void SetVSyncDelay(uint32_t delayus);
 
-            // Set the delay in microseconds between VSync and condition being signalled.
-            void SetVSyncDelay(uint32_t delayus);
+  // Set the timeout in microseconds for when VSync does not come.
+  void SetTimeout(uint32_t timeoutus);
 
-            // Set the timeout in microseconds for when VSync does not come.
-            void SetTimeout(uint32_t timeoutus);
+  // Set the period we will use when VSyncs don't come within the timeout.
+  void SetRequestedVSyncPeriod(uint32_t periodus);
 
-            // Set the period we will use when VSyncs don't come within the timeout.
-            void SetRequestedVSyncPeriod(uint32_t periodus);
+  // Stop handling VSyncs
+  void Stop();
 
-            // Stop handling VSyncs
-            void Stop();
+  void WaitForOffsetVSync();
 
-            void WaitForOffsetVSync();
+  // VSync callback
+  virtual void Signal(uint32_t disp);
 
-            // VSync callback
-            virtual void Signal(uint32_t disp);
+  bool IsActive();
 
-            bool IsActive();
+ private:
+  // Delay in nanoseconds between VSync and condition being signalled.
+  uint32_t mDelayns;
 
-        private:
-            // Delay in nanoseconds between VSync and condition being signalled.
-            uint32_t mDelayns;
+  // Timeout in ns for when VSyncs don't occur.
+  uint32_t mTimeoutns;
 
-            // Timeout in ns for when VSyncs don't occur.
-            uint32_t mTimeoutns;
+  // Expected time between VSyncs. We will simulate this if the real ones don't
+  // occur within the timeout period.
+  uint32_t mRequestedVSyncPeriodns;
 
-            // Expected time between VSyncs. We will simulate this if the real ones don't occur within the timeout period.
-            uint32_t mRequestedVSyncPeriodns;
+  timer_t mDelayTimer;
 
-            timer_t mDelayTimer;
+  Hwcval::Condition mCondition;
+  Hwcval::Mutex mMutex;
 
-            Hwcval::Condition mCondition;
-            Hwcval::Mutex mMutex;
+  bool mActive;     // Vsyncs are happening
+  bool mHaveTimer;  // Timer has been set up
 
-            bool mActive;       // Vsyncs are happening
-            bool mHaveTimer;    // Timer has been set up
+  volatile int64_t mOffsetVSyncTime;
+  int64_t mLastConsumedOffsetVSyncTime;
 
-            volatile int64_t mOffsetVSyncTime;
-            int64_t mLastConsumedOffsetVSyncTime;
+  static void TimerHandler(sigval_t value);
+  void OffsetVSync();
+  void DestroyTimer();
+};
 
-            static void TimerHandler(sigval_t value);
-            void OffsetVSync();
-            void DestroyTimer();
-    };
-
-    inline bool VSync::IsActive()
-    {
-        return mActive;
-    }
-
+inline bool VSync::IsActive() {
+  return mActive;
+}
 }
 
-#endif // __HwchVSync_h__
+#endif  // __HwchVSync_h__

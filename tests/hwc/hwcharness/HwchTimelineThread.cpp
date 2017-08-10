@@ -25,63 +25,54 @@
 
 #include <unistd.h>
 
-
-Hwch::TimelineThread::TimelineThread()
-  : mTimelineTime(0)
-{
-    mTimeline = sw_sync_timeline_create();
-    run("HwchTimelineThread", android::PRIORITY_NORMAL);
-    mLastRealTime = systemTime(SYSTEM_TIME_MONOTONIC);
+Hwch::TimelineThread::TimelineThread() : mTimelineTime(0) {
+  mTimeline = sw_sync_timeline_create();
+  run("HwchTimelineThread", android::PRIORITY_NORMAL);
+  mLastRealTime = systemTime(SYSTEM_TIME_MONOTONIC);
 }
 
-Hwch::TimelineThread::~TimelineThread()
-{
-    HWCLOGI("TimelineThread::~TimelineThread()");
-    requestExitAndWait();
-    HWCLOGI("TimelineThread::~TimelineThread terminated");
-    CloseFence(mTimeline);
-    HWCLOGI("TimelineThread::~TimelineThread exiting");
+Hwch::TimelineThread::~TimelineThread() {
+  HWCLOGI("TimelineThread::~TimelineThread()");
+  requestExitAndWait();
+  HWCLOGI("TimelineThread::~TimelineThread terminated");
+  CloseFence(mTimeline);
+  HWCLOGI("TimelineThread::~TimelineThread exiting");
 }
 
-android::status_t Hwch::TimelineThread::readyToRun()
-{
-    return android::NO_ERROR;
+android::status_t Hwch::TimelineThread::readyToRun() {
+  return android::NO_ERROR;
 }
 
+bool Hwch::TimelineThread::threadLoop() {
+  while (!exitPending()) {
+    int64_t targetRealTime = mLastRealTime + NS_PER_TIMELINE_TICK;
+    int64_t nsToWait = targetRealTime - systemTime(SYSTEM_TIME_MONOTONIC);
 
-bool Hwch::TimelineThread::threadLoop()
-{
-    while (!exitPending())
-    {
-        int64_t targetRealTime = mLastRealTime + NS_PER_TIMELINE_TICK;
-        int64_t nsToWait = targetRealTime - systemTime(SYSTEM_TIME_MONOTONIC);
-
-        if (nsToWait > 0)
-        {
-            timespec tsrq;;
-            tsrq.tv_sec = 0;
-            tsrq.tv_nsec = nsToWait;
-            timespec tsrm;
-            nanosleep(&tsrq, &tsrm);
-        }
-
-        sw_sync_timeline_inc(mTimeline, 1);
-
-        mTimelineTime += 1;
-        mLastRealTime = targetRealTime;
-        HWCLOGD_COND(eLogTimeline, "Hwch::TimelineThread tick mTimelineTime = %d", mTimelineTime);
+    if (nsToWait > 0) {
+      timespec tsrq;
+      ;
+      tsrq.tv_sec = 0;
+      tsrq.tv_nsec = nsToWait;
+      timespec tsrm;
+      nanosleep(&tsrq, &tsrm);
     }
 
-    HWCLOGI("TimelineThread::threadLoop exiting");
-    return false;
+    sw_sync_timeline_inc(mTimeline, 1);
+
+    mTimelineTime += 1;
+    mLastRealTime = targetRealTime;
+    HWCLOGD_COND(eLogTimeline, "Hwch::TimelineThread tick mTimelineTime = %d",
+                 mTimelineTime);
+  }
+
+  HWCLOGI("TimelineThread::threadLoop exiting");
+  return false;
 }
 
-uint32_t Hwch::TimelineThread::GetTimelineTime()
-{
-    return mTimelineTime;
+uint32_t Hwch::TimelineThread::GetTimelineTime() {
+  return mTimelineTime;
 }
 
-int Hwch::TimelineThread::Get()
-{
-    return mTimeline;
+int Hwch::TimelineThread::Get() {
+  return mTimeline;
 }

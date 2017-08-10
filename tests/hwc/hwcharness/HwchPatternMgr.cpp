@@ -20,96 +20,75 @@
 #include "HwcTestState.h"
 #include "HwcTestUtil.h"
 
-Hwch::PatternMgr::PatternMgr()
-{
+Hwch::PatternMgr::PatternMgr() {
 }
 
-Hwch::PatternMgr::~PatternMgr()
-{
+Hwch::PatternMgr::~PatternMgr() {
 }
 
-void Hwch::PatternMgr::Configure(bool forceGl, bool forceNoGl)
-{
-    mForceGl = forceGl;
-    mForceNoGl = forceNoGl;
+void Hwch::PatternMgr::Configure(bool forceGl, bool forceNoGl) {
+  mForceGl = forceGl;
+  mForceNoGl = forceNoGl;
 }
 
-bool Hwch::PatternMgr::IsGlPreferred(uint32_t bufferFormat)
-{
-    if (mForceGl)
-    {
+bool Hwch::PatternMgr::IsGlPreferred(uint32_t bufferFormat) {
+  if (mForceGl) {
+    return true;
+  } else if (mForceNoGl) {
+    return false;
+  } else {
+    switch (bufferFormat) {
+      case HAL_PIXEL_FORMAT_RGBA_8888:
+      case HAL_PIXEL_FORMAT_BGRA_8888:
+      case HAL_PIXEL_FORMAT_RGBX_8888:
+      case HAL_PIXEL_FORMAT_RGB_565:
         return true;
-    }
-    else if (mForceNoGl)
-    {
+
+      default:
         return false;
     }
-    else
-    {
-        switch (bufferFormat)
-        {
-            case HAL_PIXEL_FORMAT_RGBA_8888:
-            case HAL_PIXEL_FORMAT_BGRA_8888:
-            case HAL_PIXEL_FORMAT_RGBX_8888:
-            case HAL_PIXEL_FORMAT_RGB_565:
-                return true;
-
-            default:
-                return false;
-        }
-    }
+  }
 }
 
-Hwch::Pattern* Hwch::PatternMgr::CreateSolidColourPtn(uint32_t bufferFormat, uint32_t colour, uint32_t flags)
-{
-    HWCVAL_UNUSED(flags);
+Hwch::Pattern* Hwch::PatternMgr::CreateSolidColourPtn(uint32_t bufferFormat,
+                                                      uint32_t colour,
+                                                      uint32_t flags) {
+  HWCVAL_UNUSED(flags);
 
-    if (IsGlPreferred(bufferFormat))
-    {
-        return new ClearGlPtn(0, colour, colour);
-    }
-    else
-    {
-        return new SolidColourPtn(colour);
-    }
+  if (IsGlPreferred(bufferFormat)) {
+    return new ClearGlPtn(0, colour, colour);
+  } else {
+    return new SolidColourPtn(colour);
+  }
 }
 
-Hwch::Pattern* Hwch::PatternMgr::CreateHorizontalLinePtn(uint32_t bufferFormat, float updateFreq,
-    uint32_t fgColour, uint32_t bgColour, uint32_t matrixColour, uint32_t flags)
-{
-    HWCVAL_UNUSED(flags);
+Hwch::Pattern* Hwch::PatternMgr::CreateHorizontalLinePtn(
+    uint32_t bufferFormat, float updateFreq, uint32_t fgColour,
+    uint32_t bgColour, uint32_t matrixColour, uint32_t flags) {
+  HWCVAL_UNUSED(flags);
 
-    if (IsGlPreferred(bufferFormat))
-    {
-        if (matrixColour != 0)
-        {
-            return new MatrixGlPtn(updateFreq, fgColour, matrixColour, bgColour);
-        }
-        else
-        {
-            return new HorizontalLineGlPtn(updateFreq, fgColour, bgColour);
-        }
+  if (IsGlPreferred(bufferFormat)) {
+    if (matrixColour != 0) {
+      return new MatrixGlPtn(updateFreq, fgColour, matrixColour, bgColour);
+    } else {
+      return new HorizontalLineGlPtn(updateFreq, fgColour, bgColour);
     }
-    else
-    {
-        return new HorizontalLinePtn(updateFreq, fgColour, bgColour);
-    }
+  } else {
+    return new HorizontalLinePtn(updateFreq, fgColour, bgColour);
+  }
 }
 
-Hwch::Pattern* Hwch::PatternMgr::CreatePngPtn(uint32_t bufferFormat, float updateFreq, Hwch::PngImage& image,
-    uint32_t lineColour, uint32_t bgColour, uint32_t flags)
-{
-    if (IsGlPreferred(bufferFormat))
-    {
-        PngGlPtn* ptn = new PngGlPtn(updateFreq, lineColour, bgColour, (flags & ePtnUseIgnore) != 0);
-        ptn->Set(image);
-        return ptn;
-    }
-    else
-    {
-        PngPtn* ptn = new PngPtn(updateFreq, lineColour);
-        ptn->Set(image);
-        return ptn;
-    }
+Hwch::Pattern* Hwch::PatternMgr::CreatePngPtn(
+    uint32_t bufferFormat, float updateFreq, Hwch::PngImage& image,
+    uint32_t lineColour, uint32_t bgColour, uint32_t flags) {
+  if (IsGlPreferred(bufferFormat)) {
+    PngGlPtn* ptn = new PngGlPtn(updateFreq, lineColour, bgColour,
+                                 (flags & ePtnUseIgnore) != 0);
+    ptn->Set(image);
+    return ptn;
+  } else {
+    PngPtn* ptn = new PngPtn(updateFreq, lineColour);
+    ptn->Set(image);
+    return ptn;
+  }
 }
-

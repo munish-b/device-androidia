@@ -22,39 +22,34 @@
 #include <utils/String8.h>
 #include "HwcvalDebug.h"
 
-namespace Hwcval
-{
-    enum StallType
-    {
-        eStallSetDisplay = 0,
-        eStallDPMS,
-        eStallSetMode,
-        eStallSuspend,
-        eStallResume,
-        eStallHotPlug,
-        eStallHotUnplug,
-        eStallGemWait,
-        eStallMax
-    };
+namespace Hwcval {
+enum StallType {
+  eStallSetDisplay = 0,
+  eStallDPMS,
+  eStallSetMode,
+  eStallSuspend,
+  eStallResume,
+  eStallHotPlug,
+  eStallHotUnplug,
+  eStallGemWait,
+  eStallMax
+};
 
-    class Stall
-    {
-    public:
-        Stall();
-        Stall(const char* configStr, const char* name);
-        Stall(uint32_t us, double pct);
-        Stall(const Stall& rhs);
+class Stall {
+ public:
+  Stall();
+  Stall(const char* configStr, const char* name);
+  Stall(uint32_t us, double pct);
+  Stall(const Stall& rhs);
 
-        void Do(Hwcval::Mutex* mtx = 0);
+  void Do(Hwcval::Mutex* mtx = 0);
 
-    private:
-        android::String8 mName;
-        uint32_t mUs;
-        double mPct;
-        int mRandThreshold;
-    };
-} // namespace Hwcval
+ private:
+  android::String8 mName;
+  uint32_t mUs;
+  double mPct;
+  int mRandThreshold;
+};
+}  // namespace Hwcval
 
-
-
-#endif // __HwcvalStall_h__
+#endif  // __HwcvalStall_h__

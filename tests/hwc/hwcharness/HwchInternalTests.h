@@ -19,19 +19,13 @@
 
 #include "HwchTest.h"
 
-namespace Hwch
-{
-    class SSIMCompareTest  : public Test
-    {
-        public:
+namespace Hwch {
+class SSIMCompareTest : public Test {
+ public:
+  SSIMCompareTest(Hwch::Interface& interface);
 
-            SSIMCompareTest(Hwch::Interface& interface);
-
-            virtual int RunScenario();
-
-    };
-
+  virtual int RunScenario();
+};
 }
 
-#endif // __HwchInternalTests_h__
-
+#endif  // __HwchInternalTests_h__

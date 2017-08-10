@@ -20,32 +20,29 @@
 #include <binder/IInterface.h>
 #include <binder/Parcel.h>
 
-namespace android
-{
-    class String8;
+namespace android {
+class String8;
 };
 
 namespace hwcomposer {
 
-    class IDiagnostic;
-    class IDisplayControl;
-    class IVideoControl;
+class IDiagnostic;
+class IDisplayControl;
+class IVideoControl;
 
-} // namespace services
+}  // namespace services
 
-namespace Hwcval
-{
+namespace Hwcval {
 
-    /** Maintenance interface to control HWC activity.
-     */
-    class AbstractHwcServiceSubset : public android::IInterface
-    {
-    public:
-      virtual android::sp<hwcomposer::IDisplayControl>
-      getDisplayControl(uint32_t display) = 0;
-      virtual android::sp<hwcomposer::IVideoControl> getVideoControl() = 0;
-    };
+/** Maintenance interface to control HWC activity.
+ */
+class AbstractHwcServiceSubset : public android::IInterface {
+ public:
+  virtual android::sp<hwcomposer::IDisplayControl> getDisplayControl(
+      uint32_t display) = 0;
+  virtual android::sp<hwcomposer::IVideoControl> getVideoControl() = 0;
+};
 
-} // namespace Hwcval
+}  // namespace Hwcval
 
-#endif // __HwcvalAbstractHwcServiceSubset_h__
+#endif  // __HwcvalAbstractHwcServiceSubset_h__

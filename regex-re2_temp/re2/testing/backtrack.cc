@@ -51,8 +51,8 @@ class Backtracker {
   ~Backtracker();
 
   bool Search(const StringPiece& text, const StringPiece& context,
-              bool anchored, bool longest,
-              StringPiece* submatch, int nsubmatch);
+              bool anchored, bool longest, StringPiece* submatch,
+              int nsubmatch);
 
  private:
   // Explores from instruction ip at string position p looking for a match.
@@ -60,30 +60,30 @@ class Backtracker {
   bool Visit(int id, const char* p);
 
   // Search parameters
-  Prog* prog_;              // program being run
-  StringPiece text_;        // text being searched
-  StringPiece context_;     // greater context of text being searched
-  bool anchored_;           // whether search is anchored at text.begin()
-  bool longest_;            // whether search wants leftmost-longest match
-  bool endmatch_;           // whether search must end at text.end()
-  StringPiece *submatch_;   // submatches to fill in
-  int nsubmatch_;           //   # of submatches to fill in
+  Prog* prog_;             // program being run
+  StringPiece text_;       // text being searched
+  StringPiece context_;    // greater context of text being searched
+  bool anchored_;          // whether search is anchored at text.begin()
+  bool longest_;           // whether search wants leftmost-longest match
+  bool endmatch_;          // whether search must end at text.end()
+  StringPiece* submatch_;  // submatches to fill in
+  int nsubmatch_;          //   # of submatches to fill in
 
   // Search state
-  const char* cap_[64];     // capture registers
-  uint32 *visited_;         // bitmap: (Inst*, char*) pairs already backtracked
-  int nvisited_;            //   # of words in bitmap
+  const char* cap_[64];  // capture registers
+  uint32* visited_;      // bitmap: (Inst*, char*) pairs already backtracked
+  int nvisited_;         //   # of words in bitmap
 };
 
 Backtracker::Backtracker(Prog* prog)
-  : prog_(prog),
-    anchored_(false),
-    longest_(false),
-    endmatch_(false),
-    submatch_(NULL),
-    nsubmatch_(0),
-    visited_(NULL),
-    nvisited_(0) {
+    : prog_(prog),
+      anchored_(false),
+      longest_(false),
+      endmatch_(false),
+      submatch_(NULL),
+      nsubmatch_(0),
+      visited_(NULL),
+      nvisited_(0) {
 }
 
 Backtracker::~Backtracker() {
@@ -92,8 +92,8 @@ Backtracker::~Backtracker() {
 
 // Runs a backtracking search.
 bool Backtracker::Search(const StringPiece& text, const StringPiece& context,
-                         bool anchored, bool longest,
-                         StringPiece* submatch, int nsubmatch) {
+                         bool anchored, bool longest, StringPiece* submatch,
+                         int nsubmatch) {
   text_ = text;
   context_ = context;
   if (context_.begin() == NULL)
@@ -107,7 +107,7 @@ bool Backtracker::Search(const StringPiece& text, const StringPiece& context,
   endmatch_ = prog_->anchor_end();
   submatch_ = submatch;
   nsubmatch_ = nsubmatch;
-  CHECK(2*nsubmatch_ < arraysize(cap_));
+  CHECK(2 * nsubmatch_ < arraysize(cap_));
   memset(cap_, 0, sizeof cap_);
 
   // We use submatch_[0] for our own bookkeeping,
@@ -122,9 +122,9 @@ bool Backtracker::Search(const StringPiece& text, const StringPiece& context,
   // Allocate new visited_ bitmap -- size is proportional
   // to text, so have to reallocate on each call to Search.
   delete[] visited_;
-  nvisited_ = (prog_->size()*(text.size()+1) + 31)/32;
+  nvisited_ = (prog_->size() * (text.size() + 1) + 31) / 32;
   visited_ = new uint32[nvisited_];
-  memset(visited_, 0, nvisited_*sizeof visited_[0]);
+  memset(visited_, 0, nvisited_ * sizeof visited_[0]);
 
   // Anchored search must start at text.begin().
   if (anchored_) {
@@ -150,11 +150,11 @@ bool Backtracker::Visit(int id, const char* p) {
   // either it didn't match or it did but we're hoping for a better match.
   // Either way, don't go down that road again.
   CHECK(p <= text_.end());
-  int n = id*(text_.size()+1) + (p - text_.begin());
-  CHECK_LT(n/32, nvisited_);
-  if (visited_[n/32] & (1 << (n&31)))
+  int n = id * (text_.size() + 1) + (p - text_.begin());
+  CHECK_LT(n / 32, nvisited_);
+  if (visited_[n / 32] & (1 << (n & 31)))
     return false;
-  visited_[n/32] |= 1 << (n&31);
+  visited_[n / 32] |= 1 << (n & 31);
 
   // Pick out byte at current position.  If at end of string,
   // have to explore in hope of finishing a match.  Use impossible byte -1.
@@ -180,7 +180,7 @@ bool Backtracker::Visit(int id, const char* p) {
 
     case kInstByteRange:
       if (ip->Matches(c))
-        return Visit(ip->out(), p+1);
+        return Visit(ip->out(), p + 1);
       return false;
 
     case kInstCapture:
@@ -212,7 +212,8 @@ bool Backtracker::Visit(int id, const char* p) {
       if (submatch_[0].data() == NULL ||           // First match so far ...
           (longest_ && p > submatch_[0].end())) {  // ... or better match
         for (int i = 0; i < nsubmatch_; i++)
-          submatch_[i] = StringPiece(cap_[2*i], cap_[2*i+1] - cap_[2*i]);
+          submatch_[i] =
+              StringPiece(cap_[2 * i], cap_[2 * i + 1] - cap_[2 * i]);
       }
       return true;
 
@@ -223,10 +224,8 @@ bool Backtracker::Visit(int id, const char* p) {
 
 // Runs a backtracking search.
 bool Prog::UnsafeSearchBacktrack(const StringPiece& text,
-                                 const StringPiece& context,
-                                 Anchor anchor,
-                                 MatchKind kind,
-                                 StringPiece* match,
+                                 const StringPiece& context, Anchor anchor,
+                                 MatchKind kind, StringPiece* match,
                                  int nmatch) {
   // If full match, we ask for an anchored longest match
   // and then check that match[0] == text.

@@ -17,7 +17,6 @@
 #ifndef __IHWC_SHIM_BINDER_H__
 #define __IHWC_SHIM_BINDER_H__
 
-
 #include "IHwcShimService.h"
 
 class HwcTestState;
@@ -26,36 +25,32 @@ class HwcTestResult;
 
 namespace android {
 
-    class BnHwcShimService : public BnInterface<android::IHwcShimService>
-    {
-       //TODO
-       virtual status_t onTransact(uint32_t code, const Parcel& data,
-                                    Parcel* reply, uint32_t flags);
-    };
-
+class BnHwcShimService : public BnInterface<android::IHwcShimService> {
+  // TODO
+  virtual status_t onTransact(uint32_t code, const Parcel& data, Parcel* reply,
+                              uint32_t flags);
+};
 }
 
-class HwcShimService : public android::BnHwcShimService
-{
-    public:
-    HwcShimService(HwcTestState * pShim);
-    virtual ~HwcShimService();
+class HwcShimService : public android::BnHwcShimService {
+ public:
+  HwcShimService(HwcTestState* pShim);
+  virtual ~HwcShimService();
 
-    /// pointer back to hwc shim
-    HwcTestState * mpTestState;
+  /// pointer back to hwc shim
+  HwcTestState* mpTestState;
 
-    /// Get result of all checks
-    virtual android::status_t GetHwcTestResult(HwcTestResult& result, bool disableAllChecks);
-    /// Set test configuration including all check enables
-    virtual android::status_t SetHwcTestConfig(const HwcTestConfig& config, bool resetResult);
-    /// Get test configuration
-    virtual android::status_t GetHwcTestConfig(HwcTestConfig& config);
+  /// Get result of all checks
+  virtual android::status_t GetHwcTestResult(HwcTestResult& result,
+                                             bool disableAllChecks);
+  /// Set test configuration including all check enables
+  virtual android::status_t SetHwcTestConfig(const HwcTestConfig& config,
+                                             bool resetResult);
+  /// Get test configuration
+  virtual android::status_t GetHwcTestConfig(HwcTestConfig& config);
 
-    protected:
-    void WaitForFrameControlFrameRelease();
+ protected:
+  void WaitForFrameControlFrameRelease();
 };
 
-#endif // _HWC_SHIM_SERVICE_H__
-
-
-
+#endif  // _HWC_SHIM_SERVICE_H__

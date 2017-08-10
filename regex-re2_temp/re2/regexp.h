@@ -15,7 +15,8 @@
 // of regular expressions.
 //
 // Any operation that traverses the Regexp structures should be written
-// using Regexp::Walker (see walker-inl.h), not recursively, because deeply nested
+// using Regexp::Walker (see walker-inl.h), not recursively, because deeply
+// nested
 // regular expressions such as x++++++++++++++++++++... might cause recursive
 // traversals to overflow the stack.
 //
@@ -182,15 +183,31 @@ enum RegexpStatusCode {
 // Error status for certain operations.
 class RegexpStatus {
  public:
-  RegexpStatus() : code_(kRegexpSuccess), tmp_(NULL) {}
-  ~RegexpStatus() { delete tmp_; }
+  RegexpStatus() : code_(kRegexpSuccess), tmp_(NULL) {
+  }
+  ~RegexpStatus() {
+    delete tmp_;
+  }
 
-  void set_code(enum RegexpStatusCode code) { code_ = code; }
-  void set_error_arg(const StringPiece& error_arg) { error_arg_ = error_arg; }
-  void set_tmp(string* tmp) { delete tmp_; tmp_ = tmp; }
-  enum RegexpStatusCode code() const { return code_; }
-  const StringPiece& error_arg() const { return error_arg_; }
-  bool ok() const { return code() == kRegexpSuccess; }
+  void set_code(enum RegexpStatusCode code) {
+    code_ = code;
+  }
+  void set_error_arg(const StringPiece& error_arg) {
+    error_arg_ = error_arg;
+  }
+  void set_tmp(string* tmp) {
+    delete tmp_;
+    tmp_ = tmp;
+  }
+  enum RegexpStatusCode code() const {
+    return code_;
+  }
+  const StringPiece& error_arg() const {
+    return error_arg_;
+  }
+  bool ok() const {
+    return code() == kRegexpSuccess;
+  }
 
   // Copies state from status.
   void Copy(const RegexpStatus& status);
@@ -206,7 +223,7 @@ class RegexpStatus {
  private:
   enum RegexpStatusCode code_;  // Kind of error
   StringPiece error_arg_;       // Piece of regexp containing syntax error.
-  string* tmp_;                 // Temporary storage, possibly where error_arg_ is.
+  string* tmp_;  // Temporary storage, possibly where error_arg_ is.
 
   DISALLOW_EVIL_CONSTRUCTORS(RegexpStatus);
 };
@@ -218,8 +235,10 @@ class SimplifyWalker;
 class Prog;
 
 struct RuneRange {
-  RuneRange() : lo(0), hi(0) { }
-  RuneRange(int l, int h) : lo(l), hi(h) { }
+  RuneRange() : lo(0), hi(0) {
+  }
+  RuneRange(int l, int h) : lo(l), hi(h) {
+  }
   Rune lo;
   Rune hi;
 };
@@ -239,19 +258,31 @@ class CharClass {
   void Delete();
 
   typedef RuneRange* iterator;
-  iterator begin() { return ranges_; }
-  iterator end() { return ranges_ + nranges_; }
+  iterator begin() {
+    return ranges_;
+  }
+  iterator end() {
+    return ranges_ + nranges_;
+  }
 
-  int size() { return nrunes_; }
-  bool empty() { return nrunes_ == 0; }
-  bool full() { return nrunes_ == Runemax+1; }
-  bool FoldsASCII() { return folds_ascii_; }
+  int size() {
+    return nrunes_;
+  }
+  bool empty() {
+    return nrunes_ == 0;
+  }
+  bool full() {
+    return nrunes_ == Runemax + 1;
+  }
+  bool FoldsASCII() {
+    return folds_ascii_;
+  }
 
   bool Contains(Rune r);
   CharClass* Negate();
 
  private:
-  CharClass();  // not implemented
+  CharClass();   // not implemented
   ~CharClass();  // not implemented
   static CharClass* New(int maxranges);
 
@@ -259,79 +290,112 @@ class CharClass {
 
   bool folds_ascii_;
   int nrunes_;
-  RuneRange *ranges_;
+  RuneRange* ranges_;
   int nranges_;
   DISALLOW_EVIL_CONSTRUCTORS(CharClass);
 };
 
 class Regexp {
  public:
-
   // Flags for parsing.  Can be ORed together.
   enum ParseFlags {
     NoParseFlags = 0,
-    FoldCase     = 1<<0,   // Fold case during matching (case-insensitive).
-    Literal      = 1<<1,   // Treat s as literal string instead of a regexp.
-    ClassNL      = 1<<2,   // Allow char classes like [^a-z] and \D and \s
-                           // and [[:space:]] to match newline.
-    DotNL        = 1<<3,   // Allow . to match newline.
-    MatchNL      = ClassNL | DotNL,
-    OneLine      = 1<<4,   // Treat ^ and $ as only matching at beginning and
-                           // end of text, not around embedded newlines.
-                           // (Perl's default)
-    Latin1       = 1<<5,   // Regexp and text are in Latin1, not UTF-8.
-    NonGreedy    = 1<<6,   // Repetition operators are non-greedy by default.
-    PerlClasses  = 1<<7,   // Allow Perl character classes like \d.
-    PerlB        = 1<<8,   // Allow Perl's \b and \B.
-    PerlX        = 1<<9,   // Perl extensions:
-                           //   non-capturing parens - (?: )
-                           //   non-greedy operators - *? +? ?? {}?
-                           //   flag edits - (?i) (?-i) (?i: )
-                           //     i - FoldCase
-                           //     m - !OneLine
-                           //     s - DotNL
-                           //     U - NonGreedy
-                           //   line ends: \A \z
-                           //   \Q and \E to disable/enable metacharacters
-                           //   (?P<name>expr) for named captures
-                           //   \C to match any single byte
-    UnicodeGroups = 1<<10, // Allow \p{Han} for Unicode Han group
-                           //   and \P{Han} for its negation.
-    NeverNL      = 1<<11,  // Never match NL, even if the regexp mentions
-                           //   it explicitly.
-    NeverCapture = 1<<12,  // Parse all parens as non-capturing.
+    FoldCase = 1 << 0,  // Fold case during matching (case-insensitive).
+    Literal = 1 << 1,   // Treat s as literal string instead of a regexp.
+    ClassNL = 1 << 2,   // Allow char classes like [^a-z] and \D and \s
+                        // and [[:space:]] to match newline.
+    DotNL = 1 << 3,     // Allow . to match newline.
+    MatchNL = ClassNL | DotNL,
+    OneLine = 1 << 4,         // Treat ^ and $ as only matching at beginning and
+                              // end of text, not around embedded newlines.
+                              // (Perl's default)
+    Latin1 = 1 << 5,          // Regexp and text are in Latin1, not UTF-8.
+    NonGreedy = 1 << 6,       // Repetition operators are non-greedy by default.
+    PerlClasses = 1 << 7,     // Allow Perl character classes like \d.
+    PerlB = 1 << 8,           // Allow Perl's \b and \B.
+    PerlX = 1 << 9,           // Perl extensions:
+                              //   non-capturing parens - (?: )
+                              //   non-greedy operators - *? +? ?? {}?
+                              //   flag edits - (?i) (?-i) (?i: )
+                              //     i - FoldCase
+                              //     m - !OneLine
+                              //     s - DotNL
+                              //     U - NonGreedy
+                              //   line ends: \A \z
+                              //   \Q and \E to disable/enable metacharacters
+                              //   (?P<name>expr) for named captures
+                              //   \C to match any single byte
+    UnicodeGroups = 1 << 10,  // Allow \p{Han} for Unicode Han group
+                              //   and \P{Han} for its negation.
+    NeverNL = 1 << 11,        // Never match NL, even if the regexp mentions
+                              //   it explicitly.
+    NeverCapture = 1 << 12,   // Parse all parens as non-capturing.
 
     // As close to Perl as we can get.
-    LikePerl     = ClassNL | OneLine | PerlClasses | PerlB | PerlX |
-                   UnicodeGroups,
+    LikePerl = ClassNL | OneLine | PerlClasses | PerlB | PerlX | UnicodeGroups,
 
     // Internal use only.
-    WasDollar    = 1<<15,  // on kRegexpEndText: was $ in regexp text
+    WasDollar = 1 << 15,  // on kRegexpEndText: was $ in regexp text
   };
 
   // Get.  No set, Regexps are logically immutable once created.
-  RegexpOp op() { return static_cast<RegexpOp>(op_); }
-  int nsub() { return nsub_; }
-  bool simple() { return simple_; }
-  enum ParseFlags parse_flags() { return static_cast<ParseFlags>(parse_flags_); }
+  RegexpOp op() {
+    return static_cast<RegexpOp>(op_);
+  }
+  int nsub() {
+    return nsub_;
+  }
+  bool simple() {
+    return simple_;
+  }
+  enum ParseFlags parse_flags() {
+    return static_cast<ParseFlags>(parse_flags_);
+  }
   int Ref();  // For testing.
 
   Regexp** sub() {
-    if(nsub_ <= 1)
+    if (nsub_ <= 1)
       return &subone_;
     else
       return submany_;
   }
 
-  int min() { DCHECK_EQ(op_, kRegexpRepeat); return min_; }
-  int max() { DCHECK_EQ(op_, kRegexpRepeat); return max_; }
-  Rune rune() { DCHECK_EQ(op_, kRegexpLiteral); return rune_; }
-  CharClass* cc() { DCHECK_EQ(op_, kRegexpCharClass); return cc_; }
-  int cap() { DCHECK_EQ(op_, kRegexpCapture); return cap_; }
-  const string* name() { DCHECK_EQ(op_, kRegexpCapture); return name_; }
-  Rune* runes() { DCHECK_EQ(op_, kRegexpLiteralString); return runes_; }
-  int nrunes() { DCHECK_EQ(op_, kRegexpLiteralString); return nrunes_; }
-  int match_id() { DCHECK_EQ(op_, kRegexpHaveMatch); return match_id_; }
+  int min() {
+    DCHECK_EQ(op_, kRegexpRepeat);
+    return min_;
+  }
+  int max() {
+    DCHECK_EQ(op_, kRegexpRepeat);
+    return max_;
+  }
+  Rune rune() {
+    DCHECK_EQ(op_, kRegexpLiteral);
+    return rune_;
+  }
+  CharClass* cc() {
+    DCHECK_EQ(op_, kRegexpCharClass);
+    return cc_;
+  }
+  int cap() {
+    DCHECK_EQ(op_, kRegexpCapture);
+    return cap_;
+  }
+  const string* name() {
+    DCHECK_EQ(op_, kRegexpCapture);
+    return name_;
+  }
+  Rune* runes() {
+    DCHECK_EQ(op_, kRegexpLiteralString);
+    return runes_;
+  }
+  int nrunes() {
+    DCHECK_EQ(op_, kRegexpLiteralString);
+    return nrunes_;
+  }
+  int match_id() {
+    DCHECK_EQ(op_, kRegexpHaveMatch);
+    return match_id_;
+  }
 
   // Increments reference count, returns object as convenience.
   Regexp* Incref();
@@ -359,8 +423,7 @@ class Regexp {
   // string representation of the simplified form.  Returns true on success.
   // Returns false and sets *status (if status != NULL) on parse error.
   static bool SimplifyRegexp(const StringPiece& src, ParseFlags flags,
-                             string* dst,
-                             RegexpStatus* status);
+                             string* dst, RegexpStatus* status);
 
   // Returns the number of capturing groups in the regexp.
   int NumCaptures();
@@ -403,7 +466,8 @@ class Regexp {
   string Dump();
 
   // Helper traversal class, defined fully in walker-inl.h.
-  template<typename T> class Walker;
+  template <typename T>
+  class Walker;
 
   // Compile to Prog.  See prog.h
   // Reverse prog expects to be run over text backward.
@@ -427,7 +491,7 @@ class Regexp {
   // begin with a non-empty fixed string (perhaps after ASCII
   // case-folding).  If so, returns the prefix and the sub-regexp that
   // follows it.
-  bool RequiredPrefix(string* prefix, bool *foldcase, Regexp** suffix);
+  bool RequiredPrefix(string* prefix, bool* foldcase, Regexp** suffix);
 
  private:
   // Constructor allocates vectors as appropriate for operator.
@@ -491,7 +555,7 @@ class Regexp {
     if (n < 0 || static_cast<uint16>(n) != n)
       LOG(FATAL) << "Cannot AllocSub " << n;
     if (n > 1)
-      submany_ = new Regexp*[n];
+      submany_ = new Regexp* [n];
     nsub_ = n;
   }
 
@@ -499,7 +563,7 @@ class Regexp {
   void AddRuneToString(Rune r);
 
   // Swaps this with that, in place.
-  void Swap(Regexp *that);
+  void Swap(Regexp* that);
 
   // Operator.  See description of operators above.
   // uint8 instead of RegexpOp to control space usage.
@@ -536,7 +600,7 @@ class Regexp {
   static const uint16 kMaxNsub = 0xffff;
   union {
     Regexp** submany_;  // if nsub_ > 1
-    Regexp* subone_;  // if nsub_ == 1
+    Regexp* subone_;    // if nsub_ == 1
   };
 
   // Extra space for parse and teardown stacks.
@@ -563,9 +627,9 @@ class Regexp {
       CharClass* cc_;
       CharClassBuilder* ccb_;
     };
-    Rune rune_;  // Literal
-    int match_id_;  // HaveMatch
-    void *the_union_[2];  // as big as any other element, for memset
+    Rune rune_;           // Literal
+    int match_id_;        // HaveMatch
+    void* the_union_[2];  // as big as any other element, for memset
   };
 
   DISALLOW_EVIL_CONSTRUCTORS(Regexp);
@@ -579,12 +643,22 @@ class CharClassBuilder {
   CharClassBuilder();
 
   typedef RuneRangeSet::iterator iterator;
-  iterator begin() { return ranges_.begin(); }
-  iterator end() { return ranges_.end(); }
+  iterator begin() {
+    return ranges_.begin();
+  }
+  iterator end() {
+    return ranges_.end();
+  }
 
-  int size() { return nrunes_; }
-  bool empty() { return nrunes_ == 0; }
-  bool full() { return nrunes_ == Runemax+1; }
+  int size() {
+    return nrunes_;
+  }
+  bool empty() {
+    return nrunes_ == 0;
+  }
+  bool full() {
+    return nrunes_ == Runemax + 1;
+  }
 
   bool Contains(Rune r);
   bool FoldsASCII();
@@ -597,7 +671,7 @@ class CharClassBuilder {
   void AddRangeFlags(Rune lo, Rune hi, Regexp::ParseFlags parse_flags);
 
  private:
-  static const uint32 AlphaMask = (1<<26) - 1;
+  static const uint32 AlphaMask = (1 << 26) - 1;
   uint32 upper_;  // bitmap of A-Z
   uint32 lower_;  // bitmap of a-z
   int nrunes_;
@@ -606,27 +680,27 @@ class CharClassBuilder {
 };
 
 // Tell g++ that bitwise ops on ParseFlags produce ParseFlags.
-inline Regexp::ParseFlags operator|(Regexp::ParseFlags a, Regexp::ParseFlags b)
-{
-  return static_cast<Regexp::ParseFlags>(static_cast<int>(a) | static_cast<int>(b));
+inline Regexp::ParseFlags operator|(Regexp::ParseFlags a,
+                                    Regexp::ParseFlags b) {
+  return static_cast<Regexp::ParseFlags>(static_cast<int>(a) |
+                                         static_cast<int>(b));
 }
 
-inline Regexp::ParseFlags operator^(Regexp::ParseFlags a, Regexp::ParseFlags b)
-{
-  return static_cast<Regexp::ParseFlags>(static_cast<int>(a) ^ static_cast<int>(b));
+inline Regexp::ParseFlags operator^(Regexp::ParseFlags a,
+                                    Regexp::ParseFlags b) {
+  return static_cast<Regexp::ParseFlags>(static_cast<int>(a) ^
+                                         static_cast<int>(b));
 }
 
-inline Regexp::ParseFlags operator&(Regexp::ParseFlags a, Regexp::ParseFlags b)
-{
-  return static_cast<Regexp::ParseFlags>(static_cast<int>(a) & static_cast<int>(b));
+inline Regexp::ParseFlags
+operator&(Regexp::ParseFlags a, Regexp::ParseFlags b) {
+  return static_cast<Regexp::ParseFlags>(static_cast<int>(a) &
+                                         static_cast<int>(b));
 }
 
-inline Regexp::ParseFlags operator~(Regexp::ParseFlags a)
-{
+inline Regexp::ParseFlags operator~(Regexp::ParseFlags a) {
   return static_cast<Regexp::ParseFlags>(~static_cast<int>(a));
 }
-
-
 
 }  // namespace re2
 

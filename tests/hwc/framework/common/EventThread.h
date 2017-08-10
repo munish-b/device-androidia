@@ -21,7 +21,6 @@
 #include <utils/Thread.h>
 #include "HwcTestUtil.h"
 
-
 //*****************************************************************************
 //
 // EventQueue class - responsible for capturing and forwarding
@@ -29,123 +28,114 @@
 //
 //*****************************************************************************
 
-template<class C, int SIZE>
-class EventThread : public EventQueue<C, SIZE>, public android::Thread
-{
-public:
-    EventThread(const char* name="Unknown");
-    virtual ~EventThread();
+template <class C, int SIZE>
+class EventThread : public EventQueue<C, SIZE>, public android::Thread {
+ public:
+  EventThread(const char* name = "Unknown");
+  virtual ~EventThread();
 
-    // Push an entry on to the queue, overwriting one if it is full
-    void Push(const C& entry);
+  // Push an entry on to the queue, overwriting one if it is full
+  void Push(const C& entry);
 
-    // Pop next entry from the queue, waiting for one if there is none
-    bool ReadWait(C& entry);
+  // Pop next entry from the queue, waiting for one if there is none
+  bool ReadWait(C& entry);
 
-    // Ensure the thread is running
-    void EnsureRunning();
+  // Ensure the thread is running
+  void EnsureRunning();
 
-    // Abort
-    void Stop();
+  // Abort
+  void Stop();
 
-    // Overrideable join
-    void JoinThread();
+  // Overrideable join
+  void JoinThread();
 
-    virtual void onFirstRef();
+  virtual void onFirstRef();
 
+ protected:
+  Hwcval::Condition mCondition;
+  Hwcval::Mutex mMutex;
 
-protected:
-    Hwcval::Condition mCondition;
-    Hwcval::Mutex mMutex;
+  bool mThreadRunning;
 
-    bool mThreadRunning;
-
-    volatile int32_t mContinueHandleEvent;
-
+  volatile int32_t mContinueHandleEvent;
 };
 
-template<class C, int SIZE>
+template <class C, int SIZE>
 EventThread<C, SIZE>::EventThread(const char* name)
-  : EventQueue<C, SIZE>(name),
-    mThreadRunning(false)
-{
+    : EventQueue<C, SIZE>(name), mThreadRunning(false) {
 }
 
-template<class C, int SIZE>
-EventThread<C, SIZE>::~EventThread()
-{
+template <class C, int SIZE>
+EventThread<C, SIZE>::~EventThread() {
 }
 
-template<class C, int SIZE>
-bool EventThread<C, SIZE>::ReadWait(C& entry)
-{
-    HWCLOGV_COND(eLogEventHandler, "EventThread %s::ReadWait entry", this->Name());
-    mContinueHandleEvent = true;
-    uint32_t count=0;
+template <class C, int SIZE>
+bool EventThread<C, SIZE>::ReadWait(C& entry) {
+  HWCLOGV_COND(eLogEventHandler, "EventThread %s::ReadWait entry",
+               this->Name());
+  mContinueHandleEvent = true;
+  uint32_t count = 0;
 
-    while (mContinueHandleEvent && !this->Pop(entry) )
-    {
-        //HWCLOGV_COND(eLogEventHandler,"EventThread %s: Nothing to pop", this->Name());
+  while (mContinueHandleEvent && !this->Pop(entry)) {
+    // HWCLOGV_COND(eLogEventHandler,"EventThread %s: Nothing to pop",
+    // this->Name());
 
-        // For this wait, we could use mEvMutex, but then we need to place a lock on that for the whole of
-        // this function and provide a PopNoLock function for us to call.
-        Hwcval::Mutex::Autolock lock(mMutex);
-        if (mCondition.waitRelative(mMutex, 1000000) && (((++count) % 100) == 0))
-        {
-            HWCLOGV_COND(eLogEventHandler, "EventThread %s: No event within %dms", this->Name(), count);
-        }
-        if (exitPending())
-        {
-            HWCLOGD_COND(eLogEventHandler, "EventThread %s::ReadWait exiting because exitPending()", this->Name());
-            return false;
-        }
+    // For this wait, we could use mEvMutex, but then we need to place a lock on
+    // that for the whole of
+    // this function and provide a PopNoLock function for us to call.
+    Hwcval::Mutex::Autolock lock(mMutex);
+    if (mCondition.waitRelative(mMutex, 1000000) && (((++count) % 100) == 0)) {
+      HWCLOGV_COND(eLogEventHandler, "EventThread %s: No event within %dms",
+                   this->Name(), count);
     }
-
-    HWCLOGV_COND(eLogEventHandler, "EventThread %s::ReadWait exit %s", this->Name(), mContinueHandleEvent ? "true" : "false");
-    return mContinueHandleEvent;
-}
-
-
-template<class C, int SIZE>
-void EventThread<C, SIZE>::Push(const C& entry)
-{
-    EventQueue<C,SIZE>::Push(entry);
-
-    mCondition.signal();
-}
-
-template<class C, int SIZE>
-void EventThread<C, SIZE>::onFirstRef()
-{
-}
-
-template<class C, int SIZE>
-void EventThread<C, SIZE>::EnsureRunning()
-{
-    if (!isRunning())
-    {
-        HWCLOGD_COND(eLogEventHandler, "EventThread %s::EnsureRunning",this->Name());
-
-        // Set up event context
-        run(this->Name(), android::PRIORITY_URGENT_DISPLAY + android::PRIORITY_MORE_FAVORABLE);
-        mThreadRunning = true;
+    if (exitPending()) {
+      HWCLOGD_COND(eLogEventHandler,
+                   "EventThread %s::ReadWait exiting because exitPending()",
+                   this->Name());
+      return false;
     }
+  }
+
+  HWCLOGV_COND(eLogEventHandler, "EventThread %s::ReadWait exit %s",
+               this->Name(), mContinueHandleEvent ? "true" : "false");
+  return mContinueHandleEvent;
 }
 
-template<class C, int SIZE>
-void EventThread<C, SIZE>::Stop()
-{
-    HWCLOGD("EventThread %s::Stop()", this->Name());
-    mContinueHandleEvent = false;
-    mCondition.signal();
-    requestExit();
+template <class C, int SIZE>
+void EventThread<C, SIZE>::Push(const C& entry) {
+  EventQueue<C, SIZE>::Push(entry);
+
+  mCondition.signal();
 }
 
-template<class C, int SIZE>
-void EventThread<C, SIZE>::JoinThread()
-{
-    join();
+template <class C, int SIZE>
+void EventThread<C, SIZE>::onFirstRef() {
 }
 
+template <class C, int SIZE>
+void EventThread<C, SIZE>::EnsureRunning() {
+  if (!isRunning()) {
+    HWCLOGD_COND(eLogEventHandler, "EventThread %s::EnsureRunning",
+                 this->Name());
 
-#endif // __EventThread_h__
+    // Set up event context
+    run(this->Name(),
+        android::PRIORITY_URGENT_DISPLAY + android::PRIORITY_MORE_FAVORABLE);
+    mThreadRunning = true;
+  }
+}
+
+template <class C, int SIZE>
+void EventThread<C, SIZE>::Stop() {
+  HWCLOGD("EventThread %s::Stop()", this->Name());
+  mContinueHandleEvent = false;
+  mCondition.signal();
+  requestExit();
+}
+
+template <class C, int SIZE>
+void EventThread<C, SIZE>::JoinThread() {
+  join();
+}
+
+#endif  // __EventThread_h__

@@ -38,52 +38,44 @@
 
 using namespace android;
 
-class HwcTestTest : public HwcTestBase
-{
+class HwcTestTest : public HwcTestBase {
+ public:
+  // Constructor
+  HwcTestTest(int argc, char** argv);
 
-public:
-    // Constructor
-    HwcTestTest(int argc, char ** argv);
-
-    /// Create surfaces and start test
-    int Run(void);
-    /// Set checks required by the shims
-    int SetChecks(void);
+  /// Create surfaces and start test
+  int Run(void);
+  /// Set checks required by the shims
+  int SetChecks(void);
 };
 
-HwcTestTest::HwcTestTest(int argc, char ** argv)
-: HwcTestBase(argc, argv)
-{
-    mTestName = "hwc_monitor_test";
+HwcTestTest::HwcTestTest(int argc, char** argv) : HwcTestBase(argc, argv) {
+  mTestName = "hwc_monitor_test";
 }
 
-int HwcTestTest::SetChecks(void)
-{
-    SetDefaultChecks();
-    return 0;
+int HwcTestTest::SetChecks(void) {
+  SetDefaultChecks();
+  return 0;
 }
 
-int HwcTestTest::Run(void)
-{
-    ProcessState::self()->startThreadPool();
+int HwcTestTest::Run(void) {
+  ProcessState::self()->startThreadPool();
 
-    HWCLOGI("Setting run type");
-    SetTestRunTime(10000);
-    SetTestEndType(etetRunTime);
+  HWCLOGI("Setting run type");
+  SetTestRunTime(10000);
+  SetTestEndType(etetRunTime);
 
-    StartTest();
+  StartTest();
 
-    return 0;
+  return 0;
 }
 
-int main (int argc, char ** argv)
-{
-    HwcTestTest test(argc, argv);
+int main(int argc, char** argv) {
+  HwcTestTest test(argc, argv);
 
-    if(argc == 2 && strcmp(argv[1], "-h") == 0)
-    {
-        test.PrintArgs();
-        return 1;
-    }
-    return test.Run();
+  if (argc == 2 && strcmp(argv[1], "-h") == 0) {
+    test.PrintArgs();
+    return 1;
+  }
+  return test.Run();
 }

@@ -54,7 +54,12 @@ namespace re2 {
 class SparseSet {
  public:
   SparseSet()
-    : size_(0), max_size_(0), sparse_to_dense_(NULL), dense_(NULL), valgrind_(RunningOnValgrind()) {}
+      : size_(0),
+        max_size_(0),
+        sparse_to_dense_(NULL),
+        dense_(NULL),
+        valgrind_(RunningOnValgrind()) {
+  }
 
   SparseSet(int max_size) {
     max_size_ = max_size;
@@ -80,11 +85,21 @@ class SparseSet {
   typedef int* iterator;
   typedef const int* const_iterator;
 
-  int size() const { return size_; }
-  iterator begin() { return dense_; }
-  iterator end() { return dense_ + size_; }
-  const_iterator begin() const { return dense_; }
-  const_iterator end() const { return dense_ + size_; }
+  int size() const {
+    return size_;
+  }
+  iterator begin() {
+    return dense_;
+  }
+  iterator end() {
+    return dense_ + size_;
+  }
+  const_iterator begin() const {
+    return dense_;
+  }
+  const_iterator end() const {
+    return dense_ + size_;
+  }
 
   // Change the maximum size of the array.
   // Invalidates all iterators.
@@ -94,7 +109,7 @@ class SparseSet {
     if (new_max_size > max_size_) {
       int* a = new int[new_max_size];
       if (sparse_to_dense_) {
-        memmove(a, sparse_to_dense_, max_size_*sizeof a[0]);
+        memmove(a, sparse_to_dense_, max_size_ * sizeof a[0]);
         if (valgrind_) {
           for (int i = max_size_; i < new_max_size; i++)
             a[i] = 0xababababU;
@@ -105,7 +120,7 @@ class SparseSet {
 
       a = new int[new_max_size];
       if (dense_) {
-        memmove(a, dense_, size_*sizeof a[0]);
+        memmove(a, dense_, size_ * sizeof a[0]);
         if (valgrind_) {
           for (int i = size_; i < new_max_size; i++)
             a[i] = 0xababababU;
@@ -119,10 +134,14 @@ class SparseSet {
 
   // Return the maximum size of the array.
   // Indices can be in the range [0, max_size).
-  int max_size() const { return max_size_; }
+  int max_size() const {
+    return max_size_;
+  }
 
   // Clear the array.
-  void clear() { size_ = 0; }
+  void clear() {
+    size_ = 0;
+  }
 
   // Check whether i is in the array.
   bool contains(int i) const {
@@ -133,7 +152,7 @@ class SparseSet {
     }
     // Unsigned comparison avoids checking sparse_to_dense_[i] < 0.
     return (uint)sparse_to_dense_[i] < (uint)size_ &&
-      dense_[sparse_to_dense_[i]] == i;
+           dense_[sparse_to_dense_[i]] == i;
   }
 
   // Adds i to the set.
@@ -162,7 +181,9 @@ class SparseSet {
   // Can sort the sparse array so that future iterations
   // will visit indices in increasing order using
   // sort(arr.begin(), arr.end(), arr.less);
-  static bool less(int a, int b) { return a < b; }
+  static bool less(int a, int b) {
+    return a < b;
+  }
 
  private:
   int size_;

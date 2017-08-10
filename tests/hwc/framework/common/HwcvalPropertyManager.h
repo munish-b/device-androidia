@@ -24,56 +24,50 @@ class DrmShimChecks;
 // (spoofProprtyOffset) to (spoofPropertyOffset + numberOfProperties)
 #define HWCVAL_SPOOF_PROPERTY_OFFSET 0x12340000
 
-namespace Hwcval
-{
+namespace Hwcval {
 
-    class PropertyManager
-    {
-    public:
-        PropertyManager()
-          : mChecks(0)
-        {
-        }
+class PropertyManager {
+ public:
+  PropertyManager() : mChecks(0) {
+  }
 
-        virtual ~PropertyManager()
-        {
-        }
+  virtual ~PropertyManager() {
+  }
 
-        // Generate enum
-        #define DECLARE_PLANE_PROPERTY_2(ID, NAME) \
-            eDrmPlaneProp_##ID,
-        #define DECLARE_PLANE_PROPERTY(X) \
-            eDrmPlaneProp_##X,
-        #define DECLARE_CRTC_PROPERTY(X) \
-            eDrmCrtcProp_##X,
-        enum PropType
-        {
-            eDrmPropNone = HWCVAL_SPOOF_PROPERTY_OFFSET - 1,
-            #include "DrmShimPropertyList.h"
-            eDrmPropLast
-        };
-        #undef DECLARE_CRTC_PROPERTY
-        #undef DECLARE_PLANE_PROPERTY
-        #undef DECLARE_PLANE_PROPERTY_2
+// Generate enum
+#define DECLARE_PLANE_PROPERTY_2(ID, NAME) eDrmPlaneProp_##ID,
+#define DECLARE_PLANE_PROPERTY(X) eDrmPlaneProp_##X,
+#define DECLARE_CRTC_PROPERTY(X) eDrmCrtcProp_##X,
+  enum PropType {
+    eDrmPropNone = HWCVAL_SPOOF_PROPERTY_OFFSET - 1,
+#include "DrmShimPropertyList.h"
+    eDrmPropLast
+  };
+#undef DECLARE_CRTC_PROPERTY
+#undef DECLARE_PLANE_PROPERTY
+#undef DECLARE_PLANE_PROPERTY_2
 
+  virtual void CheckConnectorProperties(uint32_t connId,
+                                        uint32_t& attributes) = 0;
+  virtual PropType PropIdToType(uint32_t propId,
+                                HwcTestKernel::ObjectClass& propClass) = 0;
+  virtual const char* GetName(PropType pt) = 0;
+  virtual int32_t GetPlaneType(uint32_t plane_id) {
+    HWCVAL_UNUSED(plane_id);
+    return -1;
+  }
+  void SetTestKernel(DrmShimChecks* testKernel);
 
-        virtual void CheckConnectorProperties(uint32_t connId, uint32_t& attributes) = 0;
-        virtual PropType PropIdToType(uint32_t propId, HwcTestKernel::ObjectClass& propClass) = 0;
-        virtual const char* GetName(PropType pt) = 0;
-        virtual int32_t GetPlaneType(uint32_t plane_id) { HWCVAL_UNUSED(plane_id); return -1; }
-        void SetTestKernel(DrmShimChecks *testKernel);
+ protected:
+  DrmShimChecks* mChecks;
+  bool mDRRS;
+};
 
-    protected:
-        DrmShimChecks* mChecks;
-        bool mDRRS;
-    };
-
-    inline void PropertyManager::SetTestKernel(DrmShimChecks* checks)
-    {
-        HWCLOGV_COND(eLogNuclear, "Hwcval::PropertyManager has DrmShimChecks @%p", checks);
-        mChecks = checks;
-    }
+inline void PropertyManager::SetTestKernel(DrmShimChecks* checks) {
+  HWCLOGV_COND(eLogNuclear, "Hwcval::PropertyManager has DrmShimChecks @%p",
+               checks);
+  mChecks = checks;
+}
 }
 
-
-#endif // __HwcvalPropertyManager_h__
+#endif  // __HwcvalPropertyManager_h__

@@ -17,82 +17,77 @@
 #ifndef __Hwcval_LogDisplay_h__
 #define __Hwcval_LogDisplay_h__
 
-namespace Hwcval
-{
-    class LogDisplayMapping
-    {
-    public:
-        LogDisplayMapping();
-        LogDisplayMapping(uint32_t logDisp, uint32_t disp, uint32_t flags,
-            uint32_t sx, uint32_t sy, uint32_t sw, uint32_t sh, uint32_t dx, uint32_t dy, uint32_t dw, uint32_t dh);
+namespace Hwcval {
+class LogDisplayMapping {
+ public:
+  LogDisplayMapping();
+  LogDisplayMapping(uint32_t logDisp, uint32_t disp, uint32_t flags,
+                    uint32_t sx, uint32_t sy, uint32_t sw, uint32_t sh,
+                    uint32_t dx, uint32_t dy, uint32_t dw, uint32_t dh);
 
-        void Log(const char* str);
+  void Log(const char* str);
 
-        // Logical source display index
-        uint32_t mLogDisplayIx;
+  // Logical source display index
+  uint32_t mLogDisplayIx;
 
-        // Physical destination display index
-        uint32_t mDisplayIx;
+  // Physical destination display index
+  uint32_t mDisplayIx;
 
-        // Flags
-        uint32_t mFlags;
+  // Flags
+  uint32_t mFlags;
 
-        // Source (logical display) co-ordinates
-        uint32_t mSrcX;
-        uint32_t mSrcY;
-        uint32_t mSrcW;
-        uint32_t mSrcH;
+  // Source (logical display) co-ordinates
+  uint32_t mSrcX;
+  uint32_t mSrcY;
+  uint32_t mSrcW;
+  uint32_t mSrcH;
 
-        // Destination (physical display) co-ordinates
-        uint32_t mDstX;
-        uint32_t mDstY;
-        uint32_t mDstW;
-        uint32_t mDstH;
-    };
+  // Destination (physical display) co-ordinates
+  uint32_t mDstX;
+  uint32_t mDstY;
+  uint32_t mDstW;
+  uint32_t mDstH;
+};
 
-    class LogDisplay
-    {
-    public:
-        LogDisplay(uint32_t displayIx = eNoDisplayIx);
-        void SetDisplayIx(uint32_t displayIx);
+class LogDisplay {
+ public:
+  LogDisplay(uint32_t displayIx = eNoDisplayIx);
+  void SetDisplayIx(uint32_t displayIx);
 
-        void SetConfigs(uint32_t* configs, size_t numConfigs);
-        void SetActiveConfig(uint32_t configId);
-        void SetDisplayAttributes(uint32_t configId, const uint32_t* attributes, int32_t* values);
+  void SetConfigs(uint32_t* configs, size_t numConfigs);
+  void SetActiveConfig(uint32_t configId);
+  void SetDisplayAttributes(uint32_t configId, const uint32_t* attributes,
+                            int32_t* values);
 
-        int32_t GetWidth();
-        int32_t GetHeight();
+  int32_t GetWidth();
+  int32_t GetHeight();
 
-    private:
+ private:
+  // Display config ids by display config index
+  android::Vector<uint32_t> mConfigs;
 
-        // Display config ids by display config index
-        android::Vector<uint32_t> mConfigs;
+  // Current configuration
+  uint32_t mVSyncPeriod;
+  uint32_t mWidth;
+  uint32_t mHeight;
+  uint32_t mXDPI;
+  uint32_t mYDPI;
 
-        // Current configuration
-        uint32_t mVSyncPeriod;
-        uint32_t mWidth;
-        uint32_t mHeight;
-        uint32_t mXDPI;
-        uint32_t mYDPI;
+  uint32_t mConfigId;
+  uint32_t mDisplayIx;
+};
 
-        uint32_t mConfigId;
-        uint32_t mDisplayIx;
-    };
-
-    inline void LogDisplay::SetDisplayIx(uint32_t displayIx)
-    {
-        mDisplayIx = displayIx;
-    }
-
-    inline int32_t LogDisplay::GetWidth()
-    {
-        return mWidth;
-    }
-
-    inline int32_t LogDisplay::GetHeight()
-    {
-        return mHeight;
-    }
+inline void LogDisplay::SetDisplayIx(uint32_t displayIx) {
+  mDisplayIx = displayIx;
 }
 
-#endif // __Hwcval_LogDisplay_h__
+inline int32_t LogDisplay::GetWidth() {
+  return mWidth;
+}
+
+inline int32_t LogDisplay::GetHeight() {
+  return mHeight;
+}
+}
+
+#endif  // __Hwcval_LogDisplay_h__

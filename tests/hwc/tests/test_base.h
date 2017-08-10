@@ -32,194 +32,181 @@
 
 // to avoid included test_binder.h which will create a linking issue due to two
 // IHwcServiceShims existing at link time in test_base.o and hwc_test_test.o
-//class BpHwcShimService;
-//class android::IHwcShimService;
+// class BpHwcShimService;
+// class android::IHwcShimService;
 
 #define NANO_TO_MICRO 1000
 
 HwcTestResult* HwcGetTestResult();
 HwcTestConfig* HwcGetTestConfig();
 
+class HwcTestBase {
+  // TODO Test place holder
+  /// \futurework The idea 1
 
-class HwcTestBase
-{
-    // TODO Test place holder
-    /// \futurework The idea 1
+ public:
+  // Constructor
+  HwcTestBase(int argc, char** argv);
 
-public:
-    // Constructor
-    HwcTestBase(int argc, char ** argv);
+  // Destructor
+  virtual ~HwcTestBase();
 
-    // Destructor
-    virtual ~HwcTestBase();
+  /// Main entry point for test implmented in each test.
+  /// The implementation should set the test end type and check and create some
+  /// surfaces
+  virtual int Run(void) = 0;
 
-    /// Main entry point for test implmented in each test.
-    /// The implementation should set the test end type and check and create some
-    /// surfaces
-    virtual int Run(void) = 0;
+  /// The test must implement a function set the required shim checks
+  /// These are then send by ShimSetUpSendSetChecks implemented in this class.
+  virtual int SetChecks(void) = 0;
 
-    /// The test must implement a function set the required shim checks
-    /// These are then send by ShimSetUpSendSetChecks implemented in this class.
-    virtual int SetChecks(void) = 0;
+  /// Set all checks as enabled.
+  // This function is provided for convince for use in SetChecks().
+  void SetDefaultChecks(void);
 
-    /// Set all checks as enabled.
-    // This function is provided for convince for use in SetChecks().
-    void SetDefaultChecks(void);
+  // Test setup functions
+  /// Ways the test may end
+  enum eTestEndType {
+    etetNone,        // default so this can be test for not being set
+    etetFrameCount,  // Not currently support frame count needs incrementing
+    etetRunTime,
+    etetUserDriven,
+    etetNumberOfTestTypes
+  };
 
+  /// Error  from the test
+  enum eTestErrorStatusType {
+    etestNoError = 0,
+    etestBinderError,
+    etestUnknownRunType,
+    etestIncorrectRunTypeSettingType
+  };
 
-    // Test setup functions
-    /// Ways the test may end
-    enum eTestEndType
-    {
-        etetNone, // default so this can be test for not being set
-        etetFrameCount, // Not currently support frame count needs incrementing
-        etetRunTime,
-        etetUserDriven,
-        etetNumberOfTestTypes
-    };
+  /// predefined test types
+  enum eTestLength {
+    etlTenSeconds = 10000,
+  };
 
-    /// Error  from the test
-    enum eTestErrorStatusType
-    {
-        etestNoError = 0,
-        etestBinderError,
-        etestUnknownRunType,
-        etestIncorrectRunTypeSettingType
-    };
+  // Test functions
+  /// Set the check required
+  int SetCheckEnable(bool enable);
+  // Get function
+  // eTestEndType GetTestEndType(void);
 
-    /// predefined test types
-    enum eTestLength
-    {
-        etlTenSeconds   = 10000,
-    };
+  /// TODO
+  void CheckTestEndType();
 
-    // Test functions
-    /// Set the check required
-    int SetCheckEnable(bool enable);
-    // Get function
-    // eTestEndType GetTestEndType(void);
+  /// Set the  run length of the test
+  void SetTestRunTime(int64_t runTimeMs);
+  /// Get the current time
+  int64_t GetTime(void);
 
-    /// TODO
-    void CheckTestEndType();
+  /// Get the end  type of the test
+  eTestEndType GetTestEndType(void);
+  /// Set the way to end the test
+  void SetTestEndType(eTestEndType type);
 
-    /// Set the  run length of the test
-    void SetTestRunTime(int64_t runTimeMs);
-    /// Get the current time
-    int64_t GetTime(void);
+  /// Start test inlcudes checks that the test has a sesnibale set up.
+  int StartTest(void);
+  /// Continue test
+  bool ContinueTest(void);
+  /// Setup checks in shims
+  status_t InitialiseChecks();
+  /// Get completion status of checks and turn them off
+  void DebriefChecks(bool disableAllChecks = true);
+  /// Read configuration from shims
+  void GetOldConfig(HwcTestConfig& config);
+  /// Turn down logging level to reduce change of unattended system lockup
+  void SetLoggingLevelToDefault();
 
-    /// Get the end  type of the test
-    eTestEndType GetTestEndType(void);
-    /// Set the way to end the test
-    void SetTestEndType(eTestEndType type);
+  /// Preserve command-line arguments
+  void SetArgs(int argc, char** argv);
 
-    /// Start test inlcudes checks that the test has a sesnibale set up.
-    int StartTest(void);
-    /// Continue test
-    bool ContinueTest(void);
-    /// Setup checks in shims
-    status_t InitialiseChecks();
-    /// Get completion status of checks and turn them off
-    void DebriefChecks(bool disableAllChecks = true);
-    /// Read configuration from shims
-    void GetOldConfig(HwcTestConfig& config);
-    /// Turn down logging level to reduce change of unattended system lockup
-    void SetLoggingLevelToDefault();
+  /// Print test test
+  void LogTestResult(HwcTestConfig& config);
+  void LogTestResult();
 
-    /// Preserve command-line arguments
-    void SetArgs(int argc, char ** argv);
+  /// Functions for managing surfaces  in the test
+  /// Add a new surface to the SurfaceSenders vector
+  int CreateSurface(SurfaceSender::SurfaceSenderProperties sSSP);
 
-    /// Print test test
-    void LogTestResult(HwcTestConfig& config);
-    void LogTestResult();
+  /// Binder functions
+  void ConnectToShimBinder(void);
 
-    /// Functions for managing surfaces  in the test
-    /// Add a new surface to the SurfaceSenders vector
-    int CreateSurface(SurfaceSender::SurfaceSenderProperties sSSP);
+  /// Debug - print surfaces
+  void DumpSurfaces(SurfaceSender::SurfaceSenderProperties surfaceProperties);
 
-    /// Binder functions
-    void ConnectToShimBinder(void);
+  void PrintArgs() const;
 
-    /// Debug - print surfaces
-    void DumpSurfaces(
-            SurfaceSender::SurfaceSenderProperties surfaceProperties);
+  static HwcTestBase* GetTestBase();  // For logging
 
-    void PrintArgs() const;
+  HwcTestConfig& GetConfig();
+  HwcTestResult& GetResult();
 
-    static HwcTestBase* GetTestBase();     // For logging
+ private:
+  /// A list of surface providing objects
+  Vector<android::sp<SurfaceSender>*> SurfaceSenders;
+  /// A display class to return display properties
+  Display* mpDisplay;
 
-    HwcTestConfig& GetConfig();
-    HwcTestResult& GetResult();
+ protected:
+  /// Test name
+  android::String8 mTestName;
+  /// Binder interface
+  android::sp<android::IHwcShimService> mHwcService;
 
-private:
-        /// A list of surface providing objects
-        Vector<android::sp<SurfaceSender>* > SurfaceSenders;
-        /// A display class to return display properties
-        Display* mpDisplay;
+  /// The condition for ending the test
+  eTestEndType mTestEndCondition;
+  /// Run length of test, need a better name
+  uint32_t mTestFrameCount;
+  /// Length the of time the test should run
+  int64_t mTestRunTime;
+  /// true if the test run time has been passed as a command line parameter
+  bool mTestRunTimeOverridden;
+  /// Updated when sending a frame, rename to Current... ? or something
+  uint32_t mFrameCount;
+  /// Time a call was made
+  int64_t mStartTime;
+  /// Current time
+  int64_t mCurrentTime;
 
-protected:
+  /// Command-line argument count
+  int mArgc;
+  /// Command-line arguments
+  char** mArgv;
 
-    /// Test name
-    android::String8 mTestName;
-    /// Binder interface
-    android::sp<android::IHwcShimService> mHwcService;
+  /// Disable interface with shims
+  bool mNoShims;
 
-    /// The condition for ending the test
-    eTestEndType mTestEndCondition;
-    /// Run length of test, need a better name
-    uint32_t mTestFrameCount;
-    /// Length the of time the test should run
-    int64_t mTestRunTime;
-    /// true if the test run time has been passed as a command line parameter
-    bool mTestRunTimeOverridden;
-    /// Updated when sending a frame, rename to Current... ? or something
-    uint32_t mFrameCount;
-    /// Time a call was made
-    int64_t mStartTime;
-    /// Current time
-    int64_t mCurrentTime;
+  // Check enable components
+  bool mValHwc;
+  bool mValSf;
+  bool mValDisplays;
+  bool mValBuffers;
 
-    /// Command-line argument count
-    int mArgc;
-    /// Command-line arguments
-    char** mArgv;
+  // Additional check enables
+  bool mValHwcComposition;
+  bool mValIvpComposition;
 
-    /// Disable interface with shims
-    bool mNoShims;
-
-    // Check enable components
-    bool mValHwc;
-    bool mValSf;
-    bool mValDisplays;
-    bool mValBuffers;
-
-    // Additional check enables
-    bool mValHwcComposition;
-    bool mValIvpComposition;
-
-    /// Stored pointer to this, for logging
-    static HwcTestBase* mTheTestBase;
-    /// Test Configuration
-    HwcTestConfig mConfig;
-    /// Test Result
-    HwcTestResult mResult;
-
+  /// Stored pointer to this, for logging
+  static HwcTestBase* mTheTestBase;
+  /// Test Configuration
+  HwcTestConfig mConfig;
+  /// Test Result
+  HwcTestResult mResult;
 };
 
 // For logging
-inline HwcTestBase* HwcTestBase::GetTestBase()
-{
-    return mTheTestBase;
+inline HwcTestBase* HwcTestBase::GetTestBase() {
+  return mTheTestBase;
 }
 
-inline HwcTestConfig& HwcTestBase::GetConfig()
-{
-    return mConfig;
+inline HwcTestConfig& HwcTestBase::GetConfig() {
+  return mConfig;
 }
 
-inline HwcTestResult& HwcTestBase::GetResult()
-{
-    return mResult;
+inline HwcTestResult& HwcTestBase::GetResult() {
+  return mResult;
 }
 
-
-#endif // __HWC_TEST_BASE_H__
+#endif  // __HWC_TEST_BASE_H__

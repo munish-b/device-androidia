@@ -41,7 +41,7 @@ static void RunTest(int len, string alphabet, bool donull) {
     g.GenerateNULL();
     EXPECT_TRUE(g.HasNext());
     StringPiece sp = g.Next();
-    EXPECT_EQ(sp.data(), static_cast<const char*>(NULL));
+    EXPECT_EQ(sp.data(), static_cast<const char *>(NULL));
     EXPECT_EQ(sp.size(), 0);
   }
 
@@ -50,7 +50,7 @@ static void RunTest(int len, string alphabet, bool donull) {
     n++;
 
     // Check that all characters in s appear in alphabet.
-    for (const char *p = s.c_str(); *p != '\0'; ) {
+    for (const char *p = s.c_str(); *p != '\0';) {
       Rune r;
       p += chartorune(&r, p);
       EXPECT_TRUE(utfrune(alphabet.c_str(), r) != NULL);

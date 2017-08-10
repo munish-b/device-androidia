@@ -14,10 +14,12 @@
 namespace re2 {
 
 StringGenerator::StringGenerator(int maxlen, const vector<string>& alphabet)
-    : maxlen_(maxlen), alphabet_(alphabet),
+    : maxlen_(maxlen),
+      alphabet_(alphabet),
       generate_null_(false),
-      random_(false), nrandom_(0), acm_(NULL) {
-
+      random_(false),
+      nrandom_(0),
+      acm_(NULL) {
   // Degenerate case: no letters, no non-empty strings.
   if (alphabet_.size() == 0)
     maxlen_ = 0;
@@ -65,7 +67,7 @@ bool StringGenerator::RandomDigits() {
     return false;
 
   // Pick length.
-  int len = acm_->Uniform(maxlen_+1);
+  int len = acm_->Uniform(maxlen_ + 1);
   digits_.resize(len);
   for (int i = 0; i < len; i++)
     digits_[i] = acm_->Uniform(alphabet_.size());
@@ -110,4 +112,3 @@ void StringGenerator::GenerateNULL() {
 }
 
 }  // namespace re2
-

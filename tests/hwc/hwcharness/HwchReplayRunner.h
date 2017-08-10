@@ -24,63 +24,56 @@
 #include "HwchReplayLayer.h"
 #include "HwchReplayParser.h"
 
-namespace Hwch
-{
+namespace Hwch {
 
-    class ReplayRunner : public android::RefBase, public Test
-    {
-        protected:
+class ReplayRunner : public android::RefBase, public Test {
+ protected:
+  /** The base class owns the parser instance. */
+  android::sp<ReplayParser> mParser;
 
-            /** The base class owns the parser instance. */
-            android::sp<ReplayParser> mParser;
+  /** Reference to the HWC interface. */
+  Hwch::Interface& mInterface;
 
-            /** Reference to the HWC interface. */
-            Hwch::Interface& mInterface;
+  /** RAII file handle. */
+  std::ifstream mFile;
 
-            /** RAII file handle. */
-            std::ifstream mFile;
+  /**
+   * Set to true if the replay file has been opened and the regex
+   * compilation has been successful.
+   */
+  bool mReplayReady = false;
 
-            /**
-             * Set to true if the replay file has been opened and the regex
-             * compilation has been successful.
-             */
-            bool mReplayReady = false;
+ public:
+  /**
+   * @name  ReplayRunner
+   * @brief Base class constructor.
+   *
+   * @param interface  Reference to the Hardware Composer interface.
+   * @param filename   File to replay (typically from command line).
+   *
+   * @details Handles file opening and dynamically allocates an instance
+   * of the parser.
+   */
+  ReplayRunner(Hwch::Interface& interface, const char* filename);
 
-        public:
+  /** Returns whether the replay file was opened successfully. */
+  bool IsReady() {
+    return mReplayReady;
+  }
 
-            /**
-             * @name  ReplayRunner
-             * @brief Base class constructor.
-             *
-             * @param interface  Reference to the Hardware Composer interface.
-             * @param filename   File to replay (typically from command line).
-             *
-             * @details Handles file opening and dynamically allocates an instance
-             * of the parser.
-             */
-            ReplayRunner(Hwch::Interface& interface, const char *filename);
+  /** Virtual function to print individual 'runner' statistics. */
+  virtual void PrintStatistics(void) {
+    std::printf("No replay statistics implemented for this runner\n");
+  }
 
-            /** Returns whether the replay file was opened successfully. */
-            bool IsReady()
-            {
-                return mReplayReady;
-            }
+  /** Empty virtual destructor. */
+  virtual ~ReplayRunner() = default;
 
-            /** Virtual function to print individual 'runner' statistics. */
-            virtual void PrintStatistics(void)
-            {
-                std::printf("No replay statistics implemented for this runner\n");
-            }
-
-            /** Empty virtual destructor. */
-            virtual ~ReplayRunner() = default;
-
-            /** Runs the regular expression unit tests for the parser. */
-            bool RunParserUnitTests(void)
-            {
-                return mParser->RunParserUnitTests();
-            }
-    };
+  /** Runs the regular expression unit tests for the parser. */
+  bool RunParserUnitTests(void) {
+    return mParser->RunParserUnitTests();
+  }
+};
 }
 
-#endif // __HwchReplayRunner_h__
+#endif  // __HwchReplayRunner_h__

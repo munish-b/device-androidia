@@ -36,8 +36,8 @@ class BitState {
   // The usual Search prototype.
   // Can only call Search once per BitState.
   bool Search(const StringPiece& text, const StringPiece& context,
-              bool anchored, bool longest,
-              StringPiece* submatch, int nsubmatch);
+              bool anchored, bool longest, StringPiece* submatch,
+              int nsubmatch);
 
  private:
   inline bool ShouldVisit(int id, const char* p);
@@ -46,42 +46,42 @@ class BitState {
   bool TrySearch(int id, const char* p);
 
   // Search parameters
-  Prog* prog_;              // program being run
-  StringPiece text_;        // text being searched
-  StringPiece context_;     // greater context of text being searched
-  bool anchored_;           // whether search is anchored at text.begin()
-  bool longest_;            // whether search wants leftmost-longest match
-  bool endmatch_;           // whether match must end at text.end()
-  StringPiece *submatch_;   // submatches to fill in
-  int nsubmatch_;           //   # of submatches to fill in
+  Prog* prog_;             // program being run
+  StringPiece text_;       // text being searched
+  StringPiece context_;    // greater context of text being searched
+  bool anchored_;          // whether search is anchored at text.begin()
+  bool longest_;           // whether search wants leftmost-longest match
+  bool endmatch_;          // whether match must end at text.end()
+  StringPiece* submatch_;  // submatches to fill in
+  int nsubmatch_;          //   # of submatches to fill in
 
   // Search state
-  const char** cap_;        // capture registers
+  const char** cap_;  // capture registers
   int ncap_;
 
   static const int VisitedBits = 32;
-  uint32 *visited_;         // bitmap: (Inst*, char*) pairs already backtracked
-  int nvisited_;            //   # of words in bitmap
+  uint32* visited_;  // bitmap: (Inst*, char*) pairs already backtracked
+  int nvisited_;     //   # of words in bitmap
 
-  Job *job_;                // stack of text positions to explore
+  Job* job_;  // stack of text positions to explore
   int njob_;
   int maxjob_;
 };
 
 BitState::BitState(Prog* prog)
-  : prog_(prog),
-    anchored_(false),
-    longest_(false),
-    endmatch_(false),
-    submatch_(NULL),
-    nsubmatch_(0),
-    cap_(NULL),
-    ncap_(0),
-    visited_(NULL),
-    nvisited_(0),
-    job_(NULL),
-    njob_(0),
-    maxjob_(0) {
+    : prog_(prog),
+      anchored_(false),
+      longest_(false),
+      endmatch_(false),
+      submatch_(NULL),
+      nsubmatch_(0),
+      cap_(NULL),
+      ncap_(0),
+      visited_(NULL),
+      nvisited_(0),
+      job_(NULL),
+      njob_(0),
+      maxjob_(0) {
 }
 
 BitState::~BitState() {
@@ -95,9 +95,9 @@ BitState::~BitState() {
 // we don't repeat the visit.
 bool BitState::ShouldVisit(int id, const char* p) {
   uint n = id * (text_.size() + 1) + (p - text_.begin());
-  if (visited_[n/VisitedBits] & (1 << (n & (VisitedBits-1))))
+  if (visited_[n / VisitedBits] & (1 << (n & (VisitedBits - 1))))
     return false;
-  visited_[n/VisitedBits] |= 1 << (n & (VisitedBits-1));
+  visited_[n / VisitedBits] |= 1 << (n & (VisitedBits - 1));
   return true;
 }
 
@@ -106,7 +106,7 @@ bool BitState::GrowStack() {
   // VLOG(0) << "Reallocate.";
   maxjob_ *= 2;
   Job* newjob = new Job[maxjob_];
-  memmove(newjob, job_, njob_*sizeof job_[0]);
+  memmove(newjob, job_, njob_ * sizeof job_[0]);
   delete[] job_;
   job_ = newjob;
   if (njob_ >= maxjob_) {
@@ -270,7 +270,8 @@ bool BitState::TrySearch(int id0, const char* p0) {
         if (submatch_[0].data() == NULL ||
             (longest_ && p > submatch_[0].end())) {
           for (int i = 0; i < nsubmatch_; i++)
-            submatch_[i] = StringPiece(cap_[2*i], cap_[2*i+1] - cap_[2*i]);
+            submatch_[i] =
+                StringPiece(cap_[2 * i], cap_[2 * i + 1] - cap_[2 * i]);
         }
 
         // If going for first match, we're done.
@@ -291,8 +292,8 @@ bool BitState::TrySearch(int id0, const char* p0) {
 
 // Search text (within context) for prog_.
 bool BitState::Search(const StringPiece& text, const StringPiece& context,
-                      bool anchored, bool longest,
-                      StringPiece* submatch, int nsubmatch) {
+                      bool anchored, bool longest, StringPiece* submatch,
+                      int nsubmatch) {
   // Search parameters.
   text_ = text;
   context_ = context;
@@ -311,16 +312,17 @@ bool BitState::Search(const StringPiece& text, const StringPiece& context,
     submatch_[i] = NULL;
 
   // Allocate scratch space.
-  nvisited_ = (prog_->size() * (text.size()+1) + VisitedBits-1) / VisitedBits;
+  nvisited_ =
+      (prog_->size() * (text.size() + 1) + VisitedBits - 1) / VisitedBits;
   visited_ = new uint32[nvisited_];
-  memset(visited_, 0, nvisited_*sizeof visited_[0]);
+  memset(visited_, 0, nvisited_ * sizeof visited_[0]);
   // VLOG(0) << "nvisited_ = " << nvisited_;
 
-  ncap_ = 2*nsubmatch;
+  ncap_ = 2 * nsubmatch;
   if (ncap_ < 2)
     ncap_ = 2;
-  cap_ = new const char*[ncap_];
-  memset(cap_, 0, ncap_*sizeof cap_[0]);
+  cap_ = new const char* [ncap_];
+  memset(cap_, 0, ncap_ * sizeof cap_[0]);
 
   maxjob_ = 256;
   job_ = new Job[maxjob_];
@@ -346,11 +348,8 @@ bool BitState::Search(const StringPiece& text, const StringPiece& context,
 }
 
 // Bit-state search.
-bool Prog::SearchBitState(const StringPiece& text,
-                          const StringPiece& context,
-                          Anchor anchor,
-                          MatchKind kind,
-                          StringPiece* match,
+bool Prog::SearchBitState(const StringPiece& text, const StringPiece& context,
+                          Anchor anchor, MatchKind kind, StringPiece* match,
                           int nmatch) {
   // If full match, we ask for an anchored longest match
   // and then check that match[0] == text.

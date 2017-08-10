@@ -20,76 +20,83 @@
 #include "HwcTestState.h"
 #include <utils/KeyedVector.h>
 
-namespace Hwch
-{
-    class Rect;
+namespace Hwch {
+class Rect;
 
-    class BufferFormatConfig
-    {
-    private:
-        // Display frame minimum size
-        uint32_t mMinDisplayFrameWidth;
-        uint32_t mMinDisplayFrameHeight;
+class BufferFormatConfig {
+ private:
+  // Display frame minimum size
+  uint32_t mMinDisplayFrameWidth;
+  uint32_t mMinDisplayFrameHeight;
 
-        // Display frame alignment mask
-        uint32_t mDfXMask;
-        uint32_t mDfYMask;
+  // Display frame alignment mask
+  uint32_t mDfXMask;
+  uint32_t mDfYMask;
 
-        uint32_t mMinBufferWidth;
-        uint32_t mMinBufferHeight;
+  uint32_t mMinBufferWidth;
+  uint32_t mMinBufferHeight;
 
-        // DONT allow buffers to have a size where
-        // (size & mask) != 0
-        // Round up to avoid this.
-        uint32_t mBufferWidthAlignment;
-        uint32_t mBufferHeightAlignment;
+  // DONT allow buffers to have a size where
+  // (size & mask) != 0
+  // Round up to avoid this.
+  uint32_t mBufferWidthAlignment;
+  uint32_t mBufferHeightAlignment;
 
-        // Crop alignment
-        float mCropAlignment;
-        float mMinCropWidth;
-        float mMinCropHeight;
+  // Crop alignment
+  float mCropAlignment;
+  float mMinCropWidth;
+  float mMinCropHeight;
 
-    public:
-        BufferFormatConfig (uint32_t minDfWidth=0, uint32_t minDfHeight=0,
-                            uint32_t minBufferWidth=0, uint32_t minBufferHeight=0,
-                            uint32_t bufferWidthAlignment=1, uint32_t bufferHeightAlignment=1,
-                            float cropAlignment=0.0, float minCropWidth=0.0, float minCropHeight=0.0,
-                            uint32_t dfXMask = 0xffffffff, uint32_t dfYMask = 0xffffffff);
+ public:
+  BufferFormatConfig(uint32_t minDfWidth = 0, uint32_t minDfHeight = 0,
+                     uint32_t minBufferWidth = 0, uint32_t minBufferHeight = 0,
+                     uint32_t bufferWidthAlignment = 1,
+                     uint32_t bufferHeightAlignment = 1,
+                     float cropAlignment = 0.0, float minCropWidth = 0.0,
+                     float minCropHeight = 0.0, uint32_t dfXMask = 0xffffffff,
+                     uint32_t dfYMask = 0xffffffff);
 
-        // Adjust display frame to comply with the min width & height
-        void AdjustDisplayFrame(Rect& r, uint32_t displayWidth, uint32_t displayHeight) const;
+  // Adjust display frame to comply with the min width & height
+  void AdjustDisplayFrame(Rect& r, uint32_t displayWidth,
+                          uint32_t displayHeight) const;
 
-        // Adjust buffer size to comply with the buffer size and alignment restrictions
-        void AdjustBufferSize(uint32_t& w, uint32_t& h) const;
+  // Adjust buffer size to comply with the buffer size and alignment
+  // restrictions
+  void AdjustBufferSize(uint32_t& w, uint32_t& h) const;
 
-        // Adjust crop rectangle to comply with crop size and alignment restrictions
-        void AdjustCropSize(uint32_t bw, uint32_t bh, float& w, float& h) const;
-        void AdjustCrop(uint32_t bw, uint32_t bh, float& l, float& t, float& w, float& h) const;
-    };
+  // Adjust crop rectangle to comply with crop size and alignment restrictions
+  void AdjustCropSize(uint32_t bw, uint32_t bh, float& w, float& h) const;
+  void AdjustCrop(uint32_t bw, uint32_t bh, float& l, float& t, float& w,
+                  float& h) const;
+};
 
-    // Key: Buffer format
-    class BufferFormatConfigManager : public android::KeyedVector<uint32_t, BufferFormatConfig>
-    {
-    public:
-        // Constructor
-        BufferFormatConfigManager();
+// Key: Buffer format
+class BufferFormatConfigManager
+    : public android::KeyedVector<uint32_t, BufferFormatConfig> {
+ public:
+  // Constructor
+  BufferFormatConfigManager();
 
-        // Adjust display frame to comply with the min width & height
-        void AdjustDisplayFrame(uint32_t format, Rect& r, uint32_t displayWidth, uint32_t displayHeight);
+  // Adjust display frame to comply with the min width & height
+  void AdjustDisplayFrame(uint32_t format, Rect& r, uint32_t displayWidth,
+                          uint32_t displayHeight);
 
-        // Adjust buffer size to comply with the
-        void AdjustBufferSize(uint32_t format, uint32_t& w, uint32_t& h);
+  // Adjust buffer size to comply with the
+  void AdjustBufferSize(uint32_t format, uint32_t& w, uint32_t& h);
 
-        // Adjust crop rectangle to comply with crop size and alignment restrictions
-        void AdjustCropSize(uint32_t format, uint32_t bw, uint32_t bh, float& w, float& h);
-        void AdjustCrop(uint32_t format, uint32_t bw, uint32_t bh, float& l, float& t, float& w, float& h);
+  // Adjust crop rectangle to comply with crop size and alignment restrictions
+  void AdjustCropSize(uint32_t format, uint32_t bw, uint32_t bh, float& w,
+                      float& h);
+  void AdjustCrop(uint32_t format, uint32_t bw, uint32_t bh, float& l, float& t,
+                  float& w, float& h);
 
-        // Define parameters to be used when no configuration is present for the selected format.
-        void SetDefault(const BufferFormatConfig& cfg);
+  // Define parameters to be used when no configuration is present for the
+  // selected format.
+  void SetDefault(const BufferFormatConfig& cfg);
 
-    private:
-        BufferFormatConfig mDeflt;
-    };
+ private:
+  BufferFormatConfig mDeflt;
+};
 }
 
-#endif // __HwchBufferFormatConfig_h__
+#endif  // __HwchBufferFormatConfig_h__

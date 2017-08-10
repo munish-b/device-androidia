@@ -7,7 +7,7 @@
 #ifndef RE2_UTIL_LOGGING_H__
 #define RE2_UTIL_LOGGING_H__
 
-#include <unistd.h>  /* for write */
+#include <unistd.h> /* for write */
 #include <sstream>
 
 // Debug-only checking.
@@ -20,13 +20,16 @@
 #define DCHECK_GT(val1, val2) assert((val1) > (val2))
 
 // Always-on checking
-#define CHECK(x)	if(x){}else LogMessageFatal(__FILE__, __LINE__).stream() << "Check failed: " #x
-#define CHECK_LT(x, y)	CHECK((x) < (y))
-#define CHECK_GT(x, y)	CHECK((x) > (y))
-#define CHECK_LE(x, y)	CHECK((x) <= (y))
-#define CHECK_GE(x, y)	CHECK((x) >= (y))
-#define CHECK_EQ(x, y)	CHECK((x) == (y))
-#define CHECK_NE(x, y)	CHECK((x) != (y))
+#define CHECK(x) \
+  if (x) {       \
+  } else         \
+  LogMessageFatal(__FILE__, __LINE__).stream() << "Check failed: " #x
+#define CHECK_LT(x, y) CHECK((x) < (y))
+#define CHECK_GT(x, y) CHECK((x) > (y))
+#define CHECK_LE(x, y) CHECK((x) <= (y))
+#define CHECK_GE(x, y) CHECK((x) >= (y))
+#define CHECK_EQ(x, y) CHECK((x) == (y))
+#define CHECK_NE(x, y) CHECK((x) != (y))
 
 #define LOG_INFO LogMessage(__FILE__, __LINE__)
 #define LOG_ERROR LOG_INFO
@@ -34,7 +37,10 @@
 #define LOG_FATAL LogMessageFatal(__FILE__, __LINE__)
 #define LOG_QFATAL LOG_FATAL
 
-#define VLOG(x) if((x)>0){}else LOG_INFO.stream()
+#define VLOG(x)  \
+  if ((x) > 0) { \
+  } else         \
+  LOG_INFO.stream()
 
 #ifdef NDEBUG
 #define DEBUG_MODE 0
@@ -44,7 +50,7 @@
 #define LOG_DFATAL LOG_FATAL
 #endif
 
-#define LOG(severity) LOG_ ## severity.stream()
+#define LOG(severity) LOG_##severity.stream()
 
 class LogMessage {
  public:
@@ -54,8 +60,9 @@ class LogMessage {
   void Flush() {
     stream() << "\n";
     string s = str_.str();
-    int n = (int)s.size(); // shut up msvc
-    if(write(2, s.data(), n) < 0) {}  // shut up gcc
+    int n = (int)s.size();  // shut up msvc
+    if (write(2, s.data(), n) < 0) {
+    }  // shut up gcc
     flushed_ = true;
   }
   ~LogMessage() {
@@ -63,7 +70,9 @@ class LogMessage {
       Flush();
     }
   }
-  ostream& stream() { return str_; }
+  ostream& stream() {
+    return str_;
+  }
 
  private:
   bool flushed_;
@@ -73,12 +82,13 @@ class LogMessage {
 
 class LogMessageFatal : public LogMessage {
  public:
-  LogMessageFatal(const char* file, int line)
-    : LogMessage(file, line) { }
+  LogMessageFatal(const char* file, int line) : LogMessage(file, line) {
+  }
   ~LogMessageFatal() {
     Flush();
     abort();
   }
+
  private:
   DISALLOW_EVIL_CONSTRUCTORS(LogMessageFatal);
 };

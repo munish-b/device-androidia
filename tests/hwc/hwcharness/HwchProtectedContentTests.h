@@ -19,66 +19,48 @@
 
 #include "HwchTest.h"
 
-namespace Hwch
-{
-    class ProtectedContentCrashTest : public OptionalTest
-    {
-        public:
-            ProtectedContentCrashTest(Hwch::Interface& interface);
+namespace Hwch {
+class ProtectedContentCrashTest : public OptionalTest {
+ public:
+  ProtectedContentCrashTest(Hwch::Interface& interface);
 
-            virtual int RunScenario();
-    };
+  virtual int RunScenario();
+};
 
-    class ProtectedVideoTest  : public Test
-    {
-        public:
+class ProtectedVideoTest : public Test {
+ public:
+  ProtectedVideoTest(Hwch::Interface& interface);
 
-            ProtectedVideoTest(Hwch::Interface& interface);
+  virtual int RunScenario();
+};
 
-            virtual int RunScenario();
+class ProtectedVideoHotPlugTest : public Test {
+ public:
+  ProtectedVideoHotPlugTest(Hwch::Interface& interface);
 
-    };
+  virtual int RunScenario();
+};
 
-    class ProtectedVideoHotPlugTest  : public Test
-    {
-        public:
+class ProtectedVideoScreenDisableTest : public Test {
+ public:
+  ProtectedVideoScreenDisableTest(Hwch::Interface& interface);
 
-            ProtectedVideoHotPlugTest(Hwch::Interface& interface);
+  virtual int RunScenario();
+};
 
-            virtual int RunScenario();
+class InvalidProtectedVideoTest : public Test {
+ public:
+  InvalidProtectedVideoTest(Hwch::Interface& interface);
 
-    };
+  virtual int RunScenario();
+};
 
-    class ProtectedVideoScreenDisableTest  : public Test
-    {
-        public:
+class ComplexProtectedVideoTest : public Test {
+ public:
+  ComplexProtectedVideoTest(Hwch::Interface& interface);
 
-            ProtectedVideoScreenDisableTest(Hwch::Interface& interface);
-
-            virtual int RunScenario();
-
-    };
-
-    class InvalidProtectedVideoTest  : public Test
-    {
-        public:
-
-            InvalidProtectedVideoTest(Hwch::Interface& interface);
-
-            virtual int RunScenario();
-
-    };
-
-    class ComplexProtectedVideoTest  : public Test
-    {
-        public:
-
-            ComplexProtectedVideoTest(Hwch::Interface& interface);
-
-            virtual int RunScenario();
-
-    };
+  virtual int RunScenario();
+};
 }
 
-#endif // __HwchProtectedContentTests_h__
-
+#endif  // __HwchProtectedContentTests_h__

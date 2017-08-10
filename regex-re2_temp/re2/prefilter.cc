@@ -88,8 +88,7 @@ Prefilter* Prefilter::AndOr(Op op, Prefilter* a, Prefilter* b) {
   // Don't need to look at b, because of canonicalization above.
   // ALL and NONE are smallest opcodes.
   if (a->op() == ALL || a->op() == NONE) {
-    if ((a->op() == ALL && op == AND) ||
-        (a->op() == NONE && op == OR)) {
+    if ((a->op() == ALL && op == AND) || (a->op() == NONE && op == OR)) {
       delete a;
       return b;
     } else {
@@ -136,7 +135,7 @@ Prefilter* Prefilter::Or(Prefilter* a, Prefilter* b) {
   return AndOr(OR, a, b);
 }
 
-static void SimplifyStringSet(set<string> *ss) {
+static void SimplifyStringSet(set<string>* ss) {
   // Now make sure that the strings aren't redundant.  For example, if
   // we know "ab" is a required string, then it doesn't help at all to
   // know that "abc" is also a required string, so delete "abc". This
@@ -175,7 +174,7 @@ static Rune ToLowerRune(Rune r) {
     return r;
   }
 
-  CaseFold *f = LookupCaseFold(unicode_tolower, num_unicode_tolower, r);
+  CaseFold* f = LookupCaseFold(unicode_tolower, num_unicode_tolower, r);
   if (f == NULL || r < f->lo)
     return r;
   return ApplyFold(f, r);
@@ -222,9 +221,13 @@ class Prefilter::Info {
   // Caller takes ownership of the Prefilter.
   Prefilter* TakeMatch();
 
-  set<string>& exact() { return exact_; }
+  set<string>& exact() {
+    return exact_;
+  }
 
-  bool is_exact() const { return is_exact_; }
+  bool is_exact() const {
+    return is_exact_;
+  }
 
   class Walker;
 
@@ -243,10 +246,7 @@ class Prefilter::Info {
   Prefilter* match_;
 };
 
-
-Prefilter::Info::Info()
-  : is_exact_(false),
-    match_(NULL) {
+Prefilter::Info::Info() : is_exact_(false), match_(NULL) {
 }
 
 Prefilter::Info::~Info() {
@@ -298,8 +298,7 @@ static void CopyIn(const set<string>& src, set<string>* dst) {
 
 // Add the cross-product of a and b to dst.
 // (For each string i in a and j in b, add i+j.)
-static void CrossProduct(const set<string>& a,
-                         const set<string>& b,
+static void CrossProduct(const set<string>& a, const set<string>& b,
                          set<string>* dst) {
   for (ConstSSIter i = a.begin(); i != a.end(); ++i)
     for (ConstSSIter j = b.begin(); j != b.end(); ++j)
@@ -313,7 +312,7 @@ Prefilter::Info* Prefilter::Info::Concat(Info* a, Info* b) {
     return b;
   DCHECK(a->is_exact_);
   DCHECK(b && b->is_exact_);
-  Info *ab = new Info();
+  Info* ab = new Info();
 
   CrossProduct(a->exact_, b->exact_, &ab->exact_);
   ab->is_exact_ = true;
@@ -332,7 +331,7 @@ Prefilter::Info* Prefilter::Info::And(Info* a, Info* b) {
   if (b == NULL)
     return a;
 
-  Info *ab = new Info();
+  Info* ab = new Info();
 
   ab->match_ = Prefilter::And(a->TakeMatch(), b->TakeMatch());
   ab->is_exact_ = false;
@@ -343,7 +342,7 @@ Prefilter::Info* Prefilter::Info::And(Info* a, Info* b) {
 
 // Constructs Info for a|b given a and b.
 Prefilter::Info* Prefilter::Info::Alt(Info* a, Info* b) {
-  Info *ab = new Info();
+  Info* ab = new Info();
 
   if (a->is_exact_ && b->is_exact_) {
     CopyIn(a->exact_, &ab->exact_);
@@ -364,8 +363,8 @@ Prefilter::Info* Prefilter::Info::Alt(Info* a, Info* b) {
 }
 
 // Constructs Info for a? given a.
-Prefilter::Info* Prefilter::Info::Quest(Info *a) {
-  Info *ab = new Info();
+Prefilter::Info* Prefilter::Info::Quest(Info* a) {
+  Info* ab = new Info();
 
   ab->is_exact_ = false;
   ab->match_ = new Prefilter(ALL);
@@ -375,14 +374,14 @@ Prefilter::Info* Prefilter::Info::Quest(Info *a) {
 
 // Constructs Info for a* given a.
 // Same as a? -- not much to do.
-Prefilter::Info* Prefilter::Info::Star(Info *a) {
+Prefilter::Info* Prefilter::Info::Star(Info* a) {
   return Quest(a);
 }
 
 // Constructs Info for a+ given a. If a was exact set, it isn't
 // anymore.
-Prefilter::Info* Prefilter::Info::Plus(Info *a) {
-  Info *ab = new Info();
+Prefilter::Info* Prefilter::Info::Plus(Info* a) {
+  Info* ab = new Info();
 
   ab->match_ = a->TakeMatch();
   ab->is_exact_ = false;
@@ -437,7 +436,7 @@ Prefilter::Info* Prefilter::Info::NoMatch() {
 // since it makes no assertions whatsoever about the
 // strings being matched.
 Prefilter::Info* Prefilter::Info::AnyMatch() {
-  Prefilter::Info *info = new Prefilter::Info();
+  Prefilter::Info* info = new Prefilter::Info();
   info->match_ = new Prefilter(ALL);
   return info;
 }
@@ -452,8 +451,7 @@ Prefilter::Info* Prefilter::Info::EmptyString() {
 
 // Constructs Prefilter::Info for a character class.
 typedef CharClass::iterator CCIter;
-Prefilter::Info* Prefilter::Info::CClass(CharClass *cc,
-                                         bool latin1) {
+Prefilter::Info* Prefilter::Info::CClass(CharClass* cc, bool latin1) {
   if (Trace) {
     VLOG(0) << "CharClassInfo:";
     for (CCIter i = cc->begin(); i != cc->end(); ++i)
@@ -464,7 +462,7 @@ Prefilter::Info* Prefilter::Info::CClass(CharClass *cc,
   if (cc->size() > 10)
     return AnyChar();
 
-  Prefilter::Info *a = new Prefilter::Info();
+  Prefilter::Info* a = new Prefilter::Info();
   for (CCIter i = cc->begin(); i != cc->end(); ++i)
     for (Rune r = i->lo; r <= i->hi; r++) {
       if (latin1) {
@@ -473,7 +471,6 @@ Prefilter::Info* Prefilter::Info::CClass(CharClass *cc,
         a->exact_.insert(RuneToString(ToLowerRune(r)));
       }
     }
-
 
   a->is_exact_ = true;
 
@@ -486,18 +483,18 @@ Prefilter::Info* Prefilter::Info::CClass(CharClass *cc,
 
 class Prefilter::Info::Walker : public Regexp::Walker<Prefilter::Info*> {
  public:
-  Walker(bool latin1) : latin1_(latin1) {}
+  Walker(bool latin1) : latin1_(latin1) {
+  }
 
-  virtual Info* PostVisit(
-      Regexp* re, Info* parent_arg,
-      Info* pre_arg,
-      Info** child_args, int nchild_args);
+  virtual Info* PostVisit(Regexp* re, Info* parent_arg, Info* pre_arg,
+                          Info** child_args, int nchild_args);
 
-  virtual Info* ShortVisit(
-      Regexp* re,
-      Info* parent_arg);
+  virtual Info* ShortVisit(Regexp* re, Info* parent_arg);
 
-  bool latin1() { return latin1_; }
+  bool latin1() {
+    return latin1_;
+  }
+
  private:
   bool latin1_;
   DISALLOW_EVIL_CONSTRUCTORS(Walker);
@@ -528,10 +525,9 @@ Prefilter::Info* Prefilter::Info::Walker::ShortVisit(
 // Constructs the Prefilter::Info for the given regular expression.
 // Assumes re is simplified.
 Prefilter::Info* Prefilter::Info::Walker::PostVisit(
-    Regexp* re, Prefilter::Info* parent_arg,
-    Prefilter::Info* pre_arg, Prefilter::Info** child_args,
-    int nchild_args) {
-  Prefilter::Info *info;
+    Regexp* re, Prefilter::Info* parent_arg, Prefilter::Info* pre_arg,
+    Prefilter::Info** child_args, int nchild_args) {
+  Prefilter::Info* info;
   switch (re->op()) {
     default:
     case kRegexpRepeat:
@@ -557,8 +553,7 @@ Prefilter::Info* Prefilter::Info::Walker::PostVisit(
     case kRegexpLiteral:
       if (latin1()) {
         info = LiteralLatin1(re->rune());
-      }
-      else {
+      } else {
         info = Literal(re->rune());
       }
       break;
@@ -601,8 +596,7 @@ Prefilter::Info* Prefilter::Info::Walker::PostVisit(
         }
       }
       info = And(info, exact);
-    }
-      break;
+    } break;
 
     case kRegexpAlternate:
       info = child_args[0];
@@ -639,20 +633,18 @@ Prefilter::Info* Prefilter::Info::Walker::PostVisit(
   }
 
   if (Trace) {
-    VLOG(0) << "BuildInfo " << re->ToString()
-            << ": " << info->ToString();
+    VLOG(0) << "BuildInfo " << re->ToString() << ": " << info->ToString();
   }
 
   return info;
 }
-
 
 Prefilter* Prefilter::FromRegexp(Regexp* re) {
   if (re == NULL)
     return NULL;
 
   Regexp* simple = re->Simplify();
-  Prefilter::Info *info = BuildInfo(simple);
+  Prefilter::Info* info = BuildInfo(simple);
 
   simple->Decref();
   if (info == NULL)
@@ -710,6 +702,5 @@ Prefilter* Prefilter::FromRE2(const RE2* re2) {
 
   return FromRegexp(regexp);
 }
-
 
 }  // namespace re2

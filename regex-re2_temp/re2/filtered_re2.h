@@ -37,9 +37,8 @@ class FilteredRE2 {
   // Uses RE2 constructor to create a RE2 object (re). Returns
   // re->error_code(). If error_code is other than NoError, then re is
   // deleted and not added to re2_vec_.
-  RE2::ErrorCode Add(const StringPiece& pattern,
-                     const RE2::Options& options,
-                     int *id);
+  RE2::ErrorCode Add(const StringPiece& pattern, const RE2::Options& options,
+                     int* id);
 
   // Prepares the regexps added by Add for filtering.  Returns a set
   // of strings that the caller should check for in candidate texts.
@@ -58,22 +57,23 @@ class FilteredRE2 {
   // Returns the index of the first matching regexp.
   // Returns -1 on no match. Compile has to be called before
   // calling this.
-  int FirstMatch(const StringPiece& text,
-                 const vector<int>& atoms) const;
+  int FirstMatch(const StringPiece& text, const vector<int>& atoms) const;
 
   // Returns the indices of all matching regexps, after first clearing
   // matched_regexps.
-  bool AllMatches(const StringPiece& text,
-                  const vector<int>& atoms,
+  bool AllMatches(const StringPiece& text, const vector<int>& atoms,
                   vector<int>* matching_regexps) const;
 
   // The number of regexps added.
-  int NumRegexps() const { return re2_vec_.size(); }
+  int NumRegexps() const {
+    return re2_vec_.size();
+  }
 
  private:
-
   // Get the individual RE2 objects. Useful for testing.
-  RE2* GetRE2(int regexpid) const { return re2_vec_[regexpid]; }
+  RE2* GetRE2(int regexpid) const {
+    return re2_vec_[regexpid];
+  }
 
   // Print prefilter.
   void PrintPrefilter(int regexpid);
@@ -91,7 +91,7 @@ class FilteredRE2 {
   // An AND-OR tree of string atoms used for filtering regexps.
   PrefilterTree* prefilter_tree_;
 
-  //DISALLOW_EVIL_CONSTRUCTORS(FilteredRE2);
+  // DISALLOW_EVIL_CONSTRUCTORS(FilteredRE2);
   FilteredRE2(const FilteredRE2&);
   void operator=(const FilteredRE2&);
 };

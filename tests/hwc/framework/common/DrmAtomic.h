@@ -22,7 +22,8 @@
 #include <i915_drm.h>
 
 // TODO:
-// Kernel interface is defined locally for now (replicated from kernel/include/uapi/drm/drm_mode.h).
+// Kernel interface is defined locally for now (replicated from
+// kernel/include/uapi/drm/drm_mode.h).
 // This should be moved to $ANDROID_TOP/external/drm
 
 /* Set display IOCTL */
@@ -35,23 +36,23 @@
 
 /* Max supported planes by drm_mode_set_display API per pipe basis */
 #ifdef HWCVAL_BROXTON
-#define DRM_MODE_SET_DISPLAY_MAX_PLANES            5
+#define DRM_MODE_SET_DISPLAY_MAX_PLANES 5
 #else
-#define DRM_MODE_SET_DISPLAY_MAX_PLANES            4
+#define DRM_MODE_SET_DISPLAY_MAX_PLANES 4
 #endif
 
 /* Per-display update flag */
-#define DRM_MODE_SET_DISPLAY_UPDATE_ZORDER        (1 << 0)
-#define DRM_MODE_SET_DISPLAY_UPDATE_PANEL_FITTER        (1 << 1)
-#define DRM_MODE_SET_DISPLAY_UPDATE_PLANE(N)        (1 << (8+(N)))
+#define DRM_MODE_SET_DISPLAY_UPDATE_ZORDER (1 << 0)
+#define DRM_MODE_SET_DISPLAY_UPDATE_PANEL_FITTER (1 << 1)
+#define DRM_MODE_SET_DISPLAY_UPDATE_PLANE(N) (1 << (8 + (N)))
 /* Per-plane update flag */
-#define DRM_MODE_SET_DISPLAY_PLANE_UPDATE_PRESENT    (1 << 0)
-#define DRM_MODE_SET_DISPLAY_PLANE_UPDATE_RRB2        (1 << 1)
-#define DRM_MODE_SET_DISPLAY_PLANE_UPDATE_TRANSFORM    (1 << 2)
-#define DRM_MODE_SET_DISPLAY_PLANE_UPDATE_ALPHA        (1 << 3)
+#define DRM_MODE_SET_DISPLAY_PLANE_UPDATE_PRESENT (1 << 0)
+#define DRM_MODE_SET_DISPLAY_PLANE_UPDATE_RRB2 (1 << 1)
+#define DRM_MODE_SET_DISPLAY_PLANE_UPDATE_TRANSFORM (1 << 2)
+#define DRM_MODE_SET_DISPLAY_PLANE_UPDATE_ALPHA (1 << 3)
 /* Transforms */
-#define DRM_MODE_SET_DISPLAY_PLANE_TRANSFORM_NONE    0
-#define DRM_MODE_SET_DISPLAY_PLANE_TRANSFORM_ROT180    1
+#define DRM_MODE_SET_DISPLAY_PLANE_TRANSFORM_NONE 0
+#define DRM_MODE_SET_DISPLAY_PLANE_TRANSFORM_ROT180 1
 
 /**
  * struct drm_mode_set_display_panel_fitter - panel fitter data
@@ -77,13 +78,13 @@
  * the display.
  */
 struct drm_mode_set_display_panel_fitter {
-    __u32 mode;                 /* Mode */
-    __u16 src_w;                /* Source width */
-    __u16 src_h;                /* Source height */
-    __s16 dst_x;                /* Destination left */
-    __s16 dst_y;                /* Destination top */
-    __u16 dst_w;                /* Destination width */
-    __u16 dst_h;                /* Destination height */
+  __u32 mode;  /* Mode */
+  __u16 src_w; /* Source width */
+  __u16 src_h; /* Source height */
+  __s16 dst_x; /* Destination left */
+  __s16 dst_y; /* Destination top */
+  __u16 dst_w; /* Destination width */
+  __u16 dst_h; /* Destination height */
 };
 
 /**
@@ -108,28 +109,28 @@ struct drm_mode_set_display_panel_fitter {
  *
  */
 struct drm_mode_set_display_plane {
-    __u32 obj_id;
-    __u32 obj_type;
-    __u32 update_flag;
-    __u32 fb_id;
-    __u32 flags;
-    __s32 crtc_x, crtc_y;
-    __u32 crtc_w, crtc_h;
-    __u32 src_x, src_y;
-    __u32 src_h, src_w;
-    __u32 rrb2_enable;
-    __u32 transform;
-    __u32 alpha;
-    __u64 user_data;
+  __u32 obj_id;
+  __u32 obj_type;
+  __u32 update_flag;
+  __u32 fb_id;
+  __u32 flags;
+  __s32 crtc_x, crtc_y;
+  __u32 crtc_w, crtc_h;
+  __u32 src_x, src_y;
+  __u32 src_h, src_w;
+  __u32 rrb2_enable;
+  __u32 transform;
+  __u32 alpha;
+  __u64 user_data;
 
 #ifdef HWCVAL_ENABLE_RENDER_COMPRESSION
-    __u32 render_compression;
+  __u32 render_compression;
 #endif
 
 // Extension for Broxton which supports different blend options.
 #ifdef HWCVAL_DRM_HAS_BLEND
-    __u64 blend_func;
-    __u64 blend_color;
+  __u64 blend_func;
+  __u64 blend_color;
 #endif
 };
 
@@ -148,21 +149,21 @@ struct drm_mode_set_display_plane {
  *
  */
 struct drm_mode_set_display {
-    __u32 size;
-    __u32 version;
-    __u32 crtc_id;
-    __u32 update_flag;
-    __u32 zorder;
-    __u32 num_planes;
-    /*
-     * NOTE: These returns are temporary.
-     * The final drm_mode_set_display implementation should be atomic and
-     * all should succeed or all fail
-     */
-    __u32 presented;
-    __u32 errored;
-    struct drm_mode_set_display_panel_fitter panel_fitter;
-    struct drm_mode_set_display_plane plane[DRM_MODE_SET_DISPLAY_MAX_PLANES];
+  __u32 size;
+  __u32 version;
+  __u32 crtc_id;
+  __u32 update_flag;
+  __u32 zorder;
+  __u32 num_planes;
+  /*
+   * NOTE: These returns are temporary.
+   * The final drm_mode_set_display implementation should be atomic and
+   * all should succeed or all fail
+   */
+  __u32 presented;
+  __u32 errored;
+  struct drm_mode_set_display_panel_fitter panel_fitter;
+  struct drm_mode_set_display_plane plane[DRM_MODE_SET_DISPLAY_MAX_PLANES];
 };
 
-#endif // INTEL_UFO_HWC_DRM_ATOMIC_H
+#endif  // INTEL_UFO_HWC_DRM_ATOMIC_H

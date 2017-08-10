@@ -20,36 +20,32 @@
 
 class HwcFrameControl;
 
-typedef void (PFN_PFC)(uint32_t disp);
+typedef void(PFN_PFC)(uint32_t disp);
 
-class HwcDrmShimCallback : public DrmShimCallbackBase
-{
-    public:
-        HwcDrmShimCallback();
-        virtual ~HwcDrmShimCallback();
+class HwcDrmShimCallback : public DrmShimCallbackBase {
+ public:
+  HwcDrmShimCallback();
+  virtual ~HwcDrmShimCallback();
 
-        // VSync callback
-        virtual void VSync(uint32_t disp);
-        virtual void PageFlipComplete(uint32_t disp);
+  // VSync callback
+  virtual void VSync(uint32_t disp);
+  virtual void PageFlipComplete(uint32_t disp);
 
-        void IncOnSetCounter();
-        void SetPageFlipCompleteCallback(PFN_PFC *pfn);
+  void IncOnSetCounter();
+  void SetPageFlipCompleteCallback(PFN_PFC *pfn);
 
-    private:
-        uint32_t    cHWCOnSets;
-        uint32_t    cPageFlips;
-        PFN_PFC     *pfnPageFlipCallback;
-
+ private:
+  uint32_t cHWCOnSets;
+  uint32_t cPageFlips;
+  PFN_PFC *pfnPageFlipCallback;
 };
 
-inline void HwcDrmShimCallback::IncOnSetCounter()
-{
-    ++cHWCOnSets;
+inline void HwcDrmShimCallback::IncOnSetCounter() {
+  ++cHWCOnSets;
 }
 
-inline void HwcDrmShimCallback::SetPageFlipCompleteCallback(PFN_PFC *pfn)
-{
-    pfnPageFlipCallback = pfn;
+inline void HwcDrmShimCallback::SetPageFlipCompleteCallback(PFN_PFC *pfn) {
+  pfnPageFlipCallback = pfn;
 }
 
-#endif // __HwcDrmShimCallback_h__
+#endif  // __HwcDrmShimCallback_h__

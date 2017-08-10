@@ -31,8 +31,8 @@ int RE2::Set::Add(const StringPiece& pattern, string* error) {
     return -1;
   }
 
-  Regexp::ParseFlags pf = static_cast<Regexp::ParseFlags>(
-    options_.ParseFlags());
+  Regexp::ParseFlags pf =
+      static_cast<Regexp::ParseFlags>(options_.ParseFlags());
 
   RegexpStatus status;
   re2::Regexp* re = Regexp::Parse(pattern, pf, &status);
@@ -49,7 +49,7 @@ int RE2::Set::Add(const StringPiece& pattern, string* error) {
   re2::Regexp* m = re2::Regexp::HaveMatch(n, pf);
   if (re->op() == kRegexpConcat) {
     int nsub = re->nsub();
-    re2::Regexp** sub = new re2::Regexp*[nsub + 1];
+    re2::Regexp** sub = new re2::Regexp* [nsub + 1];
     for (int i = 0; i < nsub; i++)
       sub[i] = re->sub()[i]->Incref();
     sub[nsub] = m;
@@ -73,8 +73,8 @@ bool RE2::Set::Compile() {
   }
   compiled_ = true;
 
-  Regexp::ParseFlags pf = static_cast<Regexp::ParseFlags>(
-    options_.ParseFlags());
+  Regexp::ParseFlags pf =
+      static_cast<Regexp::ParseFlags>(options_.ParseFlags());
   re2::Regexp* re = re2::Regexp::Alternate(const_cast<re2::Regexp**>(&re_[0]),
                                            re_.size(), pf);
   re_.clear();
@@ -98,8 +98,8 @@ bool RE2::Set::Match(const StringPiece& text, vector<int>* v) const {
   }
   v->clear();
   bool failed;
-  bool ret = prog_->SearchDFA(text, text, Prog::kAnchored,
-                              Prog::kManyMatch, NULL, &failed, v);
+  bool ret = prog_->SearchDFA(text, text, Prog::kAnchored, Prog::kManyMatch,
+                              NULL, &failed, v);
   if (failed)
     LOG(DFATAL) << "RE2::Set::Match: DFA ran out of cache space";
 

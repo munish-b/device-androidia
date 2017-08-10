@@ -22,19 +22,27 @@ class Prefilter {
  public:
   enum Op {
     ALL = 0,  // Everything matches
-    NONE,  // Nothing matches
-    ATOM,  // The string atom() must match
-    AND,   // All in subs() must match
-    OR,   // One of subs() must match
+    NONE,     // Nothing matches
+    ATOM,     // The string atom() must match
+    AND,      // All in subs() must match
+    OR,       // One of subs() must match
   };
 
   explicit Prefilter(Op op);
   ~Prefilter();
 
-  Op op() { return op_; }
-  const string& atom() const { return atom_; }
-  void set_unique_id(int id) { unique_id_ = id; }
-  int unique_id() const { return unique_id_; }
+  Op op() {
+    return op_;
+  }
+  const string& atom() const {
+    return atom_;
+  }
+  void set_unique_id(int id) {
+    unique_id_ = id;
+  }
+  int unique_id() const {
+    return unique_id_;
+  }
 
   // The children of the Prefilter node.
   vector<Prefilter*>* subs() {
@@ -44,7 +52,9 @@ class Prefilter {
 
   // Set the children vector. Prefilter takes ownership of subs and
   // subs_ will be deleted when Prefilter is deleted.
-  void set_subs(vector<Prefilter*>* subs) { subs_ = subs; }
+  void set_subs(vector<Prefilter*>* subs) {
+    subs_ = subs;
+  }
 
   // Given a RE2, return a Prefilter. The caller takes ownership of
   // the Prefilter and should deallocate it. Returns NULL if Prefilter

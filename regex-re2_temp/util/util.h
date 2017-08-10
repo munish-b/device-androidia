@@ -9,12 +9,12 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdint.h>
-#include <stddef.h>         // For size_t
+#include <stddef.h>  // For size_t
 #include <assert.h>
 #include <stdarg.h>
 #include <sys/time.h>
 #include <time.h>
-#include <ctype.h>	// For isdigit, isalpha.
+#include <ctype.h>  // For isdigit, isalpha.
 
 // C++
 #include <vector>
@@ -44,7 +44,7 @@ using std::make_pair;
 #if defined(ANDROID)
 
 #if defined(_STLPORT_VERSION) || defined(_USING_LIBCXX)
-#include <unordered_set>      // using stlport
+#include <unordered_set>  // using stlport
 using std::unordered_set;
 #else
 #include <tr1/unordered_set>  // using gnustl
@@ -79,7 +79,8 @@ typedef unsigned int uint;
 typedef unsigned short ushort;
 
 // COMPILE_ASSERT causes a compile error about msg if expr is not true.
-template<bool> struct CompileAssert {};
+template <bool>
+struct CompileAssert {};
 #define COMPILE_ASSERT(expr, msg) \
   typedef CompileAssert<(bool(expr))> msg[bool(expr) ? 1 : -1]
 
@@ -89,7 +90,7 @@ template<bool> struct CompileAssert {};
   TypeName(const TypeName&);                 \
   void operator=(const TypeName&)
 
-#define arraysize(array) (sizeof(array)/sizeof((array)[0]))
+#define arraysize(array) (sizeof(array) / sizeof((array)[0]))
 
 // Fake lock annotations.  For real ones, see
 // http://code.google.com/p/data-race-test/
@@ -118,14 +119,14 @@ uint32 hashword(const uint32*, size_t, uint32);
 void hashword2(const uint32*, size_t, uint32*, uint32*);
 
 static inline uint32 Hash32StringWithSeed(const char* s, int len, uint32 seed) {
-  return hashword((uint32*)s, len/4, seed);
+  return hashword((uint32*)s, len / 4, seed);
 }
 
 static inline uint64 Hash64StringWithSeed(const char* s, int len, uint32 seed) {
   uint32 x, y;
   x = seed;
   y = 0;
-  hashword2((uint32*)s, len/4, &x, &y);
+  hashword2((uint32*)s, len / 4, &x, &y);
   return ((uint64)x << 32) | y;
 }
 
@@ -138,4 +139,4 @@ int RunningOnValgrind();
 #include "util/mutex.h"
 #include "util/utf.h"
 
-#endif // RE2_UTIL_UTIL_H__
+#endif  // RE2_UTIL_UTIL_H__

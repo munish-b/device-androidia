@@ -10,7 +10,7 @@
 static inline void WriteMemoryBarrier() {
   int x;
   __asm__ __volatile__("xchgl (%0),%0"  // The lock prefix is implicit for xchg.
-                       :: "r" (&x));
+                       ::"r"(&x));
 }
 
 #elif defined(__x86_64__)
@@ -72,8 +72,9 @@ static inline void MaybeReadMemoryBarrier() {
 
 #else
 
-static inline void MaybeReadMemoryBarrier() {}
+static inline void MaybeReadMemoryBarrier() {
+}
 
-#endif // __alpha__
+#endif  // __alpha__
 
 #endif  // RE2_UTIL_ATOMICOPS_H__

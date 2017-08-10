@@ -9,9 +9,9 @@ namespace re2 {
 
 int RunningOnValgrind() {
 #ifdef RUNNING_ON_VALGRIND
-	return RUNNING_ON_VALGRIND;
+  return RUNNING_ON_VALGRIND;
 #else
-	return 0;
+  return 0;
 #endif
 }
 

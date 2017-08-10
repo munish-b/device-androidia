@@ -28,28 +28,11 @@ DECLARE_string(test_tmpdir);
 namespace re2 {
 
 static const char* kOpcodeNames[] = {
-  "bad",
-  "no",
-  "emp",
-  "lit",
-  "str",
-  "cat",
-  "alt",
-  "star",
-  "plus",
-  "que",
-  "rep",
-  "cap",
-  "dot",
-  "byte",
-  "bol",
-  "eol",
-  "wb",   // kRegexpWordBoundary
-  "nwb",  // kRegexpNoWordBoundary
-  "bot",
-  "eot",
-  "cc",
-  "match",
+    "bad",  "no",  "emp", "lit",   "str", "cat",  "alt", "star",
+    "plus", "que", "rep", "cap",   "dot", "byte", "bol", "eol",
+    "wb",   // kRegexpWordBoundary
+    "nwb",  // kRegexpNoWordBoundary
+    "bot",  "eot", "cc",  "match",
 };
 
 // Create string representation of regexp with explicit structure.
@@ -75,7 +58,8 @@ static void DumpRegexpAppending(Regexp* re, string* s) {
       if ('a' <= r && r <= 'z')
         s->append("fold");
     }
-    if (re->op() == kRegexpLiteralString && (re->parse_flags() & Regexp::FoldCase)) {
+    if (re->op() == kRegexpLiteralString &&
+        (re->parse_flags() & Regexp::FoldCase)) {
       for (int i = 0; i < re->nrunes(); i++) {
         Rune r = re->runes()[i];
         if ('a' <= r && r <= 'z') {
@@ -96,7 +80,7 @@ static void DumpRegexpAppending(Regexp* re, string* s) {
       break;
     case kRegexpLiteral: {
       Rune r = re->rune();
-      char buf[UTFmax+1];
+      char buf[UTFmax + 1];
       buf[runetochar(buf, &r)] = 0;
       s->append(buf);
       break;
@@ -104,7 +88,7 @@ static void DumpRegexpAppending(Regexp* re, string* s) {
     case kRegexpLiteralString:
       for (int i = 0; i < re->nrunes(); i++) {
         Rune r = re->runes()[i];
-        char buf[UTFmax+1];
+        char buf[UTFmax + 1];
         buf[runetochar(buf, &r)] = 0;
         s->append(buf);
       }
@@ -132,8 +116,8 @@ static void DumpRegexpAppending(Regexp* re, string* s) {
       break;
     case kRegexpCharClass: {
       string sep;
-      for (CharClass::iterator it = re->cc()->begin();
-           it != re->cc()->end(); ++it) {
+      for (CharClass::iterator it = re->cc()->begin(); it != re->cc()->end();
+           ++it) {
         RuneRange rr = *it;
         s->append(sep);
         if (rr.lo == rr.hi)

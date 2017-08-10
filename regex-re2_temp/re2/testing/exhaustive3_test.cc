@@ -11,23 +11,25 @@ namespace re2 {
 
 // Test simple character classes by themselves.
 TEST(CharacterClasses, Exhaustive) {
-  vector<string> atoms = Split(" ",
-    "[a] [b] [ab] [^bc] [b-d] [^b-d] []a] [-a] [a-] [^-a] [a-b-c] a b .");
-  ExhaustiveTest(2, 1, atoms, RegexpGenerator::EgrepOps(),
-                 5, Explode("ab"), "", "");
+  vector<string> atoms = Split(
+      " ",
+      "[a] [b] [ab] [^bc] [b-d] [^b-d] []a] [-a] [a-] [^-a] [a-b-c] a b .");
+  ExhaustiveTest(2, 1, atoms, RegexpGenerator::EgrepOps(), 5, Explode("ab"), "",
+                 "");
 }
 
 // Test simple character classes inside a___b (for example, a[a]b).
 TEST(CharacterClasses, ExhaustiveAB) {
-  vector<string> atoms = Split(" ",
-    "[a] [b] [ab] [^bc] [b-d] [^b-d] []a] [-a] [a-] [^-a] [a-b-c] a b .");
-  ExhaustiveTest(2, 1, atoms, RegexpGenerator::EgrepOps(),
-                 5, Explode("ab"), "a%sb", "");
+  vector<string> atoms = Split(
+      " ",
+      "[a] [b] [ab] [^bc] [b-d] [^b-d] []a] [-a] [a-] [^-a] [a-b-c] a b .");
+  ExhaustiveTest(2, 1, atoms, RegexpGenerator::EgrepOps(), 5, Explode("ab"),
+                 "a%sb", "");
 }
 
 // Returns UTF8 for Rune r
 static string UTF8(Rune r) {
-  char buf[UTFmax+1];
+  char buf[UTFmax + 1];
   buf[runetochar(buf, &r)] = 0;
   return string(buf);
 }
@@ -64,31 +66,30 @@ static const vector<string>& InterestingUTF8() {
 
 // Test interesting UTF-8 characters against character classes.
 TEST(InterestingUTF8, SingleOps) {
-  vector<string> atoms = Split(" ",
-    ". ^ $ \\a \\f \\n \\r \\t \\v \\d \\D \\s \\S \\w \\W \\b \\B "
-    "[[:alnum:]] [[:alpha:]] [[:blank:]] [[:cntrl:]] [[:digit:]] "
-    "[[:graph:]] [[:lower:]] [[:print:]] [[:punct:]] [[:space:]] "
-    "[[:upper:]] [[:xdigit:]] [\\s\\S] [\\d\\D] [^\\w\\W] [^\\d\\D]");
+  vector<string> atoms =
+      Split(" ",
+            ". ^ $ \\a \\f \\n \\r \\t \\v \\d \\D \\s \\S \\w \\W \\b \\B "
+            "[[:alnum:]] [[:alpha:]] [[:blank:]] [[:cntrl:]] [[:digit:]] "
+            "[[:graph:]] [[:lower:]] [[:print:]] [[:punct:]] [[:space:]] "
+            "[[:upper:]] [[:xdigit:]] [\\s\\S] [\\d\\D] [^\\w\\W] [^\\d\\D]");
   vector<string> ops;  // no ops
-  ExhaustiveTest(1, 0, atoms, ops,
-                 1, InterestingUTF8(), "", "");
+  ExhaustiveTest(1, 0, atoms, ops, 1, InterestingUTF8(), "", "");
 }
 
 // Test interesting UTF-8 characters against character classes,
 // but wrap everything inside AB.
 TEST(InterestingUTF8, AB) {
-  vector<string> atoms = Split(" ",
-    ". ^ $ \\a \\f \\n \\r \\t \\v \\d \\D \\s \\S \\w \\W \\b \\B "
-    "[[:alnum:]] [[:alpha:]] [[:blank:]] [[:cntrl:]] [[:digit:]] "
-    "[[:graph:]] [[:lower:]] [[:print:]] [[:punct:]] [[:space:]] "
-    "[[:upper:]] [[:xdigit:]] [\\s\\S] [\\d\\D] [^\\w\\W] [^\\d\\D]");
+  vector<string> atoms =
+      Split(" ",
+            ". ^ $ \\a \\f \\n \\r \\t \\v \\d \\D \\s \\S \\w \\W \\b \\B "
+            "[[:alnum:]] [[:alpha:]] [[:blank:]] [[:cntrl:]] [[:digit:]] "
+            "[[:graph:]] [[:lower:]] [[:print:]] [[:punct:]] [[:space:]] "
+            "[[:upper:]] [[:xdigit:]] [\\s\\S] [\\d\\D] [^\\w\\W] [^\\d\\D]");
   vector<string> ops;  // no ops
   vector<string> alpha = InterestingUTF8();
   for (int i = 0; i < alpha.size(); i++)
     alpha[i] = "a" + alpha[i] + "b";
-  ExhaustiveTest(1, 0, atoms, ops,
-                 1, alpha, "a%sb", "");
+  ExhaustiveTest(1, 0, atoms, ops, 1, alpha, "a%sb", "");
 }
 
 }  // namespace re2
-

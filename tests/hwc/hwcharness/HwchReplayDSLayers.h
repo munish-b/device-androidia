@@ -19,58 +19,42 @@
 
 #include "HwchReplayLayer.h"
 
-namespace Hwch
-{
+namespace Hwch {
 
-    class ReplayDSLayerVideoPlayer : public ReplayLayer
-    {
-        public:
+class ReplayDSLayerVideoPlayer : public ReplayLayer {
+ public:
+  ReplayDSLayerVideoPlayer();
+};
 
-            ReplayDSLayerVideoPlayer();
-    };
+class ReplayDSLayerApplication : public ReplayLayer {
+ public:
+  ReplayDSLayerApplication();
+};
 
-    class ReplayDSLayerApplication : public ReplayLayer
-    {
-        public:
+class ReplayDSLayerTransparent : public ReplayLayer {
+ public:
+  ReplayDSLayerTransparent();
+};
 
-            ReplayDSLayerApplication();
-    };
+class ReplayDSLayerSemiTransparent : public ReplayLayer {
+ public:
+  ReplayDSLayerSemiTransparent();
+};
 
-    class ReplayDSLayerTransparent : public ReplayLayer
-    {
-        public:
+class ReplayDSLayerStatusBar : public ReplayLayer {
+ public:
+  ReplayDSLayerStatusBar();
+};
 
-            ReplayDSLayerTransparent();
-    };
+class ReplayDSLayerNavigationBar : public ReplayLayer {
+ public:
+  ReplayDSLayerNavigationBar();
+};
 
-    class ReplayDSLayerSemiTransparent : public ReplayLayer
-    {
-        public:
-
-            ReplayDSLayerSemiTransparent();
-    };
-
-
-    class ReplayDSLayerStatusBar : public ReplayLayer
-    {
-        public:
-
-            ReplayDSLayerStatusBar();
-    };
-
-    class ReplayDSLayerNavigationBar : public ReplayLayer
-    {
-        public:
-
-            ReplayDSLayerNavigationBar();
-    };
-
-    class ReplayDSLayerDialogBox : public ReplayLayer
-    {
-        public:
-
-            ReplayDSLayerDialogBox();
-    };
+class ReplayDSLayerDialogBox : public ReplayLayer {
+ public:
+  ReplayDSLayerDialogBox();
+};
 }
 
-#endif // __HwchReplayDSLayers_h__
+#endif  // __HwchReplayDSLayers_h__

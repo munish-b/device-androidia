@@ -11,8 +11,7 @@
 namespace re2 {
 
 FilteredRE2::FilteredRE2()
-    : compiled_(false),
-      prefilter_tree_(new PrefilterTree()) {
+    : compiled_(false), prefilter_tree_(new PrefilterTree()) {
 }
 
 FilteredRE2::~FilteredRE2() {
@@ -28,8 +27,8 @@ RE2::ErrorCode FilteredRE2::Add(const StringPiece& pattern,
 
   if (!re->ok()) {
     if (options.log_errors()) {
-      LOG(ERROR) << "Couldn't compile regular expression, skipping: "
-                 << re << " due to error " << re->error();
+      LOG(ERROR) << "Couldn't compile regular expression, skipping: " << re
+                 << " due to error " << re->error();
     }
     delete re;
   } else {
@@ -76,10 +75,8 @@ int FilteredRE2::FirstMatch(const StringPiece& text,
   return -1;
 }
 
-bool FilteredRE2::AllMatches(
-    const StringPiece& text,
-    const vector<int>& atoms,
-    vector<int>* matching_regexps) const {
+bool FilteredRE2::AllMatches(const StringPiece& text, const vector<int>& atoms,
+                             vector<int>* matching_regexps) const {
   matching_regexps->clear();
   vector<int> regexps;
   prefilter_tree_->RegexpsGivenStrings(atoms, &regexps);
@@ -93,7 +90,6 @@ void FilteredRE2::RegexpsGivenStrings(const vector<int>& matched_atoms,
                                       vector<int>* passed_regexps) {
   prefilter_tree_->RegexpsGivenStrings(matched_atoms, passed_regexps);
 }
-
 
 void FilteredRE2::PrintPrefilter(int regexpid) {
   prefilter_tree_->PrintPrefilter(regexpid);

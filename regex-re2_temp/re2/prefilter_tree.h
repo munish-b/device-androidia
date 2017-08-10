@@ -55,7 +55,6 @@ class PrefilterTree {
   // nodes of the prefilter of the regexp.
   void PrintPrefilter(int regexpid);
 
-
   // Each unique node has a corresponding Entry that helps in
   // passing the matching trigger information along the tree.
   struct Entry {
@@ -85,8 +84,7 @@ class PrefilterTree {
   void AssignUniqueIds(vector<string>* atom_vec);
 
   // Given the matching atoms, find the regexps to be triggered.
-  void PropagateMatch(const vector<int>& atom_ids,
-                      IntMap* regexps) const;
+  void PropagateMatch(const vector<int>& atom_ids, IntMap* regexps) const;
 
   // Returns the prefilter node that has the same NodeString as this
   // node. For the canonical node, returns node.

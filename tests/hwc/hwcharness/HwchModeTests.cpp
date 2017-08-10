@@ -24,85 +24,78 @@
 
 // REGISTER_TEST(VideoModes)
 Hwch::VideoModesTest::VideoModesTest(Hwch::Interface& interface)
-  : Hwch::Test(interface)
-{
+    : Hwch::Test(interface) {
 }
 
-int Hwch::VideoModesTest::RunScenario()
-{
-    Hwch::Frame frame(mInterface);
+int Hwch::VideoModesTest::RunScenario() {
+  Hwch::Frame frame(mInterface);
 
-    bool doModeSet = true;
-    Hwch::Display* display = &mSystem.GetDisplay(1);
+  bool doModeSet = true;
+  Hwch::Display* display = &mSystem.GetDisplay(1);
 
-    if (!display->IsConnected())
-    {
-        doModeSet = false;
-        display = &mSystem.GetDisplay(0);
-    }
+  if (!display->IsConnected()) {
+    doModeSet = false;
+    display = &mSystem.GetDisplay(0);
+  }
 
-    uint32_t modeCount = display->GetModes();
+  uint32_t modeCount = display->GetModes();
 
+  Hwch::NV12VideoLayer video;
+  Hwch::WallpaperLayer wallpaper;
 
-    Hwch::NV12VideoLayer video;
-    Hwch::WallpaperLayer wallpaper;
+  // Set the video update frequency
+  video.GetPattern().SetUpdateFreq(50);
 
-    // Set the video update frequency
-    video.GetPattern().SetUpdateFreq(50);
-
-    // Make sure HWC is fully started before we set mode
-    frame.Add(wallpaper);
-    frame.Send(10);
+  // Make sure HWC is fully started before we set mode
+  frame.Add(wallpaper);
+  frame.Send(10);
 
 #define HWCVAL_RESET_PREFERRED_MODE_NOT_WORKING
 #ifdef HWCVAL_RESET_PREFERRED_MODE_NOT_WORKING
-    uint32_t entryMode;
-    int st = display->GetCurrentMode(entryMode);
-    ALOG_ASSERT(st);
+  uint32_t entryMode;
+  int st = display->GetCurrentMode(entryMode);
+  ALOG_ASSERT(st);
 #endif
 
-    for (uint32_t m = 0; m<modeCount; ++m)
-    {
-        if (doModeSet)
-        {
-            HWCLOGD("Setting display mode %d/%d", m, modeCount);
-            display->SetMode(m);
-        }
-
-        SetExpectedMode(HwcTestConfig::eOn);
-        frame.Send(20);
-
-        frame.Remove(wallpaper);
-        UpdateVideoState(0, true, 50); // MDS says video is being played
-        frame.Add(video);
-
-        frame.Send(30);
-        UpdateInputState(false, true, &frame); // MDS says input has timed out
-        frame.Send(30);
-
-        UpdateInputState(true, true, &frame);   // MDS says display has been touched
-        frame.Send(20);
-
-        frame.Remove(video);
-        UpdateVideoState(0, false);
-        frame.Add(wallpaper);
-
-        frame.Send(20);
+  for (uint32_t m = 0; m < modeCount; ++m) {
+    if (doModeSet) {
+      HWCLOGD("Setting display mode %d/%d", m, modeCount);
+      display->SetMode(m);
     }
 
-    if (doModeSet)
-    {
-#ifdef HWCVAL_RESET_PREFERRED_MODE_NOT_WORKING
-        HWCLOGD("Restoring entry mode");
-        display->SetMode(entryMode);
-#else
-        HWCLOGD("Clearing display mode");
-        display->ClearMode();
-#endif
-    }
+    SetExpectedMode(HwcTestConfig::eOn);
+    frame.Send(20);
 
-    SetExpectedMode(HwcTestConfig::eDontCare);
+    frame.Remove(wallpaper);
+    UpdateVideoState(0, true, 50);  // MDS says video is being played
+    frame.Add(video);
+
+    frame.Send(30);
+    UpdateInputState(false, true, &frame);  // MDS says input has timed out
     frame.Send(30);
 
-    return 0;
+    UpdateInputState(true, true, &frame);  // MDS says display has been touched
+    frame.Send(20);
+
+    frame.Remove(video);
+    UpdateVideoState(0, false);
+    frame.Add(wallpaper);
+
+    frame.Send(20);
+  }
+
+  if (doModeSet) {
+#ifdef HWCVAL_RESET_PREFERRED_MODE_NOT_WORKING
+    HWCLOGD("Restoring entry mode");
+    display->SetMode(entryMode);
+#else
+    HWCLOGD("Clearing display mode");
+    display->ClearMode();
+#endif
+  }
+
+  SetExpectedMode(HwcTestConfig::eDontCare);
+  frame.Send(30);
+
+  return 0;
 }

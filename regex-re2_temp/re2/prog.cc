@@ -68,16 +68,15 @@ string Prog::Inst::Dump() {
       return StringPrintf("altmatch -> %d | %d", out(), out1_);
 
     case kInstByteRange:
-      return StringPrintf("byte%s [%02x-%02x] -> %d",
-                          foldcase_ ? "/i" : "",
+      return StringPrintf("byte%s [%02x-%02x] -> %d", foldcase_ ? "/i" : "",
                           lo_, hi_, out());
 
     case kInstCapture:
       return StringPrintf("capture %d -> %d", cap_, out());
 
     case kInstEmptyWidth:
-      return StringPrintf("emptywidth %#x -> %d",
-                          static_cast<int>(empty_), out());
+      return StringPrintf("emptywidth %#x -> %d", static_cast<int>(empty_),
+                          out());
 
     case kInstMatch:
       return StringPrintf("match! %d", match_id());
@@ -91,25 +90,25 @@ string Prog::Inst::Dump() {
 }
 
 Prog::Prog()
-  : anchor_start_(false),
-    anchor_end_(false),
-    reversed_(false),
-    did_onepass_(false),
-    start_(0),
-    start_unanchored_(0),
-    size_(0),
-    byte_inst_count_(0),
-    bytemap_range_(0),
-    flags_(0),
-    onepass_statesize_(0),
-    inst_(NULL),
-    dfa_first_(NULL),
-    dfa_longest_(NULL),
-    dfa_mem_(0),
-    delete_dfa_(NULL),
-    unbytemap_(NULL),
-    onepass_nodes_(NULL),
-    onepass_start_(NULL) {
+    : anchor_start_(false),
+      anchor_end_(false),
+      reversed_(false),
+      did_onepass_(false),
+      start_(0),
+      start_unanchored_(0),
+      size_(0),
+      byte_inst_count_(0),
+      bytemap_range_(0),
+      flags_(0),
+      onepass_statesize_(0),
+      inst_(NULL),
+      dfa_first_(NULL),
+      dfa_longest_(NULL),
+      dfa_mem_(0),
+      delete_dfa_(NULL),
+      unbytemap_(NULL),
+      onepass_nodes_(NULL),
+      onepass_start_(NULL) {
 }
 
 Prog::~Prog() {
@@ -184,7 +183,7 @@ void Prog::Optimize() {
     Inst* ip = inst(id);
     int j = ip->out();
     Inst* jp;
-    while (j != 0 && (jp=inst(j))->opcode() == kInstNop) {
+    while (j != 0 && (jp = inst(j))->opcode() == kInstNop) {
       j = jp->out();
     }
     ip->set_out(j);
@@ -192,7 +191,7 @@ void Prog::Optimize() {
 
     if (ip->opcode() == kInstAlt) {
       j = ip->out1();
-      while (j != 0 && (jp=inst(j))->opcode() == kInstNop) {
+      while (j != 0 && (jp = inst(j))->opcode() == kInstNop) {
         j = jp->out();
       }
       ip->out1_ = j;
@@ -219,14 +218,12 @@ void Prog::Optimize() {
     if (ip->opcode() == kInstAlt) {
       Inst* j = inst(ip->out());
       Inst* k = inst(ip->out1());
-      if (j->opcode() == kInstByteRange && j->out() == id &&
-          j->lo() == 0x00 && j->hi() == 0xFF &&
-          IsMatch(this, k)) {
+      if (j->opcode() == kInstByteRange && j->out() == id && j->lo() == 0x00 &&
+          j->hi() == 0xFF && IsMatch(this, k)) {
         ip->set_opcode(kInstAltMatch);
         continue;
       }
-      if (IsMatch(this, j) &&
-          k->opcode() == kInstByteRange && k->out() == id &&
+      if (IsMatch(this, j) && k->opcode() == kInstByteRange && k->out() == id &&
           k->lo() == 0x00 && k->hi() == 0xFF) {
         ip->set_opcode(kInstAltMatch);
       }
@@ -312,11 +309,11 @@ void Prog::ComputeByteMap() {
   // such range.
   const Bitmap<256>& v = byterange();
 
-  COMPILE_ASSERT(8*sizeof(v.Word(0)) == 32, wordsize);
+  COMPILE_ASSERT(8 * sizeof(v.Word(0)) == 32, wordsize);
   uint8 n = 0;
   uint32 bits = 0;
   for (int i = 0; i < 256; i++) {
-    if ((i&31) == 0)
+    if ((i & 31) == 0)
       bits = v.Word(i >> 5);
     bytemap_[i] = n;
     n += bits & 1;
@@ -338,4 +335,3 @@ void Prog::ComputeByteMap() {
 }
 
 }  // namespace re2
-

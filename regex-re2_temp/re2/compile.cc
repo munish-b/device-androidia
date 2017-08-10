@@ -35,13 +35,13 @@ struct PatchList {
 
   // Patches all the entries on l to have value v.
   // Caller must not ever use patch list again.
-  static void Patch(Prog::Inst *inst0, PatchList l, uint32 v);
+  static void Patch(Prog::Inst* inst0, PatchList l, uint32 v);
 
   // Deref returns the next pointer pointed at by p.
-  static PatchList Deref(Prog::Inst *inst0, PatchList l);
+  static PatchList Deref(Prog::Inst* inst0, PatchList l);
 
   // Appends two patch lists and returns result.
-  static PatchList Append(Prog::Inst *inst0, PatchList l1, PatchList l2);
+  static PatchList Append(Prog::Inst* inst0, PatchList l1, PatchList l2);
 };
 
 static PatchList nullPatchList;
@@ -55,8 +55,8 @@ PatchList PatchList::Mk(uint32 p) {
 
 // Returns the next pointer pointed at by l.
 PatchList PatchList::Deref(Prog::Inst* inst0, PatchList l) {
-  Prog::Inst* ip = &inst0[l.p>>1];
-  if (l.p&1)
+  Prog::Inst* ip = &inst0[l.p >> 1];
+  if (l.p & 1)
     l.p = ip->out1();
   else
     l.p = ip->out();
@@ -64,10 +64,10 @@ PatchList PatchList::Deref(Prog::Inst* inst0, PatchList l) {
 }
 
 // Patches all the entries on l to have value v.
-void PatchList::Patch(Prog::Inst *inst0, PatchList l, uint32 val) {
+void PatchList::Patch(Prog::Inst* inst0, PatchList l, uint32 val) {
   while (l.p != 0) {
-    Prog::Inst* ip = &inst0[l.p>>1];
-    if (l.p&1) {
+    Prog::Inst* ip = &inst0[l.p >> 1];
+    if (l.p & 1) {
       l.p = ip->out1();
       ip->out1_ = val;
     } else {
@@ -92,8 +92,8 @@ PatchList PatchList::Append(Prog::Inst* inst0, PatchList l1, PatchList l2) {
     l = next;
   }
 
-  Prog::Inst* ip = &inst0[l.p>>1];
-  if (l.p&1)
+  Prog::Inst* ip = &inst0[l.p >> 1];
+  if (l.p & 1)
     ip->out1_ = l2.p;
   else
     ip->set_out(l2.p);
@@ -106,9 +106,13 @@ struct Frag {
   uint32 begin;
   PatchList end;
 
-  explicit Frag(LinkerInitialized) {}
-  Frag() : begin(0) { end.p = 0; }  // needed so Frag can go in vector
-  Frag(uint32 begin, PatchList end) : begin(begin), end(end) {}
+  explicit Frag(LinkerInitialized) {
+  }
+  Frag() : begin(0) {
+    end.p = 0;
+  }  // needed so Frag can go in vector
+  Frag(uint32 begin, PatchList end) : begin(begin), end(end) {
+  }
 };
 
 static Frag kNullFrag(LINKER_INITIALIZED);
@@ -128,7 +132,7 @@ class Compiler : public Regexp::Walker<Frag> {
   // Caller is responsible for deleting Prog when finished with it.
   // If reversed is true, compiles for walking over the input
   // string backward (reverses all concatenations).
-  static Prog *Compile(Regexp* re, bool reversed, int64 max_mem);
+  static Prog* Compile(Regexp* re, bool reversed, int64 max_mem);
 
   // Compiles alternation of all the re to a new Prog.
   // Each re has a match with an id equal to its index in the vector.
@@ -220,13 +224,13 @@ class Compiler : public Regexp::Walker<Frag> {
   Encoding encoding_;  // Input encoding
   bool reversed_;      // Should program run backward over text?
 
-  int max_inst_;       // Maximum number of instructions.
+  int max_inst_;  // Maximum number of instructions.
 
-  Prog::Inst* inst_;   // Pointer to first instruction.
-  int inst_len_;       // Number of instructions used.
-  int inst_cap_;       // Number of instructions allocated.
+  Prog::Inst* inst_;  // Pointer to first instruction.
+  int inst_len_;      // Number of instructions used.
+  int inst_cap_;      // Number of instructions allocated.
 
-  int64 max_mem_;      // Total memory budget.
+  int64 max_mem_;  // Total memory budget.
 
   map<uint64, int> rune_cache_;
   Frag rune_range_;
@@ -309,8 +313,7 @@ Frag Compiler::Cat(Frag a, Frag b) {
 
   // Elide no-op.
   Prog::Inst* begin = &inst_[a.begin];
-  if (begin->opcode() == kInstNop &&
-      a.end.p == (a.begin << 1) &&
+  if (begin->opcode() == kInstNop && a.end.p == (a.begin << 1) &&
       begin->out() == 0) {
     PatchList::Patch(inst_, a.end, b.begin);  // in case refs to a somewhere
     return b;
@@ -431,14 +434,15 @@ Frag Compiler::EmptyWidth(EmptyOp empty) {
   if (id < 0)
     return NoMatch();
   inst_[id].InitEmptyWidth(empty, 0);
-  if (empty & (kEmptyBeginLine|kEmptyEndLine))
+  if (empty & (kEmptyBeginLine | kEmptyEndLine))
     prog_->MarkByteRange('\n', '\n');
-  if (empty & (kEmptyWordBoundary|kEmptyNonWordBoundary)) {
+  if (empty & (kEmptyWordBoundary | kEmptyNonWordBoundary)) {
     int j;
     for (int i = 0; i < 256; i = j) {
-      for (j = i+1; j < 256 && Prog::IsWordChar(i) == Prog::IsWordChar(j); j++)
+      for (j = i + 1; j < 256 && Prog::IsWordChar(i) == Prog::IsWordChar(j);
+           j++)
         ;
-      prog_->MarkByteRange(i, j-1);
+      prog_->MarkByteRange(i, j - 1);
     }
   }
   return Frag(id, PatchList::Mk(id << 1));
@@ -449,11 +453,11 @@ Frag Compiler::Capture(Frag a, int n) {
   int id = AllocInst(2);
   if (id < 0)
     return NoMatch();
-  inst_[id].InitCapture(2*n, a.begin);
-  inst_[id+1].InitCapture(2*n+1, 0);
-  PatchList::Patch(inst_, a.end, id+1);
+  inst_[id].InitCapture(2 * n, a.begin);
+  inst_[id + 1].InitCapture(2 * n + 1, 0);
+  PatchList::Patch(inst_, a.end, id + 1);
 
-  return Frag(id, PatchList::Mk((id+1) << 1));
+  return Frag(id, PatchList::Mk((id + 1) << 1));
 }
 
 // A Rune is a name for a Unicode code point.
@@ -463,8 +467,8 @@ static int MaxRune(int len) {
   if (len == 1)
     b = 7;
   else
-    b = 8-(len+1) + 6*(len-1);
-  return (1<<b) - 1;   // maximum Rune for b bits.
+    b = 8 - (len + 1) + 6 * (len - 1);
+  return (1 << b) - 1;  // maximum Rune for b bits.
 }
 
 // The rune range compiler caches common suffix fragments,
@@ -496,13 +500,12 @@ int Compiler::RuneByteSuffix(uint8 lo, uint8 hi, bool foldcase, int next) {
   // In Latin1 mode, there's no point in caching.
   // In forward UTF-8 mode, only need to cache continuation bytes.
   if (encoding_ == kEncodingLatin1 ||
-      (encoding_ == kEncodingUTF8 &&
-       !reversed_ &&
+      (encoding_ == kEncodingUTF8 && !reversed_ &&
        !(0x80 <= lo && hi <= 0xbf))) {
     return UncachedRuneByteSuffix(lo, hi, foldcase, next);
   }
 
-  uint64 key = ((uint64)next << 17) | (lo<<9) | (hi<<1) | foldcase;
+  uint64 key = ((uint64)next << 17) | (lo << 9) | (hi << 1) | foldcase;
   map<uint64, int>::iterator it = rune_cache_.find(key);
   if (it != rune_cache_.end())
     return it->second;
@@ -569,27 +572,52 @@ static struct ByteRangeProg {
   int lo;
   int hi;
 } prog_80_10ffff[] = {
-  // Two-byte
-  { -1, 0x80, 0xBF, },  // 0:  80-BF
-  {  0, 0xC2, 0xDF, },  // 1:  C2-DF 80-BF*
+      // Two-byte
+      {
+       -1, 0x80, 0xBF,
+      },  // 0:  80-BF
+      {
+       0, 0xC2, 0xDF,
+      },  // 1:  C2-DF 80-BF*
 
-  // Three-byte
-  {  0, 0xA0, 0xBF, },  // 2:  A0-BF 80-BF
-  {  2, 0xE0, 0xE0, },  // 3:  E0 A0-BF 80-BF*
-  {  0, 0x80, 0xBF, },  // 4:  80-BF 80-BF
-  {  4, 0xE1, 0xEF, },  // 5:  E1-EF 80-BF 80-BF*
+      // Three-byte
+      {
+       0, 0xA0, 0xBF,
+      },  // 2:  A0-BF 80-BF
+      {
+       2, 0xE0, 0xE0,
+      },  // 3:  E0 A0-BF 80-BF*
+      {
+       0, 0x80, 0xBF,
+      },  // 4:  80-BF 80-BF
+      {
+       4, 0xE1, 0xEF,
+      },  // 5:  E1-EF 80-BF 80-BF*
 
-  // Four-byte
-  {  4, 0x90, 0xBF, },  // 6:  90-BF 80-BF 80-BF
-  {  6, 0xF0, 0xF0, },  // 7:  F0 90-BF 80-BF 80-BF*
-  {  4, 0x80, 0xBF, },  // 8:  80-BF 80-BF 80-BF
-  {  8, 0xF1, 0xF3, },  // 9: F1-F3 80-BF 80-BF 80-BF*
-  {  4, 0x80, 0x8F, },  // 10: 80-8F 80-BF 80-BF
-  { 10, 0xF4, 0xF4, },  // 11: F4 80-8F 80-BF 80-BF*
+      // Four-byte
+      {
+       4, 0x90, 0xBF,
+      },  // 6:  90-BF 80-BF 80-BF
+      {
+       6, 0xF0, 0xF0,
+      },  // 7:  F0 90-BF 80-BF 80-BF*
+      {
+       4, 0x80, 0xBF,
+      },  // 8:  80-BF 80-BF 80-BF
+      {
+       8, 0xF1, 0xF3,
+      },  // 9: F1-F3 80-BF 80-BF 80-BF*
+      {
+       4, 0x80, 0x8F,
+      },  // 10: 80-8F 80-BF 80-BF
+      {
+       10, 0xF4, 0xF4,
+      },  // 11: F4 80-8F 80-BF 80-BF*
 };
 
 void Compiler::Add_80_10ffff() {
-  int inst[arraysize(prog_80_10ffff)] = { 0 }; // does not need to be initialized; silences gcc warning
+  int inst[arraysize(prog_80_10ffff)] = {
+      0};  // does not need to be initialized; silences gcc warning
   for (int i = 0; i < arraysize(prog_80_10ffff); i++) {
     const ByteRangeProg& p = prog_80_10ffff[i];
     int next = 0;
@@ -617,7 +645,7 @@ void Compiler::AddRuneRangeUTF8(Rune lo, Rune hi, bool foldcase) {
     Rune max = MaxRune(i);
     if (lo <= max && max < hi) {
       AddRuneRangeUTF8(lo, max, foldcase);
-      AddRuneRangeUTF8(max+1, hi, foldcase);
+      AddRuneRangeUTF8(max + 1, hi, foldcase);
       return;
     }
   }
@@ -630,16 +658,16 @@ void Compiler::AddRuneRangeUTF8(Rune lo, Rune hi, bool foldcase) {
 
   // Split range into sections that agree on leading bytes.
   for (int i = 1; i < UTFmax; i++) {
-    uint m = (1<<(6*i)) - 1;  // last i bytes of a UTF-8 sequence
+    uint m = (1 << (6 * i)) - 1;  // last i bytes of a UTF-8 sequence
     if ((lo & ~m) != (hi & ~m)) {
       if ((lo & m) != 0) {
-        AddRuneRangeUTF8(lo, lo|m, foldcase);
-        AddRuneRangeUTF8((lo|m)+1, hi, foldcase);
+        AddRuneRangeUTF8(lo, lo | m, foldcase);
+        AddRuneRangeUTF8((lo | m) + 1, hi, foldcase);
         return;
       }
       if ((hi & m) != m) {
-        AddRuneRangeUTF8(lo, (hi&~m)-1, foldcase);
-        AddRuneRangeUTF8(hi&~m, hi, foldcase);
+        AddRuneRangeUTF8(lo, (hi & ~m) - 1, foldcase);
+        AddRuneRangeUTF8(hi & ~m, hi, foldcase);
         return;
       }
     }
@@ -657,7 +685,7 @@ void Compiler::AddRuneRangeUTF8(Rune lo, Rune hi, bool foldcase) {
     for (int i = 0; i < n; i++)
       id = RuneByteSuffix(ulo[i], uhi[i], false, id);
   } else {
-    for (int i = n-1; i >= 0; i--)
+    for (int i = n - 1; i >= 0; i--)
       id = RuneByteSuffix(ulo[i], uhi[i], false, id);
   }
   AddSuffix(id);
@@ -752,16 +780,16 @@ Frag Compiler::PostVisit(Regexp* re, Frag, Frag, Frag* child_frags,
     }
 
     case kRegexpStar:
-      return Star(child_frags[0], re->parse_flags()&Regexp::NonGreedy);
+      return Star(child_frags[0], re->parse_flags() & Regexp::NonGreedy);
 
     case kRegexpPlus:
-      return Plus(child_frags[0], re->parse_flags()&Regexp::NonGreedy);
+      return Plus(child_frags[0], re->parse_flags() & Regexp::NonGreedy);
 
     case kRegexpQuest:
-      return Quest(child_frags[0], re->parse_flags()&Regexp::NonGreedy);
+      return Quest(child_frags[0], re->parse_flags() & Regexp::NonGreedy);
 
     case kRegexpLiteral:
-      return Literal(re->rune(), re->parse_flags()&Regexp::FoldCase);
+      return Literal(re->rune(), re->parse_flags() & Regexp::FoldCase);
 
     case kRegexpLiteralString: {
       // Concatenation of literals.
@@ -769,7 +797,7 @@ Frag Compiler::PostVisit(Regexp* re, Frag, Frag, Frag* child_frags,
         return Nop();
       Frag f;
       for (int i = 0; i < re->nrunes(); i++) {
-        Frag f1 = Literal(re->runes()[i], re->parse_flags()&Regexp::FoldCase);
+        Frag f1 = Literal(re->runes()[i], re->parse_flags() & Regexp::FoldCase);
         if (i == 0)
           f = f1;
         else
@@ -870,8 +898,8 @@ static bool IsAnchorStart(Regexp** pre, int depth) {
     case kRegexpConcat:
       if (re->nsub() > 0) {
         sub = re->sub()[0]->Incref();
-        if (IsAnchorStart(&sub, depth+1)) {
-          Regexp** subcopy = new Regexp*[re->nsub()];
+        if (IsAnchorStart(&sub, depth + 1)) {
+          Regexp** subcopy = new Regexp* [re->nsub()];
           subcopy[0] = sub;  // already have reference
           for (int i = 1; i < re->nsub(); i++)
             subcopy[i] = re->sub()[i]->Incref();
@@ -885,7 +913,7 @@ static bool IsAnchorStart(Regexp** pre, int depth) {
       break;
     case kRegexpCapture:
       sub = re->sub()[0]->Incref();
-      if (IsAnchorStart(&sub, depth+1)) {
+      if (IsAnchorStart(&sub, depth + 1)) {
         *pre = Regexp::Capture(sub, re->parse_flags(), re->cap());
         re->Decref();
         return true;
@@ -918,8 +946,8 @@ static bool IsAnchorEnd(Regexp** pre, int depth) {
     case kRegexpConcat:
       if (re->nsub() > 0) {
         sub = re->sub()[re->nsub() - 1]->Incref();
-        if (IsAnchorEnd(&sub, depth+1)) {
-          Regexp** subcopy = new Regexp*[re->nsub()];
+        if (IsAnchorEnd(&sub, depth + 1)) {
+          Regexp** subcopy = new Regexp* [re->nsub()];
           subcopy[re->nsub() - 1] = sub;  // already have reference
           for (int i = 0; i < re->nsub() - 1; i++)
             subcopy[i] = re->sub()[i]->Incref();
@@ -933,7 +961,7 @@ static bool IsAnchorEnd(Regexp** pre, int depth) {
       break;
     case kRegexpCapture:
       sub = re->sub()[0]->Incref();
-      if (IsAnchorEnd(&sub, depth+1)) {
+      if (IsAnchorEnd(&sub, depth + 1)) {
         *pre = Regexp::Capture(sub, re->parse_flags(), re->cap());
         re->Decref();
         return true;
@@ -970,8 +998,8 @@ void Compiler::Setup(Regexp::ParseFlags flags, int64 max_mem,
     // (The point of allowing more than 32 bits of memory is to
     // have plenty of room for the DFA states, not to use it up
     // on the program.)
-    if (m >= 1<<24)
-      m = 1<<24;
+    if (m >= 1 << 24)
+      m = 1 << 24;
 
     // Inst imposes its own limit (currently bigger than 2^24 but be safe).
     if (m > Prog::Inst::kMaxInst)
@@ -1006,7 +1034,7 @@ Prog* Compiler::Compile(Regexp* re, bool reversed, int64 max_mem) {
   bool is_anchor_end = IsAnchorEnd(&sre, 0);
 
   // Generate fragment for entire regexp.
-  Frag f = c.WalkExponential(sre, kNullFrag, 2*c.max_inst_);
+  Frag f = c.WalkExponential(sre, kNullFrag, 2 * c.max_inst_);
   sre->Decref();
   if (c.failed_)
     return NULL;
@@ -1062,9 +1090,9 @@ Prog* Compiler::Finish() {
 
   // Record remaining memory for DFA.
   if (max_mem_ <= 0) {
-    prog_->set_dfa_mem(1<<20);
+    prog_->set_dfa_mem(1 << 20);
   } else {
-    int64 m = max_mem_ - sizeof(Prog) - inst_len_*sizeof(Prog::Inst);
+    int64 m = max_mem_ - sizeof(Prog) - inst_len_ * sizeof(Prog::Inst);
     if (m < 0)
       m = 0;
     prog_->set_dfa_mem(m);
@@ -1097,7 +1125,7 @@ Prog* Compiler::CompileSet(const RE2::Options& options, RE2::Anchor anchor,
   c.Setup(pf, options.max_mem(), anchor);
 
   // Compile alternation of fragments.
-  Frag all = c.WalkExponential(re, kNullFrag, 2*c.max_inst_);
+  Frag all = c.WalkExponential(re, kNullFrag, 2 * c.max_inst_);
   re->Decref();
   if (c.failed_)
     return NULL;
@@ -1121,8 +1149,8 @@ Prog* Compiler::CompileSet(const RE2::Options& options, RE2::Anchor anchor,
   // since we're not going to fall back to the NFA.
   bool failed;
   StringPiece sp = "hello, world";
-  prog->SearchDFA(sp, sp, Prog::kAnchored, Prog::kManyMatch,
-                  NULL, &failed, NULL);
+  prog->SearchDFA(sp, sp, Prog::kAnchored, Prog::kManyMatch, NULL, &failed,
+                  NULL);
   if (failed) {
     delete prog;
     return NULL;

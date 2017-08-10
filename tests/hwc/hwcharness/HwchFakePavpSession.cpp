@@ -18,60 +18,53 @@
 #include "HwcTestState.h"
 
 Hwch::FakePavpSession::FakePavpSession()
-  :
-    mHwcsHandle(0),
-    mProtectedContentStarted(false)
-{
+    : mHwcsHandle(0), mProtectedContentStarted(false) {
 }
 
-Hwch::FakePavpSession::~FakePavpSession()
-{
+Hwch::FakePavpSession::~FakePavpSession() {
 }
 
-bool Hwch::FakePavpSession::StartProtectedContent()
-{
-    ALOGI("Starting PAVPSession thread");
-    run("Hwch::PavpSession", android::PRIORITY_NORMAL);
-    return true;
+bool Hwch::FakePavpSession::StartProtectedContent() {
+  ALOGI("Starting PAVPSession thread");
+  run("Hwch::PavpSession", android::PRIORITY_NORMAL);
+  return true;
 }
 
-bool Hwch::FakePavpSession::ProtectedContentStarted()
-{
-    // Wait for initialization, if still running.
-    join();
+bool Hwch::FakePavpSession::ProtectedContentStarted() {
+  // Wait for initialization, if still running.
+  join();
 
-    return mProtectedContentStarted;
+  return mProtectedContentStarted;
 }
 
-// Start a fake PAVP session, returning the session ID and ensuring HWC knows which session is valid
-int32_t Hwch::FakePavpSession::StartPavpSession()
-{
-    if (mHwcsHandle == 0)
-    {
-        mHwcsHandle = HwcService_Connect();
-    }
+// Start a fake PAVP session, returning the session ID and ensuring HWC knows
+// which session is valid
+int32_t Hwch::FakePavpSession::StartPavpSession() {
+  if (mHwcsHandle == 0) {
+    mHwcsHandle = HwcService_Connect();
+  }
 
-    if (mProtectedContentStarted)
-    {
-        HwcService_Video_DisableEncryptedSession(mHwcsHandle, mPavpSessionId);
-    }
+  if (mProtectedContentStarted) {
+    HwcService_Video_DisableEncryptedSession(mHwcsHandle, mPavpSessionId);
+  }
 
-    mPavpSessionId = (mPavpSessionId + 1) % 15;
-    ++mPavpInstance;
+  mPavpSessionId = (mPavpSessionId + 1) % 15;
+  ++mPavpInstance;
 
-    ALOG_ASSERT(mHwcsHandle);
+  ALOG_ASSERT(mHwcsHandle);
 
-    HwcService_Video_EnableEncryptedSession(mHwcsHandle, mPavpSessionId, mPavpInstance);
-    HWCLOGA("Fake PAVP session %d instance %d started", mPavpSessionId, mPavpInstance);
+  HwcService_Video_EnableEncryptedSession(mHwcsHandle, mPavpSessionId,
+                                          mPavpInstance);
+  HWCLOGA("Fake PAVP session %d instance %d started", mPavpSessionId,
+          mPavpInstance);
 
-    return mPavpSessionId;
+  return mPavpSessionId;
 }
 
-bool Hwch::FakePavpSession::threadLoop()
-{
-    StartPavpSession();
-    mProtectedContentStarted = true;
+bool Hwch::FakePavpSession::threadLoop() {
+  StartPavpSession();
+  mProtectedContentStarted = true;
 
-    // One-shot
-    return false;
+  // One-shot
+  return false;
 }

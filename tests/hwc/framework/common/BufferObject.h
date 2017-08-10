@@ -25,21 +25,20 @@
 class DrmShimPlane;
 class DrmShimBuffer;
 
-class HwcTestBufferObject : public android::RefBase
-{
-public:
-    android::wp<DrmShimBuffer> mBuf;
-    int mFd;
-    uint32_t mBoHandle;
+class HwcTestBufferObject : public android::RefBase {
+ public:
+  android::wp<DrmShimBuffer> mBuf;
+  int mFd;
+  uint32_t mBoHandle;
 
-public:
-    HwcTestBufferObject(int fd, uint32_t boHandle);
-    HwcTestBufferObject(const HwcTestBufferObject& rhs);
-    virtual ~HwcTestBufferObject();
+ public:
+  HwcTestBufferObject(int fd, uint32_t boHandle);
+  HwcTestBufferObject(const HwcTestBufferObject& rhs);
+  virtual ~HwcTestBufferObject();
 
-    char* IdStr(char* str, uint32_t len=HWCVAL_DEFAULT_STRLEN-1);
-    int FullIdStr(char* str, uint32_t len=HWCVAL_DEFAULT_STRLEN-1);
-    virtual HwcTestBufferObject* Dup();
+  char* IdStr(char* str, uint32_t len = HWCVAL_DEFAULT_STRLEN - 1);
+  int FullIdStr(char* str, uint32_t len = HWCVAL_DEFAULT_STRLEN - 1);
+  virtual HwcTestBufferObject* Dup();
 };
 
-#endif // __BufferObject_h__
+#endif  // __BufferObject_h__

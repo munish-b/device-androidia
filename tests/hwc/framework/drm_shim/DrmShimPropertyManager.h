@@ -20,50 +20,50 @@
 #include "HwcvalPropertyManager.h"
 #include "HwcvalPropertyManager.h"
 
-extern "C"
-{
-    #include <xf86drm.h>        //< For structs and types.
-    #include <xf86drmMode.h>    //< For structs and types.
+extern "C" {
+#include <xf86drm.h>      //< For structs and types.
+#include <xf86drmMode.h>  //< For structs and types.
 };
 
 class DrmShimChecks;
 
-class DrmShimPropertyManager : public Hwcval::PropertyManager
-{
-private:
-    struct PropInfo
-    {
-        PropInfo(const char* n = 0, HwcTestKernel::ObjectClass c = HwcTestKernel::ePlane);
-        const char* mName;
-        HwcTestKernel::ObjectClass mClass;
-    };
+class DrmShimPropertyManager : public Hwcval::PropertyManager {
+ private:
+  struct PropInfo {
+    PropInfo(const char* n = 0,
+             HwcTestKernel::ObjectClass c = HwcTestKernel::ePlane);
+    const char* mName;
+    HwcTestKernel::ObjectClass mClass;
+  };
 
-    static PropInfo mInfo[];
-    static const uint32_t mNumSpoofProperties;
-    int mFd;
+  static PropInfo mInfo[];
+  static const uint32_t mNumSpoofProperties;
+  int mFd;
 
-    // DRRS property ID per connector id
-    android::KeyedVector<uint32_t, uint32_t> mDRRSPropIds;
+  // DRRS property ID per connector id
+  android::KeyedVector<uint32_t, uint32_t> mDRRSPropIds;
 
-public:
-    DrmShimPropertyManager();
-    virtual ~DrmShimPropertyManager();
+ public:
+  DrmShimPropertyManager();
+  virtual ~DrmShimPropertyManager();
 
-    drmModeObjectPropertiesPtr ObjectGetProperties(int fd, uint32_t objectId, uint32_t objectType);
+  drmModeObjectPropertiesPtr ObjectGetProperties(int fd, uint32_t objectId,
+                                                 uint32_t objectType);
 
-    drmModePropertyPtr GetProperty(int fd, uint32_t propertyId);
+  drmModePropertyPtr GetProperty(int fd, uint32_t propertyId);
 
-    virtual PropType PropIdToType(uint32_t propId, HwcTestKernel::ObjectClass& propClass);
-    virtual const char* GetName(PropType pt);
+  virtual PropType PropIdToType(uint32_t propId,
+                                HwcTestKernel::ObjectClass& propClass);
+  virtual const char* GetName(PropType pt);
 
-    void ProcessConnectorProperties(uint32_t connId, drmModeObjectPropertiesPtr props);
-    virtual void CheckConnectorProperties(uint32_t connId, uint32_t& connectorAttributes);
-    int32_t GetPlaneType(uint32_t plane_id);
-    int32_t GetPlanePropertyId(uint32_t, const char*);
+  void ProcessConnectorProperties(uint32_t connId,
+                                  drmModeObjectPropertiesPtr props);
+  virtual void CheckConnectorProperties(uint32_t connId,
+                                        uint32_t& connectorAttributes);
+  int32_t GetPlaneType(uint32_t plane_id);
+  int32_t GetPlanePropertyId(uint32_t, const char*);
 
-    void SetFd(int fd);
+  void SetFd(int fd);
 };
 
-#endif // __DrmShimPropertyManager_h__
-
-
+#endif  // __DrmShimPropertyManager_h__

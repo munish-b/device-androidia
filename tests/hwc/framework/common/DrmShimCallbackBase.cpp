@@ -16,24 +16,18 @@
 #include "DrmShimCallbackBase.h"
 #include "HwcTestUtil.h"
 
-DrmShimCallbackBase::~DrmShimCallbackBase()
-{
+DrmShimCallbackBase::~DrmShimCallbackBase() {
 }
 
-uint32_t DrmShimCallbackBase::GetVersion()
-{
-    return HWCVAL_DRMSHIMCALLBACKBASE_VERSION;
+uint32_t DrmShimCallbackBase::GetVersion() {
+  return HWCVAL_DRMSHIMCALLBACKBASE_VERSION;
 }
 
 // Callbacks that can be overriden in subclass
-void DrmShimCallbackBase::VSync(uint32_t disp)
-{
-    HWCVAL_UNUSED(disp);
+void DrmShimCallbackBase::VSync(uint32_t disp) {
+  HWCVAL_UNUSED(disp);
 }
 
-void DrmShimCallbackBase::PageFlipComplete(uint32_t disp)
-{
-    HWCVAL_UNUSED(disp);
+void DrmShimCallbackBase::PageFlipComplete(uint32_t disp) {
+  HWCVAL_UNUSED(disp);
 }
-
-

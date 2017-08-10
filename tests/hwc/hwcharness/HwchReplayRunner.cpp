@@ -20,23 +20,18 @@
 
 #include "HwchReplayRunner.h"
 
-Hwch::ReplayRunner::ReplayRunner(Hwch::Interface& interface, const char *filename)
-    : Hwch::Test(interface), mInterface(interface)
-{
-    // Open the file and initialise the parser
-    mFile.open(filename);
-    mParser = new Hwch::ReplayParser();
+Hwch::ReplayRunner::ReplayRunner(Hwch::Interface& interface,
+                                 const char* filename)
+    : Hwch::Test(interface), mInterface(interface) {
+  // Open the file and initialise the parser
+  mFile.open(filename);
+  mParser = new Hwch::ReplayParser();
 
-    if (!mFile.good())
-    {
-        HWCERROR(eCheckReplayFail, "Fatal error opening replay file");
-    }
-    else if (!mParser->IsReady())
-    {
-        HWCERROR(eCheckReplayFail, "Replay parser not ready");
-    }
-    else
-    {
-        mReplayReady = true;
-    }
+  if (!mFile.good()) {
+    HWCERROR(eCheckReplayFail, "Fatal error opening replay file");
+  } else if (!mParser->IsReady()) {
+    HWCERROR(eCheckReplayFail, "Replay parser not ready");
+  } else {
+    mReplayReady = true;
+  }
 }

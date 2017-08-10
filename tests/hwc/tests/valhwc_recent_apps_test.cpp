@@ -24,7 +24,6 @@
 
 #include <unistd.h>
 
-
 #include "test_base.h"
 
 /** \addtogroup RecentApps Recent Apps
@@ -34,76 +33,60 @@
   @}
  */
 
-
-
 using namespace android;
 
-class HwcTestTest : public HwcTestBase
-{
+class HwcTestTest : public HwcTestBase {
+ public:
+  // Constructor
+  HwcTestTest(int argc, char** argv);
 
-public:
-    // Constructor
-    HwcTestTest(int argc, char ** argv);
-
-    /// Create surfaces and start test
-    int Run(void);
-    /// Set checks required by the shims
-    int SetChecks(void);
-
+  /// Create surfaces and start test
+  int Run(void);
+  /// Set checks required by the shims
+  int SetChecks(void);
 };
 
-HwcTestTest::HwcTestTest(int argc, char ** argv)
-: HwcTestBase(argc, argv)
-{
-    mTestName = "hwc_recent_apps_test";
+HwcTestTest::HwcTestTest(int argc, char** argv) : HwcTestBase(argc, argv) {
+  mTestName = "hwc_recent_apps_test";
 }
 
-int HwcTestTest::SetChecks(void)
-{
-    SetDefaultChecks();
+int HwcTestTest::SetChecks(void) {
+  SetDefaultChecks();
+  return 0;
+}
+
+int HwcTestTest::Run(void) {
+  SurfaceSender::SurfaceSenderProperties sSSP1(SurfaceSender::epsWallpaper);
+  CreateSurface(sSSP1);
+
+  SurfaceSender::SurfaceSenderProperties sSSP2(SurfaceSender::epsLauncher);
+  CreateSurface(sSSP2);
+
+  SurfaceSender::SurfaceSenderProperties sSSP3(SurfaceSender::epsNavigationBar);
+  CreateSurface(sSSP3);
+
+  SurfaceSender::SurfaceSenderProperties sSSP4(SurfaceSender::epsStatusBar);
+  CreateSurface(sSSP4);
+
+  SurfaceSender::SurfaceSenderProperties sSSP5(
+      SurfaceSender::epsRecentAppsPanel);
+  CreateSurface(sSSP5);
+
+  // Set test mode frame or time
+  SetTestRunTime(HwcTestBase::etlTenSeconds);
+  SetTestEndType(etetRunTime);
+
+  StartTest();
+
+  return mResult.IsGlobalFail() ? 1 : 0;
+}
+
+int main(int argc, char** argv) {
+  HwcTestTest test(argc, argv);
+
+  if (argc == 2 && strcmp(argv[1], "-h") == 0) {
+    test.PrintArgs();
     return 0;
+  }
+  return test.Run();
 }
-
-int HwcTestTest::Run(void)
-{
-    SurfaceSender::SurfaceSenderProperties
-        sSSP1(SurfaceSender::epsWallpaper);
-    CreateSurface(sSSP1);
-
-    SurfaceSender::SurfaceSenderProperties
-        sSSP2(SurfaceSender::epsLauncher);
-    CreateSurface(sSSP2);
-
-    SurfaceSender::SurfaceSenderProperties
-        sSSP3(SurfaceSender::epsNavigationBar);
-    CreateSurface(sSSP3);
-
-    SurfaceSender::SurfaceSenderProperties
-        sSSP4(SurfaceSender::epsStatusBar);
-    CreateSurface(sSSP4);
-
-    SurfaceSender::SurfaceSenderProperties
-        sSSP5(SurfaceSender::epsRecentAppsPanel);
-    CreateSurface(sSSP5);
-
-    // Set test mode frame or time
-    SetTestRunTime(HwcTestBase::etlTenSeconds);
-    SetTestEndType(etetRunTime);
-
-    StartTest();
-
-    return mResult.IsGlobalFail() ? 1 : 0;
-}
-
-int main (int argc, char ** argv)
-{
-    HwcTestTest test(argc, argv);
-
-    if(argc == 2 && strcmp(argv[1], "-h") == 0)
-    {
-        test.PrintArgs();
-        return 0;
-    }
-    return test.Run();
-}
-

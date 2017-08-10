@@ -38,220 +38,197 @@
 
 using namespace android;
 
-static HwcTestReferenceComposer* spRefCmp = 0;
+static HwcTestReferenceComposer *spRefCmp = 0;
 
-bool HwcTestReferenceComposer::verifyContextCreated()
-{
-    // Save the current GL context
-    GLContextSaver contextSaver(this);
+bool HwcTestReferenceComposer::verifyContextCreated() {
+  // Save the current GL context
+  GLContextSaver contextSaver(this);
 
-    // Try to create the GL context, if it is not created already
-    if (!isCreated())
-    {
-        if (lazyCreate())
-        {
-            // If the context does not exist and could not be created then
-            // no format is supported
-            return false;
-        }
+  // Try to create the GL context, if it is not created already
+  if (!isCreated()) {
+    if (lazyCreate()) {
+      // If the context does not exist and could not be created then
+      // no format is supported
+      return false;
     }
+  }
 
-    return true;
+  return true;
 }
 
-bool HwcTestReferenceComposer::isFormatSupportedAsOutput(int32_t format)
-{
-    /*
-    This method was moved to be a member since its querying the context
-    now to check that the extension is supported.
-    You'll need to change it's declaration as well.
-    */
+bool HwcTestReferenceComposer::isFormatSupportedAsOutput(int32_t format) {
+  /*
+  This method was moved to be a member since its querying the context
+  now to check that the extension is supported.
+  You'll need to change it's declaration as well.
+  */
 
-    //verify context is created before accessing members
-    if (!verifyContextCreated())
-    {
-        return false;
-    }
+  // verify context is created before accessing members
+  if (!verifyContextCreated()) {
+    return false;
+  }
 
-    switch (format)
-    {
-        case HAL_PIXEL_FORMAT_RGBA_8888:
-        case HAL_PIXEL_FORMAT_BGRA_8888:
-        case HAL_PIXEL_FORMAT_RGBX_8888:
-        case HAL_PIXEL_FORMAT_RGB_565:
-            return true;
-        case HAL_PIXEL_FORMAT_NV12_Y_TILED_INTEL:
-        case HAL_PIXEL_FORMAT_NV12_LINEAR_INTEL:
-        case HAL_PIXEL_FORMAT_NV12_LINEAR_PACKED_INTEL:
-        case HAL_PIXEL_FORMAT_NV12_X_TILED_INTEL:
-        case HAL_PIXEL_FORMAT_NV12_LINEAR_CAMERA_INTEL:
-            return m_nv12TargetSupported;
+  switch (format) {
+    case HAL_PIXEL_FORMAT_RGBA_8888:
+    case HAL_PIXEL_FORMAT_BGRA_8888:
+    case HAL_PIXEL_FORMAT_RGBX_8888:
+    case HAL_PIXEL_FORMAT_RGB_565:
+      return true;
+    case HAL_PIXEL_FORMAT_NV12_Y_TILED_INTEL:
+    case HAL_PIXEL_FORMAT_NV12_LINEAR_INTEL:
+    case HAL_PIXEL_FORMAT_NV12_LINEAR_PACKED_INTEL:
+    case HAL_PIXEL_FORMAT_NV12_X_TILED_INTEL:
+    case HAL_PIXEL_FORMAT_NV12_LINEAR_CAMERA_INTEL:
+      return m_nv12TargetSupported;
 
-        default:
-            return false;
-    }
+    default:
+      return false;
+  }
 }
 
 /// Helper to check the GL status and log errors when found.
 
-bool HwcTestReferenceComposer::getGLError(const char* operation)
-{
-    //printf("-gl-trace: %s\n", operation);
+bool HwcTestReferenceComposer::getGLError(const char *operation) {
+  // printf("-gl-trace: %s\n", operation);
 
-    GLint error = glGetError();
-    if (error != GL_NO_ERROR)
-    {
-        HWCLOGW("HwcTestReferenceComposer: Error 0x%x on %s", error, operation);
-        spRefCmp->mErrorOccurred = true;
-        return true;
-    }
+  GLint error = glGetError();
+  if (error != GL_NO_ERROR) {
+    HWCLOGW("HwcTestReferenceComposer: Error 0x%x on %s", error, operation);
+    spRefCmp->mErrorOccurred = true;
+    return true;
+  }
 
-    return false;
+  return false;
 }
 
 /// Helper to check the EGL status and log errors when found.
 
-bool HwcTestReferenceComposer::getEGLError(const char* operation)
-{
-    //printf("-egl-trace: %s\n", operation);
+bool HwcTestReferenceComposer::getEGLError(const char *operation) {
+  // printf("-egl-trace: %s\n", operation);
 
-    GLint error = eglGetError();
-    if (error != EGL_SUCCESS)
-    {
-        HWCLOGW("HwcTestReferenceComposer: Error 0x%x on %s", error, operation);
-        mErrorOccurred = true;
-        return true;
-    }
-
-    return false;
-}
-
-HwcTestReferenceComposer::GLContextSaver::GLContextSaver(HwcTestReferenceComposer* refCmp)
-  : mRefCmp(refCmp)
-{
-    mPrevDisplay = eglGetCurrentDisplay();
-    refCmp->getEGLError("eglGetCurrentDisplay");
-
-    mPrevDrawSurface = eglGetCurrentSurface(EGL_DRAW);
-    refCmp->getEGLError("eglGetCurrentSurface");
-
-    mPrevReadSurface = eglGetCurrentSurface(EGL_READ);
-    refCmp->getEGLError("eglGetCurrentSurface");
-
-    mPrevContext = eglGetCurrentContext();
-    refCmp->getEGLError("eglGetCurrentContext");
-
-    m_saved = true;
-}
-
-HwcTestReferenceComposer::GLContextSaver::~GLContextSaver()
-{
-    if (m_saved && mPrevContext != EGL_NO_CONTEXT)
-    {
-        eglMakeCurrent(mPrevDisplay, mPrevDrawSurface, mPrevReadSurface, mPrevContext);
-        mRefCmp->getEGLError("eglMakeCurrent ~GLContextSaver");
-    }
-    else
-    {
-        eglMakeCurrent(mRefCmp->m_display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
-        mRefCmp->getEGLError("eglMakeCurrent ~GLContextSaver (2)");
-    }
-}
-
-HwcTestReferenceComposer::CShader::CShader():
-    m_isIdValid(false)
-{
-}
-
-HwcTestReferenceComposer::CShader::~CShader()
-{
-    destroy();
-}
-
-bool HwcTestReferenceComposer::CShader::lazyCreate(GLenum shaderType, const char* source)
-{
-    m_id = glCreateShader(shaderType);
-
-    if (getGLError("glCreateShader"))
-    {
-        destroy();
-        return false;
-    }
-
-    m_isIdValid = true;
-
-    // The object creation has finished and we set it up with some values
-    glShaderSource(m_id, 1, &source, NULL);
-    if (getGLError("glShaderSource"))
-    {
-        destroy();
-        return false;
-    }
-
-    glCompileShader(m_id);
-    if (getGLError("glCompileShader"))
-    {
-        destroy();
-        return false;
-    }
-
-    GLint compiledStatus = 0;
-
-    glGetShaderiv(m_id, GL_COMPILE_STATUS, &compiledStatus);
-    if (getGLError("glGetShaderiv") || compiledStatus != GL_TRUE)
-    {
-        char buffer[1000];
-
-        // Show the shader compilation errors
-        const char* description = "Description not available";
-
-        glGetShaderInfoLog(m_id, sizeof(buffer), NULL, buffer);
-        if (!getGLError("glGetShaderInfoLog"))
-        {
-            description = buffer;
-        }
-
-        HWCERROR(eCheckGlFail, "HwcTestReferenceComposer: Error on shader compilation: %s. \n%s\n", description, source);
-
-        destroy();
-        return false;
-    }
-
+  GLint error = eglGetError();
+  if (error != EGL_SUCCESS) {
+    HWCLOGW("HwcTestReferenceComposer: Error 0x%x on %s", error, operation);
+    mErrorOccurred = true;
     return true;
+  }
+
+  return false;
 }
 
-/* Use one of the mandatory resources created on the lazy constructor as a marker
+HwcTestReferenceComposer::GLContextSaver::GLContextSaver(
+    HwcTestReferenceComposer *refCmp)
+    : mRefCmp(refCmp) {
+  mPrevDisplay = eglGetCurrentDisplay();
+  refCmp->getEGLError("eglGetCurrentDisplay");
+
+  mPrevDrawSurface = eglGetCurrentSurface(EGL_DRAW);
+  refCmp->getEGLError("eglGetCurrentSurface");
+
+  mPrevReadSurface = eglGetCurrentSurface(EGL_READ);
+  refCmp->getEGLError("eglGetCurrentSurface");
+
+  mPrevContext = eglGetCurrentContext();
+  refCmp->getEGLError("eglGetCurrentContext");
+
+  m_saved = true;
+}
+
+HwcTestReferenceComposer::GLContextSaver::~GLContextSaver() {
+  if (m_saved && mPrevContext != EGL_NO_CONTEXT) {
+    eglMakeCurrent(mPrevDisplay, mPrevDrawSurface, mPrevReadSurface,
+                   mPrevContext);
+    mRefCmp->getEGLError("eglMakeCurrent ~GLContextSaver");
+  } else {
+    eglMakeCurrent(mRefCmp->m_display, EGL_NO_SURFACE, EGL_NO_SURFACE,
+                   EGL_NO_CONTEXT);
+    mRefCmp->getEGLError("eglMakeCurrent ~GLContextSaver (2)");
+  }
+}
+
+HwcTestReferenceComposer::CShader::CShader() : m_isIdValid(false) {
+}
+
+HwcTestReferenceComposer::CShader::~CShader() {
+  destroy();
+}
+
+bool HwcTestReferenceComposer::CShader::lazyCreate(GLenum shaderType,
+                                                   const char *source) {
+  m_id = glCreateShader(shaderType);
+
+  if (getGLError("glCreateShader")) {
+    destroy();
+    return false;
+  }
+
+  m_isIdValid = true;
+
+  // The object creation has finished and we set it up with some values
+  glShaderSource(m_id, 1, &source, NULL);
+  if (getGLError("glShaderSource")) {
+    destroy();
+    return false;
+  }
+
+  glCompileShader(m_id);
+  if (getGLError("glCompileShader")) {
+    destroy();
+    return false;
+  }
+
+  GLint compiledStatus = 0;
+
+  glGetShaderiv(m_id, GL_COMPILE_STATUS, &compiledStatus);
+  if (getGLError("glGetShaderiv") || compiledStatus != GL_TRUE) {
+    char buffer[1000];
+
+    // Show the shader compilation errors
+    const char *description = "Description not available";
+
+    glGetShaderInfoLog(m_id, sizeof(buffer), NULL, buffer);
+    if (!getGLError("glGetShaderInfoLog")) {
+      description = buffer;
+    }
+
+    HWCERROR(
+        eCheckGlFail,
+        "HwcTestReferenceComposer: Error on shader compilation: %s. \n%s\n",
+        description, source);
+
+    destroy();
+    return false;
+  }
+
+  return true;
+}
+
+/* Use one of the mandatory resources created on the lazy constructor as a
+ marker
  telling us whether the the instance is fully created */
 
-bool HwcTestReferenceComposer::CShader::isCreated() const
-{
-    return m_isIdValid;
+bool HwcTestReferenceComposer::CShader::isCreated() const {
+  return m_isIdValid;
 }
 
-void HwcTestReferenceComposer::CShader::destroy()
-{
-    if (isCreated())
-    {
-        glDeleteShader(m_id);
-        getGLError("glDeleteShader");
+void HwcTestReferenceComposer::CShader::destroy() {
+  if (isCreated()) {
+    glDeleteShader(m_id);
+    getGLError("glDeleteShader");
 
-        m_isIdValid = false;
-    }
+    m_isIdValid = false;
+  }
 }
 
-GLuint HwcTestReferenceComposer::CShader::getId() const
-{
-    return m_id;
+GLuint HwcTestReferenceComposer::CShader::getId() const {
+  return m_id;
 }
 
-HwcTestReferenceComposer::CProgram::CProgram():
-    m_isIdValid(false)
-{
+HwcTestReferenceComposer::CProgram::CProgram() : m_isIdValid(false) {
 }
 
-HwcTestReferenceComposer::CProgram::~CProgram()
-{
-    destroy();
+HwcTestReferenceComposer::CProgram::~CProgram() {
+  destroy();
 }
 
 /** \brief Link several shaders to produce a ready to use program
@@ -261,198 +238,177 @@ sequence was successful the id of the newly created program replaces the
 old one. The program id becomes 0 otherwise.
 */
 
-bool HwcTestReferenceComposer::CProgram::lazyCreate(unsigned int numShaders, ...)
-{
-    m_id = glCreateProgram();
-    if (getGLError("glCreateProgram"))
-    {
-        destroy();
-        return false;
-    }
-
-    m_isIdValid = true;
-
-    // The object creation has finished and we set it up with some values
-
-    // Attach the shaders
-
-    unsigned int index;
-
-    va_list arguments;
-    va_start(arguments, numShaders);
-
-    for (index = 0; index < numShaders; ++index)
-    {
-        const CShader* shader = va_arg(arguments, const CShader *);
-
-        glAttachShader(m_id, shader->getId());
-        if (getGLError("glAttachShader"))
-        {
-            destroy();
-            return false;
-        }
-    }
-
-    va_end(arguments);
-
-    // Link the program
-
-    glLinkProgram(m_id);
-    if (getGLError("glLinkProgram"))
-    {
-        destroy();
-        return false;
-    }
-
-    GLint linkStatus = GL_FALSE;
-
-    glGetProgramiv(m_id, GL_LINK_STATUS, &linkStatus);
-    if (getGLError("glGetProgramiv") || linkStatus != GL_TRUE)
-    {
-        char buffer[1000];
-
-        // Show the shader compilation errors
-        const char* description = "Description not available";
-
-        glGetProgramInfoLog(m_id, sizeof(buffer), NULL, buffer);
-        if (!getGLError("glGetProgramInfoLog"))
-        {
-            description = buffer;
-        }
-
-        HWCERROR(eCheckGlFail, "HwcTestReferenceComposer: Error on program linkage: %s.", description );
-
-        destroy();
-        return false;
-    }
-
-    return true;
-}
-
-bool HwcTestReferenceComposer::CProgram::isCreated() const
-{
-    return m_isIdValid;
-}
-
-void HwcTestReferenceComposer::CProgram::destroy()
-{
-    if (isCreated())
-    {
-        glDeleteProgram(m_id);
-        getGLError("glDeleteProgram");
-
-        m_isIdValid = false;
-    }
-}
-
-GLuint HwcTestReferenceComposer::CProgram::getId() const
-{
-    return m_id;
-}
-
-bool HwcTestReferenceComposer::CProgram::use()
-{
-    bool result;
-
-    glUseProgram(m_id);
-    if (getGLError("glUseProgram"))
-    {
-        result = false;
-    }
-    else
-    {
-        result = true;
-    }
-
-    return result;
-}
-
-HwcTestReferenceComposer::CProgramStore::CProgramStore()
-{
-    // No program is currently set
-    m_current = 0;
-}
-
-HwcTestReferenceComposer::CProgramStore::~CProgramStore()
-{
+bool HwcTestReferenceComposer::CProgram::lazyCreate(unsigned int numShaders,
+                                                    ...) {
+  m_id = glCreateProgram();
+  if (getGLError("glCreateProgram")) {
     destroy();
-}
+    return false;
+  }
 
-void HwcTestReferenceComposer::CProgramStore::destroy()
-{
-    for (uint32_t i=0; i<2; ++i)
-    {
-        for (uint32_t j=0; j<2; ++j)
-        {
-            for (uint32_t k=0; k<2; ++k)
-            {
-                mPrograms[i][j][k].destroy();
-            }
-        }
+  m_isIdValid = true;
+
+  // The object creation has finished and we set it up with some values
+
+  // Attach the shaders
+
+  unsigned int index;
+
+  va_list arguments;
+  va_start(arguments, numShaders);
+
+  for (index = 0; index < numShaders; ++index) {
+    const CShader *shader = va_arg(arguments, const CShader *);
+
+    glAttachShader(m_id, shader->getId());
+    if (getGLError("glAttachShader")) {
+      destroy();
+      return false;
+    }
+  }
+
+  va_end(arguments);
+
+  // Link the program
+
+  glLinkProgram(m_id);
+  if (getGLError("glLinkProgram")) {
+    destroy();
+    return false;
+  }
+
+  GLint linkStatus = GL_FALSE;
+
+  glGetProgramiv(m_id, GL_LINK_STATUS, &linkStatus);
+  if (getGLError("glGetProgramiv") || linkStatus != GL_TRUE) {
+    char buffer[1000];
+
+    // Show the shader compilation errors
+    const char *description = "Description not available";
+
+    glGetProgramInfoLog(m_id, sizeof(buffer), NULL, buffer);
+    if (!getGLError("glGetProgramInfoLog")) {
+      description = buffer;
     }
 
-    m_current = 0;
+    HWCERROR(eCheckGlFail,
+             "HwcTestReferenceComposer: Error on program linkage: %s.",
+             description);
+
+    destroy();
+    return false;
+  }
+
+  return true;
 }
 
-bool HwcTestReferenceComposer::CProgramStore::bind(uint32_t planeAlpha, bool destIsNV12, bool opaque, bool preMult)
-{
-    bool result = false;
-    float scaledPlaneAlpha = planeAlpha / 255.f;
-
-    HWCLOGV_COND(eLogHarness, "HwcTestReferenceComposer::bind planeAlpha %d %s %s %s",
-        planeAlpha, destIsNV12 ? "NV12" : "Not NV12", opaque ? "OPAQUE" : "BLEND", preMult ? "PREMULT" : "NOPREMULT");
-
-    CRendererProgram& program = mPrograms[destIsNV12 ? 1 : 0] [preMult ? 1 : 0] [opaque ? 1 : 0];
-
-    if (program.isCreated() || lazyCreateProgram(&program, 1, opaque, preMult, destIsNV12))
-    {
-        if (program.use())
-        {
-            if (program.setPlaneAlphaUniform(scaledPlaneAlpha))
-            {
-                m_current = &program;
-                result = true;
-            }
-        }
-    }
-
-    return result;
+bool HwcTestReferenceComposer::CProgram::isCreated() const {
+  return m_isIdValid;
 }
 
-GLint HwcTestReferenceComposer::CProgramStore::getPositionVertexIn() const
-{
-    GLint result = 0;
-    if (m_current)
-    {
-        result = m_current->getPositionVertexIn();
-    }
-    return result;
+void HwcTestReferenceComposer::CProgram::destroy() {
+  if (isCreated()) {
+    glDeleteProgram(m_id);
+    getGLError("glDeleteProgram");
+
+    m_isIdValid = false;
+  }
 }
 
-GLint HwcTestReferenceComposer::CProgramStore::getTexCoordVertexIn() const
-{
-    GLint result = 0;
-    if (m_current)
-    {
-        result = m_current->getTexCoordVertexIn();
+GLuint HwcTestReferenceComposer::CProgram::getId() const {
+  return m_id;
+}
+
+bool HwcTestReferenceComposer::CProgram::use() {
+  bool result;
+
+  glUseProgram(m_id);
+  if (getGLError("glUseProgram")) {
+    result = false;
+  } else {
+    result = true;
+  }
+
+  return result;
+}
+
+HwcTestReferenceComposer::CProgramStore::CProgramStore() {
+  // No program is currently set
+  m_current = 0;
+}
+
+HwcTestReferenceComposer::CProgramStore::~CProgramStore() {
+  destroy();
+}
+
+void HwcTestReferenceComposer::CProgramStore::destroy() {
+  for (uint32_t i = 0; i < 2; ++i) {
+    for (uint32_t j = 0; j < 2; ++j) {
+      for (uint32_t k = 0; k < 2; ++k) {
+        mPrograms[i][j][k].destroy();
+      }
     }
-    return result;
+  }
+
+  m_current = 0;
+}
+
+bool HwcTestReferenceComposer::CProgramStore::bind(uint32_t planeAlpha,
+                                                   bool destIsNV12, bool opaque,
+                                                   bool preMult) {
+  bool result = false;
+  float scaledPlaneAlpha = planeAlpha / 255.f;
+
+  HWCLOGV_COND(eLogHarness,
+               "HwcTestReferenceComposer::bind planeAlpha %d %s %s %s",
+               planeAlpha, destIsNV12 ? "NV12" : "Not NV12",
+               opaque ? "OPAQUE" : "BLEND", preMult ? "PREMULT" : "NOPREMULT");
+
+  CRendererProgram &program =
+      mPrograms[destIsNV12 ? 1 : 0][preMult ? 1 : 0][opaque ? 1 : 0];
+
+  if (program.isCreated() ||
+      lazyCreateProgram(&program, 1, opaque, preMult, destIsNV12)) {
+    if (program.use()) {
+      if (program.setPlaneAlphaUniform(scaledPlaneAlpha)) {
+        m_current = &program;
+        result = true;
+      }
+    }
+  }
+
+  return result;
+}
+
+GLint HwcTestReferenceComposer::CProgramStore::getPositionVertexIn() const {
+  GLint result = 0;
+  if (m_current) {
+    result = m_current->getPositionVertexIn();
+  }
+  return result;
+}
+
+GLint HwcTestReferenceComposer::CProgramStore::getTexCoordVertexIn() const {
+  GLint result = 0;
+  if (m_current) {
+    result = m_current->getTexCoordVertexIn();
+  }
+  return result;
 }
 
 HwcTestReferenceComposer::CProgramStore::CRendererProgram::CRendererProgram()
- : m_vinPosition(0)
-{
-    // Setup the per-plane data
-    m_vinTexCoord = 0;
-    m_uPlaneAlpha = 0;
+    : m_vinPosition(0) {
+  // Setup the per-plane data
+  m_vinTexCoord = 0;
+  m_uPlaneAlpha = 0;
 }
 
-HwcTestReferenceComposer::CProgramStore::CRendererProgram::~CRendererProgram()
-{
-    destroy();
+HwcTestReferenceComposer::CProgramStore::CRendererProgram::~CRendererProgram() {
+  destroy();
 }
 
-// lazyCreateProgram function copied DIRECTLY from GlCellComposer with only references
+// lazyCreateProgram function copied DIRECTLY from GlCellComposer with only
+// references
 // to GlCellComposer removed.
 //
 // HERE numLayers will ALWAYS be 1.
@@ -460,393 +416,354 @@ HwcTestReferenceComposer::CProgramStore::CRendererProgram::~CRendererProgram()
 // This gives us just 2*2*2=8 possible programs.
 //
 bool HwcTestReferenceComposer::CProgramStore::lazyCreateProgram(
-    CProgramStore::CRendererProgram *program,
-    uint32_t numLayers,
-    uint32_t opaqueLayerMask,
-    uint32_t premultLayerMask,
-    bool renderToNV12)
-{
-    bool result = false;
+    CProgramStore::CRendererProgram *program, uint32_t numLayers,
+    uint32_t opaqueLayerMask, uint32_t premultLayerMask, bool renderToNV12) {
+  bool result = false;
 
-    CShader vertexShader;
+  CShader vertexShader;
 
-    String8 vertexShaderSource;
+  String8 vertexShaderSource;
 
-    if (numLayers)
-    {
-        // Multiple layers
-        static const char vertexShaderFormat [] =
-            "#version 300 es\n"
-            "in mediump vec2 vinPosition;\n"
-            "%s"
-            "\n"
-            "out mediump vec2 finTexCoords[%d];\n"
-            "\n"
-            "void main()\n"
-            "{\n"
-            "    gl_Position = vec4(vinPosition.x, vinPosition.y, 0, 1);\n"
-            "%s"
-            "}";
+  if (numLayers) {
+    // Multiple layers
+    static const char vertexShaderFormat[] =
+        "#version 300 es\n"
+        "in mediump vec2 vinPosition;\n"
+        "%s"
+        "\n"
+        "out mediump vec2 finTexCoords[%d];\n"
+        "\n"
+        "void main()\n"
+        "{\n"
+        "    gl_Position = vec4(vinPosition.x, vinPosition.y, 0, 1);\n"
+        "%s"
+        "}";
 
-        static const char texCoordDeclarationFormat[] = "in mediump vec2 vinTexCoords%d;\n";
-        static const char texCoordSetupFormat[] = "    finTexCoords[%d] = vinTexCoords%d;\n";
+    static const char texCoordDeclarationFormat[] =
+        "in mediump vec2 vinTexCoords%d;\n";
+    static const char texCoordSetupFormat[] =
+        "    finTexCoords[%d] = vinTexCoords%d;\n";
 
-        String8 texCoordDeclarationBlock;
-        String8 texCoordSetupBlock;
-        for (uint32_t i = 0; i < numLayers; ++i)
-        {
-            texCoordDeclarationBlock += String8::format(texCoordDeclarationFormat, i);
-            texCoordSetupBlock += String8::format(texCoordSetupFormat, i, i);
+    String8 texCoordDeclarationBlock;
+    String8 texCoordSetupBlock;
+    for (uint32_t i = 0; i < numLayers; ++i) {
+      texCoordDeclarationBlock += String8::format(texCoordDeclarationFormat, i);
+      texCoordSetupBlock += String8::format(texCoordSetupFormat, i, i);
+    }
+
+    vertexShaderSource =
+        String8::format(vertexShaderFormat, texCoordDeclarationBlock.string(),
+                        numLayers, texCoordSetupBlock.string());
+  } else {
+    vertexShaderSource =
+        "#version 300 es\n"
+        "in mediump vec2 vinPosition;\n"
+        "void main()\n"
+        "{\n"
+        "    gl_Position = vec4(vinPosition.x, vinPosition.y, 0, 1);\n"
+        "}";
+  }
+  ALOGD_IF(COMPOSITION_DEBUG, "\nVertex Shader:\n%s\n",
+           vertexShaderSource.string());
+
+  if (!vertexShader.lazyCreate(GL_VERTEX_SHADER, vertexShaderSource)) {
+    ALOGE("Error on \"composite\" vertex shader creation");
+  } else {
+    HwcTestReferenceComposer::CShader fragmentShader;
+
+    String8 fragmentShaderSource;
+
+    // Additional output declarations for NV12
+    static const char fragmentShaderNV12OutputDecls[] =
+        "#extension GL_EXT_YUV_target : require\n"
+        "layout(yuv) ";  // will add before "out vec4 cOut;\n"
+
+    if (numLayers) {
+      // Final Color Conversion for NV12
+      static const char fragmentShaderNV12OutputConversion[] =
+          "    vec3 yuvColor = rgb_2_yuv(outColor.xyz, itu_601);\n"
+          "    outColor = vec4(yuvColor.xyz, outColor.w);\n";
+
+      // Fragment shader main body
+      static const char fragmentShaderFormat[] =
+          "#version 300 es\n"
+          "#extension GL_OES_EGL_image_external : require\n"
+          "%sout mediump vec4 outColor;\n"  // Output Decls
+          "\n"
+          "uniform mediump sampler2D uTexture[%d];\n"
+          "uniform mediump float uPlaneAlpha[%d];\n"
+          "\n"
+          "in mediump vec2 finTexCoords[%d];\n"
+          "\n"
+          "void main()\n"
+          "{\n"
+          "    mediump vec4 incoming;\n"
+          "    mediump float planeAlpha;\n"
+          "%s"  // Layers
+          "%s"  // Output conversion
+          "}";
+
+      // Sample the given texture and get it's plane-alpha
+      static const char blendingFormatSample[] =
+          "    incoming = texture(uTexture[%d], finTexCoords[%d]);\n"
+          "    planeAlpha = uPlaneAlpha[%d];\n";
+
+      // Apply the plane alpha differently for premult and coverage
+      static const char blendingFormatPremultPlaneAlpha[] =
+          "    incoming = incoming * planeAlpha;\n";
+
+      static const char blendingFormatCoveragePlaneAlpha[] =
+          "    incoming.a = incoming.a * planeAlpha;\n";
+
+      // Apply the plane alpha for opaque surfaces (slightly more optimally)
+      static const char blendingFormatOpaquePremultPlaneAlpha[] =
+          "    incoming.rgb = incoming.rgb * planeAlpha;\n"
+          "    incoming.a = planeAlpha;\n";
+
+      static const char blendingFormatOpaqueCoveragePlaneAlpha[] =
+          "    incoming.a = planeAlpha;\n";
+
+      // Note: SurfaceFlinger has a big problem with coverage blending.
+      // If asked to render a single plane with coverage: it will apply
+      // the specified (SRC_ALPHA, 1-SRC_ALPHA) to all four channels
+      // (as per OpenGL spec) and give us a result to blend with
+      // (1, 1-SRC_ALPHA) this will produce a different dst alpha than if
+      // SF had done the whole composition (with a back layer) in GL.
+      // The 'correct' way to do the blend would be to apply
+      // (SRC_ALPHA, 1-SRC_ALPHA) only to the rgb channels and
+      // (1, 1-SRC_ALPHA) for the alpha.
+
+      // Do the coverage multiply
+      static const char blendingFormatCoverageMultiply[] =
+          "    incoming.rgb = incoming.rgb * incoming.a;\n";
+
+      // Write the colour directly for the first layer
+      static const char blendingFormatWrite[] = "    outColor = incoming;\n";
+
+      // Otherwise blend and write
+      static const char blendingFormatWritePremultBlend[] =
+          "    outColor = outColor * (1.0-incoming.a) + incoming;\n";
+
+      String8 blendingBlock;
+
+      for (uint32_t i = 0; i < numLayers; ++i) {
+        blendingBlock += String8::format(blendingFormatSample, i, i, i);
+
+        bool opaque = opaqueLayerMask & (1 << i);
+        bool premult = premultLayerMask & (1 << i);
+        if (opaque) {
+          if (premult)
+            blendingBlock += blendingFormatOpaquePremultPlaneAlpha;
+          else
+            blendingBlock += blendingFormatOpaqueCoveragePlaneAlpha;
+        } else {
+          if (premult)
+            blendingBlock += blendingFormatPremultPlaneAlpha;
+          else
+            blendingBlock += blendingFormatCoveragePlaneAlpha;
         }
-
-        vertexShaderSource = String8::format(vertexShaderFormat, texCoordDeclarationBlock.string(), numLayers, texCoordSetupBlock.string());
-    }
-    else
-    {
-        vertexShaderSource =
-            "#version 300 es\n"
-            "in mediump vec2 vinPosition;\n"
-            "void main()\n"
-            "{\n"
-            "    gl_Position = vec4(vinPosition.x, vinPosition.y, 0, 1);\n"
-            "}";
-    }
-    ALOGD_IF(COMPOSITION_DEBUG, "\nVertex Shader:\n%s\n", vertexShaderSource.string());
-
-    if (!vertexShader.lazyCreate(GL_VERTEX_SHADER, vertexShaderSource))
-    {
-        ALOGE("Error on \"composite\" vertex shader creation");
-    }
-    else
-    {
-        HwcTestReferenceComposer::CShader fragmentShader;
-
-        String8 fragmentShaderSource;
-
-        // Additional output declarations for NV12
-        static const char fragmentShaderNV12OutputDecls[] =
-            "#extension GL_EXT_YUV_target : require\n"
-            "layout(yuv) "; // will add before "out vec4 cOut;\n"
-
-        if (numLayers)
-        {
-            // Final Color Conversion for NV12
-            static const char fragmentShaderNV12OutputConversion[] =
-                "    vec3 yuvColor = rgb_2_yuv(outColor.xyz, itu_601);\n"
-                "    outColor = vec4(yuvColor.xyz, outColor.w);\n";
-
-            // Fragment shader main body
-            static const char fragmentShaderFormat[] =
-                "#version 300 es\n"
-                "#extension GL_OES_EGL_image_external : require\n"
-                "%sout mediump vec4 outColor;\n" // Output Decls
-                "\n"
-                "uniform mediump sampler2D uTexture[%d];\n"
-                "uniform mediump float uPlaneAlpha[%d];\n"
-                "\n"
-                "in mediump vec2 finTexCoords[%d];\n"
-                "\n"
-                "void main()\n"
-                "{\n"
-                "    mediump vec4 incoming;\n"
-                "    mediump float planeAlpha;\n"
-                "%s" // Layers
-                "%s" // Output conversion
-                "}";
-
-            // Sample the given texture and get it's plane-alpha
-            static const char blendingFormatSample[] =
-                "    incoming = texture(uTexture[%d], finTexCoords[%d]);\n"
-                "    planeAlpha = uPlaneAlpha[%d];\n";
-
-            // Apply the plane alpha differently for premult and coverage
-            static const char blendingFormatPremultPlaneAlpha[] =
-                "    incoming = incoming * planeAlpha;\n";
-
-            static const char blendingFormatCoveragePlaneAlpha[] =
-                "    incoming.a = incoming.a * planeAlpha;\n";
-
-            // Apply the plane alpha for opaque surfaces (slightly more optimally)
-            static const char blendingFormatOpaquePremultPlaneAlpha[] =
-                "    incoming.rgb = incoming.rgb * planeAlpha;\n"
-                "    incoming.a = planeAlpha;\n";
-
-            static const char blendingFormatOpaqueCoveragePlaneAlpha[] =
-                "    incoming.a = planeAlpha;\n";
-
-            // Note: SurfaceFlinger has a big problem with coverage blending.
-            // If asked to render a single plane with coverage: it will apply
-            // the specified (SRC_ALPHA, 1-SRC_ALPHA) to all four channels
-            // (as per OpenGL spec) and give us a result to blend with
-            // (1, 1-SRC_ALPHA) this will produce a different dst alpha than if
-            // SF had done the whole composition (with a back layer) in GL.
-            // The 'correct' way to do the blend would be to apply
-            // (SRC_ALPHA, 1-SRC_ALPHA) only to the rgb channels and
-            // (1, 1-SRC_ALPHA) for the alpha.
-
-            // Do the coverage multiply
-            static const char blendingFormatCoverageMultiply[] =
-                "    incoming.rgb = incoming.rgb * incoming.a;\n";
-
-            // Write the colour directly for the first layer
-            static const char blendingFormatWrite[] =
-                "    outColor = incoming;\n";
-
-            // Otherwise blend and write
-            static const char blendingFormatWritePremultBlend[] =
-                "    outColor = outColor * (1.0-incoming.a) + incoming;\n";
-
-            String8 blendingBlock;
-
-            for (uint32_t i = 0; i < numLayers; ++i)
-            {
-                blendingBlock += String8::format(blendingFormatSample, i, i, i);
-
-                bool opaque = opaqueLayerMask & (1 << i);
-                bool premult = premultLayerMask & (1 << i);
-                if (opaque)
-                {
-                    if (premult)
-                        blendingBlock += blendingFormatOpaquePremultPlaneAlpha;
-                    else
-                        blendingBlock += blendingFormatOpaqueCoveragePlaneAlpha;
-                }
-                else
-                {
-                    if (premult)
-                        blendingBlock += blendingFormatPremultPlaneAlpha;
-                    else
-                        blendingBlock += blendingFormatCoveragePlaneAlpha;
-                }
-                if (!premult)
-                    blendingBlock += blendingFormatCoverageMultiply;
-                if (i == 0)
-                    blendingBlock += blendingFormatWrite;
-                else
-                    blendingBlock += blendingFormatWritePremultBlend;
-            }
-
-            String8 outputDecls;
-            String8 outputConversion;
-
-            if (renderToNV12)
-            {
-                outputDecls = fragmentShaderNV12OutputDecls;
-                outputConversion = fragmentShaderNV12OutputConversion;
-            }
-
-            fragmentShaderSource = String8::format(fragmentShaderFormat, outputDecls.string(), numLayers, numLayers, numLayers, blendingBlock.string(), outputConversion.string());
-        }
+        if (!premult)
+          blendingBlock += blendingFormatCoverageMultiply;
+        if (i == 0)
+          blendingBlock += blendingFormatWrite;
         else
-        {
-            // Zero layers should result in clear to transparent
-          static const char fragmentShaderFormat[] =
-              "#version 300 es\n"
-              "%sout mediump vec4 outColor;\n"
-              "void main()\n"
-              "{\n"
-              "    outColor = %s;\n"
-              "}";
+          blendingBlock += blendingFormatWritePremultBlend;
+      }
 
-            String8 outputDecls;
-            String8 outputValue;
-            if (renderToNV12)
-            {
-                outputDecls = fragmentShaderNV12OutputDecls;
-                outputValue = "vec4(rgb_2_yuv(vec3(0,0,0), itu_601), 0)";
-            }
-            else
-            {
-                outputValue = "vec4(0,0,0,0)";
-            }
+      String8 outputDecls;
+      String8 outputConversion;
 
-            fragmentShaderSource = String8::format(fragmentShaderFormat, outputDecls.string(), outputValue.string());
-        }
+      if (renderToNV12) {
+        outputDecls = fragmentShaderNV12OutputDecls;
+        outputConversion = fragmentShaderNV12OutputConversion;
+      }
 
-        ALOGD_IF(COMPOSITION_DEBUG, "Fragment Shader:\n%s\n", fragmentShaderSource.string());
+      fragmentShaderSource = String8::format(
+          fragmentShaderFormat, outputDecls.string(), numLayers, numLayers,
+          numLayers, blendingBlock.string(), outputConversion.string());
+    } else {
+      // Zero layers should result in clear to transparent
+      static const char fragmentShaderFormat[] =
+          "#version 300 es\n"
+          "%sout mediump vec4 outColor;\n"
+          "void main()\n"
+          "{\n"
+          "    outColor = %s;\n"
+          "}";
 
-        if (!fragmentShader.lazyCreate(GL_FRAGMENT_SHADER, fragmentShaderSource))
-        {
-            ALOGE("Error on \"composite\" fragment shader creation");
-        }
-        else if (!program->lazyCreate(2, &vertexShader, &fragmentShader))
-        {
-            ALOGE("Error on \"composite\" program shader creation");
-        }
-        else if (!program->use())
-        {
-            ALOGE("Error on \"composite\" program binding");
-        }
-        else if (!program->getLocations())
-        {
-            ALOGE("Error on \"composite\" program shader locations query");
-            program->destroy();
-        }
-        else
-        {
-            result = true;
-        }
+      String8 outputDecls;
+      String8 outputValue;
+      if (renderToNV12) {
+        outputDecls = fragmentShaderNV12OutputDecls;
+        outputValue = "vec4(rgb_2_yuv(vec3(0,0,0), itu_601), 0)";
+      } else {
+        outputValue = "vec4(0,0,0,0)";
+      }
+
+      fragmentShaderSource = String8::format(
+          fragmentShaderFormat, outputDecls.string(), outputValue.string());
     }
 
-    return result;
+    ALOGD_IF(COMPOSITION_DEBUG, "Fragment Shader:\n%s\n",
+             fragmentShaderSource.string());
+
+    if (!fragmentShader.lazyCreate(GL_FRAGMENT_SHADER, fragmentShaderSource)) {
+      ALOGE("Error on \"composite\" fragment shader creation");
+    } else if (!program->lazyCreate(2, &vertexShader, &fragmentShader)) {
+      ALOGE("Error on \"composite\" program shader creation");
+    } else if (!program->use()) {
+      ALOGE("Error on \"composite\" program binding");
+    } else if (!program->getLocations()) {
+      ALOGE("Error on \"composite\" program shader locations query");
+      program->destroy();
+    } else {
+      result = true;
+    }
+  }
+
+  return result;
 }
 
-bool HwcTestReferenceComposer::CProgramStore::CRendererProgram::setPlaneAlphaUniform(float alpha)
-{
-    bool result = true;
+bool
+HwcTestReferenceComposer::CProgramStore::CRendererProgram::setPlaneAlphaUniform(
+    float alpha) {
+  bool result = true;
 
-    if (m_planeAlpha != alpha)
-    {
-        glUniform1f(m_uPlaneAlpha, alpha);
-        if (getGLError("glUniform1f"))
-        {
-            ALOGE("Unable to set the plane alpha uniform (%d) to %f", m_uPlaneAlpha, (double) alpha);
-            result = false;
-        }
-        else
-        {
-            m_planeAlpha = alpha;
-        }
+  if (m_planeAlpha != alpha) {
+    glUniform1f(m_uPlaneAlpha, alpha);
+    if (getGLError("glUniform1f")) {
+      ALOGE("Unable to set the plane alpha uniform (%d) to %f", m_uPlaneAlpha,
+            (double)alpha);
+      result = false;
+    } else {
+      m_planeAlpha = alpha;
     }
-    return result;
+  }
+  return result;
 }
 
-bool HwcTestReferenceComposer::CProgramStore::CRendererProgram::getLocations()
-{
-    return CProgramStore::getLocations(getId(), &m_vinPosition, &m_vinTexCoord, &m_uPlaneAlpha, &m_planeAlpha);
+bool HwcTestReferenceComposer::CProgramStore::CRendererProgram::getLocations() {
+  return CProgramStore::getLocations(getId(), &m_vinPosition, &m_vinTexCoord,
+                                     &m_uPlaneAlpha, &m_planeAlpha);
 }
 
 bool HwcTestReferenceComposer::CProgramStore::getLocations(
-    GLint programId,
-    GLint *pvinPosition,
-    GLint *pvinTexCoord,
-    GLint* puPlaneAlpha,
-    GLfloat* pPlaneAlpha
-)
-{
-    bool result = true;
+    GLint programId, GLint *pvinPosition, GLint *pvinTexCoord,
+    GLint *puPlaneAlpha, GLfloat *pPlaneAlpha) {
+  bool result = true;
 
-    GLint vinPosition = 0;
-    GLint vinTexCoord = 0;
-    GLint uTexture = 0;
+  GLint vinPosition = 0;
+  GLint vinTexCoord = 0;
+  GLint uTexture = 0;
 
-    // Force plane alpha to be set first time
-    static const GLfloat defaultAlpha = -1.f;
-    GLint uPlaneAlpha = 0;
+  // Force plane alpha to be set first time
+  static const GLfloat defaultAlpha = -1.f;
+  GLint uPlaneAlpha = 0;
 
-    if (pvinPosition)
-    {
-        vinPosition = glGetAttribLocation(programId, "vinPosition");
-        if (getGLError("glGetAttribLocation"))
-        {
-            HWCERROR(eCheckGlFail, "HwcTestReferenceComposer: Error on glGetAttribLocation");
-            result = false;
-        }
+  if (pvinPosition) {
+    vinPosition = glGetAttribLocation(programId, "vinPosition");
+    if (getGLError("glGetAttribLocation")) {
+      HWCERROR(eCheckGlFail,
+               "HwcTestReferenceComposer: Error on glGetAttribLocation");
+      result = false;
+    }
+  }
+
+  if (pvinTexCoord) {
+    vinTexCoord = glGetAttribLocation(programId, "vinTexCoords0");
+    if (getGLError("glGetAttribLocation")) {
+      HWCERROR(eCheckGlFail,
+               "HwcTestReferenceComposer: Error on glGetAttribLocation");
+      result = false;
     }
 
-    if (pvinTexCoord)
-    {
-        vinTexCoord = glGetAttribLocation(programId, "vinTexCoords0");
-        if (getGLError("glGetAttribLocation"))
-        {
-            HWCERROR(eCheckGlFail, "HwcTestReferenceComposer: Error on glGetAttribLocation");
-            result = false;
-        }
-
-        if (result)
-        {
-            uTexture = glGetUniformLocation(programId, "uTexture");
-            if (getGLError("glGetUniformLocation"))
-            {
-                HWCERROR(eCheckGlFail, "HwcTestReferenceComposer: Unable to find the uTexture uniform location");
-                result = false;
-            }
-        }
-
-        // Setup a default value
-        if (result)
-        {
-            GLint texturingUnits[] = {0};
-            glUniform1iv(uTexture, 1, texturingUnits);
-            if (getGLError("glUniform1iv"))
-            {
-                HWCERROR(eCheckGlFail, "HwcTestReferenceComposer: Unable to set the uTexture uniform");
-                result = false;
-            }
-        }
+    if (result) {
+      uTexture = glGetUniformLocation(programId, "uTexture");
+      if (getGLError("glGetUniformLocation")) {
+        HWCERROR(eCheckGlFail,
+                 "HwcTestReferenceComposer: Unable to find the uTexture "
+                 "uniform location");
+        result = false;
+      }
     }
 
-    if (puPlaneAlpha)
-    {
-        uPlaneAlpha = glGetUniformLocation(programId, "uPlaneAlpha[0]");
-        if (getGLError("glGetUniformLocation"))
-        {
-            HWCERROR(eCheckGlFail, "HwcTestReferenceComposer: Unable to find the uPlaneAlpha[0] uniform location");
-            result = false;
-        }
+    // Setup a default value
+    if (result) {
+      GLint texturingUnits[] = {0};
+      glUniform1iv(uTexture, 1, texturingUnits);
+      if (getGLError("glUniform1iv")) {
+        HWCERROR(
+            eCheckGlFail,
+            "HwcTestReferenceComposer: Unable to set the uTexture uniform");
+        result = false;
+      }
+    }
+  }
+
+  if (puPlaneAlpha) {
+    uPlaneAlpha = glGetUniformLocation(programId, "uPlaneAlpha[0]");
+    if (getGLError("glGetUniformLocation")) {
+      HWCERROR(eCheckGlFail,
+               "HwcTestReferenceComposer: Unable to find the uPlaneAlpha[0] "
+               "uniform location");
+      result = false;
+    }
+  }
+
+  // Setup the outputs, if everything went ok
+  if (result) {
+    if (pvinPosition) {
+      *pvinPosition = vinPosition;
     }
 
-    // Setup the outputs, if everything went ok
-    if (result)
-    {
-        if (pvinPosition)
-        {
-            *pvinPosition = vinPosition;
-        }
-
-        if (pvinTexCoord)
-        {
-            *pvinTexCoord = vinTexCoord;
-        }
-
-        if (puPlaneAlpha)
-        {
-            *puPlaneAlpha = uPlaneAlpha;
-            *pPlaneAlpha = defaultAlpha;
-        }
+    if (pvinTexCoord) {
+      *pvinTexCoord = vinTexCoord;
     }
 
-    return result;
+    if (puPlaneAlpha) {
+      *puPlaneAlpha = uPlaneAlpha;
+      *pPlaneAlpha = defaultAlpha;
+    }
+  }
+
+  return result;
 }
 
 // This composition class adds a dither pattern to the render target.
 // It currently assumes that the dithering is to a 6:6:6 display
 
-HwcTestReferenceComposer::HwcTestReferenceComposer():
-    m_remainingConstructorAttempts(1),
-    m_display(EGL_NO_DISPLAY),
-    m_surface(EGL_NO_SURFACE),
-    m_context(EGL_NO_CONTEXT),
-    m_isFboIdValid(false),
-    m_areVboIdsValid(false),
-    m_nextVboIdIndex(0),
-    m_destEGLImageCreated(false),
-    m_destTextureCreated(false),
-    m_destTextureSet(false),
-    m_destWidth(0),
-    m_destHeight(0),
-    m_destGraphicBuffer(0),
-    m_destTextureId(0),
-    m_destTextureAttachedToFBO(false),
-    m_nv12TargetSupported(false),
-    m_destIsNV12(false),
-    m_sourceEGLImagesCreated(0),
-    m_sourceTexturesCreated(0),
-    m_sourceTexturesSet(0),
-    m_sourceGraphicBuffers(0),
-    m_sourceEGLImages(0),
-    m_sourceTextureIds(0),
-    m_maxSourceLayers(0)
-{
-    spRefCmp = this;
+HwcTestReferenceComposer::HwcTestReferenceComposer()
+    : m_remainingConstructorAttempts(1),
+      m_display(EGL_NO_DISPLAY),
+      m_surface(EGL_NO_SURFACE),
+      m_context(EGL_NO_CONTEXT),
+      m_isFboIdValid(false),
+      m_areVboIdsValid(false),
+      m_nextVboIdIndex(0),
+      m_destEGLImageCreated(false),
+      m_destTextureCreated(false),
+      m_destTextureSet(false),
+      m_destWidth(0),
+      m_destHeight(0),
+      m_destGraphicBuffer(0),
+      m_destTextureId(0),
+      m_destTextureAttachedToFBO(false),
+      m_nv12TargetSupported(false),
+      m_destIsNV12(false),
+      m_sourceEGLImagesCreated(0),
+      m_sourceTexturesCreated(0),
+      m_sourceTexturesSet(0),
+      m_sourceGraphicBuffers(0),
+      m_sourceEGLImages(0),
+      m_sourceTextureIds(0),
+      m_maxSourceLayers(0) {
+  spRefCmp = this;
 }
 
-HwcTestReferenceComposer::~HwcTestReferenceComposer()
-{
-    if (isCreated())
-    {
-        destroy();
-    }
+HwcTestReferenceComposer::~HwcTestReferenceComposer() {
+  if (isCreated()) {
+    destroy();
+  }
 }
 
 /**
@@ -855,272 +772,241 @@ HwcTestReferenceComposer::~HwcTestReferenceComposer()
  was already performed.
 */
 
-bool HwcTestReferenceComposer::isCreated() const
-{
-    return m_isFboIdValid != 0;
+bool HwcTestReferenceComposer::isCreated() const {
+  return m_isFboIdValid != 0;
 }
 
-bool HwcTestReferenceComposer::lazyCreate()
-{
-    // If the construction failed too many times we do not want to retry it
-    // forever and further flood the logs
+bool HwcTestReferenceComposer::lazyCreate() {
+  // If the construction failed too many times we do not want to retry it
+  // forever and further flood the logs
 
-    if (m_remainingConstructorAttempts == 0)
-    {
-        return false;
-    }
+  if (m_remainingConstructorAttempts == 0) {
+    return false;
+  }
 
-    --m_remainingConstructorAttempts;
+  --m_remainingConstructorAttempts;
 
-    // Get a connection to the display
-    m_display = eglGetDisplay( EGL_DEFAULT_DISPLAY );
-    ALOGE("m_displayi 3 = %p ",m_display);
-    if (getEGLError("eglGetDisplay") || m_display == EGL_NO_DISPLAY)
-    {
-        HWCERROR(eCheckGlFail, "HwcTestReferenceComposer: Error on eglGetDisplay");
-        destroy();
-        return false;
-    }
+  // Get a connection to the display
+  m_display = eglGetDisplay(EGL_DEFAULT_DISPLAY);
+  ALOGE("m_displayi 3 = %p ", m_display);
+  if (getEGLError("eglGetDisplay") || m_display == EGL_NO_DISPLAY) {
+    HWCERROR(eCheckGlFail, "HwcTestReferenceComposer: Error on eglGetDisplay");
+    destroy();
+    return false;
+  }
 
-    // Initialize EGL
+  // Initialize EGL
 
-    GLint majorVersion, minorVersion;
+  GLint majorVersion, minorVersion;
 
-    GLint status = eglInitialize(m_display, &majorVersion, &minorVersion);
-    if (getEGLError("eglInitialize") || status == EGL_FALSE)
-    {
-        HWCERROR(eCheckGlFail, "HwcTestReferenceComposer: Error on eglInitialize");
-        destroy();
-        return false;
-    }
+  GLint status = eglInitialize(m_display, &majorVersion, &minorVersion);
+  if (getEGLError("eglInitialize") || status == EGL_FALSE) {
+    HWCERROR(eCheckGlFail, "HwcTestReferenceComposer: Error on eglInitialize");
+    destroy();
+    return false;
+  }
 
-    // Get a configuration with at least 8 bits for red, green, blue and alpha.
-    EGLConfig config;
-    EGLint numConfigs;
-    static EGLint const attributes[] =
-    {
-        EGL_RED_SIZE, 8,
-        EGL_GREEN_SIZE, 8,
-        EGL_BLUE_SIZE, 8,
-        EGL_ALPHA_SIZE, 8,
-        EGL_DEPTH_SIZE, 0,
-        EGL_STENCIL_SIZE, 0,
-        EGL_SURFACE_TYPE, EGL_PBUFFER_BIT,
-        EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
-        EGL_NONE
-    };
+  // Get a configuration with at least 8 bits for red, green, blue and alpha.
+  EGLConfig config;
+  EGLint numConfigs;
+  static EGLint const attributes[] = {
+      EGL_RED_SIZE,       8,                EGL_GREEN_SIZE,
+      8,                  EGL_BLUE_SIZE,    8,
+      EGL_ALPHA_SIZE,     8,                EGL_DEPTH_SIZE,
+      0,                  EGL_STENCIL_SIZE, 0,
+      EGL_SURFACE_TYPE,   EGL_PBUFFER_BIT,  EGL_RENDERABLE_TYPE,
+      EGL_OPENGL_ES2_BIT, EGL_NONE};
 
-    eglChooseConfig(m_display, attributes, &config, 1, &numConfigs);
-    if (getEGLError("eglChooseConfig") || numConfigs == 0)
-    {
-        HWCERROR(eCheckGlFail, "HwcTestReferenceComposer: Error on eglChooseConfig");
-        destroy();
-        return false;
-    }
+  eglChooseConfig(m_display, attributes, &config, 1, &numConfigs);
+  if (getEGLError("eglChooseConfig") || numConfigs == 0) {
+    HWCERROR(eCheckGlFail,
+             "HwcTestReferenceComposer: Error on eglChooseConfig");
+    destroy();
+    return false;
+  }
 
-    // Create the context
-    EGLint context_attribs[] =
-    {
-        EGL_CONTEXT_CLIENT_VERSION, 2,
-        EGL_NONE
-    };
+  // Create the context
+  EGLint context_attribs[] = {EGL_CONTEXT_CLIENT_VERSION, 2, EGL_NONE};
 
-    m_context = eglCreateContext(m_display, config, EGL_NO_CONTEXT, context_attribs);
-    if (getEGLError("eglCreateContext") || m_context == EGL_NO_CONTEXT)
-    {
-        HWCERROR(eCheckGlFail, "HwcTestReferenceComposer: Error on eglCreateContext");
-        destroy();
-        return false;
-    }
+  m_context =
+      eglCreateContext(m_display, config, EGL_NO_CONTEXT, context_attribs);
+  if (getEGLError("eglCreateContext") || m_context == EGL_NO_CONTEXT) {
+    HWCERROR(eCheckGlFail,
+             "HwcTestReferenceComposer: Error on eglCreateContext");
+    destroy();
+    return false;
+  }
 
-    // Create a 16x16 pbuffer which is never going to be written to, so the
-    // dimmensions do not really matter
-    static EGLint const pbuffer_attributes[] =
-    {
-        EGL_WIDTH, 16,
-        EGL_HEIGHT, 16,
-        EGL_NONE
-    };
+  // Create a 16x16 pbuffer which is never going to be written to, so the
+  // dimmensions do not really matter
+  static EGLint const pbuffer_attributes[] = {EGL_WIDTH, 16, EGL_HEIGHT, 16,
+                                              EGL_NONE};
 
-    m_surface = eglCreatePbufferSurface(m_display, config, pbuffer_attributes);
-    if (getEGLError("eglCreatePbufferSurface") || m_surface == EGL_NO_SURFACE)
-    {
-        ALOGE("Error on eglCreatePbufferSurface");
-        destroy();
-        return false;
-    }
+  m_surface = eglCreatePbufferSurface(m_display, config, pbuffer_attributes);
+  if (getEGLError("eglCreatePbufferSurface") || m_surface == EGL_NO_SURFACE) {
+    ALOGE("Error on eglCreatePbufferSurface");
+    destroy();
+    return false;
+  }
 
-    // Save the GL context
-    GLContextSaver contextSaver(this);
+  // Save the GL context
+  GLContextSaver contextSaver(this);
 
-    // Switch to the newly created context.
+  // Switch to the newly created context.
+  eglMakeCurrent(m_display, m_surface, m_surface, m_context);
+  if (getEGLError("eglMakeCurrent lazyCreate")) {
+    HWCERROR(eCheckGlFail, "HwcTestReferenceComposer: Error on eglMakeCurrent");
+    destroy();
+    return false;
+  }
+
+  // Create the FBO
+  glGenFramebuffers(1, &m_fboId);
+  if (getGLError("glGenFramebuffers")) {
+    HWCERROR(eCheckGlFail,
+             "HwcTestReferenceComposer: Error on glGenFramebuffers");
+    destroy();
+    return false;
+  }
+
+  m_isFboIdValid = true;
+
+  // Create the vertex buffer object
+  glGenBuffers(NumVboIds, m_vboIds);
+  if (getGLError("glGenBuffers")) {
+    HWCERROR(eCheckGlFail, "HwcTestReferenceComposer: Error on glGenBuffers");
+    destroy();
+    return false;
+  }
+
+  m_areVboIdsValid = true;
+
+  // Because this is a dedicated context that is only used for the
+  // dithering operations we can setup most of the context state as
+  // constant for the whole context life cycle.
+
+  // Bind the frame buffer object
+  glBindFramebuffer(GL_FRAMEBUFFER, m_fboId);
+  if (getGLError("glBindFramebuffer")) {
+    HWCERROR(eCheckGlFail,
+             "HwcTestReferenceComposer: Error on glBindFramebuffer");
+    destroy();
+    return false;
+  }
+
+  if (NumVboIds == 1) {
+    // Bind the VBO
+    glBindBuffer(GL_ARRAY_BUFFER, m_vboIds[0]);
+    getGLError("glBindBuffer");
+  }
+
+  // Disable blending
+  glDisable(GL_BLEND);
+  getGLError("glDisable GL_BLEND");
+
+  // Query the context for extension support
+  m_nv12TargetSupported = strstr((const char *)glGetString(GL_EXTENSIONS),
+                                 "GL_EXT_YUV_target") != NULL;
+
+  return true;
+}
+
+void HwcTestReferenceComposer::destroy() {
+  if (!isCreated()) {
+    return;
+  }
+
+  // Save the GL context
+  GLContextSaver contextSaver(this);
+
+  // Switch to our context (if available)
+  if (m_display != EGL_NO_DISPLAY && m_surface != EGL_NO_SURFACE &&
+      m_context != EGL_NO_CONTEXT) {
     eglMakeCurrent(m_display, m_surface, m_surface, m_context);
-    if (getEGLError("eglMakeCurrent lazyCreate"))
-    {
-        HWCERROR(eCheckGlFail, "HwcTestReferenceComposer: Error on eglMakeCurrent");
-        destroy();
-        return false;
+    if (getEGLError("eglMakeCurrent destroy (2)")) {
+      // Note, resources may leak if there is an error here. However, typically
+      // this
+      // happens with global destructors in tests where its harmless.
+      return;
     }
+  }
 
-    // Create the FBO
-    glGenFramebuffers(1, &m_fboId);
-    if (getGLError("glGenFramebuffers"))
-    {
-        HWCERROR(eCheckGlFail, "HwcTestReferenceComposer: Error on glGenFramebuffers");
-        destroy();
-        return false;
-    }
+  // Destroy the program store
+  m_programStore.destroy();
 
-    m_isFboIdValid = true;
+  // Delete the vertex buffer object
+  if (m_areVboIdsValid) {
+    // Destroy the VBO
+    glDeleteBuffers(NumVboIds, m_vboIds);
+    getGLError("glDeleteBuffers");
 
-    // Create the vertex buffer object
-    glGenBuffers(NumVboIds, m_vboIds);
-    if (getGLError("glGenBuffers"))
-    {
-        HWCERROR(eCheckGlFail, "HwcTestReferenceComposer: Error on glGenBuffers");
-        destroy();
-        return false;
-    }
+    // Mark it as invalid
+    m_areVboIdsValid = false;
+  }
 
-    m_areVboIdsValid = true;
+  // Delete the frame buffer object
+  if (m_isFboIdValid) {
+    // Destroy the FBO
+    glDeleteFramebuffers(1, &m_fboId);
+    getGLError("glDeleteFramebuffers");
 
-    // Because this is a dedicated context that is only used for the
-    // dithering operations we can setup most of the context state as
-    // constant for the whole context life cycle.
+    // Mark it as invalid
+    m_isFboIdValid = false;
+  }
 
-    // Bind the frame buffer object
-    glBindFramebuffer(GL_FRAMEBUFFER, m_fboId);
-    if (getGLError("glBindFramebuffer"))
-    {
-        HWCERROR(eCheckGlFail, "HwcTestReferenceComposer: Error on glBindFramebuffer");
-        destroy();
-        return false;
-    }
+  // Unset the context and surface
+  if (m_display != EGL_NO_DISPLAY) {
+    eglMakeCurrent(m_display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
+    getEGLError("eglMakeCurrent destroy(3)");
+  }
 
-    if (NumVboIds == 1)
-    {
-        // Bind the VBO
-        glBindBuffer(GL_ARRAY_BUFFER, m_vboIds[0]);
-        getGLError("glBindBuffer");
-    }
+  // Destroy the surface
+  if (m_surface != EGL_NO_SURFACE) {
+    eglDestroySurface(m_display, m_surface);
+    getEGLError("eglDestroySurface");
 
-    // Disable blending
-    glDisable(GL_BLEND);
-    getGLError("glDisable GL_BLEND");
+    // Mark it as invalid
+    m_surface = EGL_NO_SURFACE;
+  }
 
-    // Query the context for extension support
-    m_nv12TargetSupported = strstr((const char *)glGetString(GL_EXTENSIONS), "GL_EXT_YUV_target") != NULL;
+  // Destroy the context
+  if (m_context != EGL_NO_CONTEXT) {
+    eglDestroyContext(m_display, m_context);
+    getEGLError("eglDestroyContext");
+  }
 
-    return true;
+  // Mark the display as invalid
+  m_display = EGL_NO_DISPLAY;
+
+  ALOGE("m_displayi 5 = %p ", m_display);
+  // Free the source layers array
+  freeSourceLayers();
 }
 
-void HwcTestReferenceComposer::destroy()
-{
-    if (!isCreated())
-    {
-        return;
+bool HwcTestReferenceComposer::attachToFBO(GLuint textureId) {
+  bool done = false;
+
+  // Attach the colour buffer
+  glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
+                         m_destIsNV12 ? GL_TEXTURE_EXTERNAL_OES : GL_TEXTURE_2D,
+                         textureId, 0);
+  if (getGLError("glFramebufferTexture2D")) {
+    HWCERROR(eCheckGlFail,
+             "HwcTestReferenceComposer: A temporary texture could not be "
+             "attached to the frame buffer object for target %p",
+             mTargetHandle);
+  } else {
+    GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+    if (getGLError("glCheckFramebufferStatus") ||
+        status != GL_FRAMEBUFFER_COMPLETE) {
+      HWCERROR(eCheckGlFail,
+               "HwcTestReferenceComposer: The frame buffer is not ready");
+    } else {
+      done = true;
     }
+  }
 
-    // Save the GL context
-    GLContextSaver contextSaver(this);
-
-    // Switch to our context (if available)
-    if (
-        m_display != EGL_NO_DISPLAY &&
-        m_surface != EGL_NO_SURFACE &&
-        m_context != EGL_NO_CONTEXT)
-    {
-        eglMakeCurrent(m_display, m_surface, m_surface, m_context);
-        if (getEGLError("eglMakeCurrent destroy (2)"))
-        {
-            // Note, resources may leak if there is an error here. However, typically this
-            // happens with global destructors in tests where its harmless.
-            return;
-        }
-    }
-
-    // Destroy the program store
-    m_programStore.destroy();
-
-    // Delete the vertex buffer object
-    if (m_areVboIdsValid)
-    {
-        // Destroy the VBO
-        glDeleteBuffers(NumVboIds, m_vboIds);
-        getGLError("glDeleteBuffers");
-
-        // Mark it as invalid
-        m_areVboIdsValid = false;
-    }
-
-    // Delete the frame buffer object
-    if (m_isFboIdValid)
-    {
-        // Destroy the FBO
-        glDeleteFramebuffers(1, &m_fboId);
-        getGLError("glDeleteFramebuffers");
-
-        // Mark it as invalid
-        m_isFboIdValid = false;
-    }
-
-    // Unset the context and surface
-    if (m_display != EGL_NO_DISPLAY)
-    {
-        eglMakeCurrent(m_display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
-        getEGLError("eglMakeCurrent destroy(3)");
-    }
-
-    // Destroy the surface
-    if (m_surface != EGL_NO_SURFACE)
-    {
-        eglDestroySurface(m_display, m_surface);
-        getEGLError("eglDestroySurface");
-
-        // Mark it as invalid
-        m_surface = EGL_NO_SURFACE;
-    }
-
-    // Destroy the context
-    if (m_context != EGL_NO_CONTEXT)
-    {
-        eglDestroyContext(m_display, m_context);
-        getEGLError("eglDestroyContext");
-    }
-
-    // Mark the display as invalid
-    m_display = EGL_NO_DISPLAY;
-
-    ALOGE("m_displayi 5 = %p ",m_display);
-    // Free the source layers array
-    freeSourceLayers();
-}
-
-bool HwcTestReferenceComposer::attachToFBO(GLuint textureId)
-{
-    bool done = false;
-
-    // Attach the colour buffer
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, m_destIsNV12 ? GL_TEXTURE_EXTERNAL_OES : GL_TEXTURE_2D, textureId, 0);
-    if (getGLError("glFramebufferTexture2D"))
-    {
-        HWCERROR(eCheckGlFail, "HwcTestReferenceComposer: A temporary texture could not be attached to the frame buffer object for target %p",
-            mTargetHandle);
-    }
-    else
-    {
-        GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
-        if (getGLError("glCheckFramebufferStatus") || status != GL_FRAMEBUFFER_COMPLETE)
-        {
-            HWCERROR(eCheckGlFail, "HwcTestReferenceComposer: The frame buffer is not ready");
-        }
-        else
-        {
-            done = true;
-        }
-    }
-
-    return done;
+  return done;
 }
 
 void HwcTestReferenceComposer::setTexture(
@@ -1128,121 +1014,115 @@ void HwcTestReferenceComposer::setTexture(
     bool *pTextureCreated, bool *pTextureSet,
     android::sp<android::GraphicBuffer> *pGraphicBuffer, EGLImageKHR *pEGLImage,
     GLuint *pTextureId, int filter) {
-    // Nothing is successfull, unless something different is later stated
-    *pEGLImageCreated = false;
-    *pTextureCreated = false;
-    *pTextureSet = false;
+  // Nothing is successfull, unless something different is later stated
+  *pEGLImageCreated = false;
+  *pTextureCreated = false;
+  *pTextureSet = false;
 
-    Hwcval::buffer_details_t bi;
+  Hwcval::buffer_details_t bi;
 
-    if (layer->handle)
-    {
-        // If we have a handle, make sure the BufferInfo is updated
-        HWCCHECK(eCheckGrallocDetails);
-        if (DrmShimBuffer::GetBufferInfo(layer->handle, &bi))
-        {
-            HWCERROR(eCheckGrallocDetails, "Failed to get gralloc buffer info in reference composer");
-        }
+  if (layer->handle) {
+    // If we have a handle, make sure the BufferInfo is updated
+    HWCCHECK(eCheckGrallocDetails);
+    if (DrmShimBuffer::GetBufferInfo(layer->handle, &bi)) {
+      HWCERROR(eCheckGrallocDetails,
+               "Failed to get gralloc buffer info in reference composer");
     }
-    bi.pitch = bi.width;
+  }
+  bi.pitch = bi.width;
 #if ANDROID_VERSION > 711
-    *pGraphicBuffer = new android::GraphicBuffer(bi.width, bi.height, bi.format, 1,
-            bi.usage, bi.pitch, const_cast<native_handle*>(layer->handle), false);
+  *pGraphicBuffer = new android::GraphicBuffer(
+      bi.width, bi.height, bi.format, 1, bi.usage, bi.pitch,
+      const_cast<native_handle *>(layer->handle), false);
 #else
-    *pGraphicBuffer = new android::GraphicBuffer(bi.width, bi.height, bi.format,
-            bi.usage, bi.pitch, const_cast<native_handle*>(layer->handle), false);
+  *pGraphicBuffer = new android::GraphicBuffer(
+      bi.width, bi.height, bi.format, bi.usage, bi.pitch,
+      const_cast<native_handle *>(layer->handle), false);
 #endif
-    ALOGE("buffer = %p  width = %u height = %u",(*pGraphicBuffer)->getNativeBuffer(), bi.width, bi.height, bi.format);
-    *pEGLImage = eglCreateImageKHR(m_display, EGL_NO_CONTEXT, EGL_NATIVE_BUFFER_ANDROID, EGLClientBuffer((*pGraphicBuffer)->getNativeBuffer()), 0);
-    if (getEGLError("eglCreateImageKHR"))
-    {
-        HWCERROR(eCheckGlFail, "HwcTestReferenceComposer: A temporary EGL image could not be created");
-    }
-    else
-    {
-        *pEGLImageCreated = true;
+  ALOGE("buffer = %p  width = %u height = %u",
+        (*pGraphicBuffer)->getNativeBuffer(), bi.width, bi.height, bi.format);
+  *pEGLImage = eglCreateImageKHR(
+      m_display, EGL_NO_CONTEXT, EGL_NATIVE_BUFFER_ANDROID,
+      EGLClientBuffer((*pGraphicBuffer)->getNativeBuffer()), 0);
+  if (getEGLError("eglCreateImageKHR")) {
+    HWCERROR(
+        eCheckGlFail,
+        "HwcTestReferenceComposer: A temporary EGL image could not be created");
+  } else {
+    *pEGLImageCreated = true;
 
-        // Create a texture for the EGL image
+    // Create a texture for the EGL image
 
-        glGenTextures(1, pTextureId);
-        if (getGLError("glGenTextures"))
-        {
-            HWCERROR(eCheckGlFail, "HwcTestReferenceComposer: A temporary texture could not be created");
-        }
-        else
-        {
-            *pTextureCreated = true;
+    glGenTextures(1, pTextureId);
+    if (getGLError("glGenTextures")) {
+      HWCERROR(
+          eCheckGlFail,
+          "HwcTestReferenceComposer: A temporary texture could not be created");
+    } else {
+      *pTextureCreated = true;
 
-            glActiveTexture(GL_TEXTURE0 + texturingUnit);
-            if (getGLError("glActiveTexture"))
-            {
-                HWCERROR(eCheckGlFail, "HwcTestReferenceComposer: A temporary texture could not be set\n");
+      glActiveTexture(GL_TEXTURE0 + texturingUnit);
+      if (getGLError("glActiveTexture")) {
+        HWCERROR(
+            eCheckGlFail,
+            "HwcTestReferenceComposer: A temporary texture could not be set\n");
+      } else {
+        glBindTexture(GL_TEXTURE_2D, *pTextureId);
+        if (getGLError("glBindTexture")) {
+          HWCERROR(
+              eCheckGlFail,
+              "HwcTestReferenceComposer: A temporary texture could not be set");
+        } else {
+          glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, filter);
+          if (getGLError("glTexParameteri")) {
+            HWCERROR(eCheckGlFail,
+                     "HwcTestReferenceComposer: A temporary texture could not "
+                     "be set");
+          } else {
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, filter);
+            if (getGLError("glTexParameteri")) {
+              HWCERROR(eCheckGlFail,
+                       "HwcTestReferenceComposer: A temporary texture could "
+                       "not be set");
+            } else {
+              glEGLImageTargetTexture2DOES(GL_TEXTURE_2D,
+                                           (GLeglImageOES)*pEGLImage);
+              if (getGLError("glEGLImageTargetTexture2DOES")) {
+                HWCERROR(eCheckGlFail,
+                         "HwcTestReferenceComposer: A temporary texture could "
+                         "not be set");
+              } else {
+                *pTextureSet = true;
+              }
             }
-            else
-            {
-                glBindTexture(GL_TEXTURE_2D, *pTextureId);
-                if (getGLError("glBindTexture"))
-                {
-                    HWCERROR(eCheckGlFail, "HwcTestReferenceComposer: A temporary texture could not be set");
-                }
-                else
-                {
-                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, filter);
-                    if (getGLError("glTexParameteri"))
-                    {
-                        HWCERROR(eCheckGlFail, "HwcTestReferenceComposer: A temporary texture could not be set");
-                    }
-                    else
-                    {
-                        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, filter);
-                        if (getGLError("glTexParameteri"))
-                        {
-                            HWCERROR(eCheckGlFail, "HwcTestReferenceComposer: A temporary texture could not be set");
-                        }
-                        else
-                        {
-                            glEGLImageTargetTexture2DOES(GL_TEXTURE_2D, (GLeglImageOES)*pEGLImage);
-                            if (getGLError("glEGLImageTargetTexture2DOES"))
-                            {
-                                HWCERROR(eCheckGlFail, "HwcTestReferenceComposer: A temporary texture could not be set");
-                            }
-                            else
-                            {
-                                *pTextureSet = true;
-                            }
-                        }
-                    }
-                }
-            }
+          }
         }
+      }
     }
+  }
 }
 
-status_t HwcTestReferenceComposer::bindTexture(
-    GLuint texturingUnit,
-    GLuint textureId)
-{
-    status_t result = UNKNOWN_ERROR;
+status_t HwcTestReferenceComposer::bindTexture(GLuint texturingUnit,
+                                               GLuint textureId) {
+  status_t result = UNKNOWN_ERROR;
 
-    glActiveTexture(GL_TEXTURE0 + texturingUnit);
-    if (getGLError("glActiveTexture"))
-    {
-        HWCERROR(eCheckGlFail, "HwcTestReferenceComposer: A temporary texture could not be set\n");
+  glActiveTexture(GL_TEXTURE0 + texturingUnit);
+  if (getGLError("glActiveTexture")) {
+    HWCERROR(
+        eCheckGlFail,
+        "HwcTestReferenceComposer: A temporary texture could not be set\n");
+  } else {
+    glBindTexture(GL_TEXTURE_2D, textureId);
+    if (getGLError("glBindTexture")) {
+      HWCERROR(
+          eCheckGlFail,
+          "HwcTestReferenceComposer: A temporary texture could not be set");
+    } else {
+      result = android::OK;
     }
-    else
-    {
-        glBindTexture(GL_TEXTURE_2D, textureId);
-        if (getGLError("glBindTexture"))
-        {
-            HWCERROR(eCheckGlFail, "HwcTestReferenceComposer: A temporary texture could not be set");
-        }
-        else
-        {
-            result = android::OK;
-        }
-    }
+  }
 
-    return result;
+  return result;
 }
 
 /**
@@ -1253,648 +1133,576 @@ status_t HwcTestReferenceComposer::bindTexture(
 
 static void setupVBOData(GLfloat *vboData, uint32_t stride, uint32_t destWidth,
                          uint32_t destHeight, const hwcval_layer_t *layer) {
-    // First get input buffer size
-    Hwcval::buffer_details_t bi;
+  // First get input buffer size
+  Hwcval::buffer_details_t bi;
 
-    if (layer->handle)
-    {
-        // If we have a handle, make sure the BufferInfo is updated
-        HWCCHECK(eCheckGrallocDetails);
-        if (DrmShimBuffer::GetBufferInfo(layer->handle, &bi))
-        {
-            HWCERROR(eCheckGrallocDetails, "Failed to get gralloc buffer info in reference composer");
-        }
+  if (layer->handle) {
+    // If we have a handle, make sure the BufferInfo is updated
+    HWCCHECK(eCheckGrallocDetails);
+    if (DrmShimBuffer::GetBufferInfo(layer->handle, &bi)) {
+      HWCERROR(eCheckGrallocDetails,
+               "Failed to get gralloc buffer info in reference composer");
     }
+  }
 
-    GLfloat destCenterX = 0.5f * destWidth;
-    GLfloat destCenterY = 0.5f * destHeight;
+  GLfloat destCenterX = 0.5f * destWidth;
+  GLfloat destCenterY = 0.5f * destHeight;
 
-    // Calculate an oversized destination region where the right edge
-    // is moved to the right and the top edge is moved upper
+// Calculate an oversized destination region where the right edge
+// is moved to the right and the top edge is moved upper
 #if SINGLE_TRIANGLE
-    static const float oversizing = 2.0f;
+  static const float oversizing = 2.0f;
 #else
-    static const float oversizing = 1.0f;
+  static const float oversizing = 1.0f;
 #endif
-    float left = layer->displayFrame.left;
-    float right = layer->displayFrame.right;
-    float top = layer->displayFrame.top;
-    float bottom = layer->displayFrame.bottom;
+  float left = layer->displayFrame.left;
+  float right = layer->displayFrame.right;
+  float top = layer->displayFrame.top;
+  float bottom = layer->displayFrame.bottom;
 
-    float width2 = right - left;
-    float height2 = bottom - top;
-    float right2 = left + oversizing * width2;
-    float top2 = bottom - oversizing * height2;
+  float width2 = right - left;
+  float height2 = bottom - top;
+  float right2 = left + oversizing * width2;
+  float top2 = bottom - oversizing * height2;
 
-    // Calculate the corners in normalized device coordinates
-    GLfloat ndcX0 = 2.f * (left - destCenterX) / destWidth;
-    GLfloat ndcX1 = 2.f * (right2 - destCenterX) / destWidth;
-    GLfloat ndcY0 = 2.f * (top2 - destCenterY) / destHeight;
-    GLfloat ndcY1 = 2.f * (bottom - destCenterY) / destHeight;
+  // Calculate the corners in normalized device coordinates
+  GLfloat ndcX0 = 2.f * (left - destCenterX) / destWidth;
+  GLfloat ndcX1 = 2.f * (right2 - destCenterX) / destWidth;
+  GLfloat ndcY0 = 2.f * (top2 - destCenterY) / destHeight;
+  GLfloat ndcY1 = 2.f * (bottom - destCenterY) / destHeight;
 
-    // Left-top
-    vboData[0*stride+0] = ndcX0;
-    vboData[0*stride+1] = ndcY0;
+  // Left-top
+  vboData[0 * stride + 0] = ndcX0;
+  vboData[0 * stride + 1] = ndcY0;
 
-    // Left-bottom
-    vboData[1*stride+0] = ndcX0;
-    vboData[1*stride+1] = ndcY1;
+  // Left-bottom
+  vboData[1 * stride + 0] = ndcX0;
+  vboData[1 * stride + 1] = ndcY1;
 
-    // Right-bottom
-    vboData[2*stride+0] = ndcX1;
-    vboData[2*stride+1] = ndcY1;
+  // Right-bottom
+  vboData[2 * stride + 0] = ndcX1;
+  vboData[2 * stride + 1] = ndcY1;
 
-    // Right-top
-    vboData[3*stride+0] = ndcX1;
-    vboData[3*stride+1] = ndcY0;
+  // Right-top
+  vboData[3 * stride + 0] = ndcX1;
+  vboData[3 * stride + 1] = ndcY0;
 
-    // Set the texture coordinates
-    GLfloat texCoords[8];
+  // Set the texture coordinates
+  GLfloat texCoords[8];
 
-    // Calculate the insideness in the 0..+1 range
-    //GLfloat primWidthRec  = 1.f / (right - left);
-    //GLfloat primHeightRec = 1.f / (bottom - top);
+  // Calculate the insideness in the 0..+1 range
+  // GLfloat primWidthRec  = 1.f / (right - left);
+  // GLfloat primHeightRec = 1.f / (bottom - top);
 
-    const GLfloat insidenessLeft   = 0; //(left   - layer->displayFrame.left) * primWidthRec;
-    const GLfloat insidenessRight  = 1.0; //(right  - left) * primWidthRec;
-    const GLfloat insidenessTop    = 0; //(top    - layer->displayFrame.top)  * primHeightRec;
-    const GLfloat insidenessBottom = 1.0; //(bottom - top)  * primHeightRec;
+  const GLfloat insidenessLeft =
+      0;  //(left   - layer->displayFrame.left) * primWidthRec;
+  const GLfloat insidenessRight = 1.0;  //(right  - left) * primWidthRec;
+  const GLfloat insidenessTop =
+      0;  //(top    - layer->displayFrame.top)  * primHeightRec;
+  const GLfloat insidenessBottom = 1.0;  //(bottom - top)  * primHeightRec;
 
-    // Use the insideness for calculating the texture coordinates
-    GLfloat sourceWidthRec  = 1.f / (GLfloat)bi.width;
-    GLfloat sourceHeightRec = 1.f / (GLfloat)bi.height;
+  // Use the insideness for calculating the texture coordinates
+  GLfloat sourceWidthRec = 1.f / (GLfloat)bi.width;
+  GLfloat sourceHeightRec = 1.f / (GLfloat)bi.height;
 
-    GLfloat sourceLeft   = ((GLfloat)layer->sourceCropf.left)   * sourceWidthRec;
-    GLfloat sourceTop    = ((GLfloat)layer->sourceCropf.top)    * sourceHeightRec;
-    GLfloat sourceRight  = ((GLfloat)layer->sourceCropf.right)  * sourceWidthRec;
-    GLfloat sourceBottom = ((GLfloat)layer->sourceCropf.bottom) * sourceHeightRec;
+  GLfloat sourceLeft = ((GLfloat)layer->sourceCropf.left) * sourceWidthRec;
+  GLfloat sourceTop = ((GLfloat)layer->sourceCropf.top) * sourceHeightRec;
+  GLfloat sourceRight = ((GLfloat)layer->sourceCropf.right) * sourceWidthRec;
+  GLfloat sourceBottom = ((GLfloat)layer->sourceCropf.bottom) * sourceHeightRec;
 
-    // Apply transforms and scale appropriately.
-    if (layer->transform & HWC_TRANSFORM_FLIP_H)
-    {
-        swap(sourceLeft, sourceRight);
-    }
-    if (layer->transform & HAL_TRANSFORM_FLIP_V)
-    {
-        swap(sourceTop, sourceBottom);
-    }
-    if (layer->transform & HAL_TRANSFORM_ROT_90)
-    {
-        GLfloat scaledLeftY   = sourceBottom + (sourceTop   - sourceBottom) * insidenessLeft;
-        GLfloat scaledRightY  = sourceBottom + (sourceTop   - sourceBottom) * insidenessRight;
-        GLfloat scaledTopX    = sourceLeft   + (sourceRight - sourceLeft)   * insidenessTop;
-        GLfloat scaledBottomX = sourceLeft   + (sourceRight - sourceLeft)   * insidenessBottom;
+  // Apply transforms and scale appropriately.
+  if (layer->transform & HWC_TRANSFORM_FLIP_H) {
+    swap(sourceLeft, sourceRight);
+  }
+  if (layer->transform & HAL_TRANSFORM_FLIP_V) {
+    swap(sourceTop, sourceBottom);
+  }
+  if (layer->transform & HAL_TRANSFORM_ROT_90) {
+    GLfloat scaledLeftY =
+        sourceBottom + (sourceTop - sourceBottom) * insidenessLeft;
+    GLfloat scaledRightY =
+        sourceBottom + (sourceTop - sourceBottom) * insidenessRight;
+    GLfloat scaledTopX =
+        sourceLeft + (sourceRight - sourceLeft) * insidenessTop;
+    GLfloat scaledBottomX =
+        sourceLeft + (sourceRight - sourceLeft) * insidenessBottom;
 
-        texCoords[0] = scaledTopX;
-        texCoords[1] = scaledLeftY;
-        texCoords[2] = scaledBottomX;
-        texCoords[3] = scaledLeftY;
-        texCoords[4] = scaledBottomX;
-        texCoords[5] = scaledRightY;
-        texCoords[6] = scaledTopX;
-        texCoords[7] = scaledRightY;
-    }
-    else
-    {
-        GLfloat scaledLeftX   = sourceLeft + (sourceRight  - sourceLeft) * insidenessLeft;
-        GLfloat scaledRightX  = sourceLeft + (sourceRight  - sourceLeft) * insidenessRight;
-        GLfloat scaledTopY    = sourceTop  + (sourceBottom - sourceTop)  * insidenessTop;
-        GLfloat scaledBottomY = sourceTop  + (sourceBottom - sourceTop)  * insidenessBottom;
+    texCoords[0] = scaledTopX;
+    texCoords[1] = scaledLeftY;
+    texCoords[2] = scaledBottomX;
+    texCoords[3] = scaledLeftY;
+    texCoords[4] = scaledBottomX;
+    texCoords[5] = scaledRightY;
+    texCoords[6] = scaledTopX;
+    texCoords[7] = scaledRightY;
+  } else {
+    GLfloat scaledLeftX =
+        sourceLeft + (sourceRight - sourceLeft) * insidenessLeft;
+    GLfloat scaledRightX =
+        sourceLeft + (sourceRight - sourceLeft) * insidenessRight;
+    GLfloat scaledTopY = sourceTop + (sourceBottom - sourceTop) * insidenessTop;
+    GLfloat scaledBottomY =
+        sourceTop + (sourceBottom - sourceTop) * insidenessBottom;
 
-        texCoords[0] = scaledLeftX;
-        texCoords[1] = scaledTopY;
-        texCoords[2] = scaledLeftX;
-        texCoords[3] = scaledBottomY;
-        texCoords[4] = scaledRightX;
-        texCoords[5] = scaledBottomY;
-        texCoords[6] = scaledRightX;
-        texCoords[7] = scaledTopY;
-    }
+    texCoords[0] = scaledLeftX;
+    texCoords[1] = scaledTopY;
+    texCoords[2] = scaledLeftX;
+    texCoords[3] = scaledBottomY;
+    texCoords[4] = scaledRightX;
+    texCoords[5] = scaledBottomY;
+    texCoords[6] = scaledRightX;
+    texCoords[7] = scaledTopY;
+  }
 
-    // Adjust the effect of the oversizing on the texturing
-    float VertAdjU = (oversizing - 1.f) *(texCoords[0] - texCoords[2]);
-    float VertAdjV = (oversizing - 1.f) *(texCoords[1] - texCoords[3]);
-    float HorAdjU  = (oversizing - 1.f) *(texCoords[4] - texCoords[2]);
-    float HorAdjV  = (oversizing - 1.f) *(texCoords[5] - texCoords[3]);
+  // Adjust the effect of the oversizing on the texturing
+  float VertAdjU = (oversizing - 1.f) * (texCoords[0] - texCoords[2]);
+  float VertAdjV = (oversizing - 1.f) * (texCoords[1] - texCoords[3]);
+  float HorAdjU = (oversizing - 1.f) * (texCoords[4] - texCoords[2]);
+  float HorAdjV = (oversizing - 1.f) * (texCoords[5] - texCoords[3]);
 
-    texCoords[0] += VertAdjU;
-    texCoords[1] += VertAdjV;
+  texCoords[0] += VertAdjU;
+  texCoords[1] += VertAdjV;
 
-    texCoords[4] += HorAdjU;
-    texCoords[5] += HorAdjV;
+  texCoords[4] += HorAdjU;
+  texCoords[5] += HorAdjV;
 
-    texCoords[6] += HorAdjU + VertAdjU;
-    texCoords[7] += HorAdjV + VertAdjV;
+  texCoords[6] += HorAdjU + VertAdjU;
+  texCoords[7] += HorAdjV + VertAdjV;
 
-    // Copy to the VBO
-    vboData[0*stride+2+0] = texCoords[0];
-    vboData[0*stride+2+1] = texCoords[1];
-    vboData[1*stride+2+0] = texCoords[2];
-    vboData[1*stride+2+1] = texCoords[3];
-    vboData[2*stride+2+0] = texCoords[4];
-    vboData[2*stride+2+1] = texCoords[5];
-    vboData[3*stride+2+0] = texCoords[6];
-    vboData[3*stride+2+1] = texCoords[7];
+  // Copy to the VBO
+  vboData[0 * stride + 2 + 0] = texCoords[0];
+  vboData[0 * stride + 2 + 1] = texCoords[1];
+  vboData[1 * stride + 2 + 0] = texCoords[2];
+  vboData[1 * stride + 2 + 1] = texCoords[3];
+  vboData[2 * stride + 2 + 0] = texCoords[4];
+  vboData[2 * stride + 2 + 1] = texCoords[5];
+  vboData[3 * stride + 2 + 0] = texCoords[6];
+  vboData[3 * stride + 2 + 1] = texCoords[7];
 }
 
 status_t HwcTestReferenceComposer::beginFrame(uint32_t numSources,
                                               const hwcval_layer_t *source,
                                               const hwcval_layer_t *target) {
 #if CREATEDESTROY_ONCE
-    static bool firstTime = true;
+  static bool firstTime = true;
 #endif
-    mTargetHandle = target->handle;
-    ALOG_ASSERT(mTargetHandle);
+  mTargetHandle = target->handle;
+  ALOG_ASSERT(mTargetHandle);
 
-    uint32_t numSourcesToCompose = 0;
-    for (uint32_t i=0; i<numSources; ++i)
-    {
-        if ((source[i].compositionType == HWC_FRAMEBUFFER) &&
-            (source[i].handle != 0))
-        {
-            ++numSourcesToCompose;
-        }
+  uint32_t numSourcesToCompose = 0;
+  for (uint32_t i = 0; i < numSources; ++i) {
+    if ((source[i].compositionType == HWC2_COMPOSITION_CLIENT) &&
+        (source[i].handle != 0)) {
+      ++numSourcesToCompose;
     }
+  }
 
-    // Realloc the source layers array
-    if (numSourcesToCompose > m_maxSourceLayers)
-    {
-        if (!reallocSourceLayers(numSourcesToCompose))
-        {
-            return UNKNOWN_ERROR;
-        }
+  // Realloc the source layers array
+  if (numSourcesToCompose > m_maxSourceLayers) {
+    if (!reallocSourceLayers(numSourcesToCompose)) {
+      return UNKNOWN_ERROR;
     }
+  }
 
-    // Ensure the instance is fully created
-    if (!isCreated() && lazyCreate() == false)
-    {
-        return UNKNOWN_ERROR;
-    }
+  // Ensure the instance is fully created
+  if (!isCreated() && lazyCreate() == false) {
+    return UNKNOWN_ERROR;
+  }
 
-    // Switch to our context
-    eglMakeCurrent(m_display, m_surface, m_surface, m_context);
-    if (getEGLError("eglMakeCurrent beginFrame"))
-    {
-        return UNKNOWN_ERROR;
-    }
+  // Switch to our context
+  eglMakeCurrent(m_display, m_surface, m_surface, m_context);
+  if (getEGLError("eglMakeCurrent beginFrame")) {
+    return UNKNOWN_ERROR;
+  }
 
-    // Save the layers
+// Save the layers
 #if CREATEDESTROY_ONCE
-    if (firstTime)
-    {
-        firstTime = false;
-    }
-    else
-    {
-        return android::OK;
-    }
+  if (firstTime) {
+    firstTime = false;
+  } else {
+    return android::OK;
+  }
 #endif
-    // Set the destination texture
-    setTexture(
-        target,
-        numSourcesToCompose,
-        & m_destEGLImageCreated,
-        & m_destTextureCreated,
-        & m_destTextureSet,
-        & m_destGraphicBuffer,
-        & m_destEGLImage,
-        & m_destTextureId,
-        GL_NEAREST);         // Filter should be GL_NEAREST or GL_LINEAR
+  // Set the destination texture
+  setTexture(target, numSourcesToCompose, &m_destEGLImageCreated,
+             &m_destTextureCreated, &m_destTextureSet, &m_destGraphicBuffer,
+             &m_destEGLImage, &m_destTextureId,
+             GL_NEAREST);  // Filter should be GL_NEAREST or GL_LINEAR
 
-    m_destWidth = target->displayFrame.right - target->displayFrame.left;
-    m_destHeight = target->displayFrame.bottom - target->displayFrame.top;
+  m_destWidth = target->displayFrame.right - target->displayFrame.left;
+  m_destHeight = target->displayFrame.bottom - target->displayFrame.top;
 
-    m_destIsNV12 = IsLayerNV12(target);
-    HWCLOGD_COND(eLogGl, "HwcTestReferenceComposer::BeginFrame target %p is %sNV12",
-        target->handle, (m_destIsNV12 ? "" : "NOT "));
+  m_destIsNV12 = IsLayerNV12(target);
+  HWCLOGD_COND(eLogGl,
+               "HwcTestReferenceComposer::BeginFrame target %p is %sNV12",
+               target->handle, (m_destIsNV12 ? "" : "NOT "));
 
-    if (m_destTextureSet)
-    {
-        m_destTextureAttachedToFBO = attachToFBO(m_destTextureId);
+  if (m_destTextureSet) {
+    m_destTextureAttachedToFBO = attachToFBO(m_destTextureId);
+  }
+
+  // Create the source textures
+  m_sourceEGLImagesCreated = 0;
+  m_sourceTexturesCreated = 0;
+  m_sourceTexturesSet = 0;
+  uint32_t textureIx = 0;
+
+  for (uint32_t i = 0; i < numSources; ++i) {
+    if ((source[i].compositionType == HWC2_COMPOSITION_CLIENT) &&
+        (source[i].handle != 0)) {
+      bool sourceEGLImageCreated = false;
+      bool sourceTextureCreated = false;
+      bool sourceTextureSet = false;
+
+      float sw = source[i].sourceCropf.right - source[i].sourceCropf.left;
+      float sh = source[i].sourceCropf.bottom - source[i].sourceCropf.top;
+      float dw = source[i].displayFrame.right - source[i].displayFrame.left;
+      float dh = source[i].displayFrame.bottom - source[i].displayFrame.top;
+
+      bool scaling = (source[i].transform & HAL_TRANSFORM_ROT_90)
+                         ? ((sw != dh) || (sh != dw))
+                         : ((sw != dw) || (sh != dh));
+
+      setTexture(source + i, textureIx++, &sourceEGLImageCreated,
+                 &sourceTextureCreated, &sourceTextureSet,
+                 &m_sourceGraphicBuffers[m_sourceTexturesSet],
+                 &m_sourceEGLImages[m_sourceTexturesSet],
+                 &m_sourceTextureIds[m_sourceTexturesSet],
+                 scaling ? GL_LINEAR : GL_NEAREST);
+
+      if (!sourceEGLImageCreated) {
+        break;
+      }
+      ++m_sourceEGLImagesCreated;
+
+      if (!sourceTextureCreated) {
+        break;
+      }
+      ++m_sourceTexturesCreated;
+
+      if (!sourceTextureSet) {
+        break;
+      }
+      ++m_sourceTexturesSet;
     }
+  }
 
-    // Create the source textures
-    m_sourceEGLImagesCreated = 0;
-    m_sourceTexturesCreated = 0;
-    m_sourceTexturesSet = 0;
-    uint32_t textureIx = 0;
+  // Adjust the view port for covering the whole destination rectangle
+  glViewport(0, 0, m_destWidth, m_destHeight);
+  getGLError("glViewport");
 
-    for (uint32_t i = 0; i < numSources; ++i)
-    {
-        if ((source[i].compositionType == HWC_FRAMEBUFFER) &&
-            (source[i].handle != 0))
-        {
-            bool sourceEGLImageCreated = false;
-            bool sourceTextureCreated = false;
-            bool sourceTextureSet = false;
+  status_t result;
 
-            float sw = source[i].sourceCropf.right - source[i].sourceCropf.left;
-            float sh = source[i].sourceCropf.bottom - source[i].sourceCropf.top;
-            float dw = source[i].displayFrame.right - source[i].displayFrame.left;
-            float dh = source[i].displayFrame.bottom - source[i].displayFrame.top;
-
-            bool scaling = (source[i].transform & HAL_TRANSFORM_ROT_90) ?
-                ((sw != dh) || (sh != dw)) :
-                ((sw != dw) || (sh != dh));
-
-            setTexture(
-                source+i,
-                textureIx++,
-                & sourceEGLImageCreated,
-                & sourceTextureCreated,
-                & sourceTextureSet,
-                & m_sourceGraphicBuffers[m_sourceTexturesSet],
-                & m_sourceEGLImages[m_sourceTexturesSet],
-                & m_sourceTextureIds[m_sourceTexturesSet],
-                scaling ? GL_LINEAR : GL_NEAREST);
-
-            if (!sourceEGLImageCreated)
-            {
-                break;
-            }
-            ++m_sourceEGLImagesCreated;
-
-            if (!sourceTextureCreated)
-            {
-                break;
-            }
-            ++m_sourceTexturesCreated;
-
-            if (!sourceTextureSet)
-            {
-                break;
-            }
-            ++m_sourceTexturesSet;
-        }
+  if (m_destTextureAttachedToFBO) {
+    if (m_sourceTexturesSet < numSourcesToCompose) {
+      // We are indicating that parts of the composition were a failure
+      // so we know not to trust the result.
+      HWCERROR(eCheckGlFail,
+               "Reference composer: some layers could not be composed.");
+      result = android::UNKNOWN_ERROR;
+    } else {
+      result = android::OK;
     }
+  } else {
+    result = android::UNKNOWN_ERROR;
+  }
 
-    // Adjust the view port for covering the whole destination rectangle
-    glViewport(0, 0, m_destWidth, m_destHeight);
-    getGLError("glViewport");
-
-    status_t result;
-
-    if (m_destTextureAttachedToFBO)
-    {
-        if (m_sourceTexturesSet < numSourcesToCompose)
-        {
-            // We are indicating that parts of the composition were a failure
-            // so we know not to trust the result.
-            HWCERROR(eCheckGlFail, "Reference composer: some layers could not be composed.");
-            result = android::UNKNOWN_ERROR;
-        }
-        else
-        {
-            result = android::OK;
-        }
-    }
-    else
-    {
-        result = android::UNKNOWN_ERROR;
-    }
-
-    return result;
+  return result;
 }
 
 status_t HwcTestReferenceComposer::draw(const hwcval_layer_t *layer,
                                         uint32_t index) {
-    // Check that the destination texture is attached to the FBO
-    if (!m_destTextureAttachedToFBO)
-    {
-        HWCERROR(eCheckGlFail, "HwcTestReferenceComposer: The destination texture is not attached to the FBO");
-        return android::UNKNOWN_ERROR;
-    }
+  // Check that the destination texture is attached to the FBO
+  if (!m_destTextureAttachedToFBO) {
+    HWCERROR(eCheckGlFail,
+             "HwcTestReferenceComposer: The destination texture is not "
+             "attached to the FBO");
+    return android::UNKNOWN_ERROR;
+  }
 
-    // Bind the source texture
-    status_t status = bindTexture(0, m_sourceTextureIds[index]);
-    if (status != android::OK)
-    {
-        HWCERROR(eCheckGlFail, "HwcTestReferenceComposer: Unable to bind a source texture");
-        return android::UNKNOWN_ERROR;
-    }
+  // Bind the source texture
+  status_t status = bindTexture(0, m_sourceTextureIds[index]);
+  if (status != android::OK) {
+    HWCERROR(eCheckGlFail,
+             "HwcTestReferenceComposer: Unable to bind a source texture");
+    return android::UNKNOWN_ERROR;
+  }
 
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+  glEnable(GL_BLEND);
+  glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 
-    // Bind the program
-    bool opaque = HasAlpha(layer) && (layer->blending == HWC_BLENDING_NONE);
-    bool preMult = (layer->blending != HWC_BLENDING_COVERAGE);
-    bool isProgramBound = m_programStore.bind(layer->planeAlpha, m_destIsNV12, opaque, preMult);
+  // Bind the program
+  bool opaque = HasAlpha(layer) && (layer->blending == HWC_BLENDING_NONE);
+  bool preMult = (layer->blending != HWC_BLENDING_COVERAGE);
+  bool isProgramBound =
+      m_programStore.bind(layer->planeAlpha, m_destIsNV12, opaque, preMult);
 
-    if (isProgramBound)
-    {
-        // Setup the VBO contents
-        uint32_t vertexStride = 4;
-        GLfloat vboData[4*vertexStride];
+  if (isProgramBound) {
+    // Setup the VBO contents
+    uint32_t vertexStride = 4;
+    GLfloat vboData[4 * vertexStride];
 
-        setupVBOData(
-            vboData,
-            vertexStride,
-            m_destWidth,
-            m_destHeight,
-            layer);
+    setupVBOData(vboData, vertexStride, m_destWidth, m_destHeight, layer);
 
-        // Bind a VBO
-        bindAVbo();
+    // Bind a VBO
+    bindAVbo();
 
-        // Discard the previous contents and setup new ones
-        glBufferData(GL_ARRAY_BUFFER, sizeof(vboData), vboData, GL_STREAM_DRAW);
-        getGLError("glBufferData");
+    // Discard the previous contents and setup new ones
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vboData), vboData, GL_STREAM_DRAW);
+    getGLError("glBufferData");
 
-        glVertexAttribPointer(
-            m_programStore.getPositionVertexIn(),
-            2,
-            GL_FLOAT,
-            GL_FALSE,
-            vertexStride*sizeof(GLfloat), (void*)0);
-        getGLError("glVertexAttribPointer");
+    glVertexAttribPointer(m_programStore.getPositionVertexIn(), 2, GL_FLOAT,
+                          GL_FALSE, vertexStride * sizeof(GLfloat), (void *)0);
+    getGLError("glVertexAttribPointer");
 
-        glEnableVertexAttribArray(m_programStore.getPositionVertexIn());
-        getGLError("glEnableVertexAttribArray");
+    glEnableVertexAttribArray(m_programStore.getPositionVertexIn());
+    getGLError("glEnableVertexAttribArray");
 
-        glVertexAttribPointer(
-            m_programStore.getTexCoordVertexIn(),
-            2,
-            GL_FLOAT,
-            GL_FALSE,
-            vertexStride*sizeof(GLfloat),
-            (void*)(2*sizeof(float)));
-        getGLError("glVertexAttribPointer");
+    glVertexAttribPointer(m_programStore.getTexCoordVertexIn(), 2, GL_FLOAT,
+                          GL_FALSE, vertexStride * sizeof(GLfloat),
+                          (void *)(2 * sizeof(float)));
+    getGLError("glVertexAttribPointer");
 
-        glEnableVertexAttribArray(m_programStore.getTexCoordVertexIn());
-        getGLError("glEnableVertexAttribArray");
+    glEnableVertexAttribArray(m_programStore.getTexCoordVertexIn());
+    getGLError("glEnableVertexAttribArray");
 
-        // Draw the quad (fan)
-        glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
-        getGLError("glDrawArrays");
-    }
+    // Draw the quad (fan)
+    glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+    getGLError("glDrawArrays");
+  }
 
-    return android::OK;
+  return android::OK;
 }
 
-status_t HwcTestReferenceComposer::endFrame()
-{
-    status_t result;
+status_t HwcTestReferenceComposer::endFrame() {
+  status_t result;
 
-//    glFlush();
-//    if (getGLError("glFlush"))
-    glFinish();
-    if (getGLError("glFinish"))     // Make it synchronous
-    {
-        result = android::UNKNOWN_ERROR;
-    }
-    else
-    {
-        result = android::OK;
-    }
+  //    glFlush();
+  //    if (getGLError("glFlush"))
+  glFinish();
+  if (getGLError("glFinish"))  // Make it synchronous
+  {
+    result = android::UNKNOWN_ERROR;
+  } else {
+    result = android::OK;
+  }
 
 #if !CREATEDESTROY_ONCE
-    // Destroy the destination texture
-    if (m_destTextureCreated)
-    {
-        glDeleteTextures(1, &m_destTextureId);
-        getGLError("glDeleteTextures");
-    }
+  // Destroy the destination texture
+  if (m_destTextureCreated) {
+    glDeleteTextures(1, &m_destTextureId);
+    getGLError("glDeleteTextures");
+  }
 
-    // Destroy the destination EGL image
-    if (m_destEGLImageCreated)
-    {
-        eglDestroyImageKHR(m_display, m_destEGLImage);
-        getEGLError("eglDestroyImageKHR");
-    }
+  // Destroy the destination EGL image
+  if (m_destEGLImageCreated) {
+    eglDestroyImageKHR(m_display, m_destEGLImage);
+    getEGLError("eglDestroyImageKHR");
+  }
 
-    // Destroy the source textures
-    glDeleteTextures(m_sourceTexturesCreated, m_sourceTextureIds);
-    getEGLError("glDeleteTextures");
+  // Destroy the source textures
+  glDeleteTextures(m_sourceTexturesCreated, m_sourceTextureIds);
+  getEGLError("glDeleteTextures");
 
-    // Destroy the source EGL images
-    uint32_t i;
-    for (i = 0; i < m_sourceEGLImagesCreated; ++i)
-    {
-        eglDestroyImageKHR(m_display, m_sourceEGLImages[i]);
-        getEGLError("eglDestroyImageKHR");
-    }
+  // Destroy the source EGL images
+  uint32_t i;
+  for (i = 0; i < m_sourceEGLImagesCreated; ++i) {
+    eglDestroyImageKHR(m_display, m_sourceEGLImages[i]);
+    getEGLError("eglDestroyImageKHR");
+  }
 #endif
-    return result;
+  return result;
 }
 
 status_t HwcTestReferenceComposer::Compose(uint32_t numSources,
                                            hwcval_layer_t *source,
                                            hwcval_layer_t *target,
                                            bool waitForFences) {
-    status_t result;
+  status_t result;
 
-    HWCVAL_LOCK(_l, mComposeMutex);
-    mErrorOccurred = false;
+  HWCVAL_LOCK(_l, mComposeMutex);
+  mErrorOccurred = false;
 
-    // Save the GL context
-    GLContextSaver contextSaver(this);
+  // Save the GL context
+  GLContextSaver contextSaver(this);
 
-    result = beginFrame(numSources, source, target);
+  result = beginFrame(numSources, source, target);
 
-    if (result == OK)
-    {
-        glClearColor(0.f, 0.f, 0.f, 0.f);
+  if (result == OK) {
+    glClearColor(0.f, 0.f, 0.f, 0.f);
 
-        glClear(GL_COLOR_BUFFER_BIT);
-        if (getGLError("glClear"))
-        {
-            result = UNKNOWN_ERROR;
+    glClear(GL_COLOR_BUFFER_BIT);
+    if (getGLError("glClear")) {
+      result = UNKNOWN_ERROR;
+    }
+  }
+
+  uint32_t index;
+
+  if (waitForFences && (target->acquireFenceFd > 0)) {
+    if (sync_wait(target->acquireFenceFd, HWCVAL_SYNC_WAIT_100MS) < 0) {
+      HWCERROR(eCheckGlFail,
+               "HwcTestReferenceComposer: Target acquire fence timeout");
+    }
+  }
+
+  uint32_t screenIndex = 0;
+  for (index = 0; index < numSources && result == OK; ++index) {
+    hwcval_layer_t &srcLayer = source[index];
+
+    if ((srcLayer.compositionType == HWC2_COMPOSITION_CLIENT) &&
+        (srcLayer.handle != 0)) {
+      // Wait for any acquire fence
+      if (waitForFences && (srcLayer.acquireFenceFd > 0)) {
+        if (sync_wait(srcLayer.acquireFenceFd, HWCVAL_SYNC_WAIT_100MS) < 0) {
+          HWCERROR(eCheckGlFail,
+                   "HwcTestReferenceComposer: Acquire fence timeout layer %d",
+                   index);
         }
+      }
+
+      // We know that the vp renderer is synchronous, indicate that here.
+      srcLayer.releaseFenceFd = -1;
+
+      result = (result == OK) ? draw(&srcLayer, screenIndex++) : result;
     }
+  }
 
-    uint32_t index;
+  result = (result == OK) ? endFrame() : result;
+  if ((result == OK) && (mErrorOccurred)) {
+    result = UNKNOWN_ERROR;
+  }
 
-
-    if (waitForFences && (target->acquireFenceFd > 0))
-    {
-        if (sync_wait(target->acquireFenceFd, HWCVAL_SYNC_WAIT_100MS) < 0)
-        {
-            HWCERROR(eCheckGlFail, "HwcTestReferenceComposer: Target acquire fence timeout");
-        }
-    }
-
-
-    uint32_t screenIndex = 0;
-    for (index = 0; index < numSources && result == OK; ++index)
-    {
-      hwcval_layer_t &srcLayer = source[index];
-
-        if ((srcLayer.compositionType == HWC_FRAMEBUFFER) &&
-            (srcLayer.handle != 0))
-        {
-            // Wait for any acquire fence
-            if (waitForFences && (srcLayer.acquireFenceFd > 0))
-            {
-                if (sync_wait(srcLayer.acquireFenceFd, HWCVAL_SYNC_WAIT_100MS) < 0)
-                {
-                    HWCERROR(eCheckGlFail, "HwcTestReferenceComposer: Acquire fence timeout layer %d", index);
-                }
-            }
-
-            // We know that the vp renderer is synchronous, indicate that here.
-            srcLayer.releaseFenceFd = -1;
-
-            result = (result==OK)? draw(&srcLayer, screenIndex++) : result;
-        }
-    }
-
-    result = (result==OK)? endFrame() : result;
-    if ((result == OK) && (mErrorOccurred))
-    {
-        result = UNKNOWN_ERROR;
-    }
-
-    return result;
+  return result;
 }
 
-void HwcTestReferenceComposer::bindAVbo()
-{
-    if (NumVboIds > 1)
-    {
-        // Bind the VBO
-        glBindBuffer(GL_ARRAY_BUFFER, m_vboIds[m_nextVboIdIndex]);
-        getGLError("glBindBuffer");
+void HwcTestReferenceComposer::bindAVbo() {
+  if (NumVboIds > 1) {
+    // Bind the VBO
+    glBindBuffer(GL_ARRAY_BUFFER, m_vboIds[m_nextVboIdIndex]);
+    getGLError("glBindBuffer");
 
-        m_nextVboIdIndex = (m_nextVboIdIndex + 1) % NumVboIds;
-    }
+    m_nextVboIdIndex = (m_nextVboIdIndex + 1) % NumVboIds;
+  }
 }
 
-bool HwcTestReferenceComposer::reallocSourceLayers(uint32_t maxSourceLayers)
-{
-    bool result;
+bool HwcTestReferenceComposer::reallocSourceLayers(uint32_t maxSourceLayers) {
+  bool result;
 
-    m_sourceGraphicBuffers = new android::sp<android::GraphicBuffer> [ maxSourceLayers ];
-    m_sourceEGLImages = new EGLImageKHR [ maxSourceLayers ];
-    m_sourceTextureIds = new GLuint [ maxSourceLayers ];
+  m_sourceGraphicBuffers =
+      new android::sp<android::GraphicBuffer>[maxSourceLayers];
+  m_sourceEGLImages = new EGLImageKHR[maxSourceLayers];
+  m_sourceTextureIds = new GLuint[maxSourceLayers];
 
-    if (m_sourceGraphicBuffers &&
-        m_sourceEGLImages &&
-        m_sourceTextureIds)
-    {
-        m_maxSourceLayers = maxSourceLayers;
-        result = true;
-    }
-    else
-    {
-        m_maxSourceLayers = 0;
-        result = false;
-    }
-
-    return result;
-}
-
-void HwcTestReferenceComposer::freeSourceLayers()
-{
-    delete [] m_sourceGraphicBuffers;
-    delete [] m_sourceEGLImages;
-    delete [] m_sourceTextureIds;
-
-    m_sourceGraphicBuffers = 0;
-    m_sourceEGLImages = 0;
-    m_sourceTextureIds = 0;
+  if (m_sourceGraphicBuffers && m_sourceEGLImages && m_sourceTextureIds) {
+    m_maxSourceLayers = maxSourceLayers;
+    result = true;
+  } else {
     m_maxSourceLayers = 0;
+    result = false;
+  }
+
+  return result;
 }
 
-android::sp<android::GraphicBuffer> HwcTestReferenceComposer::CopyBuf(buffer_handle_t handle)
-{
-    Hwcval::buffer_details_t bi;
+void HwcTestReferenceComposer::freeSourceLayers() {
+  delete[] m_sourceGraphicBuffers;
+  delete[] m_sourceEGLImages;
+  delete[] m_sourceTextureIds;
 
-    if (handle)
-    {
-        // If we have a handle, make sure the BufferInfo is updated
-        HWCCHECK(eCheckGrallocDetails);
-        if (DrmShimBuffer::GetBufferInfo(handle, &bi))
-        {
-            HWCERROR(eCheckGrallocDetails, "Failed to get gralloc buffer info in CopyBuf");
-            return 0;
-        }
+  m_sourceGraphicBuffers = 0;
+  m_sourceEGLImages = 0;
+  m_sourceTextureIds = 0;
+  m_maxSourceLayers = 0;
+}
+
+android::sp<android::GraphicBuffer> HwcTestReferenceComposer::CopyBuf(
+    buffer_handle_t handle) {
+  Hwcval::buffer_details_t bi;
+
+  if (handle) {
+    // If we have a handle, make sure the BufferInfo is updated
+    HWCCHECK(eCheckGrallocDetails);
+    if (DrmShimBuffer::GetBufferInfo(handle, &bi)) {
+      HWCERROR(eCheckGrallocDetails,
+               "Failed to get gralloc buffer info in CopyBuf");
+      return 0;
     }
-    else
-    {
-        return 0;
-    }
+  } else {
+    return 0;
+  }
 
-    // Get destination graphic buffer
-    android::sp<android::GraphicBuffer> spDestBuffer = new android::GraphicBuffer(bi.width, bi.height, bi.format,
-            bi.usage | GRALLOC_USAGE_SW_READ_OFTEN); // Encourage use of linear buffers - it will speed the comparison
+  // Get destination graphic buffer
+  android::sp<android::GraphicBuffer> spDestBuffer = new android::GraphicBuffer(
+      bi.width, bi.height, bi.format,
+      bi.usage | GRALLOC_USAGE_SW_READ_OFTEN);  // Encourage use of linear
+                                                // buffers - it will speed the
+                                                // comparison
 
-    hwcval_layer_t srcLayer;
-    srcLayer.handle = handle;
-    srcLayer.compositionType = HWC_FRAMEBUFFER;
-    srcLayer.hints = 0;
-    srcLayer.flags = 0;
-    srcLayer.transform = 0;
-    srcLayer.blending = HWC_BLENDING_PREMULT;
-    srcLayer.sourceCropf.left = 0.0;
-    srcLayer.sourceCropf.top = 0.0;
-    srcLayer.sourceCropf.right = bi.width;
-    srcLayer.sourceCropf.bottom = bi.height;
-    srcLayer.displayFrame.left = 0;
-    srcLayer.displayFrame.top = 0;
-    srcLayer.displayFrame.right = bi.width;
-    srcLayer.displayFrame.bottom = bi.height;
-    srcLayer.visibleRegionScreen.numRects = 1;
-    srcLayer.visibleRegionScreen.rects = &srcLayer.displayFrame;
-    srcLayer.acquireFenceFd = -1;
-    srcLayer.releaseFenceFd = -1;
-    srcLayer.planeAlpha=255;
+  hwcval_layer_t srcLayer;
+  srcLayer.handle = handle;
+  srcLayer.compositionType = HWC2_COMPOSITION_CLIENT;
+  srcLayer.hints = 0;
+  srcLayer.flags = 0;
+  srcLayer.transform = 0;
+  srcLayer.blending = HWC_BLENDING_PREMULT;
+  srcLayer.sourceCropf.left = 0.0;
+  srcLayer.sourceCropf.top = 0.0;
+  srcLayer.sourceCropf.right = bi.width;
+  srcLayer.sourceCropf.bottom = bi.height;
+  srcLayer.displayFrame.left = 0;
+  srcLayer.displayFrame.top = 0;
+  srcLayer.displayFrame.right = bi.width;
+  srcLayer.displayFrame.bottom = bi.height;
+  srcLayer.visibleRegionScreen.numRects = 1;
+  srcLayer.visibleRegionScreen.rects = &srcLayer.displayFrame;
+  srcLayer.acquireFenceFd = -1;
+  srcLayer.releaseFenceFd = -1;
+  srcLayer.planeAlpha = 255;
 
-    hwcval_layer_t tgtLayer = srcLayer;
-    tgtLayer.handle = spDestBuffer->handle;
+  hwcval_layer_t tgtLayer = srcLayer;
+  tgtLayer.handle = spDestBuffer->handle;
 
-    if (Compose(1, &srcLayer, &tgtLayer, false) == OK)
-    {
-        return spDestBuffer;
-    }
-    else
-    {
-        // Don't return a copy buffer if any part of the copy might not be correct
-        return 0;
-    }
+  if (Compose(1, &srcLayer, &tgtLayer, false) == OK) {
+    return spDestBuffer;
+  } else {
+    // Don't return a copy buffer if any part of the copy might not be correct
+    return 0;
+  }
 }
 
 bool HwcTestReferenceComposer::IsLayerNV12(const hwcval_layer_t *pDest) {
-    Hwcval::buffer_details_t bi;
+  Hwcval::buffer_details_t bi;
 
-    if (pDest->handle)
-    {
-        // If we have a handle, make sure the BufferInfo is updated
-        HWCCHECK(eCheckGrallocDetails);
-        if (DrmShimBuffer::GetBufferInfo(pDest->handle, &bi))
-        {
-            HWCERROR(eCheckGrallocDetails, "Failed to get gralloc buffer info in reference composer");
-        }
+  if (pDest->handle) {
+    // If we have a handle, make sure the BufferInfo is updated
+    HWCCHECK(eCheckGrallocDetails);
+    if (DrmShimBuffer::GetBufferInfo(pDest->handle, &bi)) {
+      HWCERROR(eCheckGrallocDetails,
+               "Failed to get gralloc buffer info in reference composer");
     }
-    else
-    {
-        // No handle
-        return false;
-    }
+  } else {
+    // No handle
+    return false;
+  }
 
-    return ( IsNV12(bi.format) );
+  return (IsNV12(bi.format));
 }
 
 bool HwcTestReferenceComposer::HasAlpha(const hwcval_layer_t *pSrc) {
-    Hwcval::buffer_details_t bi;
+  Hwcval::buffer_details_t bi;
 
-    if (pSrc->handle)
-    {
-        // If we have a handle, make sure the BufferInfo is updated
-        HWCCHECK(eCheckGrallocDetails);
-        if (DrmShimBuffer::GetBufferInfo(pSrc->handle, &bi))
-        {
-            HWCERROR(eCheckGrallocDetails, "Failed to get gralloc buffer info in reference composer");
-        }
+  if (pSrc->handle) {
+    // If we have a handle, make sure the BufferInfo is updated
+    HWCCHECK(eCheckGrallocDetails);
+    if (DrmShimBuffer::GetBufferInfo(pSrc->handle, &bi)) {
+      HWCERROR(eCheckGrallocDetails,
+               "Failed to get gralloc buffer info in reference composer");
     }
-    else
-    {
-        // No handle
-        return false;
-    }
+  } else {
+    // No handle
+    return false;
+  }
 
-    return ( ::HasAlpha(bi.format) );
+  return (::HasAlpha(bi.format));
 }
-
-
-

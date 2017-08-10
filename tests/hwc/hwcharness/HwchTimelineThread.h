@@ -20,30 +20,27 @@
 #include "utils/Thread.h"
 #include "HwchDefs.h"
 
+namespace Hwch {
+class Interface;
 
-namespace Hwch
-{
-    class Interface;
+class TimelineThread : public android::Thread {
+ public:
+  TimelineThread();
+  virtual ~TimelineThread();
 
-    class TimelineThread : public android::Thread
-    {
-    public:
-        TimelineThread();
-        virtual ~TimelineThread();
+  int Get();
+  uint32_t GetTimelineTime();
 
-        int Get();
-        uint32_t GetTimelineTime();
+ private:
+  // Thread functions
+  virtual bool threadLoop();
+  virtual android::status_t readyToRun();
 
-    private:
-        //Thread functions
-        virtual bool threadLoop();
-        virtual android::status_t readyToRun();
-
-        // Private data
-        volatile int mTimeline;              // Timeline handle
-        volatile uint32_t mTimelineTime;     // Current timeline time
-        int64_t mLastRealTime;
-    };
+  // Private data
+  volatile int mTimeline;           // Timeline handle
+  volatile uint32_t mTimelineTime;  // Current timeline time
+  int64_t mLastRealTime;
+};
 }
 
-#endif // __HwchTimelineThread_h__
+#endif  // __HwchTimelineThread_h__

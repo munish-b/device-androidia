@@ -25,7 +25,7 @@ namespace re2 {
 int64 VirtualProcessSize() {
   struct rusage ru;
   getrusage(RUSAGE_SELF, &ru);
-  return (int64)ru.ru_maxrss*1024;
+  return (int64)ru.ru_maxrss * 1024;
 }
 }  // namespace re2
 

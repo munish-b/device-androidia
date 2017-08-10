@@ -24,7 +24,6 @@
 
 #include <unistd.h>
 
-
 #include "test_base.h"
 
 /** \addtogroup HwcTestNV12FullScreenVideo NV12 Full ScreenVideo
@@ -36,56 +35,46 @@
 
 using namespace android;
 
-class HwcTestTest : public HwcTestBase
-{
+class HwcTestTest : public HwcTestBase {
+ public:
+  // Constructor
+  HwcTestTest(int argc, char** argv);
 
-public:
-    // Constructor
-    HwcTestTest(int argc, char ** argv);
-
-    /// Create surfaces and start test
-    int Run(void);
-    /// Set checks required by the shims
-    int SetChecks(void);
-
+  /// Create surfaces and start test
+  int Run(void);
+  /// Set checks required by the shims
+  int SetChecks(void);
 };
 
-HwcTestTest::HwcTestTest(int argc, char ** argv)
-: HwcTestBase(argc, argv)
-{
-    mTestName = "hwc_nv12_video_full_test";
+HwcTestTest::HwcTestTest(int argc, char** argv) : HwcTestBase(argc, argv) {
+  mTestName = "hwc_nv12_video_full_test";
 }
 
-int HwcTestTest::SetChecks(void)
-{
-    SetDefaultChecks();
-    return 0;
+int HwcTestTest::SetChecks(void) {
+  SetDefaultChecks();
+  return 0;
 }
 
-int HwcTestTest::Run(void)
-{
-    SurfaceSender::SurfaceSenderProperties
-        sSSP1(SurfaceSender::epsVideoFullScreenNV12);
-    CreateSurface(sSSP1);
+int HwcTestTest::Run(void) {
+  SurfaceSender::SurfaceSenderProperties sSSP1(
+      SurfaceSender::epsVideoFullScreenNV12);
+  CreateSurface(sSSP1);
 
-    // Set test mode frame or time
-    SetTestRunTime(HwcTestBase::etlTenSeconds);
-    SetTestEndType(etetRunTime);
+  // Set test mode frame or time
+  SetTestRunTime(HwcTestBase::etlTenSeconds);
+  SetTestEndType(etetRunTime);
 
-    StartTest();
+  StartTest();
 
-    return mResult.IsGlobalFail() ? 1 : 0;
+  return mResult.IsGlobalFail() ? 1 : 0;
 }
 
-int main (int argc, char ** argv)
-{
-    HwcTestTest test(argc, argv);
+int main(int argc, char** argv) {
+  HwcTestTest test(argc, argv);
 
-    if(argc == 2 && strcmp(argv[1], "-h") == 0)
-    {
-        test.PrintArgs();
-        return 1;
-    }
-    return test.Run();
+  if (argc == 2 && strcmp(argv[1], "-h") == 0) {
+    test.PrintArgs();
+    return 1;
+  }
+  return test.Run();
 }
-

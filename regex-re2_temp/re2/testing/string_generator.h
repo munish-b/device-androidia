@@ -22,7 +22,9 @@ class StringGenerator {
   StringGenerator(int maxlen, const vector<string>& alphabet);
   ~StringGenerator();
   const StringPiece& Next();
-  bool HasNext() { return hasnext_; }
+  bool HasNext() {
+    return hasnext_;
+  }
 
   // Resets generator to start sequence over.
   void Reset();
@@ -42,14 +44,14 @@ class StringGenerator {
   vector<string> alphabet_;  // Alphabet, one string per letter.
 
   // Iteration state.
-  StringPiece sp_;           // Last StringPiece returned by Next().
-  string s_;                 // String data in last StringPiece returned by Next().
-  bool hasnext_;             // Whether Next() can be called again.
-  vector<int> digits_;       // Alphabet indices for next string.
-  bool generate_null_;       // Whether to generate a NULL StringPiece next.
-  bool random_;              // Whether generated strings are random.
-  int nrandom_;              // Number of random strings left to generate.
-  ACMRandom* acm_;           // Random number generator
+  StringPiece sp_;      // Last StringPiece returned by Next().
+  string s_;            // String data in last StringPiece returned by Next().
+  bool hasnext_;        // Whether Next() can be called again.
+  vector<int> digits_;  // Alphabet indices for next string.
+  bool generate_null_;  // Whether to generate a NULL StringPiece next.
+  bool random_;         // Whether generated strings are random.
+  int nrandom_;         // Number of random strings left to generate.
+  ACMRandom* acm_;      // Random number generator
   DISALLOW_EVIL_CONSTRUCTORS(StringGenerator);
 };
 

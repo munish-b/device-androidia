@@ -19,21 +19,17 @@
 
 #include "HwcTestDefs.h"
 
-class HwcTestDisplaySpoof
-{
-public:
-    virtual ~HwcTestDisplaySpoof();
-    virtual void ModifyStatus(uint32_t frameNo, int& status) = 0;
+class HwcTestDisplaySpoof {
+ public:
+  virtual ~HwcTestDisplaySpoof();
+  virtual void ModifyStatus(uint32_t frameNo, int& status) = 0;
 };
 
-class HwcTestNullDisplaySpoof : public HwcTestDisplaySpoof
-{
-public:
-    virtual ~HwcTestNullDisplaySpoof();
+class HwcTestNullDisplaySpoof : public HwcTestDisplaySpoof {
+ public:
+  virtual ~HwcTestNullDisplaySpoof();
 
-    virtual void ModifyStatus(uint32_t frameNo, int& status);
+  virtual void ModifyStatus(uint32_t frameNo, int& status);
 };
 
-
-#endif // __HwcTestDisplaySpoof_h__
-
+#endif  // __HwcTestDisplaySpoof_h__

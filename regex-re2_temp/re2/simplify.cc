@@ -16,8 +16,7 @@ namespace re2 {
 // string representation of the simplified form.  Returns true on success.
 // Returns false and sets *error (if error != NULL) on error.
 bool Regexp::SimplifyRegexp(const StringPiece& src, ParseFlags flags,
-                            string* dst,
-                            RegexpStatus* status) {
+                            string* dst, RegexpStatus* status) {
   Regexp* re = Parse(src, flags, status);
   if (re == NULL)
     return false;
@@ -102,11 +101,10 @@ bool Regexp::ComputeSimple() {
 // The child_args are simplified Regexp*s.
 class SimplifyWalker : public Regexp::Walker<Regexp*> {
  public:
-  SimplifyWalker() {}
+  SimplifyWalker() {
+  }
   virtual Regexp* PreVisit(Regexp* re, Regexp* parent_arg, bool* stop);
-  virtual Regexp* PostVisit(Regexp* re,
-                            Regexp* parent_arg,
-                            Regexp* pre_arg,
+  virtual Regexp* PostVisit(Regexp* re, Regexp* parent_arg, Regexp* pre_arg,
                             Regexp** child_args, int nchild_args);
   virtual Regexp* Copy(Regexp* re);
   virtual Regexp* ShortVisit(Regexp* re, Regexp* parent_arg);
@@ -170,10 +168,8 @@ Regexp* SimplifyWalker::PreVisit(Regexp* re, Regexp* parent_arg, bool* stop) {
   return NULL;
 }
 
-Regexp* SimplifyWalker::PostVisit(Regexp* re,
-                                  Regexp* parent_arg,
-                                  Regexp* pre_arg,
-                                  Regexp** child_args,
+Regexp* SimplifyWalker::PostVisit(Regexp* re, Regexp* parent_arg,
+                                  Regexp* pre_arg, Regexp** child_args,
                                   int nchild_args) {
   switch (re->op()) {
     case kRegexpNoMatch:
@@ -218,7 +214,7 @@ Regexp* SimplifyWalker::PostVisit(Regexp* re,
       Regexp* nre = new Regexp(re->op(), re->parse_flags());
       nre->AllocSub(re->nsub_);
       Regexp** nre_subs = nre->sub();
-      for (int i = 0; i <re->nsub_; i++)
+      for (int i = 0; i < re->nsub_; i++)
         nre_subs[i] = child_args[i];
       nre->simple_ = true;
       return nre;
@@ -274,8 +270,8 @@ Regexp* SimplifyWalker::PostVisit(Regexp* re,
       if (newsub->op() == kRegexpEmptyMatch)
         return newsub;
 
-      Regexp* nre = SimplifyRepeat(newsub, re->min_, re->max_,
-                                   re->parse_flags());
+      Regexp* nre =
+          SimplifyRepeat(newsub, re->min_, re->max_, re->parse_flags());
       newsub->Decref();
       nre->simple_ = true;
       return nre;
@@ -327,9 +323,9 @@ Regexp* SimplifyWalker::SimplifyRepeat(Regexp* re, int min, int max,
     nre->AllocSub(min);
     VLOG(1) << "Simplify " << min;
     Regexp** nre_subs = nre->sub();
-    for (int i = 0; i < min-1; i++)
+    for (int i = 0; i < min - 1; i++)
       nre_subs[i] = re->Incref();
-    nre_subs[min-1] = Regexp::Plus(re->Incref(), f);
+    nre_subs[min - 1] = Regexp::Plus(re->Incref(), f);
     return nre;
   }
 
@@ -358,7 +354,7 @@ Regexp* SimplifyWalker::SimplifyRepeat(Regexp* re, int min, int max,
   // Build and attach suffix: (x(x(x)?)?)?
   if (max > min) {
     Regexp* suf = Regexp::Quest(re->Incref(), f);
-    for (int i = min+1; i < max; i++)
+    for (int i = min + 1; i < max; i++)
       suf = Regexp::Quest(Concat2(re->Incref(), suf, f), f);
     if (nre == NULL)
       nre = suf;
@@ -369,7 +365,8 @@ Regexp* SimplifyWalker::SimplifyRepeat(Regexp* re, int min, int max,
   if (nre == NULL) {
     // Some degenerate case, like min > max, or min < max < 0.
     // This shouldn't happen, because the parser rejects such regexps.
-    LOG(DFATAL) << "Malformed repeat " << re->ToString() << " " << min << " " << max;
+    LOG(DFATAL) << "Malformed repeat " << re->ToString() << " " << min << " "
+                << max;
     return new Regexp(kRegexpNoMatch, f);
   }
 

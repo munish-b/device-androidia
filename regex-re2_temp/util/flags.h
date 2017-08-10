@@ -11,10 +11,14 @@
 #define RE2_UTIL_FLAGS_H__
 
 #define DEFINE_flag(type, name, deflt, desc) \
-	namespace re2 { type FLAGS_##name = deflt; }
+  namespace re2 {                            \
+  type FLAGS_##name = deflt;                 \
+  }
 
 #define DECLARE_flag(type, name) \
-	namespace re2 { extern type FLAGS_##name; }
+  namespace re2 {                \
+  extern type FLAGS_##name;      \
+  }
 
 #define DEFINE_bool(name, deflt, desc) DEFINE_flag(bool, name, deflt, desc)
 #define DEFINE_int32(name, deflt, desc) DEFINE_flag(int32, name, deflt, desc)

@@ -20,4 +20,4 @@
 #include "HwchChoice.h"
 #include "HwchSystem.h"
 
-#endif // __HwchDisplayChoice_h__
+#endif  // __HwchDisplayChoice_h__

@@ -20,36 +20,32 @@
 #include "HwchRandomTest.h"
 #include "HwchLayerChoice.h"
 
-namespace Hwch
-{
-    class DirectPlanesTest  : public RandomTest
-    {
-    public:
+namespace Hwch {
+class DirectPlanesTest : public RandomTest {
+ public:
+  DirectPlanesTest(Hwch::Interface& interface);
+  virtual ~DirectPlanesTest();
 
-        DirectPlanesTest(Hwch::Interface& interface);
-        virtual ~DirectPlanesTest();
+  virtual int RunScenario();
 
-        virtual int RunScenario();
+  bool IsFullScreen(const Hwch::LogDisplayRect& ldr, uint32_t d);
+  Layer* CreateLayer(uint32_t d);
+  void SetLayerCropDf(Hwch::Layer* layer, uint32_t d);
+  void SetLayerFullScreen(Hwch::Layer* layer, uint32_t d);
+  void SetLayerBlending(Hwch::Layer* layer);
+  void SetLayerTransform(Hwch::Layer* layer);
 
-        bool IsFullScreen(const Hwch::LogDisplayRect& ldr, uint32_t d);
-        Layer* CreateLayer(uint32_t d);
-        void SetLayerCropDf(Hwch::Layer* layer, uint32_t d);
-        void SetLayerFullScreen(Hwch::Layer* layer, uint32_t d);
-        void SetLayerBlending(Hwch::Layer* layer);
-        void SetLayerTransform(Hwch::Layer* layer);
+ private:
+  int32_t mDw[MAX_DISPLAYS];
+  int32_t mDh[MAX_DISPLAYS];
 
-    private:
-        int32_t mDw[MAX_DISPLAYS];
-        int32_t mDh[MAX_DISPLAYS];
-
-        MultiChoice<uint32_t> mColourChoice;
-        Choice mWidthChoice[MAX_DISPLAYS];
-        Choice mHeightChoice[MAX_DISPLAYS];
-        MultiChoice<uint32_t> mTransformChoice;
-        MultiChoice<uint32_t> mBlendingChoice;
-        AlphaChoice mAlphaChoice;
-    };
+  MultiChoice<uint32_t> mColourChoice;
+  Choice mWidthChoice[MAX_DISPLAYS];
+  Choice mHeightChoice[MAX_DISPLAYS];
+  MultiChoice<uint32_t> mTransformChoice;
+  MultiChoice<uint32_t> mBlendingChoice;
+  AlphaChoice mAlphaChoice;
+};
 }
 
-#endif // __HwchDirectPlanesTest_h__
-
+#endif  // __HwchDirectPlanesTest_h__

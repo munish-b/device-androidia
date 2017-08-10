@@ -12,9 +12,10 @@ namespace re2 {
 
 class NullWalker : public Regexp::Walker<bool> {
  public:
-  NullWalker() { }
-  bool PostVisit(Regexp* re, bool parent_arg, bool pre_arg,
-                 bool* child_args, int nchild_args);
+  NullWalker() {
+  }
+  bool PostVisit(Regexp* re, bool parent_arg, bool pre_arg, bool* child_args,
+                 int nchild_args);
 
   bool ShortVisit(Regexp* re, bool a) {
     // Should never be called: we use Walk not WalkExponential.
@@ -31,7 +32,7 @@ class NullWalker : public Regexp::Walker<bool> {
 // can match an empty string).  Returns whether this clause can match an
 // empty string.
 bool NullWalker::PostVisit(Regexp* re, bool parent_arg, bool pre_arg,
-                                  bool* child_args, int nchild_args) {
+                           bool* child_args, int nchild_args) {
   return false;
 }
 

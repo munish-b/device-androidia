@@ -44,12 +44,12 @@
 #define GRALLOC_DRM_GET_DIMENSIONS 2
 
 class GrallocInterface {
-public:
+ public:
   GrallocInterface();
-  hw_module_t *gralloc;
+  hw_module_t* gralloc;
   uint16_t gralloc_version;
 #ifdef HWCVAL_ENABLE_GRALLOC1
-  gralloc1_device_t *gralloc1_dvc;
+  gralloc1_device_t* gralloc1_dvc;
   GRALLOC1_PFN_LOCK_FLEX pfn_lockflex;
   GRALLOC1_PFN_GET_FORMAT pfn_getFormat;
   GRALLOC1_PFN_GET_DIMENSIONS pfn_getDimensions;
@@ -79,11 +79,9 @@ typedef struct hwc_buffer_details {
 
 typedef hwc_buffer_details_t hwc_buffer_media_details_t;
 
-namespace Hwcval
-{
+namespace Hwcval {
 typedef hwc_buffer_details_t buffer_details_t;
 }
-
 
 void LogProtection(int priority, buffer_handle_t handle, const char* desc);
 
@@ -95,281 +93,287 @@ class HwcTestProtectionChecker;
 typedef android::Vector<DrmShimTransform> DrmShimTransformVector;
 typedef android::SortedVector<DrmShimTransform> DrmShimSortedTransformVector;
 typedef android::Vector<android::sp<DrmShimBuffer> > DrmShimBufferVector;
-typedef android::SortedVector<android::sp<HwcTestBufferObject> > HwcTestBufferObjectVector;
+typedef android::SortedVector<android::sp<HwcTestBufferObject> >
+    HwcTestBufferObjectVector;
 
-class DrmShimBuffer : public android::RefBase
-{
-public:
-    struct FbIdData
-    {
-        uint32_t pixelFormat;
-        bool hasAuxBuffer;
-        uint32_t auxPitch;
-        uint32_t auxOffset;
-        __u64 modifier;
-    };
+class DrmShimBuffer : public android::RefBase {
+ public:
+  struct FbIdData {
+    uint32_t pixelFormat;
+    bool hasAuxBuffer;
+    uint32_t auxPitch;
+    uint32_t auxOffset;
+    __u64 modifier;
+  };
 
-    typedef android::KeyedVector<uint32_t, FbIdData> FbIdVector;
+  typedef android::KeyedVector<uint32_t, FbIdData> FbIdVector;
 
-protected:
-    buffer_handle_t mHandle;                // Buffer handle
-    HwcTestBufferObjectVector mBos;         // All open buffer objects
+ protected:
+  buffer_handle_t mHandle;         // Buffer handle
+  HwcTestBufferObjectVector mBos;  // All open buffer objects
 
-    int64_t mDsId;                          // ADF device-specific Id
-    int mAcquireFenceFd;
+  int64_t mDsId;  // ADF device-specific Id
+  int mAcquireFenceFd;
 
-    bool mNew;                              // This is a new buffer we haven't seen before.
-    bool mUsedByIvp;                        // consumed in an IVP call
-    bool mUsed;                             // Used either as a composition input or on a screen
-    Hwcval::BufferSourceType mBufferSource;         // Is buffer the result of a composition?
-    bool mBlanking;                         // It is just a blanking buffer
-    bool mBlack;                            // Content is (believed to be) all black
-    int32_t mFbtDisplay;                    // -1 if not a FRAMEBUFFERTARGET; display index if it is
-    Hwcval::buffer_details_t mDetails;      // gralloc usage etc
-    hwc_buffer_media_details_t mMediaDetails;
+  bool mNew;        // This is a new buffer we haven't seen before.
+  bool mUsedByIvp;  // consumed in an IVP call
+  bool mUsed;       // Used either as a composition input or on a screen
+  Hwcval::BufferSourceType
+      mBufferSource;    // Is buffer the result of a composition?
+  bool mBlanking;       // It is just a blanking buffer
+  bool mBlack;          // Content is (believed to be) all black
+  int32_t mFbtDisplay;  // -1 if not a FRAMEBUFFERTARGET; display index if it is
+  Hwcval::buffer_details_t mDetails;  // gralloc usage etc
+  hwc_buffer_media_details_t mMediaDetails;
 
 #ifdef HWCVAL_ENABLE_RENDER_COMPRESSION
-    hwc_buffer_resolve_details_t mResolveDetails;
+  hwc_buffer_resolve_details_t mResolveDetails;
 #endif
 
-    char mStrFormat[5];                     // Buffer format as a string
-    bool mReallyProtected;
-    bool mTransparentFromHarness;
+  char mStrFormat[5];  // Buffer format as a string
+  bool mReallyProtected;
+  bool mTransparentFromHarness;
 
-    FbIdVector mFbIds;
+  FbIdVector mFbIds;
 
-    DrmShimTransformVector mCombinedFrom;
-    uint32_t mBufferIx;                     // For iteration functions
+  DrmShimTransformVector mCombinedFrom;
+  uint32_t mBufferIx;  // For iteration functions
 
-    // Lifetime management
-    Hwcval::FrameNums mLastHwcFrame;
+  // Lifetime management
+  Hwcval::FrameNums mLastHwcFrame;
 
-    // Last time buffer appeared in onSet
-    Hwcval::FrameNums mLastOnSetFrame;
+  // Last time buffer appeared in onSet
+  Hwcval::FrameNums mLastOnSetFrame;
 
-    // Shadow buffer for reference composition
-    android::sp<android::GraphicBuffer> mRef;
+  // Shadow buffer for reference composition
+  android::sp<android::GraphicBuffer> mRef;
 
-    // Local copy of graphic buffer (only when needed for comparison)
-    android::sp<android::GraphicBuffer> mBufCpy;
+  // Local copy of graphic buffer (only when needed for comparison)
+  android::sp<android::GraphicBuffer> mBufCpy;
 
-    // Flag to indicate comparison is needed
-    int32_t mToBeCompared;
+  // Flag to indicate comparison is needed
+  int32_t mToBeCompared;
 
-    // Total comparison mismatches so far
-    static uint32_t mCompMismatchCount;
+  // Total comparison mismatches so far
+  static uint32_t mCompMismatchCount;
 
-    // Is the composition target from protected buffers
-    enum ShouldBeProtectedType
-    {
-        eProtDontCare,
-        eProtYes,
-        eProtNo
-    };
+  // Is the composition target from protected buffers
+  enum ShouldBeProtectedType { eProtDontCare, eProtYes, eProtNo };
 
-    ShouldBeProtectedType mShouldBeProtected;
+  ShouldBeProtectedType mShouldBeProtected;
 
-    // How many times has the buffer appeared sequentially in the layer list?
-    uint32_t mAppearanceCount;
+  // How many times has the buffer appeared sequentially in the layer list?
+  uint32_t mAppearanceCount;
 
-    // Is the buffer content all nulls?
-    Hwcval::BufferContentType mBufferContent;
+  // Is the buffer content all nulls?
+  Hwcval::BufferContentType mBufferContent;
 
-public:
-    // Total count of buffers in existence
-    static uint32_t mCount;
+ public:
+  // Total count of buffers in existence
+  static uint32_t mCount;
 
-private:
-    void ReportCompositionMismatch(uint32_t lineWidthBytes, uint32_t lineStrideCpy, uint32_t lineStrideRef,
-        double SSIMIndex, unsigned char* cpyData, unsigned char* refData);
+ private:
+  void ReportCompositionMismatch(uint32_t lineWidthBytes,
+                                 uint32_t lineStrideCpy, uint32_t lineStrideRef,
+                                 double SSIMIndex, unsigned char* cpyData,
+                                 unsigned char* refData);
 
-public:
+ public:
+  DrmShimBuffer(buffer_handle_t handle, Hwcval::BufferSourceType bufferSource =
+                                            Hwcval::BufferSourceType::Input);
+  ~DrmShimBuffer();
 
-    DrmShimBuffer(buffer_handle_t handle, Hwcval::BufferSourceType bufferSource = Hwcval::BufferSourceType::Input);
-    ~DrmShimBuffer();
+  static int GetBufferInfo(buffer_handle_t handle,
+                           Hwcval::buffer_details_t* details);
 
-    static int GetBufferInfo(buffer_handle_t handle, Hwcval::buffer_details_t* details);
+  void FreeBufCopies();
 
-    void FreeBufCopies();
+  buffer_handle_t GetHandle() const;
+  DrmShimBuffer* SetHandle(buffer_handle_t handle);
 
-    buffer_handle_t GetHandle() const;
-    DrmShimBuffer* SetHandle(buffer_handle_t handle);
+  bool IsOpen();
+  uint32_t GetOpenCount();
 
-    bool IsOpen();
-    uint32_t GetOpenCount();
+  DrmShimBuffer* AddBo(android::sp<HwcTestBufferObject> bo);
+  DrmShimBuffer* RemoveBo(android::sp<HwcTestBufferObject> bo);
+  DrmShimBuffer* RemoveBo(int fd, uint32_t boHandle);
+  HwcTestBufferObjectVector& GetBos();
 
-    DrmShimBuffer* AddBo(android::sp<HwcTestBufferObject> bo);
-    DrmShimBuffer* RemoveBo(android::sp<HwcTestBufferObject> bo);
-    DrmShimBuffer* RemoveBo(int fd, uint32_t boHandle);
-    HwcTestBufferObjectVector& GetBos();
+  DrmShimBuffer* SetNew(bool isNew);
+  bool IsNew();
 
-    DrmShimBuffer* SetNew(bool isNew);
-    bool IsNew();
+  DrmShimBuffer* SetUsedByIvp(bool usedByIvp);
+  bool IsUsedByIvp();
 
-    DrmShimBuffer* SetUsedByIvp(bool usedByIvp);
-    bool IsUsedByIvp();
+  DrmShimBuffer* SetUsed(bool used);
+  bool IsUsed();
 
-    DrmShimBuffer* SetUsed(bool used);
-    bool IsUsed();
+  DrmShimBuffer* SetCompositionTarget(Hwcval::BufferSourceType bufferSource);
+  Hwcval::BufferSourceType GetSource();
+  bool IsCompositionTarget();
 
-    DrmShimBuffer* SetCompositionTarget(Hwcval::BufferSourceType bufferSource);
-    Hwcval::BufferSourceType GetSource();
-    bool IsCompositionTarget();
+  DrmShimBuffer* SetBlanking(bool blanking);
+  bool IsBlanking();
 
-    DrmShimBuffer* SetBlanking(bool blanking);
-    bool IsBlanking();
+  DrmShimBuffer* SetBlack(bool black);
+  bool IsBlack();
 
-    DrmShimBuffer* SetBlack(bool black);
-    bool IsBlack();
+  DrmShimBuffer* SetFbtDisplay(uint32_t displayIx);
+  bool IsFbt();
+  uint32_t GetFbtDisplay();
+  bool IsFbtDisplay0();
 
-    DrmShimBuffer* SetFbtDisplay(uint32_t displayIx);
-    bool IsFbt();
-    uint32_t GetFbtDisplay();
-    bool IsFbtDisplay0();
+  FbIdVector& GetFbIds();
+  FbIdData* GetFbIdData(uint32_t fbId);
+  uint32_t GetPixelFormat(uint32_t fbId);
+  uint32_t NumFbIds() const;
 
-    FbIdVector& GetFbIds();
-    FbIdData* GetFbIdData(uint32_t fbId);
-    uint32_t GetPixelFormat(uint32_t fbId);
-    uint32_t NumFbIds() const;
+  // ADF device-specific Id
+  DrmShimBuffer* SetDsId(int64_t dsId);
+  int64_t GetDsId();
 
-    // ADF device-specific Id
-    DrmShimBuffer* SetDsId(int64_t dsId);
-    int64_t GetDsId();
+  DrmShimBuffer* SetDetails(const Hwcval::buffer_details_t& details);
+  const Hwcval::buffer_details_t& GetDetails() const;
+  // The global buffer "name" - actually a number
+  DrmShimBuffer* SetGlobalId(int id);
+  int GetGlobalId() const;
 
-    DrmShimBuffer* SetDetails(const Hwcval::buffer_details_t& details);
-    const Hwcval::buffer_details_t& GetDetails() const;
-    // The global buffer "name" - actually a number
-    DrmShimBuffer* SetGlobalId(int id);
-    int GetGlobalId() const;
-
-    DrmShimBuffer* UpdateMediaDetails();
-    DrmShimBuffer* UpdateResolveDetails();
-    const hwc_buffer_media_details_t &GetMediaDetails() const;
+  DrmShimBuffer* UpdateMediaDetails();
+  DrmShimBuffer* UpdateResolveDetails();
+  const hwc_buffer_media_details_t& GetMediaDetails() const;
 #ifdef HWCVAL_ENABLE_RENDER_COMPRESSION
-    const hwc_buffer_resolve_details_t &GetResolveDetails() const;
+  const hwc_buffer_resolve_details_t& GetResolveDetails() const;
 #endif
-    uint32_t GetWidth();
-    uint32_t GetHeight();
-    uint32_t GetAllocWidth();
-    uint32_t GetAllocHeight();
-    uint32_t GetUsage();
+  uint32_t GetWidth();
+  uint32_t GetHeight();
+  uint32_t GetAllocWidth();
+  uint32_t GetAllocHeight();
+  uint32_t GetUsage();
 
-    // Returns whether this buffer contains a video format
-    static bool IsVideoFormat(uint32_t format);
-    bool IsVideoFormat();
-    static bool IsNV12Format(uint32_t format);
-    bool IsNV12Format();
+  // Returns whether this buffer contains a video format
+  static bool IsVideoFormat(uint32_t format);
+  bool IsVideoFormat();
+  static bool IsNV12Format(uint32_t format);
+  bool IsNV12Format();
 
-    // Returns whether the buffer is render compressed
-    bool IsRenderCompressed();
+  // Returns whether the buffer is render compressed
+  bool IsRenderCompressed();
 
-    // Returns whether the buffer is in a format suitable for render compression
-    bool IsRenderCompressibleFormat();
+  // Returns whether the buffer is in a format suitable for render compression
+  bool IsRenderCompressibleFormat();
 
-    // Update cached gralloc details
-    bool UpdateDetails();
+  // Update cached gralloc details
+  bool UpdateDetails();
 
-    // Return the up-to-date global ID for this buffer handle
-    // (may not be same as our cached copy).
-    int GetCurrentGlobalId();
+  // Return the up-to-date global ID for this buffer handle
+  // (may not be same as our cached copy).
+  int GetCurrentGlobalId();
 
-    bool HasMediaDetailsEncrypted();
-    void SetShouldBeProtected(bool shouldBeProtected);
-    bool IsProtectionCorrect();
-    bool IsReallyProtected();
-    void SetReallyProtected(bool prot);
-    uint32_t GetPavpSessionId();
-    uint32_t GetPavpInstance();
-    uint32_t GetAuxOffset();
-    uint32_t GetAuxPitch();
+  bool HasMediaDetailsEncrypted();
+  void SetShouldBeProtected(bool shouldBeProtected);
+  bool IsProtectionCorrect();
+  bool IsReallyProtected();
+  void SetReallyProtected(bool prot);
+  uint32_t GetPavpSessionId();
+  uint32_t GetPavpInstance();
+  uint32_t GetAuxOffset();
+  uint32_t GetAuxPitch();
 
-    // Do we have valid session and instance id?
-    Hwcval::ValidityType IsProtectionValid(HwcTestProtectionChecker& protChecker, uint32_t hwcFrame);
-    Hwcval::ValidityType ProtectedContentValidity(HwcTestProtectionChecker& protChecker, uint32_t hwcFrame);
-    static const char* ValidityStr(Hwcval::ValidityType valid);
-    const char* EncryptionStr(char* strbuf, size_t len = HWCVAL_DEFAULT_STRLEN);
-    const char* IdProtStr(char* strbuf, size_t len = HWCVAL_DEFAULT_STRLEN);
+  // Do we have valid session and instance id?
+  Hwcval::ValidityType IsProtectionValid(HwcTestProtectionChecker& protChecker,
+                                         uint32_t hwcFrame);
+  Hwcval::ValidityType ProtectedContentValidity(
+      HwcTestProtectionChecker& protChecker, uint32_t hwcFrame);
+  static const char* ValidityStr(Hwcval::ValidityType valid);
+  const char* EncryptionStr(char* strbuf, size_t len = HWCVAL_DEFAULT_STRLEN);
+  const char* IdProtStr(char* strbuf, size_t len = HWCVAL_DEFAULT_STRLEN);
 
-    uint32_t GetFormat() const;
-    uint32_t GetDrmFormat();
+  uint32_t GetFormat() const;
+  uint32_t GetDrmFormat();
 
-    // Add and remove child buffers
-    void AddCombinedFrom(DrmShimTransform& from);
-    void SetAllCombinedFrom(const DrmShimTransformVector& combinedFrom);
-    const DrmShimTransformVector& GetAllCombinedFrom();
-    uint32_t NumCombinedFrom() const;
+  // Add and remove child buffers
+  void AddCombinedFrom(DrmShimTransform& from);
+  void SetAllCombinedFrom(const DrmShimTransformVector& combinedFrom);
+  const DrmShimTransformVector& GetAllCombinedFrom();
+  uint32_t NumCombinedFrom() const;
 
-    // Iterate child buffers
-    DrmShimTransform* FirstCombinedFrom();
-    DrmShimTransform* NextCombinedFrom();
-    void RemoveCurrentCombinedFrom();
+  // Iterate child buffers
+  DrmShimTransform* FirstCombinedFrom();
+  DrmShimTransform* NextCombinedFrom();
+  void RemoveCurrentCombinedFrom();
 
-    // Is buf one of the buffers that this one was composed from?
-    bool IsCombinedFrom(android::sp<DrmShimBuffer> buf);
+  // Is buf one of the buffers that this one was composed from?
+  bool IsCombinedFrom(android::sp<DrmShimBuffer> buf);
 
-    // Use recursion to add FB Ids of all ancestors in layer list
-    void AddSourceFBsToList(DrmShimSortedTransformVector& list, DrmShimTransform& thisTransform, uint32_t sources = 0);
+  // Use recursion to add FB Ids of all ancestors in layer list
+  void AddSourceFBsToList(DrmShimSortedTransformVector& list,
+                          DrmShimTransform& thisTransform,
+                          uint32_t sources = 0);
 
-    /// Buffer about to be deleted so make sure no-one points to us
-    void Unassociate();
+  /// Buffer about to be deleted so make sure no-one points to us
+  void Unassociate();
 
-    /// Was this buffer first seen in layer list last frame?
-    DrmShimBuffer* SetLastHwcFrame(Hwcval::FrameNums hwcFrame, bool isOnSet = false);
-    bool IsCurrent(Hwcval::FrameNums hwcFrame);
-    const char* GetHwcFrameStr(char* str, uint32_t len = HWCVAL_DEFAULT_STRLEN);
+  /// Was this buffer first seen in layer list last frame?
+  DrmShimBuffer* SetLastHwcFrame(Hwcval::FrameNums hwcFrame,
+                                 bool isOnSet = false);
+  bool IsCurrent(Hwcval::FrameNums hwcFrame);
+  const char* GetHwcFrameStr(char* str, uint32_t len = HWCVAL_DEFAULT_STRLEN);
 
-    /// Classify pixel format by bpp
-    uint32_t GetBpp();
+  /// Classify pixel format by bpp
+  uint32_t GetBpp();
 
-    /// Composition reference buffer handling
-    /// Set reference to the reference buffer
-    void SetRef(android::sp<android::GraphicBuffer>& refBuf);
-    void SetToBeCompared(bool toBeCompared = true);
-    bool IsToBeCompared();
-    bool IsToBeComparedOnce();
+  /// Composition reference buffer handling
+  /// Set reference to the reference buffer
+  void SetRef(android::sp<android::GraphicBuffer>& refBuf);
+  void SetToBeCompared(bool toBeCompared = true);
+  bool IsToBeCompared();
+  bool IsToBeComparedOnce();
 
-    /// Set copy of buffer for comparison purposes
-    void SetBufCopy(android::sp<android::GraphicBuffer>& buf);
-    android::sp<android::GraphicBuffer> GetBufCopy();
-    bool HasBufCopy();
+  /// Set copy of buffer for comparison purposes
+  void SetBufCopy(android::sp<android::GraphicBuffer>& buf);
+  android::sp<android::GraphicBuffer> GetBufCopy();
+  bool HasBufCopy();
 
-    /// Appearance counting (number of times sequentially in the layer list)
-    DrmShimBuffer* IncAppearanceCount();
-    void ResetAppearanceCount();
-    uint32_t GetAppearanceCount();
+  /// Appearance counting (number of times sequentially in the layer list)
+  DrmShimBuffer* IncAppearanceCount();
+  void ResetAppearanceCount();
+  uint32_t GetAppearanceCount();
 
-    /// Is content of the buffer all nulls?
-    bool IsBufferTransparent(const hwc_rect_t& rect);
-    static bool IsBufferTransparent(struct gralloc_module_t* gralloc, Hwcval::buffer_details_t& bi, buffer_handle_t handle, const hwc_rect_t& rect);
+  /// Is content of the buffer all nulls?
+  bool IsBufferTransparent(const hwc_rect_t& rect);
+  static bool IsBufferTransparent(struct gralloc_module_t* gralloc,
+                                  Hwcval::buffer_details_t& bi,
+                                  buffer_handle_t handle,
+                                  const hwc_rect_t& rect);
 
-    /// Compare buffer copy with copy of buffer from reference composition
-    bool CompareWithRef(bool useAlpha, hwc_rect_t* mRectToCompare = 0);
+  /// Compare buffer copy with copy of buffer from reference composition
+  bool CompareWithRef(bool useAlpha, hwc_rect_t* mRectToCompare = 0);
 
-    /// Does the buffer have a reference buffer copy?
-    bool HasRef();
+  /// Does the buffer have a reference buffer copy?
+  bool HasRef();
 
-    // Harness says the buffer is transparent
-    void SetTransparentFromHarness();
-    bool IsActuallyTransparent();
+  // Harness says the buffer is transparent
+  void SetTransparentFromHarness();
+  bool IsActuallyTransparent();
 
-    // Construct an identification string for logging
-    char* IdStr(char* str, uint32_t len=HWCVAL_DEFAULT_STRLEN-1) const;
+  // Construct an identification string for logging
+  char* IdStr(char* str, uint32_t len = HWCVAL_DEFAULT_STRLEN - 1) const;
 
-    // Return type of buffer source as a string
-    const char* GetSourceName();
+  // Return type of buffer source as a string
+  const char* GetSourceName();
 
-    // Debug - Report contents
-    void ReportStatus(int priority, const char* str);
+  // Debug - Report contents
+  void ReportStatus(int priority, const char* str);
 
-    // Debug - check another buffer not referenced by this one before we delete
-    void DbgCheckNoReferenceTo(DrmShimBuffer* buf) const;
+  // Debug - check another buffer not referenced by this one before we delete
+  void DbgCheckNoReferenceTo(DrmShimBuffer* buf) const;
 
-    // String version of buffer format
-    const char* StrBufFormat();
+  // String version of buffer format
+  const char* StrBufFormat();
 
-    // Does the buffer format have plane alpha
-    static bool FormatHasPixelAlpha(uint32_t format);
-    bool FormatHasPixelAlpha();
+  // Does the buffer format have plane alpha
+  static bool FormatHasPixelAlpha(uint32_t format);
+  bool FormatHasPixelAlpha();
 };
 
-#endif // __DrmShimBuffer_h__
+#endif  // __DrmShimBuffer_h__

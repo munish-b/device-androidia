@@ -26,347 +26,292 @@ using namespace hwcomposer;
 
 // TestParams class
 // Encapsulates command-line options
-Hwch::TestParams::TestParams()
-  : mpParams(0)
-{
+Hwch::TestParams::TestParams() : mpParams(0) {
 }
 
 Hwch::Test::Test(Hwch::Interface& interface)
-  : mInterface(interface),
-    mSystem(Hwch::System::getInstance())
-{
-    // No expectation as to cloning optimization since we can't
-    // second guess how HWC will decide to perform cloning.
-    // However, in a specific test, this can be set where cloning optimization is expected.
-    SetExpectedMode(HwcTestConfig::eDontCare);
+    : mInterface(interface), mSystem(Hwch::System::getInstance()) {
+  // No expectation as to cloning optimization since we can't
+  // second guess how HWC will decide to perform cloning.
+  // However, in a specific test, this can be set where cloning optimization is
+  // expected.
+  SetExpectedMode(HwcTestConfig::eDontCare);
 }
 
-Hwch::Test::~Test()
-{
-    // Disconnect from the HWC Service Api
-    if (mHwcsHandle)
-    {
-        HwcService_Disconnect(mHwcsHandle);
-    }
+Hwch::Test::~Test() {
+  // Disconnect from the HWC Service Api
+  if (mHwcsHandle) {
+    HwcService_Disconnect(mHwcsHandle);
+  }
 }
 
-void Hwch::TestParams::SetParams(ParamVec& params)
-{
-    mpParams = &params;
+void Hwch::TestParams::SetParams(ParamVec& params) {
+  mpParams = &params;
 }
 
-const char* Hwch::TestParams::GetParam(const char* name)
-{
-    if (!mpParams)
-    {
-        return 0;
+const char* Hwch::TestParams::GetParam(const char* name) {
+  if (!mpParams) {
+    return 0;
+  }
+
+  ssize_t ix = mpParams->indexOfKey(android::String8(name));
+
+  if (ix >= 0) {
+    UserParam& param = mpParams->editValueAt(ix);
+    param.mChecked = true;
+
+    android::String8 paramStr;
+
+    if (param.mValue == "1") {
+      paramStr = android::String8::format("-%s ", name);
+    } else {
+      paramStr =
+          android::String8::format("-%s=%s ", name, param.mValue.string());
     }
 
-    ssize_t ix = mpParams->indexOfKey(android::String8(name));
-
-    if (ix >= 0)
-    {
-        UserParam& param = mpParams->editValueAt(ix);
-        param.mChecked = true;
-
-        android::String8 paramStr;
-
-        if (param.mValue == "1")
-        {
-            paramStr = android::String8::format("-%s ", name);
-        }
-        else
-        {
-            paramStr = android::String8::format("-%s=%s ", name, param.mValue.string());
-        }
-
-        if (mUsedArgs.find(paramStr) < 0)
-        {
-            mUsedArgs += paramStr;
-        }
-
-        return param.mValue.string();
+    if (mUsedArgs.find(paramStr) < 0) {
+      mUsedArgs += paramStr;
     }
-    else
-    {
-        return 0;
-    }
+
+    return param.mValue.string();
+  } else {
+    return 0;
+  }
 }
 
-const char* Hwch::TestParams::GetStrParam(const char* name, const char* deflt)
-{
-    // Safe for users as this will not return a null
-    const char* str = GetParam(name);
+const char* Hwch::TestParams::GetStrParam(const char* name, const char* deflt) {
+  // Safe for users as this will not return a null
+  const char* str = GetParam(name);
 
-    if (str)
-    {
-        return str;
-    }
-    else
-    {
-        return deflt;
-    }
+  if (str) {
+    return str;
+  } else {
+    return deflt;
+  }
 }
 
-android::String8 Hwch::TestParams::GetStrParamLower(const char* name, const char* deflt)
-{
-    android::String8 result(GetStrParam(name, deflt));
-    result.toLower();
-    return result;
+android::String8 Hwch::TestParams::GetStrParamLower(const char* name,
+                                                    const char* deflt) {
+  android::String8 result(GetStrParam(name, deflt));
+  result.toLower();
+  return result;
 }
 
+int Hwch::TestParams::GetIntParam(const char* name, int deflt) {
+  const char* str = GetParam(name);
 
-
-int Hwch::TestParams::GetIntParam(const char* name, int deflt)
-{
-    const char* str = GetParam(name);
-
-    if (str)
-    {
-        return atoi(str);
-    }
-    else
-    {
-        return deflt;
-    }
+  if (str) {
+    return atoi(str);
+  } else {
+    return deflt;
+  }
 }
 
-float Hwch::TestParams::GetFloatParam(const char* name, float deflt)
-{
-    const char* str = GetParam(name);
+float Hwch::TestParams::GetFloatParam(const char* name, float deflt) {
+  const char* str = GetParam(name);
 
-    if (str)
-    {
-        return atof(str);
-    }
-    else
-    {
-        return deflt;
-    }
+  if (str) {
+    return atof(str);
+  } else {
+    return deflt;
+  }
 }
 
-int64_t Hwch::TestParams::GetTimeParamUs(const char* name, int64_t deflt)
-{
-    const char* str = GetParam(name);
-    const char* p = str;
-    int64_t result = deflt;
+int64_t Hwch::TestParams::GetTimeParamUs(const char* name, int64_t deflt) {
+  const char* str = GetParam(name);
+  const char* p = str;
+  int64_t result = deflt;
 
-    if (str)
-    {
-        double f = atofinc(p);
+  if (str) {
+    double f = atofinc(p);
 
-        if (strncmpinc(p, "s") == 0)
-        {
-            result = f * HWCVAL_SEC_TO_US;
-        }
-        else if (strncmpinc(p, "ms") == 0)
-        {
-            result = f * HWCVAL_MS_TO_US;
-        }
-        else if (strncmpinc(p, "us") == 0)
-        {
-            result = f;
-        }
-        else if (strncmpinc(p, "ns") == 0)
-        {
-            result = f / HWCVAL_US_TO_NS;
-        }
-        else
-        {
-            // Assume ms by default
-            result = f * HWCVAL_MS_TO_US;
-        }
+    if (strncmpinc(p, "s") == 0) {
+      result = f * HWCVAL_SEC_TO_US;
+    } else if (strncmpinc(p, "ms") == 0) {
+      result = f * HWCVAL_MS_TO_US;
+    } else if (strncmpinc(p, "us") == 0) {
+      result = f;
+    } else if (strncmpinc(p, "ns") == 0) {
+      result = f / HWCVAL_US_TO_NS;
+    } else {
+      // Assume ms by default
+      result = f * HWCVAL_MS_TO_US;
     }
+  }
 
-    return result;
+  return result;
 }
 
-// returns true if a valid range parameter (i.e. -param=x-y) is found, and the values in the last two arguments.
+// returns true if a valid range parameter (i.e. -param=x-y) is found, and the
+// values in the last two arguments.
 // default is INT_MIN to INT_MAX.
-bool Hwch::TestParams::GetRangeParam(const char* name, Hwch::Range& range)
-{
-    const char* str = GetParam(name);
+bool Hwch::TestParams::GetRangeParam(const char* name, Hwch::Range& range) {
+  const char* str = GetParam(name);
 
-    if (str)
-    {
-        range = Hwch::Range(str);
-
-        return true;
-    }
-
-    return false;
-}
-
-android::String8& Hwch::TestParams::UsedArgs()
-{
-    return mUsedArgs;
-}
-
-void Hwch::Test::SetName(const char* name)
-{
-    mName = name;
-}
-
-const char* Hwch::Test::GetName()
-{
-    return mName.string();
-}
-
-bool Hwch::Test::CheckMDSAndSetup(bool report)
-{
-    if (mHwcsHandle)
-    {
-        return true; // Already connected
-    }
-
-    // Attempt to connect to the new HWC Service Api
-    mHwcsHandle = HwcService_Connect();
-    if (!mHwcsHandle)
-    {
-        HWCERROR(eCheckSessionFail, "HWC Service Api could not connect to service");
-        return false;
-    }
+  if (str) {
+    range = Hwch::Range(str);
 
     return true;
+  }
+
+  return false;
 }
 
-bool Hwch::Test::IsAutoExtMode()
-{
-    return (HwcTestState::getInstance()->IsAutoExtMode());
+android::String8& Hwch::TestParams::UsedArgs() {
+  return mUsedArgs;
 }
 
-status_t Hwch::Test::UpdateVideoState(int sessionId, bool isPrepared, uint32_t fps)
-{
-    if (IsAutoExtMode())
-    {
-        // In No-MDS mode there are no video sessions
-        return OK;
-    }
-
-    status_t st = NAME_NOT_FOUND;
-
-    if (CheckMDSAndSetup(false))
-    {
-        st = HwcService_MDS_UpdateVideoState(mHwcsHandle, sessionId, isPrepared ? HWCS_TRUE : HWCS_FALSE);
-
-        if (st == 0)
-        {
-            st = HwcService_MDS_UpdateVideoFPS(mHwcsHandle, sessionId, fps);
-        }
-    }
-
-    return st;
+void Hwch::Test::SetName(const char* name) {
+  mName = name;
 }
 
-status_t Hwch::Test::UpdateInputState(bool inputActive, bool expectPanelEnableAsInput, Hwch::Frame* frame)
-{
-    if (IsAutoExtMode())
-    {
-        HWCLOGD("UpdateInputState: extmodeauto: inputActive %d expectPanelEnableAsInput %d",
-            inputActive, expectPanelEnableAsInput);
+const char* Hwch::Test::GetName() {
+  return mName.string();
+}
 
-        if (expectPanelEnableAsInput)
-        {
-            SetExpectedMode(HwcTestConfig::eDontCare);
-        }
+bool Hwch::Test::CheckMDSAndSetup(bool report) {
+  if (mHwcsHandle) {
+    return true;  // Already connected
+  }
 
-        // Turn the keypress generator on or off as appropriate
-        mSystem.GetInputGenerator().SetActive(inputActive);
+  // Attempt to connect to the new HWC Service Api
+  mHwcsHandle = HwcService_Connect();
+  if (!mHwcsHandle) {
+    HWCERROR(eCheckSessionFail, "HWC Service Api could not connect to service");
+    return false;
+  }
 
-        if (frame)
-        {
-            frame->Send(10);
-        }
+  return true;
+}
 
-        mSystem.GetInputGenerator().Stabilize();
+bool Hwch::Test::IsAutoExtMode() {
+  return (HwcTestState::getInstance()->IsAutoExtMode());
+}
 
-        if (expectPanelEnableAsInput)
-        {
-            SetExpectedMode(inputActive ? HwcTestConfig::eOn : HwcTestConfig::eOff);
-        }
+status_t Hwch::Test::UpdateVideoState(int sessionId, bool isPrepared,
+                                      uint32_t fps) {
+  if (IsAutoExtMode()) {
+    // In No-MDS mode there are no video sessions
+    return OK;
+  }
 
-        return OK;
+  status_t st = NAME_NOT_FOUND;
+
+  if (CheckMDSAndSetup(false)) {
+    st = HwcService_MDS_UpdateVideoState(mHwcsHandle, sessionId,
+                                         isPrepared ? HWCS_TRUE : HWCS_FALSE);
+
+    if (st == 0) {
+      st = HwcService_MDS_UpdateVideoFPS(mHwcsHandle, sessionId, fps);
     }
-    else
-    {
-        HWCLOGD("UpdateInputState: NOT extmodeauto: inputActive %d expectPanelEnableAsInput %d",
-            inputActive, expectPanelEnableAsInput);
+  }
 
+  return st;
+}
+
+status_t Hwch::Test::UpdateInputState(bool inputActive,
+                                      bool expectPanelEnableAsInput,
+                                      Hwch::Frame* frame) {
+  if (IsAutoExtMode()) {
+    HWCLOGD(
+        "UpdateInputState: extmodeauto: inputActive %d "
+        "expectPanelEnableAsInput %d",
+        inputActive, expectPanelEnableAsInput);
+
+    if (expectPanelEnableAsInput) {
+      SetExpectedMode(HwcTestConfig::eDontCare);
     }
 
-    if (CheckMDSAndSetup(false))
-    {
-        if (expectPanelEnableAsInput)
-        {
-            SetExpectedMode(inputActive ? HwcTestConfig::eOn : HwcTestConfig::eOff);
-        }
+    // Turn the keypress generator on or off as appropriate
+    mSystem.GetInputGenerator().SetActive(inputActive);
+
+    if (frame) {
+      frame->Send(10);
+    }
+
+    mSystem.GetInputGenerator().Stabilize();
+
+    if (expectPanelEnableAsInput) {
+      SetExpectedMode(inputActive ? HwcTestConfig::eOn : HwcTestConfig::eOff);
+    }
+
+    return OK;
+  } else {
+    HWCLOGD(
+        "UpdateInputState: NOT extmodeauto: inputActive %d "
+        "expectPanelEnableAsInput %d",
+        inputActive, expectPanelEnableAsInput);
+  }
+
+  if (CheckMDSAndSetup(false)) {
+    if (expectPanelEnableAsInput) {
+      SetExpectedMode(inputActive ? HwcTestConfig::eOn : HwcTestConfig::eOff);
+    }
 
 #ifndef HWCVAL_TARGET_HAS_MULTIPLE_DISPLAY
-        return HwcService_MDS_UpdateInputState(mHwcsHandle, inputActive ? HWCS_TRUE : HWCS_FALSE);
+    return HwcService_MDS_UpdateInputState(
+        mHwcsHandle, inputActive ? HWCS_TRUE : HWCS_FALSE);
 #endif
-    }
+  }
 
-    return NAME_NOT_FOUND;
+  return NAME_NOT_FOUND;
 }
 
-void Hwch::Test::SetExpectedMode(HwcTestConfig::PanelModeType modeExpect)
-{
-    HWCLOGV_COND(eLogVideo, "Hwch::Test::SetExpectedMode %s", HwcTestConfig::Str(modeExpect));
-    HwcGetTestConfig()->SetModeExpect(modeExpect);
+void Hwch::Test::SetExpectedMode(HwcTestConfig::PanelModeType modeExpect) {
+  HWCLOGV_COND(eLogVideo, "Hwch::Test::SetExpectedMode %s",
+               HwcTestConfig::Str(modeExpect));
+  HwcGetTestConfig()->SetModeExpect(modeExpect);
 }
 
-HwcTestConfig::PanelModeType Hwch::Test::GetExpectedMode()
-{
-    return HwcGetTestConfig()->GetModeExpect();
+HwcTestConfig::PanelModeType Hwch::Test::GetExpectedMode() {
+  return HwcGetTestConfig()->GetModeExpect();
 }
 
-bool Hwch::Test::SimulateHotPlug(bool connected, uint32_t displayTypes, uint32_t delayUs)
-{
-    AsyncEvent::Data* pData = new AsyncEvent::HotPlugEventData(displayTypes);
-    return SendEvent(connected ? AsyncEvent::eHotPlug : AsyncEvent::eHotUnplug, pData, delayUs);
+bool Hwch::Test::SimulateHotPlug(bool connected, uint32_t displayTypes,
+                                 uint32_t delayUs) {
+  AsyncEvent::Data* pData = new AsyncEvent::HotPlugEventData(displayTypes);
+  return SendEvent(connected ? AsyncEvent::eHotPlug : AsyncEvent::eHotUnplug,
+                   pData, delayUs);
 }
 
-bool Hwch::Test::SetVideoOptimizationMode(Display::VideoOptimizationMode videoOptimizationMode, uint32_t delayUs)
-{
-    return false;
+bool Hwch::Test::SetVideoOptimizationMode(
+    Display::VideoOptimizationMode videoOptimizationMode, uint32_t delayUs) {
+  return false;
 }
 
-void Hwch::Test::SetCheckPriority(HwcTestCheckType check, int priority)
-{
-    HwcTestResult& result = *HwcGetTestResult();
+void Hwch::Test::SetCheckPriority(HwcTestCheckType check, int priority) {
+  HwcTestResult& result = *HwcGetTestResult();
 
-    if (check < eHwcTestNumChecks)
-    {
-        result.mFinalPriority[check] = priority;
-    }
+  if (check < eHwcTestNumChecks) {
+    result.mFinalPriority[check] = priority;
+  }
 }
 
-void Hwch::Test::SetCheck(HwcTestCheckType check, bool enable)
-{
-    HwcTestResult& result = *HwcGetTestResult();
-    HwcTestConfig& config = *HwcGetTestConfig();
+void Hwch::Test::SetCheck(HwcTestCheckType check, bool enable) {
+  HwcTestResult& result = *HwcGetTestResult();
+  HwcTestConfig& config = *HwcGetTestConfig();
 
-    if (check < eHwcTestNumChecks)
-    {
-        config.mCheckConfigs[check].enable = enable;
-        result.mCausesTestFail[check] &= enable;
-    }
+  if (check < eHwcTestNumChecks) {
+    config.mCheckConfigs[check].enable = enable;
+    result.mCausesTestFail[check] &= enable;
+  }
 }
 
-// Set check priority conditionally to reducedPriority if failure count <= maxNormCount
-void Hwch::Test::ConditionalDropPriority(HwcTestCheckType check, uint32_t maxNormCount, int reducedPriority)
-{
-    HwcGetTestResult()->ConditionalDropPriority(check, maxNormCount, reducedPriority);
+// Set check priority conditionally to reducedPriority if failure count <=
+// maxNormCount
+void Hwch::Test::ConditionalDropPriority(HwcTestCheckType check,
+                                         uint32_t maxNormCount,
+                                         int reducedPriority) {
+  HwcGetTestResult()->ConditionalDropPriority(check, maxNormCount,
+                                              reducedPriority);
 }
 
-bool Hwch::Test::IsAbleToRun()
-{
-    return true;
+bool Hwch::Test::IsAbleToRun() {
+  return true;
 }
 
-bool Hwch::Test::IsOptionEnabled(HwcTestCheckType check)
-{
-    return HwcTestState::getInstance()->IsOptionEnabled(check);
+bool Hwch::Test::IsOptionEnabled(HwcTestCheckType check) {
+  return HwcTestState::getInstance()->IsOptionEnabled(check);
 }
 
 // Generate an event.
@@ -374,95 +319,81 @@ bool Hwch::Test::IsOptionEnabled(HwcTestCheckType check)
 // zero to happen immediately on the event generator thread;
 // positive to happen after the stated delay on the event generator thread.
 //
-bool Hwch::Test::SendEvent(uint32_t eventType, int32_t delayUs)
-{
-    return mSystem.AddEvent(eventType, delayUs);
+bool Hwch::Test::SendEvent(uint32_t eventType, int32_t delayUs) {
+  return mSystem.AddEvent(eventType, delayUs);
 }
 
 bool Hwch::Test::SendEvent(uint32_t eventType,
-    android::sp<Hwch::AsyncEvent::Data> eventData, int32_t delayUs)
-{
-    return mSystem.AddEvent(eventType, eventData, delayUs);
+                           android::sp<Hwch::AsyncEvent::Data> eventData,
+                           int32_t delayUs) {
+  return mSystem.AddEvent(eventType, eventData, delayUs);
 }
 
-bool Hwch::Test::Blank(bool blank,          // true for blank, false for unblank
-                       bool power,          // whether to update the power state to match
-                       int32_t delayUs)
-{
-    uint32_t t = blank ? AsyncEvent::eBlank : AsyncEvent::eUnblank;
+bool Hwch::Test::Blank(
+    bool blank,  // true for blank, false for unblank
+    bool power,  // whether to update the power state to match
+    int32_t delayUs) {
+  uint32_t t = blank ? AsyncEvent::eBlank : AsyncEvent::eUnblank;
 
-    if (power)
-    {
-        t |= blank ? AsyncEvent::eSuspend : AsyncEvent::eResume;
-    }
+  if (power) {
+    t |= blank ? AsyncEvent::eSuspend : AsyncEvent::eResume;
+  }
 
-    return SendEvent(t, delayUs);
+  return SendEvent(t, delayUs);
 }
 
 // Add an API function to enter/exit wireless docking mode.
 // Note: this will only work if a Widi connection is present.
-bool Hwch::Test::WirelessDocking(bool entry, int32_t delayUs)
-{
-    return SendEvent(entry ? AsyncEvent::eWirelessDockingEntry :
-        AsyncEvent::eWirelessDockingExit, delayUs);
+bool Hwch::Test::WirelessDocking(bool entry, int32_t delayUs) {
+  return SendEvent(entry ? AsyncEvent::eWirelessDockingEntry
+                         : AsyncEvent::eWirelessDockingExit,
+                   delayUs);
 }
 
-int Hwch::Test::Run()
-{
-    // Unblank if previously blanked
-    for (uint32_t i=0; i<HWCVAL_MAX_CRTCS; ++i)
-    {
-        if (mSystem.GetDisplay(i).IsConnected())
-        {
-            if (mInterface.IsBlanked(i))
-            {
-                mInterface.Blank(i, 0);
-            }
-        }
+int Hwch::Test::Run() {
+  // Unblank if previously blanked
+  for (uint32_t i = 0; i < HWCVAL_MAX_CRTCS; ++i) {
+    if (mSystem.GetDisplay(i).IsConnected()) {
+      if (mInterface.IsBlanked(i)) {
+        mInterface.Blank(i, 0);
+      }
     }
+  }
 
-    if (IsAutoExtMode())
-    {
-        // Stop us dropping into extended mode if we don't want to
-        mSystem.GetInputGenerator().SetActive(true);
+  if (IsAutoExtMode()) {
+    // Stop us dropping into extended mode if we don't want to
+    mSystem.GetInputGenerator().SetActive(true);
+  }
+
+  // retrieve Reference Composer composition flag
+  mSystem.SetNoCompose(GetParam("no_compose") != 0);
+
+  RunScenario();
+
+  // Send a blank frame to allow buffers used in the test to be deleted
+  Frame(mInterface).Send();
+  mSystem.FlushRetainedBufferSets();
+
+  if (GetParam("blank_after")) {
+    for (uint32_t i = 0; i < HWCVAL_MAX_CRTCS; ++i) {
+      if (mSystem.GetDisplay(i).IsConnected()) {
+        mInterface.Blank(i, 1);
+      }
     }
+  }
 
-    // retrieve Reference Composer composition flag
-    mSystem.SetNoCompose(GetParam("no_compose") != 0);
-
-    RunScenario();
-
-    // Send a blank frame to allow buffers used in the test to be deleted
-    Frame(mInterface).Send();
-    mSystem.FlushRetainedBufferSets();
-
-    if (GetParam("blank_after"))
-    {
-        for (uint32_t i=0; i<HWCVAL_MAX_CRTCS; ++i)
-        {
-            if (mSystem.GetDisplay(i).IsConnected())
-            {
-                mInterface.Blank(i, 1);
-            }
-        }
-    }
-
-    return 0;
+  return 0;
 }
 
 Hwch::BaseReg* Hwch::BaseReg::mHead = 0;
 
-Hwch::BaseReg::~BaseReg()
-{
+Hwch::BaseReg::~BaseReg() {
 }
 
 Hwch::OptionalTest::OptionalTest(Hwch::Interface& interface)
-  : Hwch::Test(interface)
-{
+    : Hwch::Test(interface) {
 }
 
-bool Hwch::OptionalTest::IsAbleToRun()
-{
-    return false;
+bool Hwch::OptionalTest::IsAbleToRun() {
+  return false;
 }
-

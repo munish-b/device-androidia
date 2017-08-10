@@ -107,8 +107,6 @@ TEST(Set, Anchored) {
   CHECK_EQ(s.Match("bar", &v), true);
   CHECK_EQ(v.size(), 1);
   CHECK_EQ(v[0], 1);
-
 }
 
 }  // namespace re2
-

@@ -23,29 +23,27 @@
 #include "hwcserviceapi.h"
 #include "utils/Thread.h"
 
-namespace Hwch
-{
-    class FakePavpSession : public AbstractPavpSession, public android::Thread
-    {
-        public:
-            FakePavpSession();
-            virtual ~FakePavpSession();
+namespace Hwch {
+class FakePavpSession : public AbstractPavpSession, public android::Thread {
+ public:
+  FakePavpSession();
+  virtual ~FakePavpSession();
 
-            virtual bool StartProtectedContent();
-            virtual bool ProtectedContentStarted();
+  virtual bool StartProtectedContent();
+  virtual bool ProtectedContentStarted();
 
-            // Start a PAVP session, returning session ID if successfully created or -1 otherwise
-            virtual int32_t StartPavpSession();
+  // Start a PAVP session, returning session ID if successfully created or -1
+  // otherwise
+  virtual int32_t StartPavpSession();
 
-        private:
-            // Thread functions
-            virtual bool threadLoop();
+ private:
+  // Thread functions
+  virtual bool threadLoop();
 
-            // Private data
-            HWCSHANDLE mHwcsHandle;
-            bool mProtectedContentStarted;
-    };
-
+  // Private data
+  HWCSHANDLE mHwcsHandle;
+  bool mProtectedContentStarted;
+};
 };
 
-#endif // __HwchFakePavpSession_h__
+#endif  // __HwchFakePavpSession_h__

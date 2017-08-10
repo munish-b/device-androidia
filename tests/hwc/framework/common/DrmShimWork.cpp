@@ -17,56 +17,55 @@
 #include "DrmShimChecks.h"
 
 // AddFbItem
-Hwcval::Work::AddFbItem::AddFbItem(int fd, uint32_t boHandle, uint32_t fbId, uint32_t width, uint32_t height, uint32_t pixelFormat)
-  : Item(fd),
-    mBoHandle(boHandle),
-    mFbId(fbId),
-    mWidth(width),
-    mHeight(height),
-    mPixelFormat(pixelFormat),
-    mAuxPitch(0),
-    mAuxOffset(0)
-{
-    mHasAuxBuffer = false;
+Hwcval::Work::AddFbItem::AddFbItem(int fd, uint32_t boHandle, uint32_t fbId,
+                                   uint32_t width, uint32_t height,
+                                   uint32_t pixelFormat)
+    : Item(fd),
+      mBoHandle(boHandle),
+      mFbId(fbId),
+      mWidth(width),
+      mHeight(height),
+      mPixelFormat(pixelFormat),
+      mAuxPitch(0),
+      mAuxOffset(0) {
+  mHasAuxBuffer = false;
 }
 
-Hwcval::Work::AddFbItem::AddFbItem(int fd, uint32_t boHandle, uint32_t fbId, uint32_t width, uint32_t height, uint32_t pixelFormat, uint32_t auxPitch, uint32_t auxOffset, __u64 modifier)
-  : Item(fd),
-    mBoHandle(boHandle),
-    mFbId(fbId),
-    mWidth(width),
-    mHeight(height),
-    mPixelFormat(pixelFormat),
-    mAuxPitch(auxPitch),
-    mAuxOffset(auxOffset),
-    mModifier(modifier)
-{
-    mHasAuxBuffer = true;
+Hwcval::Work::AddFbItem::AddFbItem(int fd, uint32_t boHandle, uint32_t fbId,
+                                   uint32_t width, uint32_t height,
+                                   uint32_t pixelFormat, uint32_t auxPitch,
+                                   uint32_t auxOffset, __u64 modifier)
+    : Item(fd),
+      mBoHandle(boHandle),
+      mFbId(fbId),
+      mWidth(width),
+      mHeight(height),
+      mPixelFormat(pixelFormat),
+      mAuxPitch(auxPitch),
+      mAuxOffset(auxOffset),
+      mModifier(modifier) {
+  mHasAuxBuffer = true;
 }
 
-Hwcval::Work::AddFbItem::~AddFbItem()
-{
+Hwcval::Work::AddFbItem::~AddFbItem() {
 }
 
-void Hwcval::Work::AddFbItem::Process()
-{
-    DrmShimChecks* checks = static_cast<DrmShimChecks*>(HwcTestState::getInstance()->GetTestKernel());
-    checks->DoWork(*this);
+void Hwcval::Work::AddFbItem::Process() {
+  DrmShimChecks* checks =
+      static_cast<DrmShimChecks*>(HwcTestState::getInstance()->GetTestKernel());
+  checks->DoWork(*this);
 }
 
 // RmFbItem
 Hwcval::Work::RmFbItem::RmFbItem(int fd, uint32_t fbId)
-  : Item(fd),
-    mFbId(fbId)
-{
+    : Item(fd), mFbId(fbId) {
 }
 
-Hwcval::Work::RmFbItem::~RmFbItem()
-{
+Hwcval::Work::RmFbItem::~RmFbItem() {
 }
 
-void Hwcval::Work::RmFbItem::Process()
-{
-    DrmShimChecks* checks = static_cast<DrmShimChecks*>(HwcTestState::getInstance()->GetTestKernel());
-    checks->DoWork(*this);
+void Hwcval::Work::RmFbItem::Process() {
+  DrmShimChecks* checks =
+      static_cast<DrmShimChecks*>(HwcTestState::getInstance()->GetTestKernel());
+  checks->DoWork(*this);
 }

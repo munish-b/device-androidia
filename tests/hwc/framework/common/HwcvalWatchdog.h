@@ -20,41 +20,38 @@
 #include "HwcTestState.h"
 #include <utils/String8.h>
 
-namespace Hwcval
-{
+namespace Hwcval {
 
-    class Watchdog : public android::RefBase
-    {
-    public:
-        Watchdog(uint64_t ns, HwcTestCheckType check, const char* str="Watchdog timer");
-        Watchdog(Watchdog& rhs);
+class Watchdog : public android::RefBase {
+ public:
+  Watchdog(uint64_t ns, HwcTestCheckType check,
+           const char* str = "Watchdog timer");
+  Watchdog(Watchdog& rhs);
 
-        void SetMessage(const android::String8& str);
-        void Start();
-        void StartIfNotRunning();
-        void Stop();
-        int64_t GetStartTime();
+  void SetMessage(const android::String8& str);
+  void Start();
+  void StartIfNotRunning();
+  void Stop();
+  int64_t GetStartTime();
 
-    private:
-        static void TimerHandler(sigval_t value);
-        void TimerHandler();
+ private:
+  static void TimerHandler(sigval_t value);
+  void TimerHandler();
 
-        uint64_t mTimeoutNs;
-        bool mHaveTimer;
-        bool mRunning;
-        timer_t mDelayTimer;
-        int64_t mStartTime;
+  uint64_t mTimeoutNs;
+  bool mHaveTimer;
+  bool mRunning;
+  timer_t mDelayTimer;
+  int64_t mStartTime;
 
-        HwcTestCheckType mCheck;
-        android::String8 mMessage;
-    };
+  HwcTestCheckType mCheck;
+  android::String8 mMessage;
+};
 
-    inline int64_t Watchdog::GetStartTime()
-    {
-        return mStartTime;
-    }
+inline int64_t Watchdog::GetStartTime() {
+  return mStartTime;
+}
 
+}  // namespace Hwcval
 
-} // namespace Hwcval
-
-#endif // __HwcvalWatchdog_h__
+#endif  // __HwcvalWatchdog_h__

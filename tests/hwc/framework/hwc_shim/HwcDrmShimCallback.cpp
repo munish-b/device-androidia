@@ -21,34 +21,27 @@
 
 // Constructor
 HwcDrmShimCallback::HwcDrmShimCallback()
-    : cHWCOnSets(0),
-      cPageFlips(0),
-      pfnPageFlipCallback(NULL)
-{
+    : cHWCOnSets(0), cPageFlips(0), pfnPageFlipCallback(NULL) {
 }
 
 // Destructor
-HwcDrmShimCallback::~HwcDrmShimCallback()
-{
+HwcDrmShimCallback::~HwcDrmShimCallback() {
 }
 
 // Callbacks that can be overriden in subclass
-void HwcDrmShimCallback::VSync(uint32_t disp)
-{
-    HWCVAL_UNUSED(disp);
+void HwcDrmShimCallback::VSync(uint32_t disp) {
+  HWCVAL_UNUSED(disp);
 }
 
-void HwcDrmShimCallback::PageFlipComplete(uint32_t disp)
-{
-    HWCVAL_UNUSED(disp);
-    ATRACE_CALL();
+void HwcDrmShimCallback::PageFlipComplete(uint32_t disp) {
+  HWCVAL_UNUSED(disp);
+  ATRACE_CALL();
 
-    ++cPageFlips;
-    HWCLOGV("HwcDrmShimCallback::PageFlipComplete - OnSet/PageFlipComplete = %u/%u", cHWCOnSets, cPageFlips);
-    if (pfnPageFlipCallback)
-    {
-        pfnPageFlipCallback(disp);
-    }
+  ++cPageFlips;
+  HWCLOGV(
+      "HwcDrmShimCallback::PageFlipComplete - OnSet/PageFlipComplete = %u/%u",
+      cHWCOnSets, cPageFlips);
+  if (pfnPageFlipCallback) {
+    pfnPageFlipCallback(disp);
+  }
 }
-
-
