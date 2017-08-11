@@ -208,7 +208,7 @@ int HwcShim::HwcShimInit(void) {
 
   state->LoggingInit(mLibHwcHandle);
 
-  // ret = HwcShimInitDrivers(state);
+  ret = HwcShimInitDrivers(state);
 
   dlerror();
   const char *sym = HAL_MODULE_INFO_SYM_AS_STR;

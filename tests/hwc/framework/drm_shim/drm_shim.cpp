@@ -486,7 +486,7 @@ int drmShimInit(bool isHwc, bool isDrm) {
     }
   }
 
-  HWCVAL_LOCK(_l, drmShimInitMutex);
+  //HWCVAL_LOCK(_l, drmShimInitMutex);
 
   if (libraryIsInitialized == 0) {
     dlerror();
@@ -1096,6 +1096,8 @@ drmModeConnectorPtr drmModeGetConnector(int fd, uint32_t connector_id) {
   ALOG_ASSERT(fpDrmModeGetConnector);
 
   drmModeConnectorPtr ret = 0;
+
+  propMgr.SetFd(fd);
 
   if (!checks || checks->passThrough()) {
     WRAPFUNC(ret = fpDrmModeGetConnector, (fd, connector_id));
