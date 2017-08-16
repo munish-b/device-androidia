@@ -150,10 +150,15 @@ int Hwch::Interface::GetDisplayAttributes(uint32_t disp) {
 
     if (pfngetDisplayConfigs) {
       ret = pfngetDisplayConfigs(hwc2_dvc, disp, &nc, NULL);
-      if (nc > 0) {
+      if (ret == android::NO_ERROR && nc > 0) {
         ret = pfngetDisplayConfigs(hwc2_dvc, disp, &nc, configs);
+      }else {
+        return ret;
       }
-    }
+    } else
+      return ret;
+
+
     numConfigs = nc;
 
     if (ret != android::NO_ERROR) {
