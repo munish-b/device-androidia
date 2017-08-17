@@ -228,17 +228,15 @@ uint32_t DrmShimCrtc::GetBlankingFb(
       return 0;
     }
 
-    uint32_t boHandle;
-#if 0
-        gralloc.getBufferObject(mBlankingBuffer->handle, &boHandle);
-        HWCLOGD("DrmShimCrtc::GetBlankingFb: Blanking buffer has boHandle 0x%x", boHandle);
-#endif
+    Hwcval::buffer_details_t boHandle;
+   // DrmShimBuffer::GetBufferInfo(mBlankingBuffer->handle, &boHandle);
+    HWCLOGD("DrmShimCrtc::GetBlankingFb: Blanking buffer has boHandle 0x%x", boHandle);
     uint32_t stride = mBlankingBuffer->stride * 4;
     uint32_t handles[4], pitches[4], offsets[4] = {0};
-    handles[0] = boHandle;
-    handles[1] = boHandle;
-    handles[2] = boHandle;
-    handles[3] = boHandle;
+    handles[0] = 1;
+    handles[1] = 1;
+    handles[2] = 1;
+    handles[3] = 1;
     pitches[0] = stride;
     pitches[1] = stride;
     pitches[2] = stride;

@@ -61,8 +61,8 @@ bool Hwch::TimelineThread::threadLoop() {
 
     mTimelineTime += 1;
     mLastRealTime = targetRealTime;
-    HWCLOGD_COND(eLogTimeline, "Hwch::TimelineThread tick mTimelineTime = %d",
-                 mTimelineTime);
+   // HWCLOGD_COND(eLogTimeline, "Hwch::TimelineThread tick mTimelineTime = %d",
+     //            mTimelineTime);
   }
 
   HWCLOGI("TimelineThread::threadLoop exiting");

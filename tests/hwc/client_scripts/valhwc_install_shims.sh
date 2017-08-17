@@ -48,30 +48,6 @@ install_library_shims()
         fi
         exit 1;
     fi
-    # Install iVP shim if not already installed
-    if [ -e $1/libivp.so ] && [ -e $1/libvalhwc_ivpshim.so ]
-    then
-        ivp_is_shim=`grep -c ivpshim $1/libivp.so`
-        if [[ $ivp_is_shim -eq 0 ]]
-        then
-            # Save real iVP library
-            val_copy $1/libivp.so $1/libivp.real.so
-            # Install vendor shims in place of real libraries
-            val_copy $1/libvalhwc_ivpshim.so $1/libivp.so
-        fi
-    else
-        echo "*** ERROR valhwc_install_shims is unable to install IVP shim ***"
-        if [[ ! -e $1/libivp.so ]]
-        then
-            echo "*** ERROR $1/libivp.so does not exist ***"
-        fi
-        if [[ ! -e $1/libvalhwc_ivpshim.so ]]
-        then
-            echo "*** ERROR $1/libvalhwc_ivpshim.so does not exist ***"
-        fi
-        exit 1;
-    fi
-
     # Install DRM shim if not already installed
     if [ -e $1/libdrm.so ] && [ -e $1/libvalhwc_drmshim.so ]
     then
@@ -96,6 +72,31 @@ install_library_shims()
         fi
         exit 1;
     fi
+    # Install iVP shim if not already installed
+    if [ -e $1/libivp.so ] && [ -e $1/libvalhwc_ivpshim.so ]
+    then
+        ivp_is_shim=`grep -c ivpshim $1/libivp.so`
+        if [[ $ivp_is_shim -eq 0 ]]
+        then
+            # Save real iVP library
+            val_copy $1/libivp.so $1/libivp.real.so
+            # Install vendor shims in place of real libraries
+            val_copy $1/libvalhwc_ivpshim.so $1/libivp.so
+        fi
+    else
+        echo "*** ERROR valhwc_install_shims is unable to install IVP shim ***"
+        if [[ ! -e $1/libivp.so ]]
+        then
+            echo "*** ERROR $1/libivp.so does not exist ***"
+        fi
+        if [[ ! -e $1/libvalhwc_ivpshim.so ]]
+        then
+            echo "*** ERROR $1/libvalhwc_ivpshim.so does not exist ***"
+        fi
+        exit 1;
+    fi
+
+
 }
 
 ##############################################################################

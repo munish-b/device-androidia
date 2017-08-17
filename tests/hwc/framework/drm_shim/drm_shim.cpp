@@ -447,6 +447,21 @@ int (*fpDrmSetClientCap)(int fd, uint64_t capability, uint64_t value);
 
 int (*fpDrmOpenWithType)(const char *name, const char *busid, int type);
 
+int (*fpDrmModeAtomicCommit)(int fd,
+                               drmModeAtomicReqPtr req,
+                               uint32_t flags,
+                               void *user_data);
+int (*fpDrmModeAtomicAddProperty)(drmModeAtomicReqPtr req,
+                                    uint32_t object_id,
+                                    uint32_t property_id,
+                                    uint64_t value);
+
+int (*fpDrmModeCreatePropertyBlob)(int fd, const void *data, size_t size,
+                                     uint32_t *id);
+int (*fpDrmModeDestroyPropertyBlob)(int fd, uint32_t id);
+
+drmModeAtomicReqPtr (*fpDrmModeAtomicAlloc)(void);
+
 #define CHECK_LIBRARY_INIT       \
   if (libraryIsInitialized == 0) \
     (void) drmShimInit(false, false);
@@ -486,7 +501,7 @@ int drmShimInit(bool isHwc, bool isDrm) {
     }
   }
 
-  HWCVAL_LOCK(_l, drmShimInitMutex);
+  //HWCVAL_LOCK(_l, drmShimInitMutex);
 
   if (libraryIsInitialized == 0) {
     dlerror();
@@ -692,6 +707,11 @@ int drmShimInit(bool isHwc, bool isDrm) {
       GET_FUNC_PTR(PrimeFDToHandle)
       GET_FUNC_PTR(SetClientCap)
       GET_FUNC_PTR(OpenWithType)
+      GET_FUNC_PTR(ModeAtomicCommit)
+      GET_FUNC_PTR(ModeAtomicAddProperty)
+      GET_FUNC_PTR(ModeCreatePropertyBlob)
+      GET_FUNC_PTR(ModeDestroyPropertyBlob)
+      GET_FUNC_PTR(ModeAtomicAlloc)
     }
 
     libraryIsInitialized = 1;
@@ -1097,6 +1117,8 @@ drmModeConnectorPtr drmModeGetConnector(int fd, uint32_t connector_id) {
 
   drmModeConnectorPtr ret = 0;
 
+  propMgr.SetFd(fd);
+
   if (!checks || checks->passThrough()) {
     WRAPFUNC(ret = fpDrmModeGetConnector, (fd, connector_id));
 
@@ -1445,6 +1467,8 @@ int drmIoctl(int fd, unsigned long request, void *arg) {
   ALOG_ASSERT(fpDrmIoctl);
   DrmShimCrtc *crtc = 0;
   // Pre-IOCTL checks
+ WRAPFUNCRET(int,fpDrmIoctl,(fd, request, arg));
+#if 0
   if (checks) {
     if (0 /*request == DRM_IOCTL_I915_SET_PLANE_180_ROTATION*/) {
       struct drm_i915_plane_180_rotation *rot =
@@ -1518,7 +1542,7 @@ int drmIoctl(int fd, unsigned long request, void *arg) {
                    DrmDecode(request));
     }
   }
-
+#endif
   // Execute the IOCTL
   int64_t durationNs;
   int status = TimeIoctl(fd, request, arg, durationNs);
@@ -2532,3 +2556,45 @@ int drmOpenWithType(const char *name, const char *busid, int type) {
 
   WRAPFUNCRET(int, fpDrmOpenWithType, (name, busid, type));
 }
+
+int drmModeAtomicCommit(int fd,
+                               drmModeAtomicReqPtr req,
+                               uint32_t flags,
+                               void *user_data) {
+  CHECK_LIBRARY_INIT
+  ALOG_ASSERT(fpDrmModeAtomicCommit);
+
+  WRAPFUNCRET(int, fpDrmModeAtomicCommit, (fd, req, flags, user_data));
+}
+
+int drmModeAtomicAddProperty(drmModeAtomicReqPtr req,
+                                    uint32_t object_id,
+                                    uint32_t property_id,
+                                    uint64_t value) {
+  CHECK_LIBRARY_INIT
+  ALOG_ASSERT(fpDrmModeAtomicAddProperty);
+
+  WRAPFUNCRET(int, fpDrmModeAtomicAddProperty, (req, object_id, property_id, value));
+}
+int drmModeCreatePropertyBlob(int fd, const void *data, size_t size,
+                                     uint32_t *id) {
+  CHECK_LIBRARY_INIT
+  ALOG_ASSERT(fpDrmModeCreatePropertyBlob);
+
+  WRAPFUNCRET(int, fpDrmModeCreatePropertyBlob, (fd, data, size, id));
+}
+
+int drmModeDestroyPropertyBlob(int fd, uint32_t id) {
+  CHECK_LIBRARY_INIT
+  ALOG_ASSERT(fpDrmModeDestroyPropertyBlob);
+
+  WRAPFUNCRET(int, fpDrmModeDestroyPropertyBlob, (fd, id));
+}
+
+drmModeAtomicReqPtr drmModeAtomicAlloc(void){
+  CHECK_LIBRARY_INIT
+  ALOG_ASSERT(fpDrmModeAtomicAlloc);
+
+  WRAPFUNCRET(int, fpDrmModeAtomicAlloc, ());
+}
+

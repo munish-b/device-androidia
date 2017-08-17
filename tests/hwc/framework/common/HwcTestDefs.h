@@ -45,8 +45,8 @@
 //#define HWCVAL_DEBUG_EXTRA_BUFFER_CHECK
 
 #if __x86_64__
-#define HWCVAL_VENDOR_LIBPATH "/system/vendor/lib64"
-#define HWCVAL_LIBPATH "/system/lib64"
+#define HWCVAL_VENDOR_LIBPATH "/vendor/lib64"
+#define HWCVAL_LIBPATH "/vendor/lib64"
 #else
 #define HWCVAL_VENDOR_LIBPATH "/system/vendor/lib"
 #define HWCVAL_LIBPATH "/system/lib"
@@ -220,7 +220,7 @@
 // This must be enabled unconditionally on platforms for which
 // backend driver support has been enabled.
 #if defined(DRM_PRIMARY_DISABLE)
-#define HWCVAL_HAVE_MAIN_PLANE_DISABLE (DRM_PRIMARY_DISABLE)
+#define HWCVAL_HAVE_MAIN_PLANE_DISABLE 0
 #else
 #define HWCVAL_HAVE_MAIN_PLANE_DISABLE 0
 #endif

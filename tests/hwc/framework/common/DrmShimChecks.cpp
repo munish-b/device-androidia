@@ -2178,7 +2178,8 @@ void DrmShimChecks::CheckSetDisplayExit(drm_mode_set_display* drmDisp,
 
   crtc->SetDisplayFailed(ret != 0);
 
-  if (mCurrentFrame[crtc->GetDisplayIx()] > 0) {
+  //if (mCurrentFrame[crtc->GetDisplayIx()] > 0) { /*FORCING to zero only support 1 display*/
+  if (mCurrentFrame[0]) {
     crtc->ValidateMode(this);
   }
 
@@ -2302,7 +2303,8 @@ bool DrmShimChecks::ConvertToSetDisplay(
     uint32_t d = crtc->GetDisplayIx();
     uint32_t planeId = obj_id;
     crtc->SavePageFlipUserData(drmAtomic->user_data);
-
+    //Support for only one display
+    d = 0;
     // For now, require each nuclear call to contain only information about one
     // display
     if (i > 0) {
@@ -2327,12 +2329,14 @@ bool DrmShimChecks::ConvertToSetDisplay(
         drmDisp->version = DRM_MODE_SET_DISPLAY_VERSION;
         drmDisp->size = sizeof(drm_mode_set_display);
 
+#ifdef DRM_PFIT_OFF
         // Force panel fitter update (PFIT:OFF).
         drmDisp->update_flag |= DRM_MODE_SET_DISPLAY_UPDATE_PANEL_FITTER;
         drmDisp->panel_fitter.src_w = crtc->GetWidth();
         drmDisp->panel_fitter.src_h = crtc->GetHeight();
         drmDisp->panel_fitter.dst_w = crtc->GetWidth();
         drmDisp->panel_fitter.dst_h = crtc->GetHeight();
+#endif
 
         ALOG_ASSERT(crtc->NumPlanes() <= DRM_MODE_SET_DISPLAY_MAX_PLANES);
         HWCLOGD_COND(eLogNuclear,
@@ -2553,6 +2557,7 @@ bool DrmShimChecks::ConvertToSetDisplay(
 
           break;
         }
+#if 0
         case Hwcval::PropertyManager::eDrmPlaneProp_RRB2: {
           drmPlane->rrb2_enable = value;
           drmPlane->update_flag |= DRM_MODE_SET_DISPLAY_PLANE_UPDATE_RRB2;
@@ -2643,6 +2648,7 @@ bool DrmShimChecks::ConvertToSetDisplay(
           break;
         }
 
+#endif
         default: {
           HWCERROR(eCheckIoctlParameters,
                    "Nuclear: Plane %d unsupported property %d", obj_id, prop);
