@@ -75,6 +75,7 @@ typedef struct hwc_buffer_details {
   int allocOffsetX;
   int allocOffsetY;
   int getBufferInfo(buffer_handle_t handle);
+  static int getBufferHandles(buffer_handle_t handle, uint32_t *handles);
 } hwc_buffer_details_t;
 
 typedef hwc_buffer_details_t hwc_buffer_media_details_t;

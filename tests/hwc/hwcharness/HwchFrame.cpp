@@ -787,7 +787,6 @@ int Hwch::Frame::Send() {
         dc->hwLayers[numLayers].displayFrame = *targetregion.rects;
         dc->hwLayers[numLayers].planeAlpha = target.mPlaneAlpha;
         mInterface.setLayerVisibleRegion(disp, targetLayer, targetregion);
-        ALOGE(" target1sdf =%p handle = %p", &target, target.handle);
 
         // target.Send(dc->hwLayers[numLayers], visibleRegions,
         // visibleRegionCount);
@@ -813,8 +812,11 @@ int Hwch::Frame::Send() {
         HWCLOGV_COND(eLogEventHandler, "Waiting for VSync before Prepare");
         mSystem.GetVSync().WaitForOffsetVSync();
       }
-      uint32_t outNumTypes = 0, outNumRequests = 0;
-      mInterface.ValidateDisplay(0, &outNumTypes, &outNumRequests);
+
+      for (uint32_t disp = 0; disp < numDisplays; ++disp) {
+         uint32_t outNumTypes = 0, outNumRequests = 0;
+         mInterface.ValidateDisplay(disp, &outNumTypes, &outNumRequests);
+      }
 
       // Populate the FRAMEBUFFER_TARGETs
       for (uint32_t disp = 0; disp < numDisplays; ++disp) {
@@ -831,7 +833,7 @@ int Hwch::Frame::Send() {
           for (uint32_t i = 0; i < numLayers; ++i) {
             Layer* layer = mLayers[disp].editItemAt(i);
 
-            if (dc->hwLayers[i].compositionType == HWC_FRAMEBUFFER) {
+            if (dc->hwLayers[i].compositionType == HWC2_COMPOSITION_CLIENT) {
               if (layer->HasPattern()) {
                 Pattern& pattern = layer->GetPattern();
                 if (pattern.IsUpdatedSinceLastFBComp()) {
@@ -941,8 +943,10 @@ int Hwch::Frame::Send() {
       }
 
       // mInterface.PresentDisplay(numDisplays, dcs);
-      int32_t outPresentFence;
-      mInterface.PresentDisplay(0, &outPresentFence);
+      for (uint32_t disp = 0; disp < numDisplays; ++disp) {
+          int32_t outPresentFence;
+          mInterface.PresentDisplay(disp, &outPresentFence);
+      }
 
       // Note, these are return values from the HWC, you have to close them
       for (uint32_t disp = 0; disp < numDisplays; ++disp) {

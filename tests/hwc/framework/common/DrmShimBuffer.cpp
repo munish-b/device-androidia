@@ -28,7 +28,7 @@
 
 #include "drm_fourcc.h"
 #include "SSIMUtils.h"
-
+#include "cros_gralloc/cros_gralloc_handle.h"
 #include <math.h>
 #include <utils/Atomic.h>
 
@@ -119,6 +119,17 @@ GrallocInterface::GrallocInterface() {
     }
   }
 #endif
+}
+
+int hwc_buffer_details::getBufferHandles(buffer_handle_t handle, uint32_t *handles) {
+  ALOGE("handle BufferInfo %llu", handle);
+  int ret = -1;
+  if (gralloc_interface.gralloc_version == HARDWARE_MODULE_API_VERSION(1, 0)) {
+   struct cros_gralloc_handle *hnd = (struct cros_gralloc_handle *)handle;
+   for (size_t plane = 0; plane < DRV_MAX_PLANES; plane++)
+              handles[plane] = hnd->fds[plane];
+  }
+  return 0;
 }
 
 int hwc_buffer_details::getBufferInfo(buffer_handle_t handle) {

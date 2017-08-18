@@ -919,7 +919,7 @@ void DrmShimChecks::DoWork(const Hwcval::Work::AddFbItem& item) {
       // handle.
       // We decide which based on the size of the buffer - this is based on our
       // knowledge of how HWC works.
-      if (1 /*BelievedEmpty(item.mWidth, item.mHeight)*/) {
+      if (BelievedEmpty(item.mWidth, item.mHeight)) {
         buf->SetBlack(true);
       } else {
         buf->SetBlanking(true);
