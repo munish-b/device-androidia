@@ -116,6 +116,10 @@ GrallocInterface::GrallocInterface() {
       pfn_getDimensions =
           (GRALLOC1_PFN_GET_DIMENSIONS)gralloc1_dvc->getFunction(
               gralloc1_dvc, GRALLOC1_FUNCTION_GET_DIMENSIONS);
+
+      pfn_getStride =
+          (GRALLOC1_PFN_GET_STRIDE)gralloc1_dvc->getFunction(
+              gralloc1_dvc, GRALLOC1_FUNCTION_GET_STRIDE);
     }
   }
 #endif
@@ -145,6 +149,17 @@ int hwc_buffer_details::getBufferInfo(buffer_handle_t handle) {
                                               handle, &width, &height);
     if (ret) {
       ALOGE("gralloc->getDimension failed: %d", ret);
+      return -1;
+    }
+
+    if (!gralloc_interface.pfn_getStride) {
+      ALOGE("Gralloc does not support getStride");
+      return -1;
+    }
+    ret = gralloc_interface.pfn_getStride(gralloc_interface.gralloc1_dvc,
+                                              handle, &pitch);
+    if (ret) {
+      ALOGE("gralloc->getiStride failed: %d", ret);
       return -1;
     }
 

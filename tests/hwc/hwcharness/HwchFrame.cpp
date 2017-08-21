@@ -731,11 +731,11 @@ int Hwch::Frame::Send() {
           hwc2_layer_t outLayer;
           mInterface.CreateLayer(disp, &outLayer);
           dc->hwLayers[i].handle = layer->handle = layer->Send();
-          ALOGE("Layer ID = %llu handle = %p", outLayer, layer->handle);
+
           mInterface.setLayerBuffer(disp, outLayer, layer->handle, -1);
           mInterface.setLayerCompositionType(disp, outLayer,
                                              layer->mCurrentCompType);
-          layer->compositionType = layer->mCurrentCompType;
+          dc->hwLayers[i].compositionType = layer->compositionType = layer->mCurrentCompType;
           mInterface.setLayerTransform(disp, outLayer,
                                        layer->mPhysicalTransform);
           mInterface.setLayerSourceCrop(disp, outLayer, layer->mSourceCropf);
@@ -747,10 +747,9 @@ int Hwch::Frame::Send() {
               layer->AssignVisibleRegions(visibleRegions, visibleRegionCount);
           region.numRects = visibleRegionCount;
 
-          dc->hwLayers[i].displayFrame = *visibleRegions;
+          dc->hwLayers[i].displayFrame = layer->mDisplayFrame;
           dc->hwLayers[i].planeAlpha = layer->mPlaneAlpha;
 
-          ALOGE("visibleRegionCount = %d", visibleRegionCount);
           mInterface.setLayerVisibleRegion(disp, outLayer, region);
 
           if (mGeometryChanged[disp]) {
