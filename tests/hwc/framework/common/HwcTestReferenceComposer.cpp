@@ -1029,7 +1029,6 @@ void HwcTestReferenceComposer::setTexture(
                "Failed to get gralloc buffer info in reference composer");
     }
   }
-  bi.pitch = bi.width;
 #if ANDROID_VERSION > 711
   *pGraphicBuffer = new android::GraphicBuffer(
       bi.width, bi.height, bi.format, 1, bi.usage, bi.pitch,

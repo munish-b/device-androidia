@@ -229,14 +229,10 @@ uint32_t DrmShimCrtc::GetBlankingFb(
     }
 
     Hwcval::buffer_details_t boHandle;
-   // DrmShimBuffer::GetBufferInfo(mBlankingBuffer->handle, &boHandle);
     HWCLOGD("DrmShimCrtc::GetBlankingFb: Blanking buffer has boHandle 0x%x", boHandle);
     uint32_t stride = mBlankingBuffer->stride * 4;
     uint32_t handles[4], pitches[4], offsets[4] = {0};
-    handles[0] = 1;
-    handles[1] = 1;
-    handles[2] = 1;
-    handles[3] = 1;
+    hwc_buffer_details::getBufferHandles(mBlankingBuffer->handle, handles);
     pitches[0] = stride;
     pitches[1] = stride;
     pitches[2] = stride;

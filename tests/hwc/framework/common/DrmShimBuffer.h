@@ -53,6 +53,7 @@ class GrallocInterface {
   GRALLOC1_PFN_LOCK_FLEX pfn_lockflex;
   GRALLOC1_PFN_GET_FORMAT pfn_getFormat;
   GRALLOC1_PFN_GET_DIMENSIONS pfn_getDimensions;
+  GRALLOC1_PFN_GET_STRIDE pfn_getStride;
 #endif
 };
 
@@ -63,7 +64,7 @@ typedef struct hwc_buffer_details {
   int usage;
   int size;
   unsigned int magic;
-  int pitch;
+  unsigned int pitch;
   int pavp_instance_id;
   int pavp_session_id;
   int is_encrypted;
@@ -75,6 +76,7 @@ typedef struct hwc_buffer_details {
   int allocOffsetX;
   int allocOffsetY;
   int getBufferInfo(buffer_handle_t handle);
+  static int getBufferHandles(buffer_handle_t handle, uint32_t *handles);
 } hwc_buffer_details_t;
 
 typedef hwc_buffer_details_t hwc_buffer_media_details_t;

@@ -1049,6 +1049,11 @@ void HwcTestKernel::NotifyIvpExecExit(iVPCtxID *ctx, iVP_layer_t *primarySurf,
 }
 #endif
 #endif
+bool HwcTestKernel::BelievedEmpty(uint32_t width, uint32_t height)
+{
+    return ((width == 16) && (height == 16));
+}
+
 
 void HwcTestKernel::WaitForCompValToComplete() {
   if (mCompVal.get()) {

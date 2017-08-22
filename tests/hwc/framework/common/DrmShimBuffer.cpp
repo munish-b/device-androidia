@@ -28,7 +28,7 @@
 
 #include "drm_fourcc.h"
 #include "SSIMUtils.h"
-
+#include "cros_gralloc/cros_gralloc_handle.h"
 #include <math.h>
 #include <utils/Atomic.h>
 
@@ -116,9 +116,24 @@ GrallocInterface::GrallocInterface() {
       pfn_getDimensions =
           (GRALLOC1_PFN_GET_DIMENSIONS)gralloc1_dvc->getFunction(
               gralloc1_dvc, GRALLOC1_FUNCTION_GET_DIMENSIONS);
+
+      pfn_getStride =
+          (GRALLOC1_PFN_GET_STRIDE)gralloc1_dvc->getFunction(
+              gralloc1_dvc, GRALLOC1_FUNCTION_GET_STRIDE);
     }
   }
 #endif
+}
+
+int hwc_buffer_details::getBufferHandles(buffer_handle_t handle, uint32_t *handles) {
+  ALOGE("handle BufferInfo %llu", handle);
+  int ret = -1;
+  if (gralloc_interface.gralloc_version == HARDWARE_MODULE_API_VERSION(1, 0)) {
+   struct cros_gralloc_handle *hnd = (struct cros_gralloc_handle *)handle;
+   for (size_t plane = 0; plane < DRV_MAX_PLANES; plane++)
+              handles[plane] = hnd->fds[plane];
+  }
+  return 0;
 }
 
 int hwc_buffer_details::getBufferInfo(buffer_handle_t handle) {
@@ -134,6 +149,17 @@ int hwc_buffer_details::getBufferInfo(buffer_handle_t handle) {
                                               handle, &width, &height);
     if (ret) {
       ALOGE("gralloc->getDimension failed: %d", ret);
+      return -1;
+    }
+
+    if (!gralloc_interface.pfn_getStride) {
+      ALOGE("Gralloc does not support getStride");
+      return -1;
+    }
+    ret = gralloc_interface.pfn_getStride(gralloc_interface.gralloc1_dvc,
+                                              handle, &pitch);
+    if (ret) {
+      ALOGE("gralloc->getiStride failed: %d", ret);
       return -1;
     }
 
