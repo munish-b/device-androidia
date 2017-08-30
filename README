@@ -1,0 +1,28 @@
+
+hwc-val source should be cloned in hwcomposer/tests
+
+BUILD INSTRUCTIONS:
+Start in a shell with Android environment initilized and lunch done for 
+suitable target device.
+1) cd hwcomposer/tests/hwc-val/tests/hwc
+2) source init.sh
+3) mm -j8
+
+Update binaries for validation on device 
+./host_scripts/valpush hwc hwcval
+
+Executing the test from host PC
+./host_scripts/valhwch -t Home
+
+Supported tests:
+Basic,Dialog,Gallery,Game,Home
+
+
+Note: Android would be stopped when tests are executed.As Shims are installed 
+device will not boot to Android home
+
+
+Uninstalling the Shims
+./host_scripts/valunistall
+
+
