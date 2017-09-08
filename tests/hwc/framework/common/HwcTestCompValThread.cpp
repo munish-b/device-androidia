@@ -407,8 +407,8 @@ void HwcTestCompValThread::TakeTransformedCopy(const hwcval_layer_t* layer,
   tgtLayer.displayFrame.bottom = height;
   tgtLayer.visibleRegionScreen.numRects = 1;
   tgtLayer.visibleRegionScreen.rects = &srcLayer.displayFrame;
-  tgtLayer.acquireFenceFd = -1;
-  tgtLayer.releaseFenceFd = -1;
+  tgtLayer.acquireFence = -1;
+  tgtLayer.releaseFence = -1;
   tgtLayer.planeAlpha = 255;
 
   mComposer.Compose(1, &srcLayer, &tgtLayer, false);

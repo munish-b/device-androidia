@@ -60,7 +60,7 @@ class Interface {
   int setLayerCompositionType(hwc2_display_t disp, hwc2_layer_t layer,
                               int32_t type);
   int setLayerBuffer(hwc2_display_t disp, hwc2_layer_t layer,
-                     buffer_handle_t buffer, int32_t acquireFencea);
+                     buffer_handle_t buffer, int32_t acquireFence);
   int setLayerBlendMode(hwc2_display_t disp, hwc2_layer_t layer, int32_t mode);
   int setLayerTransform(hwc2_display_t disp, hwc2_layer_t layer,
                         int32_t transform);
@@ -71,6 +71,8 @@ class Interface {
   int setLayerPlaneAlpha(hwc2_display_t disp, hwc2_layer_t layer, float alpha);
   int setLayerVisibleRegion(hwc2_display_t disp, hwc2_layer_t layer,
                             hwc_region_t visible);
+  int GetReleaseFences(hwc2_display_t display, uint32_t* outNumElements,
+        hwc2_layer_t* outLayers, int32_t* outFences);
 
   void UpdateDisplays(uint32_t hwcAcquireDelay);
   uint32_t NumDisplays();

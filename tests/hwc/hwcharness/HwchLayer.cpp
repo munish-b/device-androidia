@@ -589,7 +589,7 @@ void Hwch::Layer::UpdateRCResolve() {
 }
 
 void Hwch::Layer::SetAcquireFence(
-    hwc2_layer_t& hwLayer, android::sp<Hwch::TimelineThread>& timelineThread,
+    hwcval_layer_t& hwLayer, android::sp<Hwch::TimelineThread>& timelineThread,
     int mergeFence) {
 #if 0
     if (mHwcAcquireDelay > 0)

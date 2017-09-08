@@ -1538,8 +1538,8 @@ status_t HwcTestReferenceComposer::Compose(uint32_t numSources,
 
   uint32_t index;
 
-  if (waitForFences && (target->acquireFenceFd > 0)) {
-    if (sync_wait(target->acquireFenceFd, HWCVAL_SYNC_WAIT_100MS) < 0) {
+  if (waitForFences && (target->acquireFence > 0)) {
+    if (sync_wait(target->acquireFence, HWCVAL_SYNC_WAIT_100MS) < 0) {
       HWCERROR(eCheckGlFail,
                "HwcTestReferenceComposer: Target acquire fence timeout");
     }
@@ -1552,8 +1552,8 @@ status_t HwcTestReferenceComposer::Compose(uint32_t numSources,
     if ((srcLayer.compositionType == HWC2_COMPOSITION_CLIENT) &&
         (srcLayer.handle != 0)) {
       // Wait for any acquire fence
-      if (waitForFences && (srcLayer.acquireFenceFd > 0)) {
-        if (sync_wait(srcLayer.acquireFenceFd, HWCVAL_SYNC_WAIT_100MS) < 0) {
+      if (waitForFences && (srcLayer.acquireFence > 0)) {
+        if (sync_wait(srcLayer.acquireFence, HWCVAL_SYNC_WAIT_100MS) < 0) {
           HWCERROR(eCheckGlFail,
                    "HwcTestReferenceComposer: Acquire fence timeout layer %d",
                    index);
@@ -1561,7 +1561,7 @@ status_t HwcTestReferenceComposer::Compose(uint32_t numSources,
       }
 
       // We know that the vp renderer is synchronous, indicate that here.
-      srcLayer.releaseFenceFd = -1;
+      srcLayer.releaseFence = -1;
 
       result = (result == OK) ? draw(&srcLayer, screenIndex++) : result;
     }
@@ -1655,8 +1655,8 @@ android::sp<android::GraphicBuffer> HwcTestReferenceComposer::CopyBuf(
   srcLayer.displayFrame.bottom = bi.height;
   srcLayer.visibleRegionScreen.numRects = 1;
   srcLayer.visibleRegionScreen.rects = &srcLayer.displayFrame;
-  srcLayer.acquireFenceFd = -1;
-  srcLayer.releaseFenceFd = -1;
+  srcLayer.acquireFence = -1;
+  srcLayer.releaseFence = -1;
   srcLayer.planeAlpha = 255;
 
   hwcval_layer_t tgtLayer = srcLayer;

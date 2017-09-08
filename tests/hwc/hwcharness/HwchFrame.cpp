@@ -699,7 +699,7 @@ int Hwch::Frame::Send() {
         hwcval_display_contents_t* dc = pDc;
         dcs[disp].display = 0;
 
-        // dc->retireFenceFd = -1;
+        dc->outPresentFence = -1;
         // dc->numHwLayers = numLayers+1;
         // dc->flags = GetFlags(disp);
         // dc->outbufAcquireFenceFd = -1;
@@ -886,18 +886,16 @@ int Hwch::Frame::Send() {
               sRefCmp.Compose(numLayers, dc->hwLayers, dc->hwLayers + numLayers,
                               false);
             }
-#if 0
-                         //FIX_ME disabling fences*/
                         // Our acquire fences are for testing, and hence are not in sync with the composition
                         // Merge and close any fences on FB layers, and use the merged fence in the FBT.
                         int mergedFence = -1;
 
                         for (uint32_t i=0; i<numLayers; ++i)
                         {
-                            if (dc->hwLayers[i].compositionType == HWC_FRAMEBUFFER)
+                            if (dc->hwLayers[i].compositionType == HWC2_COMPOSITION_CLIENT)
                             {
-                                int fence = dc->hwLayers[i].acquireFenceFd;
-                                dc->hwLayers[i].acquireFenceFd = -1;
+                                int fence = dc->hwLayers[i].acquireFence;
+                                dc->hwLayers[i].acquireFence = -1;
 
                                 if (fence > 0)
                                 {
@@ -921,7 +919,6 @@ int Hwch::Frame::Send() {
                         // Set the fence for the framebuffer target
                         targetLayer.SetAcquireFence(dc->hwLayers[numLayers],
                                                     mTimelineThread, mergedFence);
-#endif
           } else {
             // Framebuffer Target has not changed
             // Though overlays might have
@@ -941,32 +938,26 @@ int Hwch::Frame::Send() {
         state->TriggerOnSetCondition();
       }
 
-      // mInterface.PresentDisplay(numDisplays, dcs);
-      for (uint32_t disp = 0; disp < numDisplays; ++disp) {
-          int32_t outPresentFence;
-          mInterface.PresentDisplay(disp, &outPresentFence);
-      }
-
       // Note, these are return values from the HWC, you have to close them
       for (uint32_t disp = 0; disp < numDisplays; ++disp) {
         hwcval_display_contents_t* dc = &dcs[disp];
 
         if (dc) {
+          mInterface.PresentDisplay(disp, &dc->outPresentFence);
+
           uint32_t numLayers = mLayers[disp].size();
-#if 0
-                    /* FIX_ME */
-                    if (dc->retireFenceFd > 0)
-                    {
-                        // TODO: Consider checking that this fence has been signalled within 2 frames?
-                        CloseFence(dc->retireFenceFd);
-                    }
-#endif
+          if (dc->outPresentFence > 0)
+          {
+               if (sync_wait(dc->outPresentFence, HWCVAL_SYNC_WAIT_100MS) < 0) {
+                   HWCERROR(eCheckGlFail,
+                      "outPresentFence: fence timeout");
+               }
+               dc->outPresentFence = -1;
+          }
+
           for (uint32_t i = 0; i < numLayers; ++i) {
             // Save composition type for next time
             Hwch::Layer* layer = mLayers[disp].editItemAt(i);
-
-            // layer->PostFrame(dc->hwLayers[i].compositionType,
-            // -1);
 
             if (layer->HasPattern()) {
               layer->GetPattern().ClearUpdatedSinceLastFBComp();
@@ -994,15 +985,12 @@ int Hwch::Frame::Send() {
           for (uint32_t i = 0; i < numLayers; ++i) {
             // Save composition type for next time
             Hwch::Layer* layer = mLayers[disp].editItemAt(i);
-// layer->PostFrame(dc->hwLayers[i].compositionType, -1);
-#if 0
-                        /* FIX_ME*/
-                        int acquireFence = dc->hwLayers[i].acquireFenceFd;
-                        if (acquireFence > 0)
-                        {
-                            close(acquireFence);
-                        }
-#endif
+            // layer->PostFrame(dc->hwLayers[i].compositionType, -1);
+            int acquireFence = dc->hwLayers[i].acquireFence;
+            if (acquireFence > 0)
+            {
+                 close(acquireFence);
+            }
           }
         }
       }
