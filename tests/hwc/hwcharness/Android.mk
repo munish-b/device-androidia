@@ -64,9 +64,7 @@ ifdef HWCVAL_BUILD_INTERNAL_TESTS
 LOCAL_SRC_FILES += HwchInternalTests.cpp
 endif
 
-ifdef HWCVAL_BUILD_GL_TESTS
 LOCAL_SRC_FILES += HwchGlTests.cpp
-endif
    
 LOCAL_C_INCLUDES += $(VAL_HWC_TOP)/intel 
 ifeq ($(BUILD_PAVP),1)

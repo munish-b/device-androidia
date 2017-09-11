@@ -49,7 +49,6 @@ Hwch::PngGlLayer::PngGlLayer(Hwch::PngImage& png, float updateFreq,
 ///////////////////////////////////////////////////////////////////////////////////////////////
 
 REGISTER_TEST(GlBasicLine)
-static Hwch::TestReg<Hwch::GlBasicLineTest> regGlBasicLine("GlBasicLine");
 Hwch::GlBasicLineTest::GlBasicLineTest(Hwch::Interface& interface)
     : Hwch::OptionalTest(interface) {
 }
