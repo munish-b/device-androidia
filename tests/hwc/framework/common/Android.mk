@@ -48,6 +48,7 @@ LOCAL_SRC_FILES:=\
     HwcTestLog.cpp \
     HwcvalContent.cpp \
     HwcvalHwc1Content.cpp \
+    HwcvalHwc2.cpp \
     HwcvalHwc1.cpp \
     HwcTestReferenceComposer.cpp \
     HwcTestCompValThread.cpp \

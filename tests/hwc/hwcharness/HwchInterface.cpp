@@ -110,7 +110,6 @@ int Hwch::Interface::RegisterProcs(void) {
     pfnRegisterCallBack(hwc2_dvc, HWC2_CALLBACK_REFRESH, &callbackData,
                         (hwc2_function_pointer_t)&hook_invalidate);
   }
-
   return 0;
 }
 
@@ -420,6 +419,7 @@ int Hwch::Interface::ValidateDisplay(hwc2_display_t display,
 int Hwch::Interface::PresentDisplay(hwc2_display_t display,
                                     int32_t *outPresentFence) {
   int ret = -1;
+
   if (hwc_composer_device) {
     hwc2_device_t *hwc2_dvc =
         reinterpret_cast<hwc2_device_t *>(hwc_composer_device);
@@ -430,6 +430,7 @@ int Hwch::Interface::PresentDisplay(hwc2_display_t display,
       ret = pfnPresentDisplay(hwc2_dvc, display, outPresentFence);
     }
   }
+
   return ret;  // ERROR
 }
 
