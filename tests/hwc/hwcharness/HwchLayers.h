@@ -117,11 +117,6 @@ class TransparentFullScreenLayer : public Layer {
   TransparentFullScreenLayer();
 };
 
-class ProtectedVideoLayer : public Layer {
- public:
-  ProtectedVideoLayer(uint32_t encryption = eEncrypted);
-};
-
 class PngLayer : public Layer {
  public:
   PngLayer(){};

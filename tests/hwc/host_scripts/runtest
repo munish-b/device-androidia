@@ -16,11 +16,7 @@ HWCVAL_TESTS=( "Api" "Camera" "Dialog" "Flicker1" \
         "NV12FullVideo2" "NV12PartVideo" "NV12PartVideo2" "PanelFitter" "PartComp" "Png" \
         "RandomModes" "Skip" "Smoke" "TransparencyComposition" "VideoModes" )
 
-HWCVAL_CP_TESTS=( "ComplexProtectedVideo" "InvalidProtectedVideo" \
-        "ProtectedVideo" "ProtectedVideoHotPlug" "ProtectedVideoScreenDisable" )
-
-HWCVAL_HWCCOMP=( "Api" "ComplexProtectedVideo" \
-        "FlipRot" "NV12PartVideo2" "Smoke" "TransparencyComposition" )
+HWCVAL_HWCCOMP=( "Api"  "FlipRot" "NV12PartVideo2" "Smoke" "TransparencyComposition" )
 
 
 if [ "$1" == "" ]
