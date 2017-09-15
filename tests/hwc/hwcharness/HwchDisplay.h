@@ -127,7 +127,6 @@ class Display {
   bool IsWirelessDisplay(void);
 
   // Creates an external buffer set (suitable for use with Virtual
-  // Displays or Widi).
   void CreateExternalBufferSet(void);
 
   // Returns the next handle in the buffer set.
@@ -162,7 +161,6 @@ class Display {
   HWCSHANDLE mHwcsHandle = nullptr;
 
   // This is the BufferSet which acts as the composition target for
-  // Virtual and Widi displays.
   BufferSetPtr mExternalBufferSet;
 
   bool mVirtualDisplay;

@@ -208,7 +208,6 @@ class HwcTestState {
   uint32_t mWirelessFrameTypeChangeCount = 0;
   uint32_t mWirelessBufferInfoCount = 0;
   uint32_t mMaxSetResolutions = 10;
-  bool mWidiDirectExpected = false;
 
   // Cache the start time for the last IVP_exec call. This is used by the
   // watchdog to detect lock-ups.
@@ -356,8 +355,6 @@ class HwcTestState {
   void SetMaxSetResolutions(uint32_t max);
   uint32_t GetMaxSetResolutions();
   void SetWidiOutDimensions(uint32_t width, uint32_t height);
-  void SetWidiDirectModeExpected(bool state);
-  bool GetWidiDirectModeExpected();
 
   // Accessors for setting and getting the handle of the Widi Visualisation
   // layer

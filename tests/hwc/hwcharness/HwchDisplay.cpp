@@ -310,10 +310,7 @@ void Hwch::Display::CopyRect(uint32_t bufferFormat, LogicalRect<int>& lr,
   mFmtCfgMgr->AdjustDisplayFrame(bufferFormat, r, GetWidth(), GetHeight());
 }
 
-// Functions for Virtual Display and Widi support.
-
 // Creates an external buffer set that is suitable for use with the pOutBuf
-// pointer in Virtual Display and Widi frames.
 void Hwch::Display::CreateExternalBufferSet(void) {
   // Create an Hwch::BufferSet if it has not been created yet
   if (mExternalBufferSet == NULL) {

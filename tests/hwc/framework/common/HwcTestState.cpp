@@ -423,14 +423,6 @@ uint32_t HwcTestState::GetMaxSetResolutions(void) {
   return mMaxSetResolutions;
 }
 
-void HwcTestState::SetWidiDirectModeExpected(bool state) {
-  mWidiDirectExpected = state;
-}
-
-bool HwcTestState::GetWidiDirectModeExpected() {
-  return mWidiDirectExpected;
-}
-
 // Dynamically sets the dimensions for the Widi output buffer
 void HwcTestState::SetWidiOutDimensions(uint32_t width, uint32_t height) {
   if (mTestKernel) {
