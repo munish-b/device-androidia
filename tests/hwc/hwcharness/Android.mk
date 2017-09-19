@@ -60,6 +60,8 @@ LOCAL_SRC_FILES:=\
     HwchInputGenerator.cpp \
     HwchRange.cpp
 
+LOCAL_SRC_FILES += ../../../../../common/utils/hwcutils.cpp
+
 ifdef HWCVAL_BUILD_INTERNAL_TESTS
 LOCAL_SRC_FILES += HwchInternalTests.cpp
 endif

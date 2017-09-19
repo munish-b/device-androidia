@@ -434,6 +434,23 @@ int Hwch::Interface::PresentDisplay(hwc2_display_t display,
   return ret;  // ERROR
 }
 
+int Hwch::Interface::GetReleaseFences(hwc2_display_t display, uint32_t* outNumElements,
+        hwc2_layer_t* outLayers, int32_t* outFences) {
+  int ret = -1;
+  if (hwc_composer_device) {
+    hwc2_device_t *hwc2_dvc =
+        reinterpret_cast<hwc2_device_t *>(hwc_composer_device);
+    HWC2_PFN_GET_RELEASE_FENCES pfngetReleaseFences =
+        reinterpret_cast<HWC2_PFN_GET_RELEASE_FENCES>(
+            hwc2_dvc->getFunction(hwc2_dvc, HWC2_FUNCTION_GET_RELEASE_FENCES));
+    if (pfngetReleaseFences) {
+      ret = pfngetReleaseFences(hwc2_dvc, display, outNumElements, outLayers, outFences);
+    }
+  }
+  return ret;  // ERROR
+}
+
+
 int Hwch::Interface::EventControl(uint32_t disp, uint32_t event,
                                   uint32_t enable) {
   if (hwc_composer_device) {

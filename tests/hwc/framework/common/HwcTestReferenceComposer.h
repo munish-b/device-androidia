@@ -35,7 +35,7 @@
 
 #include "Hwcval.h"
 #include <hardware/hwcomposer_defs.h>
-
+#include "common/utils/hwcutils.h"
 #include "DrmShimBuffer.h"
 #include "HwcTestDefs.h"
 

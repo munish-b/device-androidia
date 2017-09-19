@@ -18,9 +18,6 @@
 #define HWCVAL_H
 #include <hardware/hardware.h>
 #include <hardware/hwcomposer2.h>
-#include "HwchLayer.h"
-
-using namespace Hwch;
 
 enum {
   /*
@@ -51,8 +48,8 @@ typedef struct hwcval_layer {
       };
       hwc_rect_t displayFrame;
       hwc_region_t visibleRegionScreen;
-      int acquireFenceFd;
-      int releaseFenceFd;
+      int acquireFence;
+      int releaseFence;
       uint8_t planeAlpha;
       uint8_t _pad[3];
       hwc_region_t surfaceDamage;
@@ -69,7 +66,7 @@ typedef struct hwcval_display_contents {
   size_t numHwLayers;
   hwcval_layer_t hwLayers[10];
   hwc2_display_t *display;
-
+  int32_t outPresentFence;
 } hwcval_display_contents_t;
 
 #endif /* HWCVAL_H */

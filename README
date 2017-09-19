@@ -11,6 +11,8 @@ suitable target device.
 Update binaries for validation on device 
 ./host_scripts/valpush hwc hwcval
 
+Note: Hwc-val needs hwc service to work
+
 Executing the test from host PC
 ./host_scripts/valhwch -t Home
 

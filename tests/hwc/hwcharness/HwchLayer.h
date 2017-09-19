@@ -31,6 +31,7 @@
 #include "HwchBufferSet.h"
 #include "HwchCoord.h"
 #include "HwchDefs.h"
+#include "Hwcval.h"
 #include "utils/String8.h"
 
 namespace Hwch {
@@ -286,7 +287,7 @@ class Layer {
   Layer& SetForCloning(bool forCloning);
   Layer& SetFrame(Frame* frame);
   Hwch::Frame* GetFrame();
-  void SetAcquireFence(hwc2_layer_t& hwLayer,
+  void SetAcquireFence(hwcval_layer_t& hwLayer,
                        android::sp<TimelineThread>& timelineThread,
                        int mergeFence);
 
