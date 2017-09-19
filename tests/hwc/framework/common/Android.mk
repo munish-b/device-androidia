@@ -79,6 +79,7 @@ LOCAL_SRC_FILES:=\
     HwcvalDebug.cpp
 
 LOCAL_SRC_FILES += HwcvalServiceManager.cpp
+LOCAL_SRC_FILES += ../../../../../../common/utils/hwcutils.cpp
 
 ifeq ($(BUILD_SHIM_HWCSERVICE),1)
     LOCAL_SRC_FILES += \

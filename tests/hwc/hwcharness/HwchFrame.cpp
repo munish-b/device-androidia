@@ -948,7 +948,7 @@ int Hwch::Frame::Send() {
           uint32_t numLayers = mLayers[disp].size();
           if (dc->outPresentFence > 0)
           {
-               if (sync_wait(dc->outPresentFence, HWCVAL_SYNC_WAIT_100MS) < 0) {
+               if (hwcomposer::HWCPoll(dc->outPresentFence, HWCVAL_SYNC_WAIT_100MS) < 0) {
                    HWCERROR(eCheckGlFail,
                       "outPresentFence: fence timeout");
                }

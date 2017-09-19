@@ -17,6 +17,7 @@
 #ifndef __HwchFrame_h__
 #define __HwchFrame_h__
 
+#include "common/utils/hwcutils.h"
 #include "HwchLayer.h"
 #include "HwchTimelineThread.h"
 #include "utils/SortedVector.h"

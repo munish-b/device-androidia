@@ -1539,7 +1539,7 @@ status_t HwcTestReferenceComposer::Compose(uint32_t numSources,
   uint32_t index;
 
   if (waitForFences && (target->acquireFence > 0)) {
-    if (sync_wait(target->acquireFence, HWCVAL_SYNC_WAIT_100MS) < 0) {
+    if (hwcomposer::HWCPoll(target->acquireFence, HWCVAL_SYNC_WAIT_100MS) < 0) {
       HWCERROR(eCheckGlFail,
                "HwcTestReferenceComposer: Target acquire fence timeout");
     }
@@ -1553,7 +1553,7 @@ status_t HwcTestReferenceComposer::Compose(uint32_t numSources,
         (srcLayer.handle != 0)) {
       // Wait for any acquire fence
       if (waitForFences && (srcLayer.acquireFence > 0)) {
-        if (sync_wait(srcLayer.acquireFence, HWCVAL_SYNC_WAIT_100MS) < 0) {
+        if (hwcomposer::HWCPoll(srcLayer.acquireFence, HWCVAL_SYNC_WAIT_100MS) < 0) {
           HWCERROR(eCheckGlFail,
                    "HwcTestReferenceComposer: Acquire fence timeout layer %d",
                    index);
