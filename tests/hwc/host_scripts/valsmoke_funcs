@@ -150,9 +150,6 @@ runner_init()
             PROT="-protected_percent=50"
         fi
         AVOID_PROT=""
-    else
-        AVOID_PROT="-avoid ComplexProtectedVideo -avoid ProtectedVideoScreenDisable -avoid ProtectedVideoHotPlug -avoid ProtectedVideo -avoid InvalidProtectedVideo"
-        PROT=""
     fi
 
     # Work out what checks to disable
@@ -335,28 +332,6 @@ run_gta_testset()
     valhwch -logname=NV12PartVideo2_comp -t NV12PartVideo2 -val_hwc_composition -no_val_hwc $COMMON_SUFFIX |& vallogadd $TMPFILE
     valhwch -logname=Smoke_comp -t Smoke -val_hwc_composition -no_val_hwc $COMMON_SUFFIX |& vallogadd $TMPFILE
     valhwch -logname=TransparencyComposition_comp -t TransparencyComposition -val_hwc_composition -no_val_hwc $COMMON_SUFFIX |& vallogadd $TMPFILE
-
-    # Prot Tests
-    if [ $RUN_prot -eq 1 ]
-    then
-        valhwch -logname=ComplexProtectedVideo -t ComplexProtectedVideo $COMMON_SUFFIX |& vallogadd $TMPFILE
-        valhwch -logname=ProtectedVideo -t ProtectedVideo $COMMON_SUFFIX |& vallogadd $TMPFILE
-        valhwch -logname=ProtectedVideoHotPlug -t ProtectedVideoHotPlug $COMMON_SUFFIX |& vallogadd $TMPFILE
-        valhwch -logname=ProtectedVideoScreenDisable -t ProtectedVideoScreenDisable $COMMON_SUFFIX |& vallogadd $TMPFILE
-        valhwch -logname=ComplexProtectedVideo_comp -t ComplexProtectedVideo -val_hwc_composition -no_val_hwc $COMMON_SUFFIX |& vallogadd $TMPFILE
-    fi
-
-    # Current code cannot handle these tests
-    #Api_DisplayOptimized_TopCoverage  - Randomized stress test
-    #valhwch -logname=Api -t Api -min_display_frame_size=16 -min_NV12_display_frame_size=32 -min_YUY2_display_frame_size=32 \
-    #        -min_YUY2_crop_size=4 -max_frames_per_iteration=10 -test_iterations=500 -transparency_filter -hot_plug_period=50 \
-    #        -screen_disable_period=50 -allow_transform_errors=8 $PROT $COMMON_SUFFIX |& vallogadd $TMPFILE
-
-    #Api_DisplayOptimized_TopCoverage  - Randomized stress test w/ hwc_composition
-    #valhwch -logname=Api_comp -t Api -min_display_frame_size=16 -min_NV12_display_frame_size=32 -min_YUY2_display_frame_size=32 \
-    #        -min_YUY2_crop_size=4 -max_frames_per_iteration=10 -test_iterations=500 -transparency_filter -hot_plug_period=50 \
-    #        -screen_disable_period=50 -allow_transform_errors=8 $PROT -val_hwc_composition -no_val_hwc $COMMON_SUFFIX |& vallogadd $TMPFILE
-
 }
 
 ###########################################################################################################################
@@ -415,14 +390,12 @@ run_main_testset()
         HWCVAL_LOG_SETWARNING="$HWCVAL_LOG_SETWARNING eCheckOnSetLatency eCheckUnblankingLatency" \
         valhwch -logname=main_all -all -version \
             -avoid VideoModes -avoid Smoke -avoid NV12FullVideo -avoid NV12FullVideo2 -avoid RotationAnimation \
-            -avoid RandomModes -avoid DirectPlanes -avoid InvalidProtectedVideo -t RotationAnimation \
-            -avoid ComplexProtectedVideo -avoid ProtectedVideoScreenDisable -avoid ProtectedVideoHotPlug -avoid ProtectedVideo -avoid InvalidProtectedVideo \
+            -avoid RandomModes -avoid DirectPlanes  -t RotationAnimation \
             $API_TEST_OPTIONS $COMMON_SUFFIX |& vallogadd $TMPFILE
 
         if [ $RUN_prot -eq 1 ]
         then
             valhwch -logname=main_prot \
-                -t ProtectedVideo -t ComplexProtectedVideo -t InvalidProtectedVideo \
                 -no_hdmi \
                 -skip_ivp \
                 $COMMON_SUFFIX |& vallogadd $TMPFILE
@@ -690,7 +663,7 @@ run_full_subset()
     then
         valhwch -logname=full_mosaic \
             -hwc_config=$HWCVAL_ROOT/configs/mosaic1to2.txt \
-            -t ComplexProtectedVideo -t InvalidProtectedVideo -t ProtectedVideoScreenDisable -t TransparencyComposition -t Png \
+          -t TransparencyComposition -t Png \
             -t Smoke -t FlipRot -t -t Notification -t Home -t Game -t Gallery -t Dialog -t Camera -t Basic \
             $COMMON_SUFFIX |& vallogadd $TMPFILE
     fi

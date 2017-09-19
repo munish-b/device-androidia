@@ -152,16 +152,6 @@ Hwch::TransparentFullScreenLayer::TransparentFullScreenLayer()
   SetPattern(GetPatternMgr().CreateSolidColourPtn(mFormat, 0));
 }
 
-Hwch::ProtectedVideoLayer::ProtectedVideoLayer(uint32_t encryption)
-    : Hwch::Layer("ProtectedVideo", MaxRel(0), MaxRel(0), 0, -1,
-                  GRALLOC_USAGE_HW_COMPOSER | GRALLOC_USAGE_HW_TEXTURE |
-                      GRALLOC_USAGE_HW_RENDER) {
-  SetPattern(
-      GetPatternMgr().CreateHorizontalLinePtn(mFormat, 60.0, eRed, eDarkBlue));
-  SetEncrypted(encryption);
-  SetHwcAcquireDelay(0);
-}
-
 Hwch::PngLayer::PngLayer(Hwch::PngImage& png, float updateFreq,
                          uint32_t lineColour)
     : Hwch::Layer(png.GetName(), 0, 0, HAL_PIXEL_FORMAT_RGBA_8888) {

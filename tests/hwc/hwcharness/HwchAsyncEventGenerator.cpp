@@ -80,18 +80,6 @@ android::String8 Hwch::AsyncEvent::EventName(uint32_t type) {
     result += "+SetVideoOptimizationMode";
   }
 
-  if (type & AsyncEvent::eWidiConnect) {
-    result += "+WidiConnect";
-  }
-
-  if (type & AsyncEvent::eWidiDisconnect) {
-    result += "+WidiDisconnect";
-  }
-
-  if (type & AsyncEvent::eWidiFencePolicy) {
-    result += "+WidiFencePolicy";
-  }
-
   if (type & AsyncEvent::eWirelessDockingEntry) {
     result += "+WirelessDockingEntry";
   }
@@ -255,42 +243,6 @@ bool Hwch::AsyncEventGenerator::Blank(bool blank) {
   return true;
 }
 
-bool Hwch::AsyncEventGenerator::WidiConnect(
-    bool connect, AsyncEvent::WidiConnectEventData* eventData) {
-  android::status_t ret = android::UNKNOWN_ERROR;
-
-  return (ret == android::NO_ERROR);
-}
-
-bool Hwch::AsyncEventGenerator::WidiFencePolicy(
-    AsyncEvent::WidiFencePolicyEventData* eventData) {
-  using FenceReleaseMode = Hwch::System::FenceReleaseMode;
-
-  ALOG_ASSERT(eventData);
-
-  FenceReleaseMode mode =
-      static_cast<FenceReleaseMode>(eventData->mFencePolicyMode);
-
-  HWCLOGD_COND(
-      eLogHarness, "Harness simulating widi fence policy change to: %s",
-      (mode == FenceReleaseMode::eSequential)
-          ? "sequential"
-          : (mode == FenceReleaseMode::eRandom) ? "random" : "retain oldest");
-
-  if (mode == FenceReleaseMode::eRetainOldest) {
-    Hwch::System::getInstance().SetWirelessBeforeOldest(
-        eventData->mRetainOldest);
-    HWCLOGD_COND(eLogHarness,
-                 "'Retain Oldest' fence release mode selected. Retaining "
-                 "oldest fence for %d frames before signalling",
-                 eventData->mRetainOldest);
-  }
-
-  Hwch::System::getInstance().SetWirelessFenceReleaseMode(mode);
-
-  return true;
-}
-
 bool Hwch::AsyncEventGenerator::ModeSet(
     Hwch::AsyncEvent::ModeChangeEventData* mc) {
   return false;
@@ -335,22 +287,6 @@ bool Hwch::AsyncEventGenerator::Do(uint32_t eventType,
     }
   } else if (eventType & AsyncEvent::eUnblank) {
     success &= Blank(false);
-  }
-
-  if (eventType & AsyncEvent::eWidiConnect) {
-    AsyncEvent::WidiConnectEventData* res =
-        static_cast<AsyncEvent::WidiConnectEventData*>(data.get());
-    success &= WidiConnect(true, res);
-  }
-
-  if (eventType & AsyncEvent::eWidiDisconnect) {
-    success &= WidiConnect(false, nullptr);
-  }
-
-  if (eventType & AsyncEvent::eWidiFencePolicy) {
-    AsyncEvent::WidiFencePolicyEventData* fence_policy =
-        static_cast<AsyncEvent::WidiFencePolicyEventData*>(data.get());
-    success &= WidiFencePolicy(fence_policy);
   }
 
   if (eventType & AsyncEvent::eWirelessDockingEntry) {

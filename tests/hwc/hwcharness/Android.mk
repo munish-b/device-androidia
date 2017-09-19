@@ -28,7 +28,6 @@ LOCAL_SRC_FILES:=\
     HwchApiTest.cpp \
     HwchRandomModesTest.cpp \
     HwchDirectPlanesTest.cpp \
-    HwchProtectedContentTests.cpp \
     HwchFlickerTests.cpp \
     HwchStressTests.cpp \
     HwchModeTests.cpp \

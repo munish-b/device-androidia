@@ -45,11 +45,6 @@ class AsyncEvent {
     eSuspend = 4,
     eResume = 8,
 
-    // Widi
-    eWidiConnect = 0x80,
-    eWidiDisconnect = 0x100,
-    eWidiFencePolicy = 0x200,
-
     // Wireless docking mode
     eWirelessDockingEntry = 0x400,
     eWirelessDockingExit = 0x800,
@@ -124,27 +119,6 @@ class AsyncEvent {
     Display::VideoOptimizationMode mVideoOptimizationMode;
   };
 
-  class WidiConnectEventData : public Data {
-   public:
-    WidiConnectEventData(uint32_t width, uint32_t height)
-        : mWidth(width), mHeight(height){};
-    virtual ~WidiConnectEventData(){};
-
-    uint32_t mWidth = 0;
-    uint32_t mHeight = 0;
-  };
-
-  class WidiFencePolicyEventData : public Data {
-   public:
-    WidiFencePolicyEventData(uint32_t mode, uint32_t retain_oldest)
-        : mFencePolicyMode(mode), mRetainOldest(retain_oldest) {
-    }
-    virtual ~WidiFencePolicyEventData(){};
-
-    uint32_t mFencePolicyMode = 0;
-    uint32_t mRetainOldest = 0;
-  };
-
   AsyncEvent();
   AsyncEvent(const AsyncEvent& rhs);
   virtual ~AsyncEvent();
@@ -180,8 +154,6 @@ class AsyncEventGenerator : public EventMultiThread<AsyncEvent, 256, 16> {
 
   bool Blank(bool blank);
   bool SuspendResume(bool suspend);
-  bool WidiConnect(bool connect, AsyncEvent::WidiConnectEventData* res);
-  bool WidiFencePolicy(AsyncEvent::WidiFencePolicyEventData* eventData);
   bool ModeSet(AsyncEvent::ModeChangeEventData* mc);
   bool ModeClear(AsyncEvent::ModeChangeEventData* mc);
   bool SetVideoOptimizationMode(

@@ -435,37 +435,21 @@ void HwcTestKernel::checkWidiBuffer(HwcTestCrtc* crtc, Hwcval::LayerList* ll,
     android::sp<DrmShimBuffer> buf = lookupDrmShimBuffer(handle);
     HWCLOGD_COND(eLogBuffer, "Widi buffer %s %s", buf->IdStr(strbuf), notes);
 
-    if (buf != NULL) {
-      if (IsWidiEnabled()) {
-        HWCCHECK(eCheckWidiWrongFormat);
-      } else {
-        // Virtual display mode
-        // Hence no format check
-      }
+    // Signal that this frame was drawn to the screen to prevent
+    // it being classified as a dropped frame rather than an error.
+    crtc->IncDrawCount();
 
-      // Signal that this frame was drawn to the screen to prevent
-      // it being classified as a dropped frame rather than an error.
-      crtc->IncDrawCount();
-
-      DrmShimPlane* plane = crtc->GetPlane(0);
-      if (plane != NULL) {
-        // Update the plane
-        plane->SetBuf(buf);
-        plane->SetSourceCrop(0, 0, buf->GetWidth(), buf->GetHeight());
-        plane->SetDisplayFrame(0, 0, buf->GetWidth(), buf->GetHeight());
-        plane->GetTransform().SetBlend(BlendingType::HWCVAL_PASSTHROUGH, false,
-                                       1.0);
-        plane->SetDecrypt(buf->IsReallyProtected());
-      } else {
-        HWCLOGW("CRTC has NULL plane!");
-      }
-
-      HWCCHECK(eCheckBufferInfoRequired);
-      if (mBufferInfoRequired) {
-        HWCERROR(
-            eCheckBufferInfoRequired,
-            "Saw a SetResolution message without a corresponding BufferInfo");
-      }
+    DrmShimPlane* plane = crtc->GetPlane(0);
+    if (plane != NULL) {
+      // Update the plane
+      plane->SetBuf(buf);
+      plane->SetSourceCrop(0, 0, buf->GetWidth(), buf->GetHeight());
+      plane->SetDisplayFrame(0, 0, buf->GetWidth(), buf->GetHeight());
+      plane->GetTransform().SetBlend(BlendingType::HWCVAL_PASSTHROUGH, false,
+                                     1.0);
+      plane->SetDecrypt(buf->IsReallyProtected());
+    } else {
+      HWCLOGW("CRTC has NULL plane!");
     }
   }
 }

@@ -126,36 +126,6 @@ class HwcShim : hwc2_device, public HwcShimInitializer {
   virtual void HwcShimInitDrm(void);
 
  private:
-  template <typename PFN, typename T>
-  static hwc2_function_pointer_t ToHook(T function) {
-    static_assert(std::is_same<PFN, T>::value, "Incompatible fn pointer");
-    return reinterpret_cast<hwc2_function_pointer_t>(function);
-  }
-
-  template <typename T, int Y, typename... Args>
-  static int32_t func_hook(hwc2_device_t *dev, Args... args) {
-    HwcShim *temp1 = static_cast<HwcShim *>(dev);
-    hwc2_device_t *hwc2_dvc =
-        reinterpret_cast<hwc2_device_t *>(temp1->hwc_composer_device);
-    T temp = reinterpret_cast<T>(hwc2_dvc->getFunction(hwc2_dvc, Y));
-    return temp(hwc2_dvc, std::forward<Args>(args)...);
-  }
-  template <typename T, int Y, typename... Args>
-  static void func_hookv(hwc2_device_t *dev, Args... args) {
-    HwcShim *temp1 = static_cast<HwcShim *>(dev);
-    hwc2_device_t *hwc2_dvc =
-        reinterpret_cast<hwc2_device_t *>(temp1->hwc_composer_device);
-    T temp = reinterpret_cast<T>(hwc2_dvc->getFunction(hwc2_dvc, Y));
-    return temp(hwc2_dvc, std::forward<Args>(args)...);
-  }
-  template <typename T, int Y, typename... Args>
-  static uint32_t func_hooku(hwc2_device_t *dev, Args... args) {
-    HwcShim *temp1 = static_cast<HwcShim *>(dev);
-    hwc2_device_t *hwc2_dvc =
-        reinterpret_cast<hwc2_device_t *>(temp1->hwc_composer_device);
-    T temp = reinterpret_cast<T>(hwc2_dvc->getFunction(hwc2_dvc, Y));
-    return temp(hwc2_dvc, std::forward<Args>(args)...);
-  }
   static hwc2_function_pointer_t HookDevGetFunction(struct hwc2_device *dev,
                                                     int32_t descriptor);
 
