@@ -943,7 +943,7 @@ int Hwch::Frame::Send() {
         hwcval_display_contents_t* dc = &dcs[disp];
 
         if (dc) {
-          mInterface.PresentDisplay(disp, &dc->outPresentFence);
+          mInterface.PresentDisplay(&dc, disp, &dc->outPresentFence);
 
           uint32_t numLayers = mLayers[disp].size();
           if (dc->outPresentFence > 0)

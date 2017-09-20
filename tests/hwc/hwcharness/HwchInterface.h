@@ -55,7 +55,7 @@ class Interface {
   /*HWC2 functions*/
   int ValidateDisplay(hwc2_display_t display, uint32_t *outNumTypes,
                       uint32_t *outNumRequests);
-  int PresentDisplay(hwc2_display_t display, int32_t *outPresentFence);
+  int PresentDisplay(hwcval_display_contents_t **display, hwc2_display_t disp, int32_t *outPresentFence);
   int CreateLayer(hwc2_display_t disp, hwc2_layer_t *outLayer);
   int setLayerCompositionType(hwc2_display_t disp, hwc2_layer_t layer,
                               int32_t type);

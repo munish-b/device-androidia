@@ -61,7 +61,7 @@ EXPORT_API void Hwcval::Hwc2::CheckValidateDisplayExit() {
 /// in
 /// the
 /// contents of the display structures
-EXPORT_API void Hwcval::Hwc2::CheckPresentDisplayEnter() {
+EXPORT_API void Hwcval::Hwc2::CheckPresentDisplayEnter(hwcval_display_contents_t** displays, hwc2_display_t display) {
 }
 
 void Hwcval::Hwc2::CheckPresentDisplayExit() {

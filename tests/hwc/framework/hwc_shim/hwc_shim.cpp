@@ -288,18 +288,18 @@ void HwcShim::HwcShimInitDrm() {
   }
 }
 
-int HwcShim::HookPresentDisplay(hwc2_device_t *device, hwc2_display_t display,
+int HwcShim::HookPresentDisplay(hwcval_display_contents_t** displays, hwc2_device_t *device, hwc2_display_t display,
                                 int32_t *outPresentFence) {
   int ret = -1;
-  ret = GetComposerShim(device)->OnPresentDisplay(device, display,
+  ret = GetComposerShim(device)->OnPresentDisplay(displays, device, display,
                                                   outPresentFence);
   return ret;
 }
 
-int HwcShim::OnPresentDisplay(hwc2_device_t *device, hwc2_display_t display,
+int HwcShim::OnPresentDisplay(hwcval_display_contents_t** displays, hwc2_device_t *device, hwc2_display_t display,
                               int32_t *outPresentFence) {
   int ret = -1;
-  mHwc2->CheckPresentDisplayEnter();
+  mHwc2->CheckPresentDisplayEnter(displays, display);
 
   HWC2_PFN_PRESENT_DISPLAY pfnPresentDisplay =
       reinterpret_cast<HWC2_PFN_PRESENT_DISPLAY>(

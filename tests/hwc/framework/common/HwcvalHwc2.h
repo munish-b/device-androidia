@@ -68,7 +68,7 @@ class EXPORT_API Hwc2 {
   //void EXPORT_API
   //    CheckPresentDisplayEnter(size_t numDisplays, hwcval_display_contents_t** displays);
   void EXPORT_API
-      CheckPresentDisplayEnter();
+      CheckPresentDisplayEnter(hwcval_display_contents_t** displays, hwc2_display_t display);
 
   /// Notify exit from PresentDisplay from HWC Shim, and perform checks
   //EXPORT_API void CheckPresentDisplayExit(size_t numDisplays,

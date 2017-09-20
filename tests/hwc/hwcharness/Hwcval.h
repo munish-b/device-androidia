@@ -69,4 +69,5 @@ typedef struct hwcval_display_contents {
   int32_t outPresentFence;
 } hwcval_display_contents_t;
 
+typedef int32_t /*hwc2_error_t*/ (*HWCVAL_PFN_PRESENT_DISPLAY)(hwcval_display_contents_t **display, hwc2_device_t* device, hwc2_display_t disp, int32_t* outPresentFence);
 #endif /* HWCVAL_H */
