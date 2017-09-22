@@ -186,7 +186,6 @@ class HwcTestBase {
 
   // Additional check enables
   bool mValHwcComposition;
-  bool mValIvpComposition;
 
   /// Stored pointer to this, for logging
   static HwcTestBase* mTheTestBase;

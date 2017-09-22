@@ -39,30 +39,6 @@ uint32_t DrmShimBuffer::mCompMismatchCount = 0;
 static int sNumBufCopies = 0;
 GrallocInterface gralloc_interface;
 
-void LogProtection(int priority, buffer_handle_t handle, const char* desc) {
-  Hwcval::buffer_details_t bi;
-  int err = DrmShimBuffer::GetBufferInfo(handle, &bi);
-  if (err) {
-    HWCLOGW("LogProtection: Invalid gralloc handle %p", handle);
-    return;
-  }
-
-  hwc_buffer_media_details_t md;
-
-  md.magic = sizeof(hwc_buffer_media_details_t);
-  if (1 /*GetGralloc().queryMediaDetails(handle, &md) != 0*/) {
-    HWCLOGW("LogProtection: queryMediaDetails Failed %p", handle);
-    return;
-  }
-
-  HWCLOG_COND(priority, eLogIvp,
-              "iVP %s: Handle %p %s is_encrypted %d pavp_session_id %d "
-              "pavp_instance_id %d",
-              desc, handle,
-              ((bi.usage & GRALLOC_USAGE_PROTECTED) ? "PROT" : ""),
-              md.is_encrypted, md.pavp_session_id, md.pavp_instance_id);
-}
-
 static void InitBufferInfo(Hwcval::buffer_details_t* details) {
   // Default all buffer info state
   details->width = 0;
@@ -212,7 +188,6 @@ DrmShimBuffer::DrmShimBuffer(buffer_handle_t handle,
       mDsId(0),
       mAcquireFenceFd(-1),
       mNew(true),
-      mUsedByIvp(false),
       mUsed(false),
       mBufferSource(bufferSource),
       mBlanking(false),
@@ -326,15 +301,6 @@ DrmShimBuffer* DrmShimBuffer::SetNew(bool isNew) {
 
 bool DrmShimBuffer::IsNew() {
   return mNew;
-}
-
-DrmShimBuffer* DrmShimBuffer::SetUsedByIvp(bool usedByIvp) {
-  mUsedByIvp = usedByIvp;
-  return this;
-}
-
-bool DrmShimBuffer::IsUsedByIvp() {
-  return mUsedByIvp;
 }
 
 DrmShimBuffer* DrmShimBuffer::SetUsed(bool used) {
@@ -1092,8 +1058,6 @@ const char* DrmShimBuffer::GetSourceName() {
       return "Input";
     case Hwcval::BufferSourceType::PartitionedComposer:
       return "PartitionedComposer";
-    case Hwcval::BufferSourceType::Ivp:
-      return "Ivp";
     case Hwcval::BufferSourceType::Writeback:
       return "Writeback";
     default:
@@ -1107,8 +1071,7 @@ void DrmShimBuffer::ReportStatus(int priority, const char* str) {
 
   // For efficiency, filter the logging at this point
   if (HwcGetTestConfig()->IsLevelEnabled(priority)) {
-    HWCLOG(priority, "%s: %s %s %s %s", str, IdStr(strbuf),
-           mUsedByIvp ? "+UsedByIvp" : "-UsedByIvp", GetSourceName(),
+    HWCLOG(priority, "%s: %s %s %s", str, IdStr(strbuf), GetSourceName(),
            mBlanking ? "+Blanking" : "-Blanking");
     HWCLOG(priority, "  Size %dx%d Alloc %dx%d DrmFormat %x Usage %x",
 #ifdef HWCVAL_FB_BUFFERINFO_FORMAT

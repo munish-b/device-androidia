@@ -32,17 +32,6 @@ class HwcShimInitializer {
   /// struct of pointer to real drm functions
   drmShimFunctionsType drmShimFunctions;
 
-  /// struct of pointer to iVP shim function as hwc is linked against real iVP
-  typedef struct {
-    /// pointer to iVP shim iVPShimInit
-    void (*fpiVPShimInit)();
-    /// pointer to iVP shim iVPShimCleanup
-    void (*fpiVPShimCleanup)(void);
-  } iVPShimFunctionsType;
-
-  /// struct of pointer to real iVP functions
-  iVPShimFunctionsType iVPShimFunctions;
-
  public:
   virtual ~HwcShimInitializer() {
   }

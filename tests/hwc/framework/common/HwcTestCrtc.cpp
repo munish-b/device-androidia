@@ -1193,33 +1193,6 @@ void HwcTestCrtc::ConsistencyChecks(Hwcval::LayerList* ll, uint32_t hwcFrame) {
                  pTransform, i);
     pTransform->SetLayerIndex(i);
 
-    // Does protection match?
-    if (buf->IsReallyProtected()) {
-      HWCCHECK(eCheckPavpConsistent);
-      if (layer.GetCompositionType() == CompositionType::SF) {
-        logTransformPriority = HWCERROR(
-            eCheckSfCompNotProt, "D%d P%d Layer %d %s", GetSfSrcDisplayIx(),
-            GetDisplayIx(), i, pTransform->GetBuf()->IdStr(strbuf));
-      } else if (!pTransform->IsDecrypted()) {
-        if (mDisplayIx != HWCVAL_VD_WIDI_DISPLAY_INDEX) {
-          logTransformPriority = HWCERROR(
-              eCheckPavpConsistent,
-              "D%d P%d layer %d %s is protected, but is on undecrypted plane",
-              GetSfSrcDisplayIx(), GetDisplayIx(), i,
-              pTransform->GetBuf()->IdProtStr(strbuf));
-        } else {
-          // Inhibiting this error on WIDI because it can result from a known
-          // and ultimately fixed iVP bug
-          // namely the tendency of iVP to reset the protected state of a
-          // composition target
-          // This error is trapped separately anyway.
-        }
-      }
-    } else {
-      // It's OK to include unprotected data on decrypted planes.
-      // This may happen if it's included in a iVP composition.
-    }
-
     // If rotation is in progress, co-ordinates may have been perturbed to
     // restore them to
     // what they were last frame. So in that instance we don't compare against
@@ -1403,94 +1376,6 @@ void HwcTestCrtc::SetDisplayIsBlack(uint32_t numTransforms,
       "mCurrentCrtc->mDPMSEnabled=%d",
       mPower.mBlack, numTransforms, mPower.mDPMS);
   mPower.mHasContent = (numLayers > 1);
-}
-
-void HwcTestCrtc::WidiVideoConsistencyChecks(Hwcval::LayerList* ll) {
-  ATRACE_CALL();
-  HWCLOGV_COND(eLogWidi, "Entering %s", __FUNCTION__);
-
-  // Check parameters
-  ALOG_ASSERT(ll);
-
-  if (ll->GetVideoFlags().mFullScreenVideo == eTrue)  // TODO: actually we
-                                                      // really want to know if
-                                                      // we are full screen on
-                                                      // ALL displays
-  {
-    // At this stage, we know that there is a video playing, extended mode is
-    // not disabled and that
-    // a video is playing full screen on all displays (this is established in
-    // HwcTestCrtc::Checks).
-    // Perform the full screen extended mode checks as described in the
-    // specification. The following
-    // 'requirements' are taken from the specification document (available from
-    // the HWC team)::
-
-    // 1. 'Only the video layer should be sent to the TV (No subtitles)'
-    //
-    // In this case, the layer list should contain 2 layers i.e. an NV12 layer
-    // and a frameBuffer
-    // target (Note: mTransforms never contains framebuffer targets - so will
-    // have a size of 1). If
-    // this is the case, then the transform's DrmShimBuffer should be the same
-    // as the layer's.
-    if ((ll->GetNumLayers() == 2) && (mTransforms.size() == 1)) {
-      HWCLOGV_COND(
-          eLogWidi,
-          "%s: fullscreen mode and layer list contains a single video layer",
-          __FUNCTION__);
-
-      // Check that the transform points to the same DrmShimBuffer as the layer
-      if (mTransforms.editItemAt(0).GetBuf() == ll->GetLayer(0).GetBuf()) {
-        // 2. 'Video is full-screen on TV'
-        //
-        // Check that the video is at full-screen scaling.
-        hwc_rect_t display_frame;
-        mTransforms.editItemAt(0).GetEffectiveDisplayFrame(display_frame);
-
-        // Disable the following check for virtual displays - this is only
-        // relevant for true WiDi.
-        if ((mWidth > 0) && (mHeight > 0)) {
-          HWCCHECK(eCheckWidiFullScreenScaling);
-          if (((display_frame.right - display_frame.left) !=
-               static_cast<int32_t>(mWidth)) &&
-              ((display_frame.bottom - display_frame.top) !=
-               static_cast<int32_t>(mHeight))) {
-            HWCERROR(eCheckWidiFullScreenScaling,
-                     "In fullscreen mode, but Widi video is not full screen "
-                     "(%d %d != %d %d)",
-                     display_frame.right - display_frame.left,
-                     display_frame.bottom - display_frame.top, mWidth, mHeight);
-          } else {
-            // All checks passed. Note, the local display blanking (i.e.
-            // requirement 3) is
-            // checked in HwcTestKernel::SetExtendedModeExpectation().
-            HWCLOGV_COND(eLogWidi, "%s: All Widi checks passed", __FUNCTION__);
-          }
-        }
-      } else {
-        HWCERROR(eCheckWidiWrongLayer,
-                 "DrmShimBuffer mismatch between transform and layer");
-      }
-      HWCCHECK(eCheckWidiWrongLayer);
-    }
-  } else {
-    // At this point, we know that we have video on all displays, but that the
-    // video is not fullscreen.
-    // We should now check the 'partial screen video requirements' from the
-    // spec., however, as of 2/12/14,
-    // this functionality has not been implemented in HWC 15.33 (i.e. the
-    // 'golden' reference), so issue
-    // a warning (for now) if there is more than one layer (not including the
-    // framebuffer target) being sent
-    // to the Widi display.
-    HWCCHECK(eCheckWidiPartialVideo);
-    if (ll->GetNumLayers() > 2) {
-      HWCERROR(eCheckWidiPartialVideo,
-               "Detected a specification inconsistency with Widi partial video "
-               "mode");
-    }
-  }
 }
 
 void HwcTestCrtc::ReportPanelFitterStatistics(FILE* f) {

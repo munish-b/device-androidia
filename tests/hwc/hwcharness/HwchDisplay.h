@@ -25,7 +25,7 @@
 
 #include "hwcserviceapi.h"
 
-#define HWCH_WIDI_VIRTUAL_NUM_BUFFERS 4
+#define HWCH_VIRTUAL_NUM_BUFFERS 4
 
 namespace Hwch {
 class BufferFormatConfigManager;

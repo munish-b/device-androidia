@@ -65,8 +65,8 @@
 #define HWCH_ROTATION_ANIMATION_MIN_PERTURB_VALUE 100
 #define HWCH_ROTATION_ANIMATION_PERTURB_DIVISOR 10
 
-// Widi and Replay definitions
-#define HWCVAL_DISPLAY_ID_WIDI_VIRTUAL 2
+// Virtual display and Replay definitions
+#define HWCVAL_DISPLAY_ID_VIRTUAL 2
 #define HWCVAL_MAX_PROT_SESSIONS 15
 
 #endif  // __HwchDefs_h__

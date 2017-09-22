@@ -67,7 +67,6 @@ HwcTestKernel::HwcTestKernel()
       mCrcReader(this, mState),
       mLogParser(this, mProtChecker),
       mPassThrough(1),
-      mShimIvpFd(0),
       mPlanes((DrmShimPlane*)0),
       mOrders((HwcTestCrtc::SeqVector*)0),
       mVideoRate(0),
@@ -100,11 +99,9 @@ HwcTestKernel::HwcTestKernel()
       mCompTargets("composition_targets"),
       mTotalBuffers("total_buffers"),
       mSfCompositionCount("sf_compositions"),
-      mIvpCompositionCount("ivp_compositions"),
       mPartitionedCompositionCount("partitioned_compositions"),
       mWritebackCompositionCount("writeback_compositions"),
       mPCScaleStat("partitioned_composer_scale", "%f"),
-      mIvpScaleStat("ivp_scale_stat", "%f"),
       mSfScaleStat("sf_scale_stat", "%f"),
       mSnapshotsRestored("snapshots_restored") {
   HWCLOGI("Creating HwcTestKernel");
@@ -115,8 +112,8 @@ HwcTestKernel::HwcTestKernel()
   // Create the Crtc and plane objects for the Widi display
   HWCLOGD("Initialising CRTC for the Widi display");
 
-  HwcTestCrtc* virtCrtc = new HwcTestCrtc(HWCVAL_VD_WIDI_CRTC_ID, 0, 0, 0, 0);
-  DrmShimPlane* mainPlane = new DrmShimPlane(HWCVAL_VD_WIDI_CRTC_ID, virtCrtc);
+  HwcTestCrtc* virtCrtc = new HwcTestCrtc(HWCVAL_VD_CRTC_ID, 0, 0, 0, 0);
+  DrmShimPlane* mainPlane = new DrmShimPlane(HWCVAL_VD_CRTC_ID, virtCrtc);
   mainPlane->SetPlaneIndex(0);
   virtCrtc->AddPlane(mainPlane);
   mCrtcByDisplayIx[eDisplayIxVirtual] = virtCrtc;
@@ -616,428 +613,10 @@ void HwcTestKernel::SetExtendedModeExpectation(bool singleFullScreenVideo,
     default: { ALOG_ASSERT(0); }
   }
 }
-#if 0
-// Convert IVP blending type to HWC blending types.
-//
-uint32_t HwcTestKernel::GetBlending(iVP_blend_t blend)
-{
-    if (blend == IVP_BLEND_NONE)
-    {
-        return HWC_BLENDING_NONE;
-    }
-    else if (blend == IVP_ALPHA_SOURCE_PREMULTIPLIED_TIMES_PLANE)
-    {
-        return HWC_BLENDING_PREMULT;
-    }
-    else
-    {
-        return HWC_BLENDING_NONE;
-    }
+
+bool HwcTestKernel::BelievedEmpty(uint32_t width, uint32_t height) {
+  return ((width == 16) && (height == 16));
 }
-
-// Analyse an input layer to an iVP composition.
-// This includes recording the buffer state
-// and creating a DrmShimTransform to express the composition.
-//
-// NOTE: The code to build up equivalent layers in sfLayers is currently disabled.
-// Its purpose would be to trigger a reference composition in
-android::sp<DrmShimBuffer> HwcTestKernel::IvpCoordinateCheck(DrmShimTransformVector& contributors,
-    android::Vector<hwcval_layer_t>& sfLayers,
-    uint32_t layerIx, iVP_layer_t* ivpLayer,
-    buffer_handle_t outHandle, bool& err,
-    const char* description, int param)
-{
-    HWCVAL_UNUSED(sfLayers); // To be replaced with ValLayers ultimately
-
-    android::sp<DrmShimBuffer> buf;
-    char strbuf[HWCVAL_DEFAULT_STRLEN];
-    char notes[HWCVAL_DEFAULT_STRLEN];
-    notes[0] = '\0';
-
-    if (ivpLayer)
-    {
-        HWCCHECK(eCheckSrcBufAlsoTgt);
-        if (ivpLayer->gralloc_handle == outHandle)
-        {
-            HWCERROR(eCheckSrcBufAlsoTgt, "Handle %p", outHandle);
-            err = true;
-            return buf;
-        }
-
-        buf = mBuffers.valueFor(ivpLayer->gralloc_handle);
-
-        // Make sure that no RC buffers are passed to VPP. If they are, trigger an error.
-        HWCCHECK(eCheckRCSentToVPP);
-        if (buf.get() && buf->IsRenderCompressed())
-        {
-            HWCERROR(eCheckRCSentToVPP, "Buffer with handle %p %s was sent to VPP",
-                ivpLayer->gralloc_handle, buf->IdStr(strbuf));
-        }
-
-        LogProtection(ANDROID_LOG_DEBUG, ivpLayer->gralloc_handle, "input");
-
-        HWCCHECK(eCheckIvp);
-        if (buf.get() == 0)
-        {
-            // This buffer handle is not previously known to us.
-            // Is that because HWC is using it as a 16x16 black buffer
-            // (as a replacement for a layer with an invalid encryption state)?
-            if (!BelievedEmpty(ivpLayer->gralloc_handle))
-            {
-                // No. So it is an error for us to be using iVP to compose a buffer
-                // we have not previously come across.
-                HWCLOGW("iVP composition used on unknown buffer handle %p",
-                    ivpLayer->gralloc_handle);
-                return buf;
-            }
-            else
-            {
-                // Yes - this is a 16x16 black buffer.
-                // Let's keep track of it.
-                buf = RecordBufferState(ivpLayer->gralloc_handle, Hwcval::BufferSourceType::Hwc, notes);
-                buf->SetBlack(true);
-            }
-        }
-
-        if (ivpLayer->srcRect == 0)
-        {
-            HWCERROR(eCheckIvp, "iVP layer has no srcRect for handle %p %s",
-                ivpLayer->gralloc_handle, buf->IdStr(strbuf));
-            return buf;
-        }
-
-        if (ivpLayer->destRect == 0)
-        {
-            HWCERROR(eCheckIvp, "iVP layer has no destRect for handle %p %s",
-                ivpLayer->gralloc_handle, buf->IdStr(strbuf));
-            return buf;
-        }
-
-        HWCLOGD_COND(eLogIvp,  "NotifyIvpExec %s[%d] %s srcRect(l,t,w,h)=(%d, %d, %d, %d) destRect=(%d, %d, %d, %d) %s",
-            description,
-            param,
-            buf->IdStr(strbuf),
-            ivpLayer->srcRect->left,
-            ivpLayer->srcRect->top,
-            ivpLayer->srcRect->width,
-            ivpLayer->srcRect->height,
-            ivpLayer->destRect->left,
-            ivpLayer->destRect->top,
-            ivpLayer->destRect->width,
-            ivpLayer->destRect->height,
-            notes);
-
-        buf->SetUsedByIvp(true)
-           ->SetUsed(true);
-
-        DrmShimTransform transform(buf, layerIx, ivpLayer);
-        contributors.add(transform);
-
-        if (mState->IsCheckEnabled(eCheckIvpCompMatchesRef))
-        {
-#if 0
-// NOT CURRENTLY SUPPORTED
-// TODO: Rework to use ValLayer etc.
-// No point in doing this until we have NV12 supported in SSIM.
-            hwcval_layer_t layer;
-            layer.compositionType = HWC2_COMPOSITION_CLIENT;
-            layer.hints = 0;
-            layer.flags = 0;
-            layer.handle = ivpLayer->gralloc_handle;
-            layer.transform = transform.GetTransform();
-            layer.blending = GetBlending(ivpLayer->blend);
-            layer.sourceCropf.left = float(ivpLayer->srcRect->left);
-            layer.sourceCropf.top = float(ivpLayer->srcRect->top);
-            layer.sourceCropf.right = float(ivpLayer->srcRect->left + ivpLayer->srcRect->width);
-            layer.sourceCropf.bottom = float(ivpLayer->srcRect->top + ivpLayer->srcRect->height);
-            layer.displayFrame.left = ivpLayer->destRect->left;
-            layer.displayFrame.top = ivpLayer->destRect->top;
-            layer.displayFrame.right = ivpLayer->destRect->left + ivpLayer->destRect->width;
-            layer.displayFrame.bottom = ivpLayer->destRect->top + ivpLayer->destRect->height;
-            layer.visibleRegionScreen.numRects = 0;
-            layer.visibleRegionScreen.rects = 0;
-            layer.acquireFenceFd = -1;
-            layer.planeAlpha = ivpLayer->alpha * 255;
-
-            sfLayers.add(layer);
-#endif
-        }
-    }
-    return buf;
-}
-#if 0
-// On some platforms, very large or very small scaling factors may cause iVP to hang or crash.
-// We therefore have the ability to skip iVP compositions with extreme scaling factors so
-// that we can continue to validate HWC.
-bool HwcTestKernel::CheckIvpScaling(iVP_layer_t *ivpLayer)
-{
-    bool scaleOutOfRange = false;
-
-    if (ivpLayer)
-    {
-        bool rot90 = ivpLayer->rotation & 1;
-
-        int32_t dw = ivpLayer->destRect->width;
-        int32_t dh = ivpLayer->destRect->height;
-        int32_t sw = ivpLayer->srcRect->width;
-        int32_t sh = ivpLayer->srcRect->height;
-
-        float xscale;
-        float yscale;
-
-        if (rot90)
-        {
-            xscale = float(dw) / sh;
-            yscale = float(dh) / sw;
-        }
-        else
-        {
-            xscale = float(dw) / sw;
-            yscale = float(dh) / sh;
-        }
-
-        float minIvpScale = mState->GetMinIvpScale();
-        float maxIvpScale = mState->GetMaxIvpScale();
-        scaleOutOfRange = ((xscale >= maxIvpScale) || (yscale >= maxIvpScale) || (xscale <= minIvpScale) || (yscale <= minIvpScale));
-
-        HWCCHECK(eCheckIvpExcessScale);
-        if (scaleOutOfRange)
-        {
-            HWCERROR(eCheckIvpExcessScale, "iVP_exec skipped due to scale factors %fx%f (out of range %f-%f)",
-                double(xscale), double(yscale), double(minIvpScale), double(maxIvpScale));
-        }
-    }
-
-    return scaleOutOfRange;
-}
-
-
-// Intercepted iVP call.
-// This function is called BEFORE real iVP gets executed.
-bool HwcTestKernel::NotifyIvpExecEntry(iVPCtxID *ctx, iVP_layer_t *primarySurf,
-        iVP_layer_t *subSurfs, unsigned int numOfSubs, iVP_layer_t  *outSurf, bool syncFlag)
-{
-    char strbuf[HWCVAL_DEFAULT_STRLEN];
-    PushThreadState ts("NotifyIvpExecEntry");
-
-    HWCLOGV_COND(eLogIvp, "iVP Entry");
-    HWCVAL_UNUSED(ctx);
-    HWCVAL_UNUSED(primarySurf);
-    HWCVAL_UNUSED(subSurfs);
-    HWCVAL_UNUSED(numOfSubs);
-    HWCVAL_UNUSED(syncFlag);
-
-    SetThreadState("NotifyIvpExecEntry (locking)");
-    HWCVAL_LOCK(_l, mMutex);
-    SetThreadState("NotifyIvpExecEntry (locked)");
-    mWorkQueue.Process();
-    HWCLOGV_COND(eLogIvp, "Processed work queue");
-
-    bool excessScale = CheckIvpScaling(primarySurf);
-
-    for (uint32_t i=0; i<numOfSubs; ++i)
-    {
-        excessScale |= CheckIvpScaling(subSurfs+i);
-    }
-
-    if (outSurf && outSurf->gralloc_handle)
-    {
-        char notes[HWCVAL_DEFAULT_STRLEN];
-        notes[0] = '\0';
-        LogProtection(ANDROID_LOG_DEBUG, outSurf->gralloc_handle, "output");
-        android::sp<DrmShimBuffer> buf = RecordBufferState(outSurf->gralloc_handle, Hwcval::BufferSourceType::Ivp, notes);
-
-        if (buf.get())
-        {
-            HWCLOGD_COND(eLogIvp, "iVP target %s %s", buf->IdStr(strbuf), notes);
-        }
-    }
-
-    return excessScale;
-}
-
-// Intercepted iVP call.
-// This function is called AFTER real iVP gets executed.
-void HwcTestKernel::NotifyIvpExecExit(iVPCtxID *ctx, iVP_layer_t *primarySurf,
-        iVP_layer_t *subSurfs, unsigned int numOfSubs, iVP_layer_t  *outSurf, bool syncFlag, int retval)
-{
-    char strbuf[HWCVAL_DEFAULT_STRLEN];
-    PushThreadState ts("NotifyIvpExecExit (locking)");
-
-    HWCLOGV_COND(eLogIvp, "iVP Exit");
-    HWCVAL_UNUSED(ctx);
-    HWCVAL_UNUSED(syncFlag);
-
-    HWCVAL_LOCK(_l,mMutex);
-    SetThreadState("NotifyIvpExecExit (locked)");
-    HWCLOGV_COND(eLogIvp, "iVP Exit: got lock");
-    mWorkQueue.Process();
-    HWCLOGV_COND(eLogIvp, "iVP Exit: Processed work queue");
-
-    ++mIvpCompositionCount;
-
-    HWCCHECK(eCheckIvpFail);
-    if (retval != 0)
-    {
-        HWCERROR(eCheckIvpFail, "iVP_exec returned failure status %d", retval);
-        return;
-    }
-
-    buffer_handle_t outHandle = 0;
-    if (outSurf)
-    {
-        outHandle = outSurf->gralloc_handle;
-    }
-
-    android::sp<DrmShimBuffer> buf;
-    android::Vector<hwcval_layer_t> sfLayers;
-
-    DrmShimTransformVector contributors;
-    bool err = false;
-
-    IvpCoordinateCheck(contributors, sfLayers, 0, primarySurf, outHandle, err, "Primary", 0);
-
-    for (uint32_t i=0; i<numOfSubs; ++i)
-    {
-        IvpCoordinateCheck(contributors, sfLayers, i+1, subSurfs+i, outHandle, err, "Subsurf", i);
-    }
-
-    if (err)
-    {
-        // Error already found and reported
-        return;
-    }
-
-    if (outSurf)
-    {
-        HWCCHECK(eCheckAllocFail);
-        if (outSurf->gralloc_handle == 0)
-        {
-            HWCERROR(eCheckAllocFail, "iVP Composition buffer allocation failure");
-            return;
-        }
-
-        // Do we ever get a fence from iVP? Does not seem to be specified.
-        LogProtection(ANDROID_LOG_DEBUG, outSurf->gralloc_handle, "output");
-        buf = UpdateIvpBufferState(outSurf->gralloc_handle);
-        if (buf.get() == 0)
-        {
-            return;
-        }
-
-        if (buf->NumFbIds() == 0)
-        {
-            // TODO: extend this to cover all formats valid for display on the hardware
-            // If they aren't valid for display on the hardware (e.g. NV12 on Valleyview) we don't expect a FB ID.
-            HWCCHECK(eCheckAllocFail);
-            if (buf->GetDrmFormat() == DRM_FORMAT_YUYV)
-            {
-                HWCERROR(eCheckAllocFail, "iVP composition unsuccessful: failed to allocate FB id for handle %p format %s",
-                    buf->GetHandle(), buf->StrBufFormat());
-            }
-        }
-
-        if (outSurf->srcRect)
-        {
-            HWCLOGD_COND(eLogIvp,  "NotifyIvpExec outSurf %s srcRect(l,t,w,h)=(%d,%d,%d,%d)",
-                buf->IdStr(strbuf),
-                outSurf->srcRect->left,
-                outSurf->srcRect->top,
-                outSurf->srcRect->width,
-                outSurf->srcRect->height);
-        }
-        else
-        {
-            HWCLOGD_COND(eLogIvp,  "NotifyIvpExec outSurf %s srcRect undefined",
-                buf->IdStr(strbuf));
-        }
-
-        if (mState->IsCheckEnabled(eLogIvp))
-        {
-            buf->ReportStatus(ANDROID_LOG_VERBOSE, "Created by iVP");
-        }
-
-        uint32_t protectedContributorCount = 0;
-
-        for (uint32_t i=0; i<contributors.size(); ++i)
-        {
-            DrmShimTransform& contrib = contributors.editItemAt(i);
-
-            mIvpScaleStat.Add(contrib.GetXScale());
-            mIvpScaleStat.Add(contrib.GetYScale());
-
-            if (mState->IsOptionEnabled(eLogIvpInputs))
-            {
-                android::String8 logstr(android::String8::format("iVP input %d:", i));
-                contrib.Log(ANDROID_LOG_VERBOSE, logstr.string());
-            }
-
-            contrib.GetBuf()->UpdateMediaDetails();
-            contrib.GetBuf()->UpdateResolveDetails();
-
-            if ((contrib.GetBuf()->HasMediaDetailsEncrypted()) != 0)
-            {
-                ++protectedContributorCount;
-            }
-            else if (contrib.GetBuf()->IsReallyProtected())
-            {
-                HWCERROR(eCheckPavpConsistent, "Protected iVP source buffer %s NOT marked as encrypted - corruption risk",
-                    contrib.GetBuf()->IdProtStr(strbuf));
-            }
-        }
-        buf->SetAllCombinedFrom(contributors);
-
-        buf->SetShouldBeProtected (protectedContributorCount > 0);
-
-        if (mState->IsCheckEnabled(eCheckIvpCompMatchesRef))
-        {
-#if 0
-// NOT CURRENTLY SUPPORTED
-// TODO: Rework to use ValLayer etc.
-// No point in doing this until we have NV12 supported in SSIM.
-            hwcval_layer_t tgtLayer;
-            tgtLayer.compositionType = HWC2_COMPOSITION_CLIENT;
-            tgtLayer.hints = 0;
-            tgtLayer.flags = 0;
-            tgtLayer.handle = buf->GetHandle();
-            tgtLayer.transform = 0;
-            tgtLayer.blending = GetBlending(outSurf->blend);
-
-            if (outSurf->srcRect)
-            {
-                tgtLayer.sourceCropf.left = float(outSurf->srcRect->left);
-                tgtLayer.sourceCropf.top = float(outSurf->srcRect->top);
-                tgtLayer.sourceCropf.right = float(outSurf->srcRect->left + outSurf->srcRect->width);
-                tgtLayer.sourceCropf.bottom = float(outSurf->srcRect->top + outSurf->srcRect->height);
-            }
-            else
-            {
-                tgtLayer.sourceCropf.left = 0;
-                tgtLayer.sourceCropf.top = 0;
-                tgtLayer.sourceCropf.right = buf->GetWidth();
-                tgtLayer.sourceCropf.bottom = buf->GetHeight();
-            }
-
-            tgtLayer.displayFrame.left = 0;
-            tgtLayer.displayFrame.top = 0;
-            tgtLayer.displayFrame.right = buf->GetWidth();
-            tgtLayer.displayFrame.bottom = buf->GetHeight();
-            tgtLayer.visibleRegionScreen.numRects = 0;
-            tgtLayer.visibleRegionScreen.rects = 0;
-            tgtLayer.acquireFenceFd = -1;
-
-            mCompVal->Compose(buf, sfLayers, &tgtLayer);
-#endif
-        }
-    }
-}
-#endif
-#endif
-bool HwcTestKernel::BelievedEmpty(uint32_t width, uint32_t height)
-{
-    return ((width == 16) && (height == 16));
-}
-
 
 void HwcTestKernel::WaitForCompValToComplete() {
   if (mCompVal.get()) {
@@ -1714,43 +1293,6 @@ void HwcTestKernel::DoPrime(const Hwcval::Work::PrimeItem& item) {
   HWCVAL_UNUSED(item);
 }
 
-android::sp<DrmShimBuffer> HwcTestKernel::UpdateIvpBufferState(
-    buffer_handle_t handle) {
-  ATRACE_CALL();
-  mWorkQueue.Process();
-
-  android::sp<DrmShimBuffer> buf;
-  char strbuf[HWCVAL_DEFAULT_STRLEN];
-
-  ssize_t ix = mBuffers.indexOfKey(handle);
-
-  if (ix >= 0) {
-    buf = mBuffers.valueAt(ix);
-    bool wasProtected = buf->HasMediaDetailsEncrypted();
-    buf->SetReallyProtected(wasProtected);
-    buf->UpdateMediaDetails();
-    buf->UpdateResolveDetails();
-
-    HWCCHECK(eCheckIvpProt);
-    if (wasProtected && !buf->HasMediaDetailsEncrypted()) {
-      HWCERROR(eCheckIvpChangeTgtEncryption,
-               "iVP has changed the encrypted state on %s to NOT ENCRYPTED",
-               buf->IdStr(strbuf));
-    } else if (!wasProtected && buf->HasMediaDetailsEncrypted()) {
-      HWCERROR(eCheckIvpChangeTgtEncryption,
-               "iVP has changed the encrypted state on %s to ENCRYPTED",
-               buf->IdStr(strbuf));
-    }
-  } else {
-    HWCERROR(eCheckInternalError,
-             "Buffer handle %p has disappeared from mBuffers between entrance "
-             "and exit from iVP_exec",
-             handle);
-  }
-
-  return buf;
-}
-
 #ifdef HWCVAL_INTERNAL_BO_VALIDATION
 // This is aggressive validation of our internal buffer tracking
 // and should only be used if this is going wrong - for example there appears to
@@ -2317,7 +1859,7 @@ void HwcTestKernel::SkipFrameValidation(HwcTestCrtc* crtc) {
   uint32_t displayIx = crtc->GetDisplayIx();
 
   if (displayIx < HWCVAL_MAX_CRTCS) {
-    if (displayIx != HWCVAL_VD_WIDI_DISPLAY_INDEX) {
+    if (displayIx != HWCVAL_VD_DISPLAY_INDEX) {
       Hwcval::LayerList* ll = mLLQ[displayIx].GetFrame(mFN[displayIx], false);
       if (ll) {
         // TODO: other dropped frames
@@ -2325,18 +1867,7 @@ void HwcTestKernel::SkipFrameValidation(HwcTestCrtc* crtc) {
         // dropped too.
         ++droppedFrames;
       }
-    } else if (mWidiState == eWidiEnabled)  // Widi / Virtual display
-    {
-      // Calculate dropped frame count for Widi:
-      //   current frame number - last frame number seen in Widi shim - 1
-      //   (potentially)
-      droppedFrames =
-          GetHwcFrame(HWCVAL_VD_WIDI_DISPLAY_INDEX) - GetWidiLastFrame();
-      if (droppedFrames >= 1) {
-        --droppedFrames;
-      }
     }
-
     HWCLOGI("Final dropped frames: Display %d: %d", displayIx, droppedFrames);
     crtc->AddDroppedFrames(droppedFrames);
   }
@@ -2349,9 +1880,7 @@ void HwcTestKernel::FinaliseTest() {
 
   // Set eval counts where these couldn't be calculated at the time
   HWCCHECK_ADD(eCheckSfFallback, mPartitionedCompositionCount.GetValue() +
-                                     mIvpCompositionCount.GetValue() +
                                      mSfCompositionCount.GetValue());
-
   for (uint32_t i = 0; i < HWCVAL_MAX_CRTCS; ++i) {
     if (mCrtcByDisplayIx[i]) {
       // Finalise dropped frame counts

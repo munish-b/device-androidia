@@ -25,7 +25,7 @@
 const char* HwcTestConfig::mComponentNames[] = {
     // ALWAYS ensure this matches the values of the enumerate
     // HwcTestComponentType.
-    "None", "Test", "HWC", "Buffers", "Displays", "IVP", "SF", 0};
+    "None", "Test", "HWC", "Buffers", "Displays", "SF", 0};
 
 #define DECLARE_CHECK(enumId, component, defaultPriority, description, \
                       category)                                        \
@@ -166,9 +166,8 @@ HwcTestConfig::HwcTestConfig()
 }
 
 void HwcTestConfig::Initialise(bool valHwc, bool valDisplays,
-                               bool valBufferAllocation, bool valIvp,
-                               bool valSf, bool valHwcComposition,
-                               bool valIvpComposition) {
+                               bool valBufferAllocation, bool valSf,
+                               bool valHwcComposition) {
   // Indicate which test components will cause test failure on error
 
   // Test failures should never be inhibited.
@@ -182,18 +181,12 @@ void HwcTestConfig::Initialise(bool valHwc, bool valDisplays,
   SetComponentEnabled(eComponentDisplays, true, valDisplays);
   SetComponentEnabled(eComponentBuffers, true, valBufferAllocation);
   SetComponentEnabled(eComponentSF, true, valSf);
-  SetComponentEnabled(eComponentIVP, true, valIvp);
 
   // Opt category is not enabled by any of the above. We do that now for any
   // checks we require.
   if (valHwcComposition) {
     SetCheck(eCheckHwcCompMatchesRef, true, true);
   }
-
-  if (valIvpComposition) {
-    SetCheck(eCheckIvpCompMatchesRef, true, true);
-  }
-
   // Turn on the master switch
   mGlobalEnable = true;
 }
@@ -580,8 +573,7 @@ void HwcTestResult::Log(HwcTestConfig& config, const char* testName,
     prefix = "##";
   }
 
-  if (config.IsEnabled(eCheckHwcCompMatchesRef) ||
-      config.IsEnabled(eCheckIvpCompMatchesRef)) {
+  if (config.IsEnabled(eCheckHwcCompMatchesRef)) {
     printf("%sHWC Composition: %d done, %d skipped\n", prefix, mHwcCompValCount,
            mHwcCompValSkipped);
   }

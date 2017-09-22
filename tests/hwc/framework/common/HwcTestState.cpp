@@ -60,8 +60,6 @@ HwcTestState::HwcTestState()
       mfpdrm_intel_bo_unmap(0),
       mMaxDumpImages(0),
       mNumDumpImage(0),
-      mMinIvpScale(0),
-      mMaxIvpScale(INFINITY),
       mMaxUnblankingLatency(HWCVAL_MAX_UNBLANKING_LATENCY_DEFAULT_US) {
   Hwcval::InitThreadStates();
   SetShimFail(eCheckSFRestarted);
@@ -423,24 +421,6 @@ uint32_t HwcTestState::GetMaxSetResolutions(void) {
   return mMaxSetResolutions;
 }
 
-// Dynamically sets the dimensions for the Widi output buffer
-void HwcTestState::SetWidiOutDimensions(uint32_t width, uint32_t height) {
-  if (mTestKernel) {
-    HwcTestCrtc* crtc =
-        mTestKernel->GetHwcTestCrtcByDisplayIx(HWCVAL_VD_WIDI_DISPLAY_INDEX);
-
-    if (crtc) {
-      HWCLOGD("Setting Widi out dimensions to %d %d", width, height);
-
-      crtc->SetOutDimensions(width, height);
-    } else {
-      HWCLOGD("Could not find Widi CRTC (id: %d)", HWCVAL_VD_WIDI_CRTC_ID);
-    }
-  } else {
-    HWCLOGD("Invalid pointer to test kernel");
-  }
-}
-
 void HwcTestState::SetMDSInfoProviderShim(
     Hwcval::MultiDisplayInfoProviderShim* shim) {
   mMDSInfoProviderShim = shim;
@@ -456,20 +436,6 @@ uint32_t HwcTestState::GetHwcFrame(uint32_t displayIx) {
   } else {
     return 0;
   }
-}
-
-// iVP watchdog related calls
-void HwcTestState::SetIVPCallTime(uint64_t time) {
-  mIVPStartTimeLock.lock();
-  mIVPStartTime = time;
-  mIVPStartTimeLock.unlock();
-}
-
-uint64_t HwcTestState::GetIVPStartTime() {
-  mIVPStartTimeLock.lock();
-  uint64_t ret = mIVPStartTime;
-  mIVPStartTimeLock.unlock();
-  return ret;
 }
 
 void HwcTestState::SetStall(Hwcval::StallType ix, const Hwcval::Stall& stall) {

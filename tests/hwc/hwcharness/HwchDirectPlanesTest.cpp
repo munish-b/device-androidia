@@ -180,7 +180,6 @@ int Hwch::DirectPlanesTest::RunScenario() {
   frame.Send();
 
   // Get initial composition counts
-  uint32_t ivpEntryCount = HwcGetTestResult()->GetEvalCount(eCheckIvpFail);
   uint32_t hwcEntryCount =
       HwcGetTestResult()->GetEvalCount(eCountHwcComposition);
 
@@ -252,24 +251,19 @@ int Hwch::DirectPlanesTest::RunScenario() {
   }
 
   // Get final composition counts, ignoring anything done in first frame
-  uint32_t ivpCount =
-      HwcGetTestResult()->GetEvalCount(eCheckIvpFail) - ivpEntryCount;
   uint32_t hwcCount =
       HwcGetTestResult()->GetEvalCount(eCountHwcComposition) - hwcEntryCount;
-
   HWCCHECK(eCheckUnnecessaryComposition);
-  if ((ivpCount + hwcCount) > 0) {
+  if (hwcCount > 0) {
     HWCERROR(eCheckUnnecessaryComposition,
-             "HWC used composition unnecessarily, HWC %d iVP %d", hwcCount,
-             ivpCount);
+             "HWC used composition unnecessarily, HWC %d ", hwcCount);
   }
 
   HWCLOGV_COND(
       eLogHarness,
       "DirectPlanes test complete, reporting statistics and restoring state");
   if (!IsOptionEnabled(eOptBrief)) {
-    printf("Hwc compositions:           %6d iVP Compositions:           %6d\n",
-           hwcCount, ivpCount);
+    printf("Hwc compositions:           %6d\n", hwcCount);
     ReportStatistics();
   }
 

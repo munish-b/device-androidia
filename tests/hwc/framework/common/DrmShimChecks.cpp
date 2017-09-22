@@ -3062,17 +3062,6 @@ android::sp<DrmShimBuffer> DrmShimChecks::UpdateBufferPlane(
   }
   HWCCHECK(eCheckDrmFbId);
 
-  HWCCHECK(eCheckIvpProt);
-  if (buf.get() && !buf->IsProtectionCorrect()) {
-    if (!buf->HasMediaDetailsEncrypted()) {
-      HWCERROR(eCheckIvpProt, "%s should be encrypted, but is not",
-               buf->IdStr(strbuf));
-    } else {
-      HWCERROR(eCheckIvpProt, "%s should NOT be encrypted, but is",
-               buf->IdStr(strbuf));
-    }
-  }
-
   plane->SetBuf(buf);
 
   return buf;

@@ -34,7 +34,6 @@ enum HwcTestCategoryType {
                    // problem
   eCatHwc,         // Errors detected in Hardware Composer
   eCatHwcDisplay,  // Errors detected in Hardware Composer use of DRM or ADF
-  eCatIvp,         // Errors detected in Hardware Composer use of iVP
   eCatWidi,        // Errors detected in Hardware Composer use of Widi
   eCatUX,          // User Experience
   eCatDbg,         // Enables of specific types of debug logs. Not checks.
@@ -52,7 +51,6 @@ enum HwcTestComponentType {
   eComponentHWC,
   eComponentBuffers,
   eComponentDisplays,
-  eComponentIVP,
   eComponentSF,
   // Add in new values before this.
   eComponentMax
@@ -152,9 +150,7 @@ class HwcTestConfig {
 
   // Perform standard initialisation
   void Initialise(bool valHwc, bool valDisplays, bool valBufferAllocation,
-                  bool valIvp, bool valSf, bool valHwcComposition,
-                  bool valIvpComposition);
-
+                  bool valSf, bool valHwcComposition);
   // Serialisation
   bool WriteToParcel(android::Parcel& parcel) const;
   bool ReadFromParcel(const android::Parcel& parcel);

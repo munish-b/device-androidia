@@ -82,7 +82,7 @@ class HwcTestState {
   // Display attribute query
   enum DisplayPropertyType { ePropNone = 0, ePropConnectorId };
 
-  enum ShimMaskType { eHwcShim = 1, eDrmShim = 2, eIvpShim = 4, eMdsShim = 8 };
+  enum ShimMaskType { eHwcShim = 1, eDrmShim = 2, eMdsShim = 8 };
 
   // Typedef for HWC Log function pointer
   typedef void (*HwcLogAddPtr)(const char* fmt, ...);
@@ -209,11 +209,6 @@ class HwcTestState {
   uint32_t mWirelessBufferInfoCount = 0;
   uint32_t mMaxSetResolutions = 10;
 
-  // Cache the start time for the last IVP_exec call. This is used by the
-  // watchdog to detect lock-ups.
-  Hwcval::Mutex mIVPStartTimeLock;
-  uint64_t mIVPStartTime = 0LL;
-
   // MDS
   Hwcval::MultiDisplayInfoProviderShim* mMDSInfoProviderShim;
 
@@ -236,11 +231,6 @@ class HwcTestState {
   uint32_t mNumDumpImage;
 
   android::sp<Hwcval::Selector> mTgtFrameDumpSelector;
-
-  // Scale factor range we will allow through to iVP
-  float mMinIvpScale;
-  float mMaxIvpScale;
-
   // Max latency allowed to unblank the display
   int64_t mMaxUnblankingLatency;
 
@@ -372,10 +362,6 @@ class HwcTestState {
     return mWirelessCrtcRefresh;
   }
 
-  // iVP watchdog related calls
-  void SetIVPCallTime(uint64_t time);
-  uint64_t GetIVPStartTime();
-
   // Fence validity checking.
   // If we are not live, these always return true.
   bool IsFenceValid(int fence, uint32_t disp, uint32_t hwcFrame,
@@ -434,12 +420,6 @@ class HwcTestState {
 
   // Stringification
   static const char* DisplayTypeStr(uint32_t displayType);
-
-  // Maximum scale factor we will allow through to iVP
-  void SetIvpScaleRange(float minScale, float maxScale);
-  float GetMinIvpScale();
-  float GetMaxIvpScale();
-
   void SetMaxUnblankingLatency(int64_t ns);
   int64_t GetMaxUnblankingLatency();
 };
@@ -609,19 +589,6 @@ inline void HwcTestState::SetRunningShim(ShimMaskType shim) {
 
 inline bool HwcTestState::HotPlugInProgress() {
   return (mHotPlugInProgress != 0);
-}
-
-inline void HwcTestState::SetIvpScaleRange(float minScale, float maxScale) {
-  mMinIvpScale = minScale;
-  mMaxIvpScale = maxScale;
-}
-
-inline float HwcTestState::GetMinIvpScale() {
-  return mMinIvpScale;
-}
-
-inline float HwcTestState::GetMaxIvpScale() {
-  return mMaxIvpScale;
 }
 
 inline void HwcTestState::SetMaxUnblankingLatency(int64_t ns) {

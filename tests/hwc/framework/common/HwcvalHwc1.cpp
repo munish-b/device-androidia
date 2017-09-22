@@ -228,7 +228,7 @@ EXPORT_API void Hwcval::Hwc1::CheckSetEnter(
       ALOG_ASSERT(fbtLayer->compositionType == HWC2_COMPOSITION_DEVICE);
 
       const hwc_rect_t& fbtRect = fbtLayer->displayFrame;
-      if (displayIx < HWCVAL_VD_WIDI_DISPLAY_INDEX) {
+      if (displayIx < HWCVAL_VD_DISPLAY_INDEX) {
         if (fbtRect.right != ld.GetWidth() ||
             fbtRect.bottom != ld.GetHeight() || fbtRect.left != 0 ||
             fbtRect.top != 0) {

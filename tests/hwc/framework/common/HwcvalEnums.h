@@ -81,7 +81,6 @@ enum class BufferSourceType {
   Input,
   SfComp,  // Surface flinger composition target
   PartitionedComposer,
-  Ivp,
   Writeback,
   Hwc,        // Blanking buffers, or anything else invented by HWC
   Validation  // Anything we have dreamed up ourselves e.g. for composition

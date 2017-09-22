@@ -34,8 +34,7 @@ HwcTestBase::HwcTestBase(int argc, char** argv)
       mValSf(false),
       mValDisplays(false),
       mValBuffers(false),
-      mValHwcComposition(false),
-      mValIvpComposition(false) {
+      mValHwcComposition(false) {
   HWCLOGI("Start of HwcTestBase ctor");
   mTheTestBase = this;
 
@@ -62,11 +61,7 @@ HwcTestBase::~HwcTestBase() {
 }
 
 void HwcTestBase::SetDefaultChecks(void) {
-  mConfig.Initialise(
-      mValHwc, mValDisplays, mValBuffers, mValSf,
-      mValHwc,  // IVP validation enabled if HWC validation enabled
-      mValHwcComposition, mValIvpComposition);
-
+  mConfig.Initialise(mValHwc, mValDisplays, mValBuffers, mValSf, mValHwc);
   // Don't enable UX checks by default
 }
 
@@ -334,8 +329,6 @@ void HwcTestBase::SetArgs(int argc, char** argv) {
       mConfig.SetCheck(eCheckCRC);
     } else if (strcmp(argv[i], "-val_hwc_composition") == 0) {
       mValHwcComposition = true;
-    } else if (strcmp(argv[i], "-val_ivp_composition") == 0) {
-      mValIvpComposition = true;
     } else if (strcmp(argv[i], "-no_val_hwc") == 0) {
       mValHwc = false;
     } else if (strcmp(argv[i], "-val_sf") == 0) {
@@ -388,9 +381,6 @@ void HwcTestBase::PrintArgs() const {
   printf("-t=<s>               # overrides the test run time to <s> seconds\n");
   printf(
       "-val_hwc_composition # Enable validtion of HWC composition against "
-      "reference composer using SSIM\n");
-  printf(
-      "-val_ivp_composition # Enable validtion of iVP composition against "
       "reference composer using SSIM\n");
   printf(
       "-log_pri=<p>         # Sets the minimum priority to appear in the log. "

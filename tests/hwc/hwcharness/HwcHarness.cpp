@@ -290,7 +290,6 @@ int HwcTestRunner::getargs(int argc, char** argv) {
           "Test configuration:\n"
           "\t-val_hwc_composition      Enable validation of HWC composition "
           "against reference composer using SSIM\n"
-          "\t-val_ivp_composition      Enable validation of iVP composition "
           "against reference composer using SSIM\n"
           "\t-val_buffer_allocation    Enable test failure from buffer "
           "allocation checks\n"
@@ -298,30 +297,13 @@ int HwcTestRunner::getargs(int argc, char** argv) {
           "displays specific checks\n"
           "\t-no_val_hwc               Inhibit test failure from Hardware "
           "Composer specific checks\n"
-          "\t-no_val_ivp               Inhibit test failure from IVP specific "
           "checks\n"
           "\t-val_sf                   Enable test failure from SurfaceFlinger "
           "specific checks\n"
           "\n"
-          "\nVirtual display and WiDi options:\n"
+          "\nVirtual display options:\n"
           "\t-virtual_display <w>x<h>  Enables virtual display emulation for a "
           "specified width and height\n"
-          "\t-widi <w>x<h> <sw>x<sh> r Enables Widi support. The parameters "
-          "correspond to the following:\n"
-          "\t  <w>x<h>     - specifies the resolution of the underlying "
-          "display (i.e. the size of the framebuffer target)\n"
-          "\t  <sw>x<sh>   - sets the scaled resolution that is (normally) "
-          "returned by the Widi stack in 'setResolution'\n"
-          "\t  refresh (r) - refresh rate that is (normally) returned by the "
-          "Widi stack in 'setResolution'\n"
-          "\t-widi_fence_mode=sequential|random|oldest\n"
-          "\t                          Sets the fence release policy\n"
-          "\t-widi_fence_pool_size=n   Size of the widi release fence pool\n"
-          "\t-widi_retain_oldest=n     Retains the oldest fence for 'n' frames "
-          "before releasing it\n"
-          "\t-widi_window <w>x<h>      Displays the widi visualisation window "
-          "(with a specified width and height)\n"
-          "\n"
           "Logging options:\n"
           "\t-brief                    Provide minimal information in stdout, "
           "focus on pass/fail\n"
@@ -567,9 +549,6 @@ int HwcTestRunner::getargs(int argc, char** argv) {
   // how the test is run.
   UsedArgs() = "";
 
-  // Skip iVP in compositions
-  config.SetCheck(eOptSkipIvp, (GetParam("skip_ivp") != 0));
-
   // Enable CRC-based flicker detection
   if (GetParam("crc") != 0) {
     config.SetCheck(eCheckCRC);
@@ -640,11 +619,6 @@ int HwcTestRunner::getargs(int argc, char** argv) {
 
     mSystem.SetRCIgnoreHintRange(rcIgnoreHintRange);
   }
-
-  float maxScale = GetFloatParam("max_ivp_scale", INFINITY);
-  float minScale = GetFloatParam("min_ivp_scale", 0);
-  mState->SetIvpScaleRange(minScale, maxScale);
-
   int64_t maxUnblankingLatency =
       GetTimeParamUs("unblanking_time_limit",
                      HWCVAL_MAX_UNBLANKING_LATENCY_DEFAULT_US) *
@@ -839,8 +813,7 @@ void HwcTestRunner::LogTestResult(const char* testName, const char* args) {
   } else {
     if (mBrief && (mHwclogPath != "")) {
       printf("Log file is %s\n", mHwclogPath.string());
-      if ((result.mCheckFailCount[eCheckIvpCompMatchesRef] > 0) ||
-          (result.mCheckFailCount[eCheckHwcCompMatchesRef] > 0)) {
+      if ((result.mCheckFailCount[eCheckHwcCompMatchesRef] > 0)) {
         size_t pos = mHwclogPath.find("hwclog_");
         android::String8 dumpPath = mHwclogPath;
 
@@ -1194,17 +1167,14 @@ int HwcTestRunner::CreateTests() {
   int rc = 0;
 
   bool valHwc = (GetParam("no_val_hwc") == 0);
-  bool valIvp = valHwc && (GetParam("no_val_ivp") == 0);
   bool valDisplays = (GetParam("no_val_displays") == 0);
   bool valBuffers = (GetParam("val_buffer_allocation") != 0);
   bool valSf = (GetParam("val_sf") != 0);
 
   UsedArgs() = "";
-  config.Initialise(valHwc, valDisplays, valBuffers, valIvp, valSf,
-                    (GetParam("val_hwc_composition") != 0),
-                    (GetParam("val_ivp_composition") != 0));
+  config.Initialise(valHwc, valDisplays, valBuffers, valSf,
+                    (GetParam("val_hwc_composition") != 0));
 
-  // Include -val_hwc_composition/-val_ivp_composition in the args logged by
   // Jenkins
   mArgs += UsedArgs();
 
@@ -1389,9 +1359,7 @@ int HwcTestRunner::RunTests() {
 
     mWatchdog.Set(10, mWatchdogFps);
     mWatchdog.Start();
-
-    if ((mState->IsCheckEnabled(eCheckHwcCompMatchesRef)) ||
-        (mState->IsCheckEnabled(eCheckIvpCompMatchesRef))) {
+    if ((mState->IsCheckEnabled(eCheckHwcCompMatchesRef))) {
       // Composition validation slows everything down
       mWatchdog.Set(10, min(mWatchdogFps, float(4)));
     }
@@ -1648,7 +1616,7 @@ int main(int argc, char** argv) {
   Hwch::System& system = Hwch::System::getInstance();
   if (system.IsVirtualDisplayEmulationEnabled()) {
     HWCLOGI("Initialising Virtual Display Support\n");
-    system.GetDisplay(HWCVAL_DISPLAY_ID_WIDI_VIRTUAL).EmulateVirtualDisplay();
+    system.GetDisplay(HWCVAL_DISPLAY_ID_VIRTUAL).EmulateVirtualDisplay();
   }
 
   // Configure choice of patterns

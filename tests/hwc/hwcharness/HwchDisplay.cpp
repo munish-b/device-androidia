@@ -316,10 +316,10 @@ void Hwch::Display::CreateExternalBufferSet(void) {
   if (mExternalBufferSet == NULL) {
     ALOG_ASSERT(Hwch::System::getInstance().GetVirtualDisplayWidth());
     ALOG_ASSERT(Hwch::System::getInstance().GetVirtualDisplayHeight());
-    mExternalBufferSet = new BufferSet(
-        Hwch::System::getInstance().GetVirtualDisplayWidth(),
-        Hwch::System::getInstance().GetVirtualDisplayHeight(),
-        HAL_PIXEL_FORMAT_RGBA_8888, HWCH_WIDI_VIRTUAL_NUM_BUFFERS);
+    mExternalBufferSet =
+        new BufferSet(Hwch::System::getInstance().GetVirtualDisplayWidth(),
+                      Hwch::System::getInstance().GetVirtualDisplayHeight(),
+                      HAL_PIXEL_FORMAT_RGBA_8888, HWCH_VIRTUAL_NUM_BUFFERS);
   }
 }
 

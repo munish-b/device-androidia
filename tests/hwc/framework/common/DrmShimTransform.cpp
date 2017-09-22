@@ -236,116 +236,6 @@ DrmShimTransform::DrmShimTransform(android::sp<DrmShimBuffer>& buf,
                this);
 }
 
-const int DrmShimTransform::ivpRotationTable[] = {
-    eTransformNone, eTransformRot90, eTransformRot180, eTransformRot270};
-const int DrmShimTransform::ivpFlipTable[] = {eTransformNone, eTransformFlipH,
-                                              eTransformFlipV};
-
-#if 0
-// Transform creation for iVP composition
-DrmShimTransform::DrmShimTransform(android::sp<DrmShimBuffer>& buf, uint32_t layerIx, const iVP_layer_t* layer)
-  : mBuf(buf),
-    mZOrder(uint64_t(layerIx) << MOST_SIGNIFICANT_Z_ORDER_BITS),
-    mZOrderLevels(1),
-    mXoffset(layer->destRect->left),
-    mYoffset(layer->destRect->top),
-    mLayerIndex(eNoLayer),
-    mDecrypt(false),
-    mSources(0) // this is probably a source layer so not "from iVP"
-{
-    // Combine the rotation and flip give in the IVP layer to give a HAL transform.
-    int transform1 = 0;
-    int transform2 = 0;
-
-    mSourcecropf.left = layer->srcRect->left;
-    mSourcecropf.top = layer->srcRect->top;
-    mSourcecropf.right = layer->srcRect->left + layer->srcRect->width;
-    mSourcecropf.bottom = layer->srcRect->top + layer->srcRect->height;
-
-    transform1 = ivpRotationTable[layer->rotation];
-    transform2 = ivpFlipTable[layer->flip];
-
-    // HAL transforms are defined as flip first then rotate
-    mTransform = mTransformTable[transform2][transform1];
-    HWCLOGD_COND(eLogIvp,  "Rotation=%d transform1=%d Flip=%d transform2=%d mTransform=%d",
-        layer->rotation, transform1, layer->flip, transform2, mTransform);
-
-    if (layer->destRect->width == 0)
-    {
-        mXscale = 1.0;
-    }
-    else if (mTransform & eTransformRot90)
-    {
-        mXscale = ((double)layer->destRect->width)/((double)layer->srcRect->height);
-    }
-    else
-    {
-        mXscale = ((double)layer->destRect->width)/((double)layer->srcRect->width);
-    }
-
-    if (layer->destRect->height == 0)
-    {
-        mYscale = 1.0;
-    }
-    else if (mTransform == eTransformRot90 || mTransform == eTransformRot270 || mTransform == eTransformFlip45 || mTransform == eTransformFlip135)
-    {
-        mYscale = ((double)layer->destRect->height)/((double)layer->srcRect->width);
-    }
-    else
-    {
-        mYscale = ((double)layer->destRect->height)/((double)layer->srcRect->height);
-    }
-
-    switch (layer->blend)
-    {
-        case IVP_BLEND_NONE:
-            mBlending = BlendingType::NONE;
-            mHasPixelAlpha = false;
-            mPlaneAlpha = 1.0;
-            HWCLOGD_COND(eLogIvp, "handle %p IVP_BLEND_NONE => no pixel or plane alpha", buf->GetHandle());
-            break;
-
-        case IVP_ALPHA_SOURCE_PREMULTIPLIED_TIMES_PLANE:
-            mBlending = BlendingType::PREMULTIPLIED;
-            mHasPixelAlpha = true;
-            mPlaneAlpha = layer->alpha;
-            HWCLOGD_COND(eLogIvp, "handle %p IVP_ALPHA_SOURCE_PREMULTIPLIED_TIMES_PLANE => pixel alpha and plane alpha %f", buf->GetHandle(), layer->alpha);
-            break;
-
-        case IVP_ALPHA_SOURCE_PREMULTIPLIED:
-            mBlending = BlendingType::PREMULTIPLIED;
-            mHasPixelAlpha = true;
-            mPlaneAlpha = 1.0;
-            HWCLOGD_COND(eLogIvp, "handle %p IVP_ALPHA_SOURCE_PREMULTIPLIED => pixel alpha", buf->GetHandle());
-            break;
-
-        case IVP_ALPHA_SOURCE_CONSTANT:
-            mHasPixelAlpha = false;
-            mPlaneAlpha = layer->alpha;
-            mBlending = BlendingType::NONE;
-            HWCLOGD_COND(eLogIvp, "handle %p IVP_ALPHA_SOURCE_CONSTANT => plane alpha %f", buf->GetHandle(), layer->alpha);
-            break;
-
-        default:
-            HWCERROR(eCheckIvp, "Invalid iVP blend option %d", layer->blend);
-
-    }
-
-#ifdef EXPERIMENTAL
-    // Experimental
-    if (layerIx == 0 && (mBlending == BlendingType::NONE || mBlending == BlendingType::PREMULTIPLIED))
-    {
-        mBlending = HWCVAL_BLENDING_PASSTHROUGH;
-    }
-#endif
-
-    if (HWCCOND(eLogIvp))
-    {
-        Log(ANDROID_LOG_INFO,"iVP transform created:");
-    }
-    HWCLOGD_COND(eLogBuffer, "DrmShimTransform::DrmShimTransform(&buf, int, ivp_layer) Created transform@%p", this);
-}
-#endif
 DrmShimTransform DrmShimTransform::Inverse() {
   DrmShimTransform result;
   hwc_rect_t df;
@@ -630,11 +520,6 @@ DrmShimTransform::DrmShimTransform(DrmShimTransform& a, DrmShimTransform& b,
                this);
 }
 
-DrmShimTransform* DrmShimTransform::SetRotation(uint32_t rotation) {
-  mTransform = ivpRotationTable[rotation];
-  return this;
-}
-
 DrmShimTransform* DrmShimTransform::SetTransform(uint32_t transform) {
   mTransform = transform;
   return this;
@@ -812,13 +697,6 @@ bool DrmShimTransform::Compare(DrmShimTransform& actual, DrmShimTransform& orig,
         GetLayerIndex(), GetBuf()->IdStr(strbuf), GetTransformName(),
         actual.GetTransformName(), display, hwcFrame);
   }
-
-  if (actual.IsFromIvp()) {
-    if (!HwcTestState::getInstance()->IsOptionEnabled(eOptValidateIvpBlend)) {
-      return true;
-    }
-  }
-
   HWCCHECK(eCheckPlaneBlending);
 
   // Special for back layer
@@ -1017,11 +895,6 @@ hwc_rect_t InverseTransformRect(hwc_rect_t& rect,
   return result;
 }
 
-bool DrmShimTransform::IsFromIvp() {
-  return ((mSources & (1 << static_cast<int>(Hwcval::BufferSourceType::Ivp))) !=
-          0);
-}
-
 bool DrmShimTransform::IsFromSfComp() {
   return ((mSources &
            (1 << static_cast<int>(Hwcval::BufferSourceType::SfComp))) != 0);
@@ -1038,11 +911,6 @@ const char* DrmShimTransform::SourcesStr(uint32_t sources, char* strbuf) {
   if (sources & (1 << static_cast<int>(Hwcval::BufferSourceType::SfComp))) {
     p += sprintf(p, " Sf");
   }
-
-  if (sources & (1 << static_cast<int>(Hwcval::BufferSourceType::Ivp))) {
-    p += sprintf(p, " Ivp");
-  }
-
   if (sources &
       (1 << static_cast<int>(Hwcval::BufferSourceType::PartitionedComposer))) {
     p += sprintf(p, " PC");

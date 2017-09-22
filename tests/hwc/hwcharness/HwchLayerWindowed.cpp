@@ -28,22 +28,23 @@ HwchLayerWindowed::HwchLayerWindowed(uint32_t width, uint32_t height,
 
   SetIgnoreScreenRotation(true);
 
-  // Trigger a warning if the width and height of the Widi window exceeds the
+  // Trigger a warning if the width and height of the virtual window exceeds the
   // size of the panel.
-  if (((WIDI_WINDOW_OFFSET + width) > panel_width) ||
-      (WIDI_WINDOW_OFFSET + height) > panel_height) {
+  if (((VIRTUAL_WINDOW_OFFSET + width) > panel_width) ||
+      (VIRTUAL_WINDOW_OFFSET + height) > panel_height) {
     HWCLOGW(
         "The Widi window parameters are too large for the panel - capping to "
         "screen edges.\n");
   }
 
-  SetLogicalDisplayFrame(Hwch::LogDisplayRect(
-      WIDI_WINDOW_OFFSET, WIDI_WINDOW_OFFSET,
-      ((WIDI_WINDOW_OFFSET + width) <= panel_width) ? WIDI_WINDOW_OFFSET + width
-                                                    : panel_width,
-      ((WIDI_WINDOW_OFFSET + height) <= panel_height)
-          ? WIDI_WINDOW_OFFSET + height
-          : panel_height));
+  SetLogicalDisplayFrame(
+      Hwch::LogDisplayRect(VIRTUAL_WINDOW_OFFSET, VIRTUAL_WINDOW_OFFSET,
+                           ((VIRTUAL_WINDOW_OFFSET + width) <= panel_width)
+                               ? VIRTUAL_WINDOW_OFFSET + width
+                               : panel_width,
+                           ((VIRTUAL_WINDOW_OFFSET + height) <= panel_height)
+                               ? VIRTUAL_WINDOW_OFFSET + height
+                               : panel_height));
 
   SetCrop(Hwch::LogCropRect(0, 0, panel_width, panel_height));
 };
