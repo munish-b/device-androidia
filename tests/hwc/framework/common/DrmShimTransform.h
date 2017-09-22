@@ -30,8 +30,6 @@ namespace Hwcval {
 class ValLayer;
 }
 
-typedef struct _IVP_LAYER_T iVP_layer_t;
-
 class ToFRect : public hwc_frect_t {
  public:
   ToFRect(const hwc_rect_t& rect);
@@ -93,11 +91,9 @@ class DrmShimTransform {
   uint32_t mSources;
 
   // Table to define effect of one transform after another
-  static const int
-      mTransformTable[Hwcval::eMaxTransform][Hwcval::eMaxTransform];
+  static const int mTransformTable[Hwcval::eMaxTransform]
+                                  [Hwcval::eMaxTransform];
   static const char* mTransformNames[];
-  static const int ivpRotationTable[];
-  static const int ivpFlipTable[];
 
  public:
   DrmShimTransform();
@@ -108,8 +104,6 @@ class DrmShimTransform {
                    const hwcval_layer_t* layer);
   DrmShimTransform(android::sp<DrmShimBuffer>& buf, uint32_t layerIx,
                    const Hwcval::ValLayer& layer);
-  DrmShimTransform(android::sp<DrmShimBuffer>& buf, uint32_t layerIx,
-                   const iVP_layer_t* layer);
   ~DrmShimTransform();
 
   // Combine transforms one after another
@@ -166,7 +160,6 @@ class DrmShimTransform {
   // Set/get sources/composition types used to create this buffer (directly or
   // indirectly)
   void SetSources(uint32_t sources);
-  bool IsFromIvp();
   bool IsFromSfComp();
   const char* SourcesStr(char* strbuf) const;
   static const char* SourcesStr(uint32_t sources, char* strbuf);

@@ -127,17 +127,6 @@ bool Hwch::WatchdogThread::threadLoop() {
         lastFrameCount = framesNow;
         noChangeCount = 0;
       }
-
-      // Check for iVP lockups
-      uint64_t ivpStartTime = HwcTestState::getInstance()->GetIVPStartTime();
-      if (ivpStartTime) {
-        if (currentTime >= ivpStartTime + (60 * HWCVAL_SEC_TO_NS)) {
-          HWCERROR(eCheckIvpLockUp,
-                   "Watchdog has detected iVP lock-up (iVP_exec has taken > 1 "
-                   "minute to return) - exiting!");
-          Exit();
-        }
-      }
     }
   }
 

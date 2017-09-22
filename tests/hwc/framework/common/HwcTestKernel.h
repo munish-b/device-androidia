@@ -78,9 +78,6 @@ class EXPORT_API HwcTestKernel {
   /// Mutex for internal state
   Hwcval::Mutex mMutex;
 
-  // IVP file descriptor
-  int mShimIvpFd;
-
   // Frame numbers at which the test started
   Hwcval::FrameNums mStartFN;
 
@@ -231,12 +228,10 @@ class EXPORT_API HwcTestKernel {
   Hwcval::Statistics::Histogram mCompTargets;
   Hwcval::Statistics::Aggregate<uint32_t> mTotalBuffers;
   Hwcval::Statistics::Counter mSfCompositionCount;
-  Hwcval::Statistics::Counter mIvpCompositionCount;
   Hwcval::Statistics::Counter mPartitionedCompositionCount;
   Hwcval::Statistics::Counter mWritebackCompositionCount;
 
   Hwcval::Statistics::Aggregate<double> mPCScaleStat;
-  Hwcval::Statistics::Aggregate<double> mIvpScaleStat;
   Hwcval::Statistics::Aggregate<double> mSfScaleStat;
   Hwcval::Statistics::Counter mSnapshotsRestored;
 
@@ -466,9 +461,6 @@ class EXPORT_API HwcTestKernel {
   void ValidateOptimizationMode(Hwcval::LayerList* disp);
   virtual bool IsDDRFreqSupported() = 0;
 
-  /// Set maximum scale factor (X or Y) we will allow through to iVP
-  void SetIvpScaleRange(float minScale, float maxScale);
-
   /// Set snapshot handle and lifetime
   void SetSnapshot(buffer_handle_t snapshotHandle, uint32_t keepCount);
   bool IsSnapshot(buffer_handle_t handle, uint32_t hwcFrame);
@@ -525,20 +517,6 @@ class EXPORT_API HwcTestKernel {
   bool BelievedEmpty(uint32_t width, uint32_t height);
 
  private:
-  /// Look for excessive scale factors
-  bool CheckIvpScaling(iVP_layer_t* ivpLayer);
-
-  /// Check consistency of one set of coordinates input to IVP with SF layer
-  android::sp<DrmShimBuffer> IvpCoordinateCheck(
-      DrmShimTransformVector& contributors,
-      android::Vector<hwcval_layer_t>& sfLayers, uint32_t layerIx,
-      iVP_layer_t* ivpLayer, buffer_handle_t outHandle, bool& err,
-      const char* description, int param);
-
-  /// Get DrmShimBuffer for the handle, and check encryption state has not
-  /// changed
-  android::sp<DrmShimBuffer> UpdateIvpBufferState(buffer_handle_t handle);
-
   /// Add next sequence to one of the supported z-orders
   void AddZOrder(uint32_t order, uint32_t seq, uint32_t planeOffset);
 

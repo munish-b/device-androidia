@@ -117,9 +117,8 @@ class DrmShimBuffer : public android::RefBase {
   int64_t mDsId;  // ADF device-specific Id
   int mAcquireFenceFd;
 
-  bool mNew;        // This is a new buffer we haven't seen before.
-  bool mUsedByIvp;  // consumed in an IVP call
-  bool mUsed;       // Used either as a composition input or on a screen
+  bool mNew;   // This is a new buffer we haven't seen before.
+  bool mUsed;  // Used either as a composition input or on a screen
   Hwcval::BufferSourceType
       mBufferSource;    // Is buffer the result of a composition?
   bool mBlanking;       // It is just a blanking buffer
@@ -203,9 +202,6 @@ class DrmShimBuffer : public android::RefBase {
 
   DrmShimBuffer* SetNew(bool isNew);
   bool IsNew();
-
-  DrmShimBuffer* SetUsedByIvp(bool usedByIvp);
-  bool IsUsedByIvp();
 
   DrmShimBuffer* SetUsed(bool used);
   bool IsUsed();

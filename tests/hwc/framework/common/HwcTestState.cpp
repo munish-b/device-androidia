@@ -60,8 +60,6 @@ HwcTestState::HwcTestState()
       mfpdrm_intel_bo_unmap(0),
       mMaxDumpImages(0),
       mNumDumpImage(0),
-      mMinIvpScale(0),
-      mMaxIvpScale(INFINITY),
       mMaxUnblankingLatency(HWCVAL_MAX_UNBLANKING_LATENCY_DEFAULT_US) {
   Hwcval::InitThreadStates();
   SetShimFail(eCheckSFRestarted);
@@ -456,20 +454,6 @@ uint32_t HwcTestState::GetHwcFrame(uint32_t displayIx) {
   } else {
     return 0;
   }
-}
-
-// iVP watchdog related calls
-void HwcTestState::SetIVPCallTime(uint64_t time) {
-  mIVPStartTimeLock.lock();
-  mIVPStartTime = time;
-  mIVPStartTimeLock.unlock();
-}
-
-uint64_t HwcTestState::GetIVPStartTime() {
-  mIVPStartTimeLock.lock();
-  uint64_t ret = mIVPStartTime;
-  mIVPStartTimeLock.unlock();
-  return ret;
 }
 
 void HwcTestState::SetStall(Hwcval::StallType ix, const Hwcval::Stall& stall) {

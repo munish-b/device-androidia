@@ -79,9 +79,6 @@ extern "C" {
 #undef LOG_TAG
 #define LOG_TAG "HWC_SHIM"
 
-// const char * cLibiVPPath = HWCVAL_LIBPATH "/libivp.so";
-// const char * cLibiVPVendorPath = HWCVAL_VENDOR_LIBPATH "/libivp.so";
-
 HwcShim::HwcShim(const hw_module_t *module) {
   common.tag = HARDWARE_DEVICE_TAG;
   common.version = HWC_SHIM_HWC_DEVICE_API_VERSION;
@@ -138,53 +135,6 @@ int HwcShim::HwcShimInit(void) {
   state->SetDrmFunctions(::drm_intel_bo_map, ::drm_intel_bo_unmap);
 
   int ret = 0;
-
-  void *libiVPHandle;
-
-  HWCLOGI("Open libiVPHandle");
-#if 0
-    // Open iVP library
-    libiVPHandle = dll_open(cLibiVPPath, RTLD_NOW);
-    if (!libiVPHandle)
-    {
-        // Look in the '/vendor' location
-        dlerror();
-
-        libiVPHandle = dll_open(cLibiVPVendorPath, RTLD_NOW);
-        if (!libiVPHandle)
-        {
-            HWCERROR(eCheckIvpBind, "Failed to open shim iVP at %s or %s", cLibiVPPath, cLibiVPVendorPath);
-            ALOG_ASSERT(0);
-            ret = -EFAULT;
-        }
-    }
-
-    // Get function in iVP shim that are not in real iVP. As we link
-    // against real iVP to avoid issues with libraries names at run time.
-    rc = GetFunctionPointer(
-                libiVPHandle,
-                (char *)"_Z11iVPShimInitv",
-                (void **)&iVPShimFunctions.fpiVPShimInit,
-                0);
-    if(rc)
-    {
-        HWCERROR(eCheckIvpShimBind, "Error loading iVPShimInit");
-        ret = -1;
-    }
-
-    rc |= GetFunctionPointer(
-                libiVPHandle,
-                (char *)"_Z14iVPShimCleanupv",
-                (void **)&iVPShimFunctions.fpiVPShimCleanup,
-                0);
-    if(rc)
-    {
-        HWCERROR(eCheckIvpShimBind, "Error loading iVPShimCleanup");
-        ret = -1;
-    }
-    HWCLOGI("fpiVPShimInit %p", iVPShimFunctions.fpiVPShimInit);
-#endif
-
   // Load HWC and get a pointer to logger function
   dlerror();
   mLibHwcHandle =
@@ -234,14 +184,6 @@ int HwcShim::HwcShimInit(void) {
 
   // Check libraries are compatible
   mDrmShimCallback.CheckVersion();
-#if 0
-    // load iVP shim
-    if(iVPShimFunctions.fpiVPShimInit)
-    {
-        HWCLOGI("Load iVP shim");
-        iVPShimFunctions.fpiVPShimInit();
-    }
-#endif
   rc = pHwcModule->common.methods->open(
       (const hw_module_t *)&pHwcModule->common, HWC_HARDWARE_COMPOSER, &hw_dev);
 

@@ -74,10 +74,6 @@ DECLARE_CHECK(eOptForceGlFill, None, INFO,
 DECLARE_CHECK(eOptForceCPUFill, None, INFO,
               "Force buffers to be filled using CPU", Opt)
 
-// Skip all calls to iVP - HWC will think the call has been made successfully
-// but no composition will take place.
-DECLARE_CHECK(eOptSkipIvp, None, INFO, "Skip calls to iVP", Opt)
-
 // Block any SetDisplay calls where we know the contents are invalid
 // If invalid contents are detected, the shim will return -1 from the SetDisplay
 // without calling DRM.
@@ -99,15 +95,6 @@ DECLARE_CHECK(eOptSpoofNoPanel, None, INFO, "Pretend panel is HDMI", Opt)
 DECLARE_CHECK(eOptSpoofDRRS, None, INFO,
               "Let HWC think DRRS is enabled even if kernel does not think so",
               Opt)
-
-// Validate blending even when iVP is used in composition
-// At time of writing HWC does not use the input layer's blend options in
-// iVP_exec.
-// This may be because this feature can't be relied on in iVP - we don't know at
-// the moment.
-DECLARE_CHECK(eOptValidateIvpBlend, None, INFO,
-              "Validate blend/plane alpha of iVP-composed layers", Opt)
-
 // "Real" VSyncs will be enabled all the time by the shims - only passed on to
 // HWC when requested
 DECLARE_CHECK(eOptVSyncInterception, None, INFO, "Intercept VSyncs", Opt)
@@ -158,9 +145,6 @@ DECLARE_CHECK(eLogHotPlug, None, INFO, "Enable logs for hotplug simulation",
               Dbg)
 DECLARE_CHECK(eLogHwchInterface, None, INFO,
               "Enable logs for HWC harness interface to HWC", Dbg)
-DECLARE_CHECK(eLogIvp, None, INFO, "Enable logs for IVP category", Dbg)
-DECLARE_CHECK(eLogIvpInputs, None, INFO,
-              "Log input layers to all iVP compositions", Dbg)
 DECLARE_CHECK(eLogLLQ, None, INFO, "Enable logs for Layer List Queue", Dbg)
 DECLARE_CHECK(eLogLLQContents, None, INFO,
               "Enable logging of Layer List Queue contents", Dbg)
@@ -275,15 +259,6 @@ DECLARE_CHECK(eCheckTestFail, Test, ERROR, "Test Failure", Test)
 
 // Any problem with GL
 DECLARE_CHECK(eCheckGlFail, Test, WARN, "GL failure", Test)
-
-// IVP shim failure to run-time link to iVP)
-DECLARE_CHECK(eCheckIvpBind, Test, FATAL,
-              "iVP shim failed run-time linking to iVP", StickyTest)
-
-// HWC shim failure to run-time link to iVP shim
-DECLARE_CHECK(eCheckIvpShimBind, Test, FATAL,
-              "Failed run-time linking to iVP shim", StickyTest)
-
 // HWC shim failure to run-time link to real HWC
 DECLARE_CHECK(eCheckHwcBind, Test, FATAL,
               "HWC shim failed run-time linking to real HWC", StickyTest)
@@ -959,57 +934,6 @@ DECLARE_CHECK(eCheckSfCompMatchesRef, SF, ERROR,
 
 // HWC API parameter validation
 DECLARE_CHECK(eCheckHwcParams, SF, ERROR, "Invalid HWC API parameters", Sf)
-
-//==============================================================================
-// VALIDATION FAILURES  - IVP Component
-//==============================================================================
-// IVP parameters validation.
-// TODO split and change message
-DECLARE_CHECK(eCheckIvp, IVP, ERROR, "iVP Checks", Ivp)
-
-// This happens when IVP changes the encrypted state of the target buffer.
-// We often see that an iVP composition with encrypted inputs and where HWC has
-// marked the output buffer as encrypted, results in iVP resetting the output
-// buffer to unencrypted.
-// Fortunately, this has no effect on HWC, which ignores the encryption flag set
-// by iVP.
-DECLARE_CHECK(eCheckIvpChangeTgtEncryption, IVP, WARN,
-              "Ivp has changed encryption of composition target", Ivp)
-
-// Shims have detected an inconsistency between the protection state of the
-// input and output layers of an iVP composition.
-// We know that iVP frequently does this. Fortunately HWC takes no notice of
-// whether iVP says the output buffer is encrypted
-// or not, instead if it knows that one of the inputs is encrypted, then the
-// output must also be encrypted, so it uses
-// that information ultimately to set the RRB2 flag on the display, rather
-// whether or not the gralloc buffer says it is
-// encrypted.
-DECLARE_CHECK(
-    eCheckIvpProt, IVP, WARN,
-    "Protected layers combined through iVP must produce protected layers", Ivp)
-
-// iVP has been asked to scale beyond the scale factor limits we know to be
-// reliable.
-// on BXT particularly we have found that scale factors >5.0 seem to lead to GPU
-// hang.
-DECLARE_CHECK(eCheckIvpExcessScale, IVP, WARN,
-              "Excessive scaling requested in iVP", Ivp)
-
-// Optional iVP composition validation.
-DECLARE_CHECK(eCheckIvpCompMatchesRef, IVP, ERROR,
-              "HWC iVP Composition target differs from reference composer", Opt)
-
-// iVP_exec errors
-DECLARE_CHECK(eCheckIvpFail, IVP, ERROR, "iVP_exec call reported failure", Ivp)
-DECLARE_CHECK(eCheckIvpLatency, IVP, WARN, "iVP_exec latency excessive", Ivp)
-
-// The watchdog timer has detected that an iVP call has not completed within a
-// minute.
-// The test has been aborted.
-DECLARE_CHECK(eCheckIvpLockUp, IVP, ERROR,
-              "iVP_exec has not returned within 1 minute - iVP lock-up?", Ivp)
-
 //==============================================================================
 // VALIDATION FAILURES  - Display Component
 // These errors could be caused by display kernel problems
