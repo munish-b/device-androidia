@@ -129,10 +129,10 @@
 // Display index for HDMI displays
 #define HWCVAL_HDMI_DISPLAY_INDEX 1
 
-// This is the CRTC id (and array / display index) for the virtual / Widi
-// display (if present)
-#define HWCVAL_VD_WIDI_CRTC_ID 100
-#define HWCVAL_VD_WIDI_DISPLAY_INDEX 2
+// This is the CRTC id (and array / display index) for the virtual display (if
+// present)
+#define HWCVAL_VD_CRTC_ID 100
+#define HWCVAL_VD_DISPLAY_INDEX 2
 
 // Number of events in GEM event queue
 #define HWCVAL_MAX_GEM_EVENTS 2000
@@ -262,29 +262,6 @@ enum { eNoLayer = 0xff, eNoDisplayIx = 0xffffffff };
 
 /*
  * END SECTION
- */
-
-/*
- * START WIDI SECTION
- */
-
-#define HWCVAL_WIDI_SERVICE_NAME "hwc.widi"
-#define HWCVAL_WIDI_REAL_SERVICE_NAME "hwc.widi.real"
-#define HWCVAL_WIDI_FENCE_POOL_SIZE_DEFAULT 4
-#define HWCVAL_WIDI_RETAIN_OLDEST_DEFAULT 3
-#define HWCVAL_WIDI_FENCE_MODE_DEFAULT_STR "sequential"
-
-// Constant for the Widi buffer output format. Note: this is intended to mirror
-// the same define in the HWC (WidiDisplay.cpp).
-#define WIDI_OUTPUT_BUFFER_FORMAT HAL_PIXEL_FORMAT_NV12_Y_TILED_INTEL
-
-// The HWC forces a number of compositions at start-of-day for frames that would
-// otherwise be sent to Widi direct. This define forces these through before the
-// Widi direct test begins.
-#define HWCVAL_WIDI_NUM_FRAMES_TO_FLUSH_DIRECT_COMPOSITIONS 5
-
-/*
- * END WIDI SECTION
  */
 
 #endif  // __HwcTestDefs_h__

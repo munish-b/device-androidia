@@ -112,8 +112,8 @@ HwcTestKernel::HwcTestKernel()
   // Create the Crtc and plane objects for the Widi display
   HWCLOGD("Initialising CRTC for the Widi display");
 
-  HwcTestCrtc* virtCrtc = new HwcTestCrtc(HWCVAL_VD_WIDI_CRTC_ID, 0, 0, 0, 0);
-  DrmShimPlane* mainPlane = new DrmShimPlane(HWCVAL_VD_WIDI_CRTC_ID, virtCrtc);
+  HwcTestCrtc* virtCrtc = new HwcTestCrtc(HWCVAL_VD_CRTC_ID, 0, 0, 0, 0);
+  DrmShimPlane* mainPlane = new DrmShimPlane(HWCVAL_VD_CRTC_ID, virtCrtc);
   mainPlane->SetPlaneIndex(0);
   virtCrtc->AddPlane(mainPlane);
   mCrtcByDisplayIx[eDisplayIxVirtual] = virtCrtc;
@@ -1859,7 +1859,7 @@ void HwcTestKernel::SkipFrameValidation(HwcTestCrtc* crtc) {
   uint32_t displayIx = crtc->GetDisplayIx();
 
   if (displayIx < HWCVAL_MAX_CRTCS) {
-    if (displayIx != HWCVAL_VD_WIDI_DISPLAY_INDEX) {
+    if (displayIx != HWCVAL_VD_DISPLAY_INDEX) {
       Hwcval::LayerList* ll = mLLQ[displayIx].GetFrame(mFN[displayIx], false);
       if (ll) {
         // TODO: other dropped frames
@@ -1867,18 +1867,7 @@ void HwcTestKernel::SkipFrameValidation(HwcTestCrtc* crtc) {
         // dropped too.
         ++droppedFrames;
       }
-    } else if (mWidiState == eWidiEnabled)  // Widi / Virtual display
-    {
-      // Calculate dropped frame count for Widi:
-      //   current frame number - last frame number seen in Widi shim - 1
-      //   (potentially)
-      droppedFrames =
-          GetHwcFrame(HWCVAL_VD_WIDI_DISPLAY_INDEX) - GetWidiLastFrame();
-      if (droppedFrames >= 1) {
-        --droppedFrames;
-      }
     }
-
     HWCLOGI("Final dropped frames: Display %d: %d", displayIx, droppedFrames);
     crtc->AddDroppedFrames(droppedFrames);
   }

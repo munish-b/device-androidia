@@ -301,25 +301,9 @@ int HwcTestRunner::getargs(int argc, char** argv) {
           "\t-val_sf                   Enable test failure from SurfaceFlinger "
           "specific checks\n"
           "\n"
-          "\nVirtual display and WiDi options:\n"
+          "\nVirtual display options:\n"
           "\t-virtual_display <w>x<h>  Enables virtual display emulation for a "
           "specified width and height\n"
-          "\t-widi <w>x<h> <sw>x<sh> r Enables Widi support. The parameters "
-          "correspond to the following:\n"
-          "\t  <w>x<h>     - specifies the resolution of the underlying "
-          "display (i.e. the size of the framebuffer target)\n"
-          "\t  <sw>x<sh>   - sets the scaled resolution that is (normally) "
-          "returned by the Widi stack in 'setResolution'\n"
-          "\t  refresh (r) - refresh rate that is (normally) returned by the "
-          "Widi stack in 'setResolution'\n"
-          "\t-widi_fence_mode=sequential|random|oldest\n"
-          "\t                          Sets the fence release policy\n"
-          "\t-widi_fence_pool_size=n   Size of the widi release fence pool\n"
-          "\t-widi_retain_oldest=n     Retains the oldest fence for 'n' frames "
-          "before releasing it\n"
-          "\t-widi_window <w>x<h>      Displays the widi visualisation window "
-          "(with a specified width and height)\n"
-          "\n"
           "Logging options:\n"
           "\t-brief                    Provide minimal information in stdout, "
           "focus on pass/fail\n"
@@ -1632,7 +1616,7 @@ int main(int argc, char** argv) {
   Hwch::System& system = Hwch::System::getInstance();
   if (system.IsVirtualDisplayEmulationEnabled()) {
     HWCLOGI("Initialising Virtual Display Support\n");
-    system.GetDisplay(HWCVAL_DISPLAY_ID_WIDI_VIRTUAL).EmulateVirtualDisplay();
+    system.GetDisplay(HWCVAL_DISPLAY_ID_VIRTUAL).EmulateVirtualDisplay();
   }
 
   // Configure choice of patterns

@@ -421,24 +421,6 @@ uint32_t HwcTestState::GetMaxSetResolutions(void) {
   return mMaxSetResolutions;
 }
 
-// Dynamically sets the dimensions for the Widi output buffer
-void HwcTestState::SetWidiOutDimensions(uint32_t width, uint32_t height) {
-  if (mTestKernel) {
-    HwcTestCrtc* crtc =
-        mTestKernel->GetHwcTestCrtcByDisplayIx(HWCVAL_VD_WIDI_DISPLAY_INDEX);
-
-    if (crtc) {
-      HWCLOGD("Setting Widi out dimensions to %d %d", width, height);
-
-      crtc->SetOutDimensions(width, height);
-    } else {
-      HWCLOGD("Could not find Widi CRTC (id: %d)", HWCVAL_VD_WIDI_CRTC_ID);
-    }
-  } else {
-    HWCLOGD("Invalid pointer to test kernel");
-  }
-}
-
 void HwcTestState::SetMDSInfoProviderShim(
     Hwcval::MultiDisplayInfoProviderShim* shim) {
   mMDSInfoProviderShim = shim;

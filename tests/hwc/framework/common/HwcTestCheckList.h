@@ -159,7 +159,6 @@ DECLARE_CHECK(eLogTimeline, None, INFO, "Enable logs for timelines and fences",
 DECLARE_CHECK(eLogVideo, None, INFO, "Enable logs for video modes", Dbg)
 DECLARE_CHECK(eLogVisibleRegions, None, INFO, "Enable logs for visible regions",
               Dbg)
-DECLARE_CHECK(eLogWidi, None, INFO, "Enable logs for WIDI category", Dbg)
 DECLARE_CHECK(eLogStall, None, INFO, "Enable logs for forced stalls", Dbg)
 DECLARE_CHECK(eLogLayerAlloc, None, INFO,
               "Enable logs for harness layer allocation", Dbg)
@@ -271,10 +270,6 @@ DECLARE_CHECK(eCheckDrmShimBind, Test, FATAL, "Failed run-time linking to DRM",
 DECLARE_CHECK(eCheckMdsBind, Test, ERROR,
               "Failed to bind to Multi-Display Service", StickyTest)
 
-// Failure to run-time link to WIDI
-DECLARE_CHECK(eCheckWidiBind, Test, ERROR,
-              "Failed to bind to real WiDi service", StickyTest)
-
 // Run-time failure shimming HWC service
 DECLARE_CHECK(eCheckHwcServiceBind, Test, ERROR,
               "Failed to bind to HWC service", StickyTest)
@@ -287,10 +282,6 @@ DECLARE_CHECK(eCheckPngFail, Test, ERROR, "PNG error", Test)
 
 // PAVP processing failure
 DECLARE_CHECK(eCheckPavpProc, Test, ERROR, "PAVP internal error", Test)
-
-// WIDI connect/disconnect failure
-DECLARE_CHECK(eCheckWidiConnect, Test, ERROR, "WIDI connect/disconnect error",
-              Test)
 
 // Legacy test error
 DECLARE_CHECK(eCheckSurfaceSender, Test, ERROR, "Surface sender error", Test)

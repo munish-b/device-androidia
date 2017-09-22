@@ -17,14 +17,14 @@
 #ifndef __HwchLayerWindowed_h__
 #define __HwchLayerWindowed_h__
 
-#include <utils/RefBase.h>
 #include <ui/GraphicBuffer.h>
+#include <utils/RefBase.h>
 
-#include "HwchLayer.h"
 #include "HwchCoord.h"
 #include "HwchDisplay.h"
+#include "HwchLayer.h"
 
-#define WIDI_WINDOW_OFFSET 100
+#define VIRTUAL_WINDOW_OFFSET 100
 
 class HwchLayerWindowed : public Hwch::Layer, public android::RefBase {
  private:
