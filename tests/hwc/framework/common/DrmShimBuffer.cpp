@@ -409,7 +409,7 @@ DrmShimBuffer* DrmShimBuffer::UpdateMediaDetails() {
 
   if (mHandle != 0) {
     mMediaDetails.magic = sizeof(hwc_buffer_media_details_t);
-    if (1 /*GetGralloc().queryMediaDetails(mHandle, &mMediaDetails) != 0*/) {
+    if (0 /*GetGralloc().queryMediaDetails(mHandle, &mMediaDetails) != 0*/) {
       HWCLOGW("DrmShimBuffer::UpdateMediaDetails: queryMediaDetails Failed %s",
               IdStr(strbuf));
       memset(&mMediaDetails, 0, sizeof(hwc_buffer_media_details_t));

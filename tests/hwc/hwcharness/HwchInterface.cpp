@@ -416,7 +416,7 @@ int Hwch::Interface::ValidateDisplay(hwc2_display_t display,
   return ret;  // ERROR
 }
 
-int Hwch::Interface::PresentDisplay(hwcval_display_contents_t **display, hwc2_display_t disp,
+int Hwch::Interface::PresentDisplay(hwcval_display_contents_t *display, hwc2_display_t disp,
                                     int32_t *outPresentFence) {
   int ret = -1;
 

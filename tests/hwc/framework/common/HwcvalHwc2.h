@@ -68,13 +68,15 @@ class EXPORT_API Hwc2 {
   //void EXPORT_API
   //    CheckPresentDisplayEnter(size_t numDisplays, hwcval_display_contents_t** displays);
   void EXPORT_API
-      CheckPresentDisplayEnter(hwcval_display_contents_t** displays, hwc2_display_t display);
+      CheckPresentDisplayEnter(hwcval_display_contents_t* displays, hwc2_display_t display);
 
   /// Notify exit from PresentDisplay from HWC Shim, and perform checks
   //EXPORT_API void CheckPresentDisplayExit(size_t numDisplays,
   //                             hwcval_display_contents_t** displays);
-  EXPORT_API void CheckPresentDisplayExit();
-
+  EXPORT_API void CheckPresentDisplayExit(hwcval_display_contents_t* displays, hwc2_display_t display, int32_t *outPresentFence);
+  EXPORT_API void GetDisplayConfigsExit(int disp, uint32_t* configs,
+                                         size_t numConfigs);
+  EXPORT_API void GetDisplayAttributesExit(uint32_t disp, uint32_t config, const int32_t attribute, int32_t* values);
 };
 }
 

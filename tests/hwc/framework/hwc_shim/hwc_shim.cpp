@@ -288,7 +288,7 @@ void HwcShim::HwcShimInitDrm() {
   }
 }
 
-int HwcShim::HookPresentDisplay(hwcval_display_contents_t** displays, hwc2_device_t *device, hwc2_display_t display,
+int HwcShim::HookPresentDisplay(hwcval_display_contents_t* displays, hwc2_device_t *device, hwc2_display_t display,
                                 int32_t *outPresentFence) {
   int ret = -1;
   ret = GetComposerShim(device)->OnPresentDisplay(displays, device, display,
@@ -296,7 +296,7 @@ int HwcShim::HookPresentDisplay(hwcval_display_contents_t** displays, hwc2_devic
   return ret;
 }
 
-int HwcShim::OnPresentDisplay(hwcval_display_contents_t** displays, hwc2_device_t *device, hwc2_display_t display,
+int HwcShim::OnPresentDisplay(hwcval_display_contents_t* displays, hwc2_device_t *device, hwc2_display_t display,
                               int32_t *outPresentFence) {
   int ret = -1;
   mHwc2->CheckPresentDisplayEnter(displays, display);
@@ -309,7 +309,7 @@ int HwcShim::OnPresentDisplay(hwcval_display_contents_t** displays, hwc2_device_
     ret = pfnPresentDisplay(hwc_composer_device, display, outPresentFence);
   }
 
-  mHwc2->CheckPresentDisplayExit();
+  mHwc2->CheckPresentDisplayExit(displays, display, outPresentFence);
   return ret;
 }
 
@@ -609,7 +609,7 @@ int HwcShim::OnGetDisplayAttribute(hwc2_device_t *device,
     ret = pfnDisplayAttribute(hwc_composer_device, display, config, attribute,
                               outValue);
   }
-
+  mHwc2->GetDisplayAttributesExit(display, config, attribute, outValue);
   return ret;
 }
 
@@ -1817,9 +1817,7 @@ void HwcShim::OnDump(char *buff, int buff_len) {
 int HwcShim::OnGetDisplayConfigs(int disp, uint32_t *configs,
                                  size_t *numConfigs) {
   int ret =
-      true;  // hwc_composer_device->getDisplayConfigs(hwc_composer_device,
-             // disp,
-  //                                configs, numConfigs);
+      true;
 
   HWCLOGD("HwcShim::OnGetDisplayConfigs enter disp %d", disp);
   if (disp != 0)
@@ -1835,19 +1833,18 @@ int HwcShim::OnGetDisplayConfigs(int disp, uint32_t *configs,
 
   HWCLOGD("HwcShim::OnGetDisplayConfigs D%d %d configs returned", disp,
           *numConfigs);
-  mHwc1->GetDisplayConfigsExit(disp, configs, *numConfigs);
+  mHwc2->GetDisplayConfigsExit(disp, configs, *numConfigs);
   return ret;
 }
 
 int HwcShim::OnGetActiveConfig(int disp) {
-  int ret =
-      -1;  // hwc_composer_device->getActiveConfig(hwc_composer_device, disp);
+  int ret = -1;
   mHwc1->GetActiveConfigExit(disp, ret);
   return ret;
 }
 
 int HwcShim::OnGetDisplayAttributes(int disp, uint32_t config,
-                                    const uint32_t *attributes,
+                                    const int32_t attribute,
                                     int32_t *values) {
   HWCLOGV_COND(eLogHwcDisplayConfigs,
                "HwcShim::OnGetDisplayAttributes D%d config %d", disp, config);
@@ -1861,17 +1858,9 @@ int HwcShim::OnGetDisplayAttributes(int disp, uint32_t config,
     HWC2_PFN_GET_DISPLAY_ATTRIBUTE temp =
         reinterpret_cast<HWC2_PFN_GET_DISPLAY_ATTRIBUTE>(hwc2_dvc->getFunction(
             hwc2_dvc, HWC2_FUNCTION_GET_DISPLAY_ATTRIBUTE));
-    //    hwc2_config_t *numConfig2s;
-    temp(hwc2_dvc, disp, config, *attributes, values);
-
-    /*        ret =
-       hwc_composer_device->getDisplayAttributes(hwc_composer_device, disp,
-                                                                config,
-       attributes,
-                                                                values);*/
+    temp(hwc2_dvc, disp, config, attribute, values);
   }
-
-  mHwc1->GetDisplayAttributesExit(disp, config, attributes, values);
+  mHwc2->GetDisplayAttributesExit(disp, config, attribute, values);
   return ret;
 }
 

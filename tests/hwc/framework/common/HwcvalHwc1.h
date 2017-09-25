@@ -80,7 +80,7 @@ class EXPORT_API Hwc1 {
                                         size_t numConfigs);
   EXPORT_API void GetActiveConfigExit(uint32_t disp, uint32_t config);
   EXPORT_API void GetDisplayAttributesExit(uint32_t disp, uint32_t config,
-                                           const uint32_t* attributes,
+                                           const int32_t attribute,
                                            int32_t* values);
 };
 }

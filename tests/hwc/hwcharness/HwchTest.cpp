@@ -368,10 +368,10 @@ int Hwch::Test::Run() {
   // retrieve Reference Composer composition flag
   mSystem.SetNoCompose(GetParam("no_compose") != 0);
 
+
   RunScenario();
 
   // Send a blank frame to allow buffers used in the test to be deleted
-  Frame(mInterface).Send();
   mSystem.FlushRetainedBufferSets();
 
   if (GetParam("blank_after")) {
