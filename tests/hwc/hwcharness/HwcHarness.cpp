@@ -500,7 +500,6 @@ int HwcTestRunner::getargs(int argc, char** argv) {
   // Minimal logging in stdout (let's not confuse those developers).
   mBrief = (GetParam("brief") != 0);
   config.SetCheck(eOptBrief, mBrief);
-  mSystem.SetQuiet(mBrief);
 
   // Log priority.
   // This code will NOT be executed if you use valhwch
@@ -1210,8 +1209,7 @@ int HwcTestRunner::CreateTests() {
       }
 
       replay = new Hwch::ReplayHWCLRunner(mInterface, mReplayFileName,
-                                          mReplayMatch, mReplayNoTiming,
-                                          mReplayNoProtected, mAlpha);
+                                          mReplayMatch, mReplayNoTiming, mAlpha);
     } else if (mDSReplay) {
       replay = new Hwch::ReplayDSRunner(mInterface, mReplayFileName,
                                         mDSReplayNumFrames);
@@ -1219,7 +1217,7 @@ int HwcTestRunner::CreateTests() {
       // The unit-tests run on the HWCL regular expressions. Create a dummy HWCL
       // runner
       // so that we can access the parser.
-      replay = new Hwch::ReplayHWCLRunner(mInterface, "", 0, false, false, 0);
+      replay = new Hwch::ReplayHWCLRunner(mInterface, "", 0, false, 0);
     } else {
       HWCERROR(eCheckCommandLineParam,
                "Unsupported sequence of replay command-line options");

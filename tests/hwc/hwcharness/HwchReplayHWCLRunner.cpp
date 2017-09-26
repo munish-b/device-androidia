@@ -332,34 +332,12 @@ void Hwch::ReplayHWCLRunner::PrintStatistics(void) {
       mStats.parsed_onset_count, mStats.parsed_layer_count,
       mStats.encrypted_layer_count, mStats.skip_layer_count,
       mStats.hwc_frame_count,
-      mReplayNoProtected ? 0 : HWCH_PAVP_WARMUP_FRAMECOUNT,
       mStats.processed_layer_count,
-      mReplayNoProtected ? 0 : HWCH_PAVP_WARMUP_FRAMECOUNT, mStats.match_count,
       mStats.allocation_count, mStats.hotplug_count,
       mStats.hotplug_connects_count, mStats.hotplug_disconnects_count,
       mStats.blanking_count, mStats.blanking_blank_count,
       mStats.blanking_unblank_count);
 }
-
-#ifdef HWCVAL_BUILD_PAVP
-// Disables one or all protected sessions
-void Hwch::ReplayHWCLRunner::DisableOneOrAllProtectedSessions(
-    Hwch::AbstractPavpSession& pavp_session, int32_t session) {
-  HWCVAL_UNUSED(pavp_session);  // Future use
-
-  for (int32_t i = 0; i < HWCVAL_MAX_PROT_SESSIONS; ++i) {
-    if ((session == -1) || (mProtectedSessions[i].parsed_session == session)) {
-      // TODO: Terminate the session and instance
-
-      HWCLOGD("Destroyed protected session %d ", session);
-      mProtectedSessions[i].parsed_session = -1;
-      mProtectedSessions[i].parsed_instance = -1;
-      mProtectedSessions[i].active_session = -1;
-      mProtectedSessions[i].active_instance = -1;
-    }
-  }
-}
-#endif
 
 int Hwch::ReplayHWCLRunner::RunScenario(void) {
   Hwch::Frame frame(mInterface);
@@ -374,11 +352,6 @@ int Hwch::ReplayHWCLRunner::RunScenario(void) {
   // Cache the id of the last display that was processed
   int32_t last_display_processed = -1;
 
-#ifdef HWCVAL_BUILD_PAVP
-  // Declare protected content variables
-  int32_t session = 0, instance = 0;
-#endif
-
   // Create caches of the layer pointers for deallocation
   // and also for the buffer tracking
   layer_cache_t layer_cache, prev_layer_cache;
@@ -388,23 +361,6 @@ int Hwch::ReplayHWCLRunner::RunScenario(void) {
 
   // struct timespec to hold the interframe spacing value
   timespec interframe_spacing = {0, 0};
-
-  // Start a protected session
-  if (!mReplayNoProtected) {
-    Hwch::System& system = Hwch::System::getInstance();
-    system.StartProtectedContent();
-
-    // Send some frames to start the protected session
-    Hwch::WallpaperLayer wallpaper;
-    frame.Add(wallpaper);
-    frame.Send(HWCH_PAVP_WARMUP_FRAMECOUNT);
-    mStats.hwc_frame_count += HWCH_PAVP_WARMUP_FRAMECOUNT;
-    mStats.processed_layer_count += HWCH_PAVP_WARMUP_FRAMECOUNT;
-    if (!mSystem.ProtectedContentStarted()) {
-      HWCLOGE("Could not start protected session!");
-    }
-    frame.Clear();
-  }
 
   // Parse the replay file line-by-line
   std::string line;
@@ -447,107 +403,6 @@ int Hwch::ReplayHWCLRunner::RunScenario(void) {
         ++mStats.blanking_unblank_count;
       }
     }
-#ifdef HWCVAL_BUILD_PAVP
-    // Look for events related to protected content
-    else if (mParser->ParseProtectedEnable(line, session, instance)) {
-      if (!mReplayNoProtected) {
-        HWCLOGD(
-            "Parsed a protected session enable, but protected "
-            "content disabled on command line - skipping.");
-        continue;
-      }
-
-      HWCLOGD("Enabling protected session (%d) and instance (%d)", session,
-              instance);
-
-      // Find a new protected session descriptor. Note the following:
-      //
-      // Sessions are created by libPAVP and refer to protected audio video
-      // paths in the
-      // hardware. When these are torn down, it is perfectly feasible (and
-      // highly likely)
-      // that the next created protected session will re-use the id from the
-      // previous.
-      //
-      // Instances are created by CoreU and are never re-used. The instance
-      // number is
-      // effectively a counter that tells you how many tear downs have occurred.
-      //
-      // Because of this, we should never see a request to add a new instance on
-      // an existing
-      // session. This would imply that we have missed a session 'disable'
-      // event.
-      int32_t index;
-      for (index = 0; index < HWCVAL_MAX_PROT_SESSIONS; ++index) {
-        if ((mProtectedSessions[index].parsed_session == session) &&
-            (mProtectedSessions[index].parsed_instance == instance)) {
-          // TODO change to HWCERROR
-          HWCLOGE("Saw existing protected enable for session %d instance %d!",
-                  session, instance);
-          index = HWCVAL_MAX_PROT_SESSIONS;
-          break;
-        } else {
-          continue;
-        }
-      }
-
-      if (index == HWCVAL_MAX_PROT_SESSIONS) {
-        // TODO change to HWCERROR or HWCLOGW
-        HWCLOGE(
-            "No protected sessions available for parsed session %d (instance: "
-            "%d)! "
-            "Skipping pavp_session_creation.",
-            session, instance);
-        continue;
-      }
-
-      // There is a descriptor available - populate the fields.
-      mProtectedSessions[index].parsed_session = session;
-      mProtectedSessions[index].parsed_instance = instance;
-
-      // Running in single session mode - get the session / instance ids locally
-      android::sp<Hwch::AbstractPavpSession> pavpSession =
-          Hwch::System::getInstance().GetPavpSession();
-
-      // This should probably be done on a thread
-      mProtectedSessions[index].active_session =
-          pavpSession->StartPavpSession();
-      mProtectedSessions[index].active_instance = pavpSession->GetInstanceId();
-      HWCLOGD(
-          "Created new protected session %d with (instance: %d) from parsed "
-          "session %d (instance: %d)",
-          mProtectedSessions[index].active_session,
-          mProtectedSessions[index].active_instance,
-          mProtectedSessions[index].parsed_session,
-          mProtectedSessions[index].parsed_instance);
-    } else if (mParser->ParseProtectedDisableSession(line, session)) {
-      if (!mReplayNoProtected) {
-        HWCLOGD(
-            "Parsed a protected session disable, but protected "
-            "content disabled on command line - skipping.");
-        continue;
-      }
-
-      HWCLOGD("Disabling protected session (%d)", session);
-
-      android::sp<Hwch::AbstractPavpSession> pavpSession =
-          Hwch::System::getInstance().GetPavpSession();
-      DisableOneOrAllProtectedSessions(*pavpSession, session);
-    } else if (mParser->ParseProtectedDisableAll(line)) {
-      if (!mReplayNoProtected) {
-        HWCLOGD(
-            "Parsed a protected session disable all, but protected "
-            "content disabled on command line - skipping.");
-        continue;
-      }
-
-      HWCLOGD("Disabling all protected sessions");
-
-      android::sp<Hwch::AbstractPavpSession> pavpSession =
-          Hwch::System::getInstance().GetPavpSession();
-      DisableOneOrAllProtectedSessions(*pavpSession, -1);
-    }
-#endif  // HWCVAL_BUILD_PAVP
     // Look for OnSets
     else if (mParser->ParseHwclOnSet(line, secs, msecs, nsecs, frame_id,
                                      display, flags)) {

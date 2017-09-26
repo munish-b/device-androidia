@@ -104,9 +104,6 @@ DECLARE_CHECK(eOptVSyncInterception, None, INFO, "Intercept VSyncs", Opt)
 // This should only be enabled if VSync interception is also enabled.
 DECLARE_CHECK(eOptPageFlipInterception, None, INFO, "Intercept Page Flips", Opt)
 
-// Don't use Pavp/COREU etc
-DECLARE_CHECK(eOptFakePavpSession, None, INFO, "Use simulated CoreU/PAVP", Opt)
-
 // Keep frame numbers for each display distinct, even under HWC 1.5
 DECLARE_CHECK(eOptDivergeFrameNumbers, None, INFO,
               "Distinct frame numbers for each display even under HWC 1.5", Opt)
@@ -222,14 +219,6 @@ DECLARE_CHECK(eCheckObjectLeak, Test, WARN,
               "Internal data structures have grown very large - possible leak",
               Test)
 
-// Errors with PAVP session or CoreU initialization.
-DECLARE_CHECK(eCheckPavpFail, Test, ERROR,
-              "Protected Content Initialization Failure", Test)
-
-// Errors with PAVP build support.
-DECLARE_CHECK(eCheckFeatureNotInBuild, Test, ERROR,
-              "Protected Content not supported in this build", Test)
-
 // Replay file or parser not correct.
 DECLARE_CHECK(eCheckReplayFail, Test, FATAL, "Replay Failure", Test)
 
@@ -279,9 +268,6 @@ DECLARE_CHECK(eCheckFileError, Test, ERROR, "File access error", Test)
 
 // Png error
 DECLARE_CHECK(eCheckPngFail, Test, ERROR, "PNG error", Test)
-
-// PAVP processing failure
-DECLARE_CHECK(eCheckPavpProc, Test, ERROR, "PAVP internal error", Test)
 
 // Legacy test error
 DECLARE_CHECK(eCheckSurfaceSender, Test, ERROR, "Surface sender error", Test)

@@ -28,20 +28,6 @@ extern "C" {  // shame
 #include <drm_fourcc.h>
 }  // extern "C"
 
-// Shift/mask to extract PAVP Session instance from the 32bit datatype.
-#define DRM_BO_DATATYPE_INSTANCE_SHIFT 16
-#define DRM_BO_DATATYPE_INSTANCE_MASK 0xFFFF
-
-#ifdef HWCVAL_BUILD_PAVP
-#if defined(DRM_IOCTL_I915_GEM_ACCESS_DATATYPE)
-#define DRM_ACCESS_USERDATA DRM_IOCTL_I915_GEM_ACCESS_DATATYPE
-#elif defined(DRM_IOCTL_I915_GEM_ACCESS_USERDATA)
-#define DRM_ACCESS_USERDATA DRM_IOCTL_I915_GEM_ACCESS_USERDATA
-#else
-#error \
-    "Missing DRM_IOCTL_I915_GEM_ACCESS_DATATYPE and DRM_IOCTL_I915_GEM_ACCESS_USERDATA"
-#endif
-#endif  // HWCVAL_BUILD_PAVP
 
 static uint32_t bufferCount = 0;
 
@@ -147,13 +133,6 @@ bool Hwch::BufferSet::SetNextBufferInstance(uint32_t index) {
 
     FencedBuffer fb(buf, -1);
     mBuffers.add(fb);
-
-#ifdef HWCVAL_BUILD_PAVP
-    intel::ufo::gralloc::GrallocClient& gralloc =
-        intel::ufo::gralloc::GrallocClient::getInstance();
-    gralloc.setBufferPavpSession(buf->handle, mSessionId, mInstance,
-                                 mEncrypted);
-#endif
 
     ++mNumBuffers;
   }
@@ -271,32 +250,6 @@ void Hwch::BufferSet::CloseAllFences() {
     }
   }
 }
-
-#ifdef HWCVAL_BUILD_PAVP
-void Hwch::BufferSet::SetProtectionState(bool encrypted) {
-  Hwch::System& system = Hwch::System::getInstance();
-  SetProtectionState(encrypted, system.GetPavpSessionId(),
-                     system.GetPavpInstance());
-}
-#if 0
-void Hwch::BufferSet::SetProtectionState(bool encrypted, uint32_t sessionId, uint32_t instance)
-{
-    mEncrypted = encrypted;
-    intel::ufo::gralloc::GrallocClient& gralloc = intel::ufo::gralloc::GrallocClient::getInstance();
-
-    for (uint32_t i=0; i<mBuffers.size(); ++i)
-    {
-        FencedBuffer& fencedB = mBuffers.editItemAt(i);
-
-        gralloc.setBufferPavpSession(fencedB.mBuf->handle, sessionId, instance, encrypted);
-    }
-
-    // Cache the session and instance ids for use in Replays
-    mSessionId = sessionId;
-    mInstance = instance;
-}
-#endif
-#endif
 
 Hwch::BufferSetPtr::~BufferSetPtr() {
   // Force operator= code to happen

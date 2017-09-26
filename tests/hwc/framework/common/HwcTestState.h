@@ -314,9 +314,6 @@ class HwcTestState {
   // Display is deemed to be in a bad state, we need to reboot
   bool IsTotalDisplayFail();
 
-  // Expect PAVP teardown
-  void NotifyProtectedContentChange();
-
   // Harness can call to avoid our work queue overflowing
   void ProcessWork();
 

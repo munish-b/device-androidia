@@ -24,7 +24,6 @@
 #include "DrmShimChecks.h"
 #include "HwcTestUtil.h"
 #include "HwcTestDebug.h"
-#include "HwcTestProtectionChecker.h"
 
 #include "drm_fourcc.h"
 #include "SSIMUtils.h"
@@ -414,22 +413,9 @@ DrmShimBuffer* DrmShimBuffer::UpdateMediaDetails() {
       HWCLOGW("DrmShimBuffer::UpdateMediaDetails: queryMediaDetails Failed %s",
               IdStr(strbuf));
       memset(&mMediaDetails, 0, sizeof(hwc_buffer_media_details_t));
-    } else {
-      HWCLOGV_COND(eLogProtectedContent,
-                   "DrmShimBuffer::updateMediaDetails queryMediaDetails handle "
-                   "%p -> session %d instance %d",
-                   mHandle, mMediaDetails.pavp_session_id,
-                   mMediaDetails.pavp_instance_id);
-    }
+    } 
   } else {
     memset(&mMediaDetails, 0, sizeof(hwc_buffer_media_details_t));
-  }
-
-  // We aren't going to clear this flag just because the media details say the
-  // buffer is not protected
-  // because iVP has an annoying habit of clearing the flag when it should not.
-  if (mMediaDetails.is_encrypted) {
-    SetReallyProtected(true);
   }
 
   return this;
@@ -532,51 +518,6 @@ uint32_t DrmShimBuffer::GetAllocHeight() {
 
 uint32_t DrmShimBuffer::GetUsage() {
   return mDetails.usage;
-}
-
-// This function returns true if the buffer's media details state that the
-// buffer is encrypted
-// However, this is not always a correct reflection of whether the buffer is
-// actually encrypted
-// because iVP has a tendency to clear this flag in the composition target, even
-// when the buffer actually is
-// encrypted (and we know that because one of the composition sources is
-// encrypted).
-bool DrmShimBuffer::HasMediaDetailsEncrypted() {
-  char strbuf[HWCVAL_DEFAULT_STRLEN];
-  bool ret = (mMediaDetails.is_encrypted != 0);
-  HWCLOGD_COND(eLogProtectedContent,
-               "DrmShimBuffer::HasMediaDetailsEncrypted %s => %s",
-               IdProtStr(strbuf), ret ? "Protected" : "Not protected");
-  return ret;
-}
-
-bool DrmShimBuffer::IsReallyProtected() {
-  return mReallyProtected;
-}
-
-void DrmShimBuffer::SetReallyProtected(bool prot) {
-  mReallyProtected = prot;
-}
-
-void DrmShimBuffer::SetShouldBeProtected(bool shouldBeProtected) {
-  mShouldBeProtected = shouldBeProtected ? eProtYes : eProtNo;
-}
-
-bool DrmShimBuffer::IsProtectionCorrect() {
-  UpdateMediaDetails();
-  UpdateResolveDetails();
-
-  switch (mShouldBeProtected) {
-    case eProtDontCare:
-      return true;
-
-    case eProtYes:
-      return HasMediaDetailsEncrypted();
-
-    default:
-      return !HasMediaDetailsEncrypted();
-  }
 }
 
 uint32_t DrmShimBuffer::GetFormat() const {
@@ -1499,24 +1440,6 @@ bool DrmShimBuffer::HasRef() {
   return (mRef.get() != 0);
 }
 
-Hwcval::ValidityType DrmShimBuffer::IsProtectionValid(
-    HwcTestProtectionChecker& protChecker, uint32_t hwcFrame) {
-  HWCLOGD(
-      "DrmShimBuffer::IsProtectionValid handle %p session %d instance %d "
-      "frame:%d",
-      mHandle, mMediaDetails.pavp_session_id, mMediaDetails.pavp_instance_id,
-      hwcFrame);
-  return protChecker.IsValid(mMediaDetails, hwcFrame);
-}
-
-Hwcval::ValidityType DrmShimBuffer::ProtectedContentValidity(
-    HwcTestProtectionChecker& protChecker, uint32_t hwcFrame) {
-  if (HasMediaDetailsEncrypted()) {
-    return IsProtectionValid(protChecker, hwcFrame);
-  } else {
-    return ValidityType::Valid;
-  }
-}
 
 const char* DrmShimBuffer::ValidityStr(Hwcval::ValidityType valid) {
   switch (valid) {
@@ -1540,38 +1463,6 @@ const char* DrmShimBuffer::ValidityStr(Hwcval::ValidityType valid) {
     }
     default: { return "Unknown"; }
   }
-}
-
-const char* DrmShimBuffer::EncryptionStr(char* strbuf, size_t len) {
-  size_t n = 0;
-
-  if (mDetails.usage & GRALLOC_USAGE_PROTECTED) {
-    n = snprintf(strbuf, len, "PROT ");
-  }
-
-  if (mMediaDetails.is_encrypted) {
-    n +=
-        snprintf(strbuf + n, len - n, "ENCRYPT:%d:%d",
-                 mMediaDetails.pavp_session_id, mMediaDetails.pavp_instance_id);
-  }
-
-  return strbuf;
-}
-
-const char* DrmShimBuffer::IdProtStr(char* strbuf, size_t len) {
-  IdStr(strbuf, len);
-  uint32_t s = strlen(strbuf);
-
-  EncryptionStr(strbuf + s, len - s);
-  return strbuf;
-}
-
-uint32_t DrmShimBuffer::GetPavpSessionId() {
-  return mMediaDetails.pavp_session_id;
-}
-
-uint32_t DrmShimBuffer::GetPavpInstance() {
-  return mMediaDetails.pavp_instance_id;
 }
 
 uint32_t DrmShimBuffer::GetAuxOffset() {

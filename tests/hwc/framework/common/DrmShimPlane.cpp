@@ -112,26 +112,6 @@ bool DrmShimPlane::IsUsing(android::sp<DrmShimBuffer> buf) {
   return (mTransform.GetBuf() == buf) || (mFlippedBuffer == buf);
 }
 
-void DrmShimPlane::ProtectionCheck(android::sp<DrmShimBuffer>& buf) {
-  // Is protection consistent?
-  bool bufferProtected = buf->IsReallyProtected();
-  bool planeDecrypted = IsDecrypted();
-  char strbuf[HWCVAL_DEFAULT_STRLEN];
-
-  HWCCHECK(eCheckPavpConsistent);
-  if (bufferProtected) {
-    if (!planeDecrypted) {
-      HWCERROR(eCheckPavpConsistent, "Plane %d %s protected but NOT decrypted",
-               GetPlaneId(), buf->IdProtStr(strbuf));
-    }
-  } else {
-    if (planeDecrypted) {
-      HWCERROR(eCheckPavpConsistent, "Plane %d %s decrypted but NOT protected",
-               GetPlaneId(), buf->IdProtStr(strbuf));
-    }
-  }
-}
-
 void DrmShimPlane::Expand(DrmShimSortedTransformVector& transforms) {
   ATRACE_CALL();
 

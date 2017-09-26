@@ -18,10 +18,6 @@
 #define __HwchDefs_h__
 
 #include "HwcTestDefs.h"
-#ifdef HWCVAL_BUILD_PAVP
-#include "coreu_pavp_interface.h"
-#include "PavpEscape.h"
-#endif
 
 #define MAX_DISPLAYS 2
 #define MAX_VISIBLE_REGIONS 1024

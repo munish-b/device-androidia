@@ -159,7 +159,6 @@
 
 // Enable specific features
 // These will be defined by make file system - see Hwcval.mk
-//#define HWCVAL_BUILD_PAVP
 //#define HWCVAL_TARGET_HAS_MULTIPLE_DISPLAY
 
 // Disable specific features

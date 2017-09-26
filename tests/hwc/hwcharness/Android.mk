@@ -41,9 +41,6 @@ LOCAL_SRC_FILES:=\
     HwchFrame.cpp \
     HwchDisplay.cpp \
     HwchSystem.cpp \
-    HwchAbstractPavpSession.cpp \
-    HwchPavpSession.cpp \
-    HwchFakePavpSession.cpp \
     HwchPattern.cpp \
     HwchGlPattern.cpp \
     HwchPatternMgr.cpp \

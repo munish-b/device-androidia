@@ -17,8 +17,6 @@
 #include "HwchSystem.h"
 #include "HwchDefs.h"
 #include "HwchTimelineThread.h"
-#include "HwchPavpSession.h"
-#include "HwchFakePavpSession.h"
 #include <ui/GraphicBuffer.h>
 #include "HwcTestLog.h"
 #include "HwcTestState.h"
@@ -182,11 +180,6 @@ void Hwch::System::QuickExit(int status) {
   _exit(status);
 }
 
-void Hwch::System::SetQuiet(bool quiet) {
-  mQuiet = quiet;
-  GetPavpSession()->SetQuiet(quiet);
-}
-
 void Hwch::System::EnableGl() {
   mEnableGl = true;
 
@@ -197,35 +190,6 @@ void Hwch::System::EnableGl() {
 
 Hwch::GlInterface& Hwch::System::GetGl() {
   return mGlInterface;
-}
-
-uint32_t Hwch::System::GetPavpSessionId() {
-  return GetPavpSession()->GetPavpSessionId();
-}
-
-uint32_t Hwch::System::GetPavpInstance() {
-  return GetPavpSession()->GetInstanceId();
-}
-
-bool Hwch::System::StartProtectedContent() {
-  HwcTestState::getInstance()->NotifyProtectedContentChange();
-  return GetPavpSession()->StartProtectedContent();
-}
-
-bool Hwch::System::ProtectedContentStarted() {
-  return GetPavpSession()->ProtectedContentStarted();
-}
-
-android::sp<Hwch::AbstractPavpSession> Hwch::System::GetPavpSession() {
-  if (mPavpSession.get() == 0) {
-    if (HwcTestState::getInstance()->IsOptionEnabled(eOptFakePavpSession)) {
-      mPavpSession = new Hwch::FakePavpSession();
-    } else {
-      mPavpSession = new Hwch::PavpSession();
-    }
-  }
-
-  return mPavpSession;
 }
 
 Hwch::System* Hwch::System::mInstance = 0;
