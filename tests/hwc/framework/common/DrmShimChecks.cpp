@@ -65,7 +65,7 @@ DrmShimChecks::DrmShimChecks()
       mPropMgr(0),
       mUniversalPlanes(false),
       mDrmFrameNo(0),
-      mDrmParser(this, mProtChecker, &mLogParser) {
+      mDrmParser(this,&mLogParser) {
   for (uint32_t i = 0; i < HWCVAL_MAX_CRTCS; ++i) {
     mCurrentFrame[i] = -1;
     mLastFrameWasDropped[i] = false;
@@ -408,7 +408,8 @@ void DrmShimChecks::CheckGetConnectorExit(int fd, uint32_t connId,
 
   // drmModeGetConnector can take ages which means hot plug is delayed
   // indicate that this is OK.
-  mProtChecker.RestartSelfTeardown();
+  //TODO: How do we take care this situation?
+  //mProtChecker.RestartSelfTeardown();
 }
 
 void DrmShimChecks::CheckGetEncoder(uint32_t encoder_id,
@@ -646,8 +647,6 @@ void DrmShimChecks::CheckSetCrtcEnter(int fd, uint32_t crtcId,
   // Clear ESD recovery
   crtc->EsdStateTransition(HwcTestCrtc::eEsdDpmsOff, HwcTestCrtc::eEsdModeSet);
 
-  // Complete invalidation of protected sessions that was started by hot plug
-  mProtChecker.InvalidateOnModeChange();
 }
 
 void DrmShimChecks::CheckSetCrtcExit(int fd, uint32_t crtcId, uint32_t ret) {

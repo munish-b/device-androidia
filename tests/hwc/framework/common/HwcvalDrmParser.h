@@ -28,12 +28,9 @@ class DrmParser : public Hwcval::LogChecker {
   // Pointers and references to internal objects
   DrmShimChecks* mChecks;
 
-  // Protection checker
-  HwcTestProtectionChecker& mProtChecker;
-
  public:
   // Constructor
-  DrmParser(DrmShimChecks* checks, HwcTestProtectionChecker& protChecker,
+  DrmParser(DrmShimChecks* checks,
             Hwcval::LogChecker* nextChecker);
 
   // Parse "...drm releaseTo..."

@@ -65,7 +65,7 @@ static void BoValidationAssert() {
 HwcTestKernel::HwcTestKernel()
     : mState(HwcTestState::getInstance()),
       mCrcReader(this, mState),
-      mLogParser(this, mProtChecker),
+      mLogParser(this),
       mPassThrough(1),
       mPlanes((DrmShimPlane*)0),
       mOrders((HwcTestCrtc::SeqVector*)0),
@@ -80,7 +80,6 @@ HwcTestKernel::HwcTestKernel()
       mNumSetResolutionsReceived(0),
       mWidiLastFrame(0),
       mSfCompMismatchCount(0),
-      mProtChecker(this),
       mLastOnPrepareTime(0),
 #ifdef HWCVAL_BUILD_SHIM_HWCSERVICE
       mVideoControl(0),
@@ -444,7 +443,6 @@ void HwcTestKernel::checkWidiBuffer(HwcTestCrtc* crtc, Hwcval::LayerList* ll,
       plane->SetDisplayFrame(0, 0, buf->GetWidth(), buf->GetHeight());
       plane->GetTransform().SetBlend(BlendingType::HWCVAL_PASSTHROUGH, false,
                                      1.0);
-      plane->SetDecrypt(buf->IsReallyProtected());
     } else {
       HWCLOGW("CRTC has NULL plane!");
     }
@@ -1888,9 +1886,6 @@ void HwcTestKernel::FinaliseTest() {
     }
   }
 
-  // Final check for missing protected content teardowns
-  mProtChecker.ValidateSelfTeardownTime();
-
   // If there have been a lot of video layers restored during
   // supposed rotation animation then there must be something wrong
 
@@ -1935,19 +1930,6 @@ void HwcTestKernel::CheckInvalidSessionsDisplayed() {
 
       android::sp<DrmShimBuffer> buf = plane->GetTransform().GetBuf();
 
-      if (buf.get()) {
-        Hwcval::ValidityType val =
-            buf->ProtectedContentValidity(mProtChecker, hwcFrame);
-        if ((val != ValidityType::Valid) &&
-            (val != ValidityType::ValidUntilModeChange) &&
-            (val != ValidityType::Invalidating)) {
-          HWCERROR(eCheckInvProtDisp,
-                   "Buffer %s %s has invalid protected content and was still "
-                   "displayed on plane %d at end of DisableEncryptedSessions()",
-                   buf->IdStr(strbuf), buf->EncryptionStr(strbuf2),
-                   plane->GetPlaneId());
-        }
-      }
     }
   }
 }

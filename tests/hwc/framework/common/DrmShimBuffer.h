@@ -65,9 +65,6 @@ typedef struct hwc_buffer_details {
   int size;
   unsigned int magic;
   unsigned int pitch;
-  int pavp_instance_id;
-  int pavp_session_id;
-  int is_encrypted;
   int name;
   int fb;
   int fb_format;

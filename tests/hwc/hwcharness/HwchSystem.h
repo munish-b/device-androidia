@@ -28,7 +28,6 @@
 #include "HwchLayer.h"
 #include "HwchVSync.h"
 #include "HwchBufferFormatConfig.h"
-#include "HwchAbstractPavpSession.h"
 #include "HwchBufferDestroyer.h"
 #include "HwchAsyncEventGenerator.h"
 #include "HwchGlInterface.h"
@@ -123,7 +122,6 @@ class System {
   uint32_t GetPavpInstance();
   bool StartProtectedContent();
   bool ProtectedContentStarted();
-  android::sp<Hwch::AbstractPavpSession> GetPavpSession();
 
   VSync& GetVSync();
 
@@ -186,7 +184,6 @@ class System {
   SyncOptionType mSyncOption;
 
   android::sp<Hwch::TimelineThread> mTimelineThread;
-  android::sp<Hwch::AbstractPavpSession> mPavpSession;
 
   BufferFormatConfigManager mFmtCfgMgr;
 

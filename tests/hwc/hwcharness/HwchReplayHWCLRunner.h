@@ -19,10 +19,6 @@
 
 #include "HwchInterface.h"
 
-#ifdef HWCVAL_BUILD_PAVP
-#include "libpavp.h"
-#endif
-
 #include "HwchReplayRunner.h"
 #include "HwchReplayParser.h"
 
@@ -40,16 +36,6 @@ class ReplayHWCLRunner : public ReplayRunner {
   using layer_cache_t =
       android::KeyedVector<layer_cache_key_t, android::sp<ReplayLayer>>;
 
-/** Data structure for mapping parsed session/instances to live ones. */
-#ifdef HWCVAL_BUILD_PAVP
-  struct prot_session {
-    int32_t parsed_session = -1;   // Parsed session id
-    int32_t parsed_instance = -1;  // Parsed instance id
-    int32_t active_session = -1;   // Active session id
-    int32_t active_instance = -1;  // Active instance id
-  } mProtectedSessions[HWCVAL_MAX_PROT_SESSIONS];
-#endif
-
   /** Constants for number of nano/millseconds in a second. */
   const uint64_t mNanosPerSec = 1000000000;
   const uint64_t mMillisPerSec = 1000000;
@@ -63,9 +49,6 @@ class ReplayHWCLRunner : public ReplayRunner {
 
   /** Command line argument to disable inter-frame spacing. */
   bool mReplayNoTiming = false;
-
-  /** Command line argument to disable protected content. */
-  bool mReplayNoProtected = false;
 
   /** Command line argument to set the alpha value. */
   int32_t mAlpha = 0xFF;
@@ -146,7 +129,6 @@ class ReplayHWCLRunner : public ReplayRunner {
    * @param filename          File to replay (typically from command line).
    * @param replayMatch       Integer to select the buffer tracking algorithm.
    * @param replayNoTiming    Flag to disable inter-frame spacing
-   * @param replayNoProtected Flag to disable inter-frame spacing
    * @param alpha             Alpha value to apply to each layer
    *
    * @details This is the main user constructor for replaying HWC log
@@ -155,11 +137,10 @@ class ReplayHWCLRunner : public ReplayRunner {
    */
   ReplayHWCLRunner(Hwch::Interface& interface, const char* filename,
                    uint32_t replayMatch, bool replayNoTiming,
-                   bool replayNoProtected, int32_t alpha)
+                   int32_t alpha)
       : ReplayRunner(interface, filename),
         mReplayMatch(replayMatch),
         mReplayNoTiming(replayNoTiming),
-        mReplayNoProtected(replayNoProtected),
         mAlpha(alpha){};
 
   /**
@@ -182,18 +163,6 @@ class ReplayHWCLRunner : public ReplayRunner {
    */
   int RunScenario(void) override;
 
-#ifdef HWCVAL_BUILD_PAVP
-  /**
-   * @name  DisableOneOrAllProtectedSessions
-   * @brief Disables a specified protected session or all of them
-   *
-   * @param pavp_session PAVP session handle.
-   * @param session      Can be a valid session id or '-1' to indicate that
-   *                     all sessions should be destroyed.
-   */
-  void DisableOneOrAllProtectedSessions(AbstractPavpSession& pavp_session,
-                                        int32_t session);
-#endif  // HWCVAL_BUILD_PAVP
 };
 }
 

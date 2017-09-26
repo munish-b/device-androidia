@@ -53,7 +53,6 @@ LOCAL_SRC_FILES:=\
     HwcTestReferenceComposer.cpp \
     HwcTestCompValThread.cpp \
     HwcTestKernel.cpp \
-    HwcTestProtectionChecker.cpp \
     HwcTestTimeline.cpp \
     HwcTestUtil.cpp \
     HwcTestDebug.cpp \

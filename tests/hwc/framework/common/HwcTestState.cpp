@@ -234,7 +234,6 @@ bool HwcTestState::SimulateHotPlug(bool connected, uint32_t displayTypes) {
     if (connected && mTestKernel->IsHotPluggableDisplayAvailable()) {
       // On hotplug, all existing protected sessions must be torn down.
       HWCLOGI("SimulateHotPlug: Encrypted sessions should be torn down soon.");
-      mTestKernel->GetProtectionChecker().ExpectSelfTeardown();
     }
 
     bool hotPlugDone = mTestKernel->SimulateHotPlug(displayTypes, connected);
@@ -276,13 +275,6 @@ bool HwcTestState::IsTotalDisplayFail() {
     return mTestKernel->IsTotalDisplayFail();
   } else {
     return false;
-  }
-}
-
-// Expect a short period of inconsistency in protected content
-void HwcTestState::NotifyProtectedContentChange() {
-  if (mTestKernel) {
-    mTestKernel->GetProtectionChecker().TimestampChange();
   }
 }
 

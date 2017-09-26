@@ -88,25 +88,7 @@ EXPORT_API void Hwcval::Hwc1::CheckOnPrepareEntry(
             HWCLOGW("CheckOnPrepareEntry: queryMediaDetails Failed %p", handle);
 
           } else {
-            bool encrypted = (md.is_encrypted != 0);
-            HWCLOGD_COND(eLogProtectedContent,
-                         "HwcTestKernel::CheckOnPrepareEntry D%d layer %d "
-                         "handle %p isEncrypted %d session %d instance %d",
-                         displayIx, i, handle, encrypted, md.pavp_session_id,
-                         md.pavp_instance_id);
-
-            if (encrypted) {
-              Hwcval::ValidityType valid =
-                  mTestKernel->GetProtectionChecker().IsValid(md, mHwcFrame);
-              mLayerValidity[displayIx].editItemAt(i) = valid;
-              HWCLOGV_COND(
-                  eLogProtectedContent,
-                  "HwcTestKernel::CheckOnPrepareExit D%d.%d Validity %s",
-                  displayIx, i, DrmShimBuffer::ValidityStr(valid));
-            } else {
-              // Not protected, so must be valid
               mLayerValidity[displayIx].editItemAt(i) = ValidityType::Valid;
-            }
           }
         }
       }
@@ -344,28 +326,6 @@ EXPORT_API void Hwcval::Hwc1::CheckSetEnter(
         // Get validity at OnPrepare
         Hwcval::ValidityType validAtOnPrepare = mLayerValidity[displayIx][i];
 
-        Hwcval::ValidityType valid =
-            buf.get()
-                ? buf->ProtectedContentValidity(
-                      mTestKernel->GetProtectionChecker(), mHwcFrame)
-                : ValidityType::Valid;
-
-        if (validAtOnPrepare != valid) {
-          // We can't validate, because we don't know exactly what the validity
-          // was when HWC saw the buffer.
-          valid = ValidityType::Indeterminate;
-        }
-
-        valLayer.SetValidity(valid);
-        HWCLOGD_COND(eLogProtectedContent,
-                     "D%d layer %d protected content validity set to %s",
-                     displayIx, i, DrmShimBuffer::ValidityStr(valid));
-
-        if (valid != ValidityType::Valid) {
-          // These errors are reported in HwcTestCrtc::ConsistencyChecks.
-          HWCCHECK(eCheckInvProtDisp);
-          HWCCHECK(eCheckBadProtRenderBlack);
-        }
 
         // Work out if we are full screen video on each display
         mTestKernel->DetermineFullScreenVideo(displayIx, i, valLayer, notes);

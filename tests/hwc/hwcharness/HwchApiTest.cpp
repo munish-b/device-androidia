@@ -415,23 +415,6 @@ Hwch::Layer* Hwch::ApiTest::CreateLayer(const char* name) {
 
   layer->SetHwcAcquireDelay(mHwcAcquireDelayChoice.Get());
 
-  if (mProtectedLayers < mMaxProtectedLayers) {
-    if (mProtectedChooser.Get() < mProtectedPercent) {
-      // Keep this random choice outside the subsequent "if", or we lose
-      // repeatability of segments of the run.
-      uint32_t encrypt = mProtectionValidityChoice.Get();
-
-      if (!mPavpInitialized) {
-        mSystem.StartProtectedContent();
-        mPavpInitialized = true;
-      }
-
-      layer->SetEncrypted(encrypt);
-      ++mProtectedLayers;
-      ++mNumProtectedLayersCreated;
-    }
-  }
-
   return layer;
 }
 
@@ -719,19 +702,6 @@ int Hwch::ApiTest::RunScenario() {
     mColourChoice.Add(0);  // Fully transparent
   }
 
-  mProtectionValidityChoice.Add(Hwch::Layer::eEncrypted);
-
-  if (GetParam("no_invalid_pavp") == 0) {
-    mProtectionValidityChoice.Add(Hwch::Layer::eEncrypted);
-    mProtectionValidityChoice.Add(Hwch::Layer::eEncrypted |
-                                  Hwch::Layer::eInvalidSessionId);
-    mProtectionValidityChoice.Add(Hwch::Layer::eEncrypted |
-                                  Hwch::Layer::eInvalidInstanceId);
-    mProtectionValidityChoice.Add(Hwch::Layer::eEncrypted |
-                                  Hwch::Layer::eInvalidInstanceId |
-                                  Hwch::Layer::eInvalidSessionId);
-  }
-
   mTileChoice.Add(Hwch::Layer::eLinear);
   mTileChoice.Add(Hwch::Layer::eXTile);
   mTileChoice.Add(Hwch::Layer::eYTile);
@@ -768,9 +738,6 @@ int Hwch::ApiTest::RunScenario() {
   Choice updateDisplayFrameChooser(0, 5);
   Choice updateBlendingChooser(0, 5);
   Choice panelFitterValChooser(panelFitter ? 0 : 1, 1);
-
-  // Restart PAVP on average one every 200 frames.
-  Choice protectionRestartChooser(0, protectedSessionCreatePeriod);
 
   Hwch::Frame frame(mInterface);
   uint32_t layerCreateCount =
@@ -1006,13 +973,6 @@ int Hwch::ApiTest::RunScenario() {
         }
       } else {
         HWCLOGD_COND(eLogHarness, "NO LAYERS on D%d!", d);
-      }
-
-      if (mProtectedPercent > 0) {
-        if (protectionRestartChooser.Get() == 0) {
-          mSystem.StartProtectedContent();
-          ++mNumProtectedSessionsStarted;
-        }
       }
 
       ChooseScreenDisable(frame);

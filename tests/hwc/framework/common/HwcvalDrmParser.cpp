@@ -27,12 +27,8 @@
   }
 
 Hwcval::DrmParser::DrmParser(DrmShimChecks* checks,
-                             HwcTestProtectionChecker& protChecker,
                              Hwcval::LogChecker* nextChecker)
-    : Hwcval::LogChecker(nextChecker),
-      mChecks(checks),
-      mProtChecker(protChecker) {
-}
+    : mChecks(checks), Hwcval::LogChecker(nextChecker){};
 
 // Log validation
 bool Hwcval::DrmParser::DoParse(pid_t pid, int64_t timestamp, const char* str) {
@@ -131,15 +127,14 @@ bool Hwcval::DrmParser::ParseEsdRecovery(const char* str) {
 
 bool Hwcval::DrmParser::ParseSelfTeardown(const char* str) {
   if (strstr(str, "DRM Display Self Teardown")) {
-    mProtChecker.SelfTeardown();
-
+//Removed code for self tear down incase of protected content
     return true;
   }
 
   if (strstr(str, "Drm HotPlugEvent to hotpluggable")) {
     // HWC is still processing the hot plugs
     // Reset the frame counter if it's running
-    mProtChecker.RestartSelfTeardown();
+    //mProtChecker.RestartSelfTeardown();
 
     return true;
   }

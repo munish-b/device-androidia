@@ -18,12 +18,9 @@
 #define __HwchDefs_h__
 
 #include "HwcTestDefs.h"
-#ifdef HWCVAL_BUILD_PAVP
-#include "coreu_pavp_interface.h"
-#include "PavpEscape.h"
-#endif
-
-#define MAX_DISPLAYS 2
+//TODO Increase the count after taking 
+//care of connected display
+#define MAX_DISPLAYS 1
 #define MAX_VISIBLE_REGIONS 1024
 #define HWCH_DEFAULT_NUM_BUFFERS 3
 #define HWCH_FBT_NUM_BUFFERS 3  // Number of buffers for FRAMEBUFFER_TARGET

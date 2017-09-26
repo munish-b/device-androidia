@@ -31,7 +31,6 @@ class LogParser : public Hwcval::LogChecker {
  private:
   // Pointers and references to internal objects
   HwcTestKernel* mTestKernel = nullptr;
-  HwcTestProtectionChecker& mProtChecker;
 
   int64_t mParsedEncEnableStartTime = 0;
   int64_t mParsedEncDisableStartTime = 0;
@@ -130,8 +129,8 @@ class LogParser : public Hwcval::LogChecker {
 
  public:
   // Constructor
-  LogParser(HwcTestKernel* pKernel, HwcTestProtectionChecker& pChecker)
-      : mTestKernel(pKernel), mProtChecker(pChecker){};
+  LogParser(HwcTestKernel* pKernel)
+      : mTestKernel(pKernel){};
 
   // Log parser entry point
   virtual bool DoParse(pid_t pid, int64_t timestamp, const char* str);

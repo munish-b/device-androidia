@@ -22,7 +22,6 @@
 #include "HwcTestUtil.h"
 #include "HwcTestState.h"
 #include "HwcvalContent.h"
-#include "HwcTestProtectionChecker.h"
 #include "HwcvalLogDisplay.h"
 
 using namespace Hwcval;
@@ -601,7 +600,6 @@ void HwcTestCrtc::Checks(Hwcval::LayerList* ll, HwcTestKernel* testKernel,
       if (buf.get()) {
         transform.SetPlaneOrder(plane->GetZOrder());
         FlickerClassify(plane, buf);
-        plane->ProtectionCheck(buf);
 
         // Recursively expand the buffer currently displayed on the plane
         // using the information we have about how buffers were internally
@@ -746,7 +744,6 @@ void HwcTestCrtc::ConsistencyChecks(Hwcval::LayerList* ll, uint32_t hwcFrame) {
   char strbuf2[HWCVAL_DEFAULT_STRLEN];
   mVideoLayerIndex = -1;
   HwcTestKernel* testKernel = HwcTestState::getInstance()->GetTestKernel();
-  HwcTestProtectionChecker& protChecker = testKernel->GetProtectionChecker();
   uint32_t cropErrorCount = 0;
   uint32_t scaleErrorCount = 0;
 
@@ -939,18 +936,10 @@ void HwcTestCrtc::ConsistencyChecks(Hwcval::LayerList* ll, uint32_t hwcFrame) {
     if ((pcValidity != ValidityType::Valid) &&
         (pcValidity != ValidityType::ValidUntilModeChange) &&
         (pcValidity != ValidityType::Indeterminate)) {
-      // Protected buffer cases:
-      HWCCHECK(eCheckBadProtRenderBlack);
       if (pTransform && (pTransform->GetLayerIndex() == eNoLayer) &&
           pTransform->GetBuf()->IsBlack() && !pTransform->GetBuf()->IsFbt()) {
         // Bad protected content has been correctly rendered as a black layer.
         char strbuf2[HWCVAL_DEFAULT_STRLEN];
-        HWCLOGD_COND(eLogProtectedContent,
-                     "HwcTestCrtc::ConsistencyChecks D%d P%d Layer %d %s bad "
-                     "protected content, rendered as %s",
-                     GetSfSrcDisplayIx(), GetDisplayIx(), i, buf->IdStr(strbuf),
-                     pTransform->GetBuf()->IdStr(strbuf2));
-        mProtectedLayerRemoved = true;
 
         // Get the requested transform
         DrmShimTransform layerTransform(buf, i, layer);
@@ -982,22 +971,18 @@ void HwcTestCrtc::ConsistencyChecks(Hwcval::LayerList* ll, uint32_t hwcFrame) {
           HWCLOGW(
               "D%d P%d layer %d %s %s was composed by SF, will be black, "
               "protected session/instance %s",
-              GetSfSrcDisplayIx(), GetDisplayIx(), i, buf->IdStr(strbuf),
-              buf->EncryptionStr(strbuf2),
-              DrmShimBuffer::ValidityStr(pcValidity));
+              GetSfSrcDisplayIx(), GetDisplayIx(), i, buf->IdStr(strbuf));
         } else if (pcValidity == ValidityType::Invalid) {
           logTransformPriority =
               HWCERROR(eCheckInvProtDisp,
-                       "Display %d layer %d %s %s was displayed, but should "
+                       "Display %d layer %d %s  was displayed, but should "
                        "not be as session/instance is invalid",
-                       GetDisplayIx(), i, buf->IdStr(strbuf),
-                       buf->EncryptionStr(strbuf2));
+                       GetDisplayIx(), i, buf->IdStr(strbuf));
         } else {
           HWCLOGW(
-              "D%d P%d layer %d %s %s was displayed, protected "
+              "D%d P%d layer %d %s was displayed, protected "
               "session/instance %s",
               GetSfSrcDisplayIx(), GetDisplayIx(), i, buf->IdStr(strbuf),
-              buf->EncryptionStr(strbuf2),
               DrmShimBuffer::ValidityStr(pcValidity));
         }
 
@@ -1027,7 +1012,7 @@ void HwcTestCrtc::ConsistencyChecks(Hwcval::LayerList* ll, uint32_t hwcFrame) {
         }
         continue;
       }
-    } else if (buf->IsReallyProtected() && pTransform &&
+    } else if (pTransform &&
                pTransform->GetBuf()->IsBlack()) {
       // We have a protected buffer that we think is valid but which HWC has
       // decided to
@@ -1035,19 +1020,10 @@ void HwcTestCrtc::ConsistencyChecks(Hwcval::LayerList* ll, uint32_t hwcFrame) {
       //
       // Use the buffer validity state at the time of OnSet - probably the state
       // has changed since then.
-      HWCCHECK(eCheckBlackProt);
       if (layer.GetValidity() == ValidityType::Valid) {
-        logTransformPriority =
-            HWCERROR(eCheckBlackProt,
-                     "D%d P%d Layer %d %s was mapped as a black layer, "
-                     "although session %d instance %d is %s",
-                     GetSfSrcDisplayIx(), GetDisplayIx(), i, buf->IdStr(strbuf),
-                     buf->GetPavpSessionId(), buf->GetPavpInstance(),
-                     DrmShimBuffer::ValidityStr(layer.GetValidity()));
       }
       pTransform->SetLayerIndex(i);
       ++transformIx;
-      mProtectedLayerRemoved = true;
       continue;
     } else if ((pTransform == 0) || (buf != pTransform->GetBuf())) {
       HWCLOGV_COND(eLogCombinedTransform,
@@ -1270,14 +1246,7 @@ void HwcTestCrtc::ConsistencyChecks(Hwcval::LayerList* ll, uint32_t hwcFrame) {
       // HWCCHECK is in HwcTestKernel::CheckSetEnter
       errorCode = eCheckSkipLayerUsage;
     } else {
-      Hwcval::ValidityType valid =
-          buf->ProtectedContentValidity(protChecker, hwcFrame);
-      if ((valid != ValidityType::Valid) &&
-          (valid != ValidityType::ValidUntilModeChange)) {
-        // HWCCHECK is in HwcTestKernel::CheckSetEnter
-        errorCode = eCheckInvProtDisp;
       }
-    }
 
     // If this is the snapshot layer in a rotation animation then this is not an
     // error

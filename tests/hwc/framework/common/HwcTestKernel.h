@@ -38,7 +38,6 @@
 #include "HwcvalSelector.h"
 #include "HwcvalStatistics.h"
 
-#include "HwcTestProtectionChecker.h"
 #include "HwcTestCompValThread.h"
 
 #include "HwcCrcReader.h"
@@ -181,9 +180,6 @@ class EXPORT_API HwcTestKernel {
   // A queue for Gem Open/Close/Flink events.
   // These must be queued to break a deadlock between gralloc and ourselves.
   Hwcval::Work::Queue mWorkQueue;
-
-  // For checking if protected content has valid session/instance
-  HwcTestProtectionChecker mProtChecker;
 
   // Time last onPrepare started
   int64_t mLastOnPrepareTime;
@@ -566,9 +562,6 @@ inline Hwcval::Mutex& HwcTestKernel::GetMutex() {
   return mMutex;
 }
 
-inline HwcTestProtectionChecker& HwcTestKernel::GetProtectionChecker() {
-  return mProtChecker;
-}
 
 inline HwcCrcReaderInterface& HwcTestKernel::GetCrcReader() {
   return mCrcReader;
