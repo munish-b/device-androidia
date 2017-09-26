@@ -75,7 +75,7 @@ class EXPORT_API Hwc2 {
   //                             hwcval_display_contents_t** displays);
   EXPORT_API void CheckPresentDisplayExit(hwcval_display_contents_t* displays, hwc2_display_t display, int32_t *outPresentFence);
   EXPORT_API void GetDisplayConfigsExit(int disp, uint32_t* configs,
-                                         size_t numConfigs);
+                                         uint32_t numConfigs);
   EXPORT_API void GetDisplayAttributesExit(uint32_t disp, uint32_t config, const int32_t attribute, int32_t* values);
 };
 }

@@ -77,7 +77,7 @@ class EXPORT_API Hwc1 {
 
   // Display config checking
   EXPORT_API void GetDisplayConfigsExit(int disp, uint32_t* configs,
-                                        size_t numConfigs);
+                                        uint32_t numConfigs);
   EXPORT_API void GetActiveConfigExit(uint32_t disp, uint32_t config);
   EXPORT_API void GetDisplayAttributesExit(uint32_t disp, uint32_t config,
                                            const int32_t attribute,

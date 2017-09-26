@@ -700,7 +700,7 @@ int Hwch::Frame::Send() {
         dcs[disp].display = 0;
 
         dc->outPresentFence = -1;
-        dc->numHwLayers = numLayers+1;
+        dc->numHwLayers = numLayers + 1;
         // dc->flags = GetFlags(disp);
         // dc->outbufAcquireFenceFd = -1;
 

@@ -66,9 +66,10 @@ Hwcval::LogDisplay::LogDisplay(uint32_t displayIx)
       mDisplayIx(displayIx) {
 }
 
-void Hwcval::LogDisplay::SetConfigs(uint32_t* configs, size_t numConfigs) {
+void Hwcval::LogDisplay::SetConfigs(uint32_t* configs, uint32_t numConfigs) {
   mConfigs.clear();
-  mConfigs.appendArray(configs, numConfigs);
+  if(configs) {
+  mConfigs.insert(mConfigs.begin(), configs, configs + numConfigs - 4);
 
   if (numConfigs > 0) {
     for (uint32_t i = 0; i < numConfigs; ++i) {
@@ -86,6 +87,7 @@ void Hwcval::LogDisplay::SetConfigs(uint32_t* configs, size_t numConfigs) {
                  "D%d: SetConfigs current config is now %x", mDisplayIx,
                  mConfigId);
   }
+ }
 }
 
 void Hwcval::LogDisplay::SetActiveConfig(uint32_t configId) {

@@ -635,7 +635,7 @@ int HwcShim::OnGetDisplayConfig(hwc2_device_t *device, hwc2_display_t display,
     ret = pfnGetDisplayConfig(hwc_composer_device, display, outNumConfigs,
                               outConfigs);
   }
-
+  mHwc2->GetDisplayConfigsExit(display, outConfigs, *outNumConfigs);
   return ret;
 }
 

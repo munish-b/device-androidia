@@ -649,7 +649,7 @@ void Hwcval::Hwc1::CheckBlankExit(int disp, int blank) {
 }
 
 void Hwcval::Hwc1::GetDisplayConfigsExit(int disp, uint32_t* configs,
-                                         size_t numConfigs) {
+                                         uint32_t numConfigs) {
   if (disp < HWCVAL_MAX_LOG_DISPLAYS) {
     mTestKernel->GetLogDisplay(disp).SetConfigs(configs, numConfigs);
   } else {
