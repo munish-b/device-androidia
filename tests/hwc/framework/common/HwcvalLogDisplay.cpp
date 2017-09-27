@@ -69,25 +69,25 @@ Hwcval::LogDisplay::LogDisplay(uint32_t displayIx)
 void Hwcval::LogDisplay::SetConfigs(uint32_t* configs, uint32_t numConfigs) {
   mConfigs.clear();
   if(configs) {
-  mConfigs.insert(mConfigs.begin(), configs, configs + numConfigs - 4);
+    mConfigs.insert(mConfigs.begin(), configs, configs + numConfigs - 4);
 
-  if (numConfigs > 0) {
-    for (uint32_t i = 0; i < numConfigs; ++i) {
-      if (configs[i] == mConfigId) {
-        // Currently set config id is valid, so we can keep it
-        HWCLOGD_COND(eLogHwcDisplayConfigs,
-                     "D%d: SetConfigs current config is still %x", mDisplayIx,
-                     mConfigId);
-        return;
-      }
+    if (numConfigs > 0) {
+      for (uint32_t i = 0; i < numConfigs; ++i) {
+        if (configs[i] == mConfigId) {
+          // Currently set config id is valid, so we can keep it
+          HWCLOGD_COND(eLogHwcDisplayConfigs,
+          "D%d: SetConfigs current config is still %x", mDisplayIx,
+           mConfigId);
+           return;
+         }
+       }
+
+       mConfigId = configs[0];
+       HWCLOGD_COND(eLogHwcDisplayConfigs,
+       "D%d: SetConfigs current config is now %x", mDisplayIx,
+        mConfigId);
     }
-
-    mConfigId = configs[0];
-    HWCLOGD_COND(eLogHwcDisplayConfigs,
-                 "D%d: SetConfigs current config is now %x", mDisplayIx,
-                 mConfigId);
   }
- }
 }
 
 void Hwcval::LogDisplay::SetActiveConfig(uint32_t configId) {
