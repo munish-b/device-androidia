@@ -646,21 +646,19 @@ int Hwch::Frame::Send() {
 
       display.RecordScreenSize();
     }
-#if 0 
-        /*FIX_ME disabled code as mInterface is incorrectly updated */
-        // Update the geometry for displays where the number of layers has changed
-        // but nothing else.
-        for (uint32_t disp=0; disp<numDisplays; ++disp)
-        {
-            if (mLayers[disp].size() != mNumLayers[disp])
-            {
-                mGeometryChanged[disp] = true;
-            }
-            mNumLayers[disp] = mLayers[disp].size();
-        }
-#endif
+    // Update the geometry for displays where the number of layers has changed
+    // but nothing else.
+    for (uint32_t disp=0; disp<numDisplays; ++disp)
+    {
+      if (mLayers[disp].size() != mNumLayers[disp])
+      {
+        mGeometryChanged[disp] = true;
+      }
+      mNumLayers[disp] = mLayers[disp].size();
+    }
     // Allocate enough space for a frame with all it's layers
     hwcval_display_contents_t dcs[MAX_DISPLAYS];
+    memset(dcs, 0, MAX_DISPLAYS * sizeof(hwcval_display_contents_t));
     /*        size_t displayStructSizes[MAX_DISPLAYS];
             size_t totalSize=0;
 
@@ -700,18 +698,15 @@ int Hwch::Frame::Send() {
         dcs[disp].display = 0;
 
         dc->outPresentFence = -1;
-        // dc->numHwLayers = numLayers+1;
-        // dc->flags = GetFlags(disp);
-        // dc->outbufAcquireFenceFd = -1;
+        dc->numHwLayers = numLayers + 1;
 
-        // Check if virtual or wireless display emulation is enabled. If so, set
         // dc->outbuf to point
         // to a real buffer in an Hwch::BufferSet.
         if (mSystem.IsVirtualDisplayEmulationEnabled() &&
             mSystem.GetDisplay(disp).IsVirtualDisplay()) {
-          // dc->outbuf = mSystem.GetDisplay(disp).GetNextExternalBuffer();
+            dc->outbuf = mSystem.GetDisplay(disp).GetNextExternalBuffer();
         } else {
-          // dc->outbuf = NULL;
+            dc->outbuf = NULL;
         }
 
         // Each layer must now populate HWC's layer list (in Layer::Send).
@@ -747,13 +742,14 @@ int Hwch::Frame::Send() {
               layer->AssignVisibleRegions(visibleRegions, visibleRegionCount);
           region.numRects = visibleRegionCount;
 
+          dc->hwLayers[i].visibleRegionScreen = region;
           dc->hwLayers[i].displayFrame = layer->mDisplayFrame;
           dc->hwLayers[i].planeAlpha = layer->mPlaneAlpha;
 
           mInterface.setLayerVisibleRegion(disp, outLayer, region);
 
           if (mGeometryChanged[disp]) {
-            // dc->hwLayers[i].compositionType = HWC_FRAMEBUFFER;
+            dc->hwLayers[i].compositionType = HWC2_COMPOSITION_CLIENT;
           }
 
           // If this is a video layer, get the rate and make sure we don't have
@@ -769,7 +765,7 @@ int Hwch::Frame::Send() {
         mInterface.CreateLayer(disp, &targetLayer);
         mInterface.setLayerCompositionType(disp, targetLayer,
                                            target.mCurrentCompType);
-        target.compositionType = target.mCurrentCompType;
+        dc->hwLayers[numLayers].compositionType = target.compositionType = target.mCurrentCompType;
         mInterface.setLayerTransform(disp, targetLayer,
                                      target.mPhysicalTransform);
         mInterface.setLayerSourceCrop(disp, targetLayer, target.mSourceCropf);
@@ -783,6 +779,7 @@ int Hwch::Frame::Send() {
         targetregion.rects =
             target.AssignVisibleRegions(visibleRegions, visibleRegionCount);
         targetregion.numRects = visibleRegionCount;
+        dc->hwLayers[numLayers].visibleRegionScreen = targetregion;
         dc->hwLayers[numLayers].displayFrame = *targetregion.rects;
         dc->hwLayers[numLayers].planeAlpha = target.mPlaneAlpha;
         mInterface.setLayerVisibleRegion(disp, targetLayer, targetregion);
@@ -943,7 +940,7 @@ int Hwch::Frame::Send() {
         hwcval_display_contents_t* dc = &dcs[disp];
 
         if (dc) {
-          mInterface.PresentDisplay(disp, &dc->outPresentFence);
+          mInterface.PresentDisplay(dc, disp, &dc->outPresentFence);
 
           uint32_t numLayers = mLayers[disp].size();
           if (dc->outPresentFence > 0)

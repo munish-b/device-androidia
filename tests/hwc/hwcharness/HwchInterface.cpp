@@ -416,18 +416,18 @@ int Hwch::Interface::ValidateDisplay(hwc2_display_t display,
   return ret;  // ERROR
 }
 
-int Hwch::Interface::PresentDisplay(hwc2_display_t display,
+int Hwch::Interface::PresentDisplay(hwcval_display_contents_t *display, hwc2_display_t disp,
                                     int32_t *outPresentFence) {
   int ret = -1;
 
   if (hwc_composer_device) {
     hwc2_device_t *hwc2_dvc =
         reinterpret_cast<hwc2_device_t *>(hwc_composer_device);
-    HWC2_PFN_PRESENT_DISPLAY pfnPresentDisplay =
-        reinterpret_cast<HWC2_PFN_PRESENT_DISPLAY>(
+    HWCVAL_PFN_PRESENT_DISPLAY pfnPresentDisplay =
+        reinterpret_cast<HWCVAL_PFN_PRESENT_DISPLAY>(
             hwc2_dvc->getFunction(hwc2_dvc, HWC2_FUNCTION_PRESENT_DISPLAY));
     if (pfnPresentDisplay) {
-      ret = pfnPresentDisplay(hwc2_dvc, display, outPresentFence);
+      ret = pfnPresentDisplay(display, hwc2_dvc, disp, outPresentFence);
     }
   }
 

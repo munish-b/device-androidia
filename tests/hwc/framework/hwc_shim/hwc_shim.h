@@ -132,7 +132,7 @@ class HwcShim : hwc2_device, public HwcShimInitializer {
   /// Get pointer to functions in Real drm
   int GetFunctionPointer(void *LibHandle, const char *Symbol,
                          void **FunctionHandle, uint32_t debug);
-  static int HookPresentDisplay(hwc2_device_t *device, hwc2_display_t display,
+  static int HookPresentDisplay(hwcval_display_contents_t* displays, hwc2_device_t *device, hwc2_display_t display,
                                 int32_t *outPresentFence);
   static int HookCreateVirtualDisplay(
       hwc2_device_t *device, uint32_t width, uint32_t height,
@@ -421,9 +421,9 @@ class HwcShim : hwc2_device, public HwcShimInitializer {
 
   /// Implementation of Real HWC - OnGetDisplayAttributes
   int OnGetDisplayAttributes(int disp, uint32_t config,
-                             const uint32_t *attributes, int32_t *values);
+                             const int32_t attribute, int32_t *values);
 
-  int OnPresentDisplay(hwc2_device_t *device, hwc2_display_t display,
+  int OnPresentDisplay(hwcval_display_contents_t* displays, hwc2_device_t *device, hwc2_display_t display,
                        int32_t *outPresentFence);
 
  private:

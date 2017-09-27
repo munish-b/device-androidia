@@ -16,7 +16,7 @@
 
 #ifndef __Hwcval_LogDisplay_h__
 #define __Hwcval_LogDisplay_h__
-
+#include<vector>
 namespace Hwcval {
 class LogDisplayMapping {
  public:
@@ -54,9 +54,9 @@ class LogDisplay {
   LogDisplay(uint32_t displayIx = eNoDisplayIx);
   void SetDisplayIx(uint32_t displayIx);
 
-  void SetConfigs(uint32_t* configs, size_t numConfigs);
+  void SetConfigs(uint32_t* configs, uint32_t numConfigs);
   void SetActiveConfig(uint32_t configId);
-  void SetDisplayAttributes(uint32_t configId, const uint32_t* attributes,
+  void SetDisplayAttributes(uint32_t configId, const int32_t attributes,
                             int32_t* values);
 
   int32_t GetWidth();
@@ -64,7 +64,7 @@ class LogDisplay {
 
  private:
   // Display config ids by display config index
-  android::Vector<uint32_t> mConfigs;
+  std::vector<uint32_t> mConfigs;
 
   // Current configuration
   uint32_t mVSyncPeriod;

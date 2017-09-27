@@ -32,7 +32,7 @@
 #define NS_PER_TIMELINE_TICK 1000000  // Timeline ticks are one per ms
 #define HWCH_BUFFERPARAM_UNDEFINED 0xffffffff
 #define HWCH_MIN_DISPLAYLIST_SIZE \
-  2U  // Minimum number of displays to keep in the list (even if some are null).
+  1U  // Minimum number of displays to keep in the list (even if some are null).
 #define HWCH_PAVP_WARMUP_FRAMECOUNT \
   30  // Number of frames to issue following initialization of protected content
       // before we should assume the session is active

@@ -649,7 +649,7 @@ void Hwcval::Hwc1::CheckBlankExit(int disp, int blank) {
 }
 
 void Hwcval::Hwc1::GetDisplayConfigsExit(int disp, uint32_t* configs,
-                                         size_t numConfigs) {
+                                         uint32_t numConfigs) {
   if (disp < HWCVAL_MAX_LOG_DISPLAYS) {
     mTestKernel->GetLogDisplay(disp).SetConfigs(configs, numConfigs);
   } else {
@@ -666,11 +666,11 @@ void Hwcval::Hwc1::GetActiveConfigExit(uint32_t disp, uint32_t config) {
 }
 
 void Hwcval::Hwc1::GetDisplayAttributesExit(uint32_t disp, uint32_t config,
-                                            const uint32_t* attributes,
+                                            const int32_t attribute,
                                             int32_t* values) {
   if (disp < HWCVAL_MAX_LOG_DISPLAYS) {
     mTestKernel->GetLogDisplay(disp)
-        .SetDisplayAttributes(config, attributes, values);
+        .SetDisplayAttributes(config, attribute, values);
   } else {
     HWCERROR(eCheckHwcParams, "getDisplayAttributes D%d config %d", disp,
              config);
