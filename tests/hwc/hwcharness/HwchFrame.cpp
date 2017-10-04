@@ -587,7 +587,6 @@ int Hwch::Frame::Send() {
 
   uint32_t numDisplays = mInterface.NumDisplays();
   bool connected[HWCVAL_MAX_CRTCS];
-  connected[0] = true;
 
   if (mInterface.GetDevice()) {
     // Do we wait for specified offset from VSync?
@@ -619,7 +618,7 @@ int Hwch::Frame::Send() {
     }
 
     // Update the geometry for additional displays
-    for (uint32_t disp = 1; disp < numDisplays; ++disp) {
+    for (uint32_t disp = 0; disp < numDisplays; ++disp) {
       Hwch::Display& display = mSystem.GetDisplay(disp);
       connected[disp] = display.IsConnected();
       if (connected[disp]) {
@@ -685,16 +684,13 @@ int Hwch::Frame::Send() {
     hwc_rect_t visibleRegions[MAX_VISIBLE_REGIONS];
     uint32_t visibleRegionCount = 0;
 
-    hwcval_display_contents_t* pDc = &dcs[0];
-
     for (uint32_t disp = 0; disp < numDisplays; ++disp) {
       float dispVideoRate = 0;
       uint32_t videoCount = 0;
-
       if (connected[disp]) {
         mGeometryChanged[disp] = true;
         uint32_t numLayers = mLayers[disp].size();
-        hwcval_display_contents_t* dc = pDc;
+        hwcval_display_contents_t* dc = &dcs[disp];
         dcs[disp].display = 0;
 
         dc->outPresentFence = -1;
@@ -938,6 +934,8 @@ int Hwch::Frame::Send() {
       // Note, these are return values from the HWC, you have to close them
       for (uint32_t disp = 0; disp < numDisplays; ++disp) {
         hwcval_display_contents_t* dc = &dcs[disp];
+        if (!connected[disp])
+          continue;
 
         if (dc) {
           mInterface.PresentDisplay(dc, disp, &dc->outPresentFence);
