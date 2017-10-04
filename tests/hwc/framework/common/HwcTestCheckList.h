@@ -149,8 +149,6 @@ DECLARE_CHECK(eLogNuclear, None, INFO, "Enable logs for Nuclear DRM", Dbg)
 DECLARE_CHECK(eLogParse, None, INFO, "Enable logs for log parser", Dbg)
 DECLARE_CHECK(eLogOptionParse, None, INFO,
               "Enable logs for parsing HWC options", Dbg)
-DECLARE_CHECK(eLogProtectedContent, None, INFO,
-              "Enable logs for protected content checks", Dbg)
 DECLARE_CHECK(eLogTimeline, None, INFO, "Enable logs for timelines and fences",
               Dbg)
 DECLARE_CHECK(eLogVideo, None, INFO, "Enable logs for video modes", Dbg)
@@ -322,24 +320,6 @@ DECLARE_CHECK(
 // Hwc Category
 //=====================================
 
-// For Display of protected content, each protected layer has to have session
-// and instance id.
-// Pavp and coreu are in charge of session and instance id management. In
-// particular they
-// notify HWC via binder interface when a session has become valid or invalid.
-// If HWC receives an encrypted layer with invalid session or instance, it is
-// required to
-// place that layer on the screen with black box.
-DECLARE_CHECK(
-    eCheckBadProtRenderBlack, HWC, ERROR,
-    "Protected layer with invalid session/instance should be rendered as black",
-    Hwc)
-
-// HWC has treated an encrypted layer as invalid, when we believe it is valid
-DECLARE_CHECK(
-    eCheckBlackProt, HWC, ERROR,
-    "Valid protected layer was treated as invalid and rendered as black", Hwc)
-
 // The OnSet call took longer than the predefined period.
 DECLARE_CHECK(eCheckOnSetLatency, HWC, WARN, "Check OnSet Latency", Hwc)
 
@@ -412,31 +392,11 @@ DECLARE_CHECK(eCheckHwcGeneratesVSync, HWC, WARN,
               "the timeout",
               Hwc)
 
-// Protected content has been passed to a composer not able to handle it.
-DECLARE_CHECK(eCheckHwcProt, HWC, ERROR,
-              "Protected content passed to or from an insecure composer", Hwc)
-
-// The HWC has not filtered out protected content with an invalid
-// session/instance.
-DECLARE_CHECK(
-    eCheckInvProtDisp, HWC, ERROR,
-    "Protected layer with invalid session/instance should not be displayed",
-    Hwc)
-
 // This error means that what is on the screen is wrong. There may be an extra
 // layer or a missing layer.
 // The handles in the layer list have not been fully expressed in the screen.
 DECLARE_CHECK(eCheckLayerDisplay, HWC, ERROR,
               "Missing or extra layers on the screen", Hwc)
-
-// In order to disable a protected session, coreu makes a call into HWC via
-// binder interface.
-// HWC is required to block this call until all the content that has been
-// invalidated has been removed from the screen.
-// If HWC blocks the call for much longer than expected, an error will be
-// generated.
-DECLARE_CHECK(eCheckProtEnableStall, HWC, WARN,
-              "Protected content enable/disable stall", Hwc)
 
 // When the harness fills a buffer, it waits on the previous release fence
 // before starting.
@@ -469,10 +429,6 @@ DECLARE_CHECK(eCheckRunAbort, HWC, FATAL,
 // harness.
 DECLARE_CHECK(eCheckSFRestarted, HWC, FATAL, "Surface Flinger Restarted", Hwc)
 
-// SF is not supposed to compose protected content. This should be done by VPP.
-DECLARE_CHECK(eCheckSfCompNotProt, HWC, WARN,
-              "SF requested to compose protected content", Hwc)
-
 // This error happens when a buffer previously identified as "SKIP" has been
 // placed on the screen in
 // a subsequent frame where it doesn't appear in the layer list.
@@ -500,10 +456,6 @@ DECLARE_CHECK(
 DECLARE_CHECK(eCheckHotPlugTimeout, HWC, ERROR,
               "Hot plug/unplug attempt not completed inside timeout period",
               Hwc)
-
-// No protected content teardown following hot plug
-DECLARE_CHECK(eCheckMissingTeardown, HWC, ERROR,
-              "No protected content teardown following hot plug", Hwc)
 
 // HWC must (normally?) provide a retire fence for every onSet on D0
 DECLARE_CHECK(eCheckNoRetireFenceOnPrimary, HWC, ERROR,
@@ -626,23 +578,6 @@ DECLARE_CHECK(eCheckLayerOrder, HWC, ERROR,
 // self-explanatory
 DECLARE_CHECK(eCheckDrmFence, HWC, ERROR,
               "Fence state incompatible with DRM call", HwcDisplay)
-
-// This is a requirement for some platforms, like BYT or CHT.
-DECLARE_CHECK(eCheckPavpOverlayPlane, HWC, ERROR,
-              "Protected content must not be sent to main plane", HwcDisplay)
-
-// This happens when:
-// - an encrypted buffer is displayed without decrypted flag in DRM
-// - a clear buffer is displayed with a decrpyt flag in DRM
-// - a buffer we know is protected is used as an iVP source without encrypted
-// media details
-// - a buffer we know is protected is sent to the WiDi stack without encrypted
-// media details
-// - a buffer we know is not protected is sent to the WiDi stack with encrypted
-// media details
-DECLARE_CHECK(eCheckPavpConsistent, HWC, ERROR,
-              "Protection state of the buffer inconsistent with buffer use",
-              HwcDisplay)
 
 // The screen has been blanked when there is no valid reason.
 DECLARE_CHECK(eCheckDisplayDisableInconsistency, HWC, ERROR,

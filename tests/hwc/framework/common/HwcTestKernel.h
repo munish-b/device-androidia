@@ -374,9 +374,6 @@ class EXPORT_API HwcTestKernel {
   HwcTestCrtc* GetHwcTestCrtcByDisplayIx(uint32_t displayIx,
                                          bool persistentCopy = false);
 
-  // Get reference to Protection checker
-  HwcTestProtectionChecker& GetProtectionChecker();
-
   // Get reference to CRC Reader
   HwcCrcReaderInterface& GetCrcReader();
 

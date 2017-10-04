@@ -120,7 +120,7 @@ EXPORT_API void Hwcval::Hwc2::CheckPresentDisplayEnter(hwcval_display_contents_t
     // 4. Recording of protected content validity. To avoid spurious errors it
     // is important that this is recorded
     //    at the right time, so we are actually caching in the layer list a
-    //    state that was recorded during onPrepare.
+    //    state that was recorded during onValidity.
     //
     // 5. Some additional flag setting and statistic recording.
     //
@@ -240,31 +240,8 @@ EXPORT_API void Hwcval::Hwc2::CheckPresentDisplayEnter(hwcval_display_contents_t
           buf->SetTransparentFromHarness();
         }
         ALOGE("%d", layer->visibleRegionScreen.numRects);
+
         Hwcval::Hwc1Layer valLayer(layer, buf);
-#if 0
-
-        // Get validity at OnPrepare
-        Hwcval::ValidityType validAtOnPrepare = mLayerValidity[displayIx][i];
-
-        Hwcval::ValidityType valid = ValidityType::Valid;
-
-        if (validAtOnPrepare != valid) {
-          // We can't validate, because we don't know exactly what the validity
-          // was when HWC saw the buffer.
-          valid = ValidityType::Indeterminate;
-        }
-
-        valLayer.SetValidity(valid);
-        HWCLOGD_COND(eLogProtectedContent,
-//                     "D%d layer %d protected content validity set to %s",
-   //                  displayIx, i, DrmShimBuffer::ValidityStr(valid));
-
-        if (valid != ValidityType::Valid) {
-          // These errors are reported in HwcTestCrtc::ConsistencyChecks.
-          HWCCHECK(eCheckInvProtDisp);
-          HWCCHECK(eCheckBadProtRenderBlack);
-        }
-#endif
         // Work out if we are full screen video on each display
         mTestKernel->DetermineFullScreenVideo(displayIx, i, valLayer, notes);
 

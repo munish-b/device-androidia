@@ -2846,38 +2846,7 @@ void DrmShimChecks::CheckIoctlI915DispScreenControl(
   }
 }
 #endif
-#if 0
-void DrmShimChecks::CheckIoctlI915SetDecrypt(struct drm_i915_reserved_reg_bit_2* decrypt)
-{
-    if (decrypt)
-    {
-        uint32_t planeId;
-        planeId = decrypt->plane;
-        HWCLOGD("CheckIoctlI915SetDecrypt: Plane %d enable %d", planeId, decrypt->enable);
-        HWCVAL_LOCK(_l,mMutex);
-        mWorkQueue.Process();
 
-        DrmShimPlane* plane = mPlanes.valueFor(planeId);
-
-        if (plane)
-        {
-            if (plane->IsMainPlane())
-            {
-                HWCCHECK(eCheckPavpOverlayPlane);
-                if (decrypt->enable)
-                {
-                    // TODO: Consider future platforms where this may not be the case.
-                    HWCERROR(eCheckPavpOverlayPlane, "Main plane %d does not support encryption", planeId);
-                }
-            }
-            else
-            {
-                plane->SetDecrypt(decrypt->enable);
-            }
-        }
-    }
-}
-#endif
 uint32_t DrmShimChecks::GetCrtcIdForConnector(uint32_t conn_id) {
   DrmShimCrtc* crtc = mConnectors.valueFor(conn_id).mCrtc;
 

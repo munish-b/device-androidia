@@ -63,8 +63,6 @@ class ApiTest : public RandomTest {
   MultiChoice<uint32_t> mColourChoice;
   MultiChoice<uint32_t> mUpdateRateChoice;
   Choice mHwcAcquireDelayChoice;
-  Choice mProtectedChooser;
-  MultiChoice<uint32_t> mProtectionValidityChoice;
   MultiChoice<uint32_t> mBlankTypeChoice;
   MultiChoice<uint32_t> mTileChoice;
   MultiChoice<Hwch::Layer::CompressionType> mRCChoice;
@@ -103,15 +101,6 @@ class ApiTest : public RandomTest {
   bool mDisplayFrameInsideScreen;
 
   float mPanelFitterScale;
-
-  // Percentage of layers created as protected
-  // (subject to mMaxProtectedLayers being the max number of protected layers at
-  // any one time
-  // and this defaults to 1).
-  int32_t mProtectedPercent;
-  bool mPavpInitialized;
-  uint32_t mMaxProtectedLayers;
-  uint32_t mProtectedLayers;
 
   // Percentage of layers created as skip layers
   int32_t mSkipPercent;

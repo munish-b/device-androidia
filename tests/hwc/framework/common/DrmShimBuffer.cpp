@@ -192,11 +192,9 @@ DrmShimBuffer::DrmShimBuffer(buffer_handle_t handle,
       mBlanking(false),
       mBlack(false),
       mFbtDisplay(-1),
-      mReallyProtected(false),
       mTransparentFromHarness(false),
       mBufferIx(0),
       mToBeCompared(0),
-      mShouldBeProtected(eProtDontCare),
       mAppearanceCount(0),
       mBufferContent(Hwcval::BufferContentType::ContentNotTested) {
   InitBufferInfo(&mDetails);
@@ -380,9 +378,6 @@ DrmShimBuffer* DrmShimBuffer::SetDetails(
   UpdateMediaDetails();
   UpdateResolveDetails();
 
-  // Normally buffer protection state is unknown. This will be ovewritten if
-  // this is an iVP target.
-  mShouldBeProtected = eProtDontCare;
   return this;
 }
 

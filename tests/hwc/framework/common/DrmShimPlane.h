@@ -154,7 +154,6 @@ class DrmShimPlane {
   void Flip();
 
   // Checks
-  void ProtectionCheck(android::sp<DrmShimBuffer>& buf);
   void Expand(DrmShimSortedTransformVector& transforms);
   bool FormatHasPixelAlpha();
   void ValidateFormat();

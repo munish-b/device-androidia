@@ -31,9 +31,6 @@
 #define HWCH_BUFFERPARAM_UNDEFINED 0xffffffff
 #define HWCH_MIN_DISPLAYLIST_SIZE \
   2U  // Minimum number of displays to keep in the list (even if some are null).
-#define HWCH_PAVP_WARMUP_FRAMECOUNT \
-  30  // Number of frames to issue following initialization of protected content
-      // before we should assume the session is active
 #define HWCH_ALL_DISPLAYS_UPDATED 0xf  // Bitmask for mUpdatedSinceFBComp
 
 // Definitions for randomized harness tests

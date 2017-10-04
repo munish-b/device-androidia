@@ -118,11 +118,6 @@ class System {
 
   bool IsWirelessDisplayCloningEnabled();
 
-  uint32_t GetPavpSessionId();
-  uint32_t GetPavpInstance();
-  bool StartProtectedContent();
-  bool ProtectedContentStarted();
-
   VSync& GetVSync();
 
   void SetSyncOption(const char* syncOptionStr);

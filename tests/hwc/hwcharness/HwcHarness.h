@@ -61,7 +61,6 @@ class HwcTestRunner : public Hwch::TestParams {
   uint32_t mReplayMatch;
   const char* mReplayFileName;
   bool mReplayNoTiming;
-  bool mReplayNoProtected;
   bool mReplayTest;
   float mWatchdogFps;
 
