@@ -135,7 +135,9 @@ int Hwch::Interface::GetDisplayAttributes(uint32_t disp) {
     att.vsyncPeriod = 0;
 
     HWCLOGI("GetDisplayAttributes: created virtual display on D%d", disp);
-  } else {
+  }
+
+  if (!(disp == HWCVAL_DISPLAY_ID_VIRTUAL)) {
     Hwch::Display &display = system.GetDisplay(disp);
     uint32_t nc = 0;  // sizeof(configs) / sizeof(uint32_t);
     int ret = -1;
@@ -245,6 +247,7 @@ int Hwch::Interface::GetDisplayAttributes(uint32_t disp) {
                                      attributes[j], values + j);
       }
     }
+
     if ((display.GetWidth() == 0) && (display.GetHeight() == 0)) {
       display.SetConnected(false);
     } else {

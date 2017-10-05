@@ -947,22 +947,6 @@ void Hwch::Layer::CalculateRects(Display& display) {
                mName.string());
     }
 
-#ifdef HWCVAL_BUILD_PAVP
-    if (mEncrypted != eNotEncrypted) {
-      uint32_t sessionId = Hwch::System::getInstance().GetPavpSessionId();
-      if (mEncrypted & eInvalidSessionId) {
-        ++sessionId;
-      }
-
-      uint32_t instance = Hwch::System::getInstance().GetPavpInstance();
-      if (mEncrypted & eInvalidInstanceId) {
-        // Instance must be in the valid range for this test to work
-        instance = (instance + 8) % 15;
-      }
-
-      mBufs->SetProtectionState(true, sessionId, instance);
-    }
-#endif
   }
 
   if (!((mSourceCropf.left >= 0) && (mSourceCropf.top >= 0) &&

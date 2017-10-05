@@ -40,7 +40,6 @@ Hwch::BufferSet::BufferSet(uint32_t width, uint32_t height, uint32_t format,
       mFormat(format),
       mUsage(usage),
       mLastTimestamp(0),
-      mEncrypted(false),
       mBuffersUpdatedThisFrame(false),
       mBuffersFilledAtLeastOnce(false) {
   if (numBuffers < 0) {

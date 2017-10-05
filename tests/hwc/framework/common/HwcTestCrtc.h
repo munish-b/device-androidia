@@ -261,8 +261,6 @@ class HwcTestCrtc : public android::RefBase {
   bool DidSetDisplayFail();
   bool IsTotalDisplayFail();
 
-  // Was a protected layer removed by HWC?
-  bool IsProtectedLayerRemoved();
 
   // Panel Fitter
   void SetPanelFitter(uint32_t mode);
@@ -496,9 +494,6 @@ class HwcTestCrtc : public android::RefBase {
 
   // Max permitted latency from unblank request to 1st real content on screen
   int64_t mMaxUnblankingLatency;
-
-  // Protected layer was removed by HWC because it believed it to be invalid
-  bool mProtectedLayerRemoved;
 
   // Effective refresh rate for extended mode / DRRS validation
   float mVideoRate;
@@ -778,10 +773,6 @@ inline bool HwcTestCrtc::IsHotPluggable() {
 
 inline uint32_t HwcTestCrtc::GetLastDisplayedFrame() {
   return mLastDisplayedFrame;
-}
-
-inline bool HwcTestCrtc::IsProtectedLayerRemoved() {
-  return mProtectedLayerRemoved;
 }
 
 inline bool HwcTestCrtc::IsDPMSInProgress() {

@@ -29,8 +29,6 @@
 
 using namespace hwcomposer;
 
-class HwcTestProtectionChecker;
-
 class HwcServiceShim : public BxService,
                        public Hwcval::Singleton<HwcServiceShim> {
  public:

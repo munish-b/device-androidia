@@ -95,22 +95,11 @@ class ReplayParser : public android::RefBase {
   const std::string unblank_string =
       ".+ HardwareManager::onBlank Display (\\d) Unblank.*$";
 
-  // Patterns related to Protected Content
-  const std::string encrypted_layer_string = "ENCRYPT\\(S:(\\d+), I:(\\d+)\\)";
-  const std::string protected_enable_string =
-      "Hwc service enable protected sessionID:(\\d+) instanceID:(\\d+)";
-  const std::string protected_disable_session_string =
-      "Hwc service disable protected sessionID:(\\d+)";
-  const std::string protected_disable_all_string =
-      "Hwc service disable all protected sessions";
-
   // RE2 compiled Regex data structures
   RE2 hwcl_onset_regex, hwcl_onset_1533_regex, hwcl_layer_regex_hdr,
       hwcl_layer_1533_regex_hdr, hwcl_layer_regex_vbr, hwcl_layer_regex_trl,
       ds_display_regex, ds_layer_regex, hotplug_connected_regex,
-      hotplug_disconnected_regex, blank_regex, unblank_regex,
-      encrypted_layer_regex, protected_enable_regex,
-      protected_disable_session_regex, protected_disable_all_regex;
+      hotplug_disconnected_regex, blank_regex, unblank_regex;
 
   // Flag to denote whether the parser is ready
   bool mRegexCompilationSuccess;
@@ -226,14 +215,6 @@ class ReplayParser : public android::RefBase {
 
   /** Parses blanking (i.e. blank / unblank) requests */
   bool ParseBlanking(const std::string& line, bool& blank, int32_t& disp);
-
-  /** Parses encrypted layers */
-  bool ParseEncrypted(const std::string& line, int32_t& session,
-                      int32_t& instance);
-  bool ParseProtectedEnable(const std::string& line, int32_t& session,
-                            int32_t& instance);
-  bool ParseProtectedDisableSession(const std::string& line, int32_t& session);
-  bool ParseProtectedDisableAll(const std::string& line);
 
   /*
    * Unit tests

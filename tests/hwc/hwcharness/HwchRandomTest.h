@@ -72,8 +72,6 @@ class RandomTest : public Test {
   // Statistics
   uint32_t mNumNormalLayersCreated;
   uint32_t mNumPanelFitterLayersCreated;
-  uint32_t mNumProtectedSessionsStarted;
-  uint32_t mNumProtectedLayersCreated;
   uint32_t mNumSkipLayersCreated;
   uint32_t mNumSuspends;
   uint32_t mNumFencePolicySelections;

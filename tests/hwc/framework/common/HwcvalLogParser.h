@@ -24,7 +24,6 @@
 #endif
 
 class HwcTestKernel;
-class HwcTestProtectionChecker;
 
 namespace Hwcval {
 class LogParser : public Hwcval::LogChecker {

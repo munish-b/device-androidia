@@ -32,8 +32,6 @@ Hwch::ApiTest::ApiTest(Hwch::Interface& interface)
       mPatternMgr(mSystem.GetPatternMgr()),
       mTransformChoice(0, 7, "mTransformChoice"),
       mHwcAcquireDelayChoice(0, 15, "mHwcAcquireDelayChoice"),
-      mProtectedChooser(0, 99, "mProtectedChooser"),
-      mProtectionValidityChoice("mProtectionValidityChoice"),
       mBlankTypeChoice("mBlankTypeChoice"),
       mTileChoice("mTileChoice"),
       mRCChoice("mRCChoice"),
@@ -45,9 +43,8 @@ Hwch::ApiTest::ApiTest(Hwch::Interface& interface)
       mMinDisplayFrameWidth(1),
       mMinDisplayFrameHeight(1),
       mScreenIsRotated90(false),
-      mNoNV12(false),
-      mPavpInitialized(false),
-      mProtectedLayers(0) {
+      mNoNV12(false)
+      {
 }
 
 void Hwch::ApiTest::SetLayerBlending(Hwch::Layer* layer) {
@@ -506,8 +503,6 @@ int Hwch::ApiTest::RunScenario() {
   int maxLayers = GetIntParam("max_layers", HWCH_APITEST_MAX_LAYERS);
   uint32_t maxRam = GetIntParam("max_ram", HWCH_MAX_RAM_USAGE);
   uint32_t maxFramesPerIteration = GetIntParam("max_frames_per_iteration", 100);
-  uint32_t protectedSessionCreatePeriod =
-      GetIntParam("protected_session_create_period", 200);
 
   bool panelFitter =
       (GetParam("panel_fitter") !=
@@ -533,15 +528,8 @@ int Hwch::ApiTest::RunScenario() {
       GetFloatParam("panel_fitter_validation_max_scale_factor",
                     HWCH_PANELFITVAL_MAX_SCALE_FACTOR);
 
-  // What percentage of protected layers shall we generate?
-  mProtectedPercent = max(GetIntParam("protected_percent", 0), 0);
-
   // What percentage of skip layers shall we generate?
   mSkipPercent = max(GetIntParam("skip_percent", 0), 0);
-
-  // Max number of protected layers at any one time.
-  // Currently a real scenario will never generate more than one.
-  mMaxProtectedLayers = GetIntParam("max_protected_layers", 1);
 
   // Include transparency filter tests
   bool testTransparencyFilter = (GetParam("transparency_filter") != 0);
@@ -746,14 +734,6 @@ int Hwch::ApiTest::RunScenario() {
   // Ensure we don't go into extended mode and create spurious errors
   UpdateInputState(true, false);
 
-  // If we intend to create protected layers, warm up HWC so we can create
-  // sessions straight away
-  // if needed.
-  if (mProtectedPercent > 0) {
-    WallpaperLayer wallpaper;
-    frame.Add(wallpaper);
-    frame.Send(HWCH_PAVP_WARMUP_FRAMECOUNT);
-  }
 
   for (uint32_t i = 0; i < testIterations; ++i) {
     HWCLOGD_COND(eLogHarness, ">>> Test Iteration %d <<<", i);
@@ -769,7 +749,6 @@ int Hwch::ApiTest::RunScenario() {
         }
       }
 
-      mProtectedLayers = 0;
 
       clearLayersCount = mClearLayersPeriod;
     }
@@ -819,18 +798,6 @@ int Hwch::ApiTest::RunScenario() {
       // We can leave some cloned layers, it will do no harm.
       maxDisp = numDisplays;
       ramPerDisp = maxRam / numDisplays;
-    }
-
-    // Count remaining protected layers
-    mProtectedLayers = 0;
-    for (uint32_t d = minDisp; d < maxDisp; ++d) {
-      for (uint32_t l = 0; l < frame.NumLayers(d); ++l) {
-        if (frame.GetLayer(l, d)->IsEncrypted()) {
-          if (!frame.GetLayer(l, d)->IsAClone()) {
-            ++mProtectedLayers;
-          }
-        }
-      }
     }
 
     for (uint32_t d = minDisp; d < maxDisp; ++d) {
@@ -1025,11 +992,6 @@ void Hwch::ApiTest::ReportStatistics() {
         mNumRCLayersRC, mNumRCLayersCC_RC, mNumRCLayersHint);
   }
 
-  printf(
-      "Protected sessions started: %6d Protected layers created:   %6d Skip "
-      "layers created:        %6d\n",
-      mNumProtectedSessionsStarted, mNumProtectedLayersCreated,
-      mNumSkipLayersCreated);
   printf(
       "Suspends:                   %6d Mode changes:               %6d Video "
       "opt mode changes:     %6d\n",

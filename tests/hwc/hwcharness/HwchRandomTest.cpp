@@ -53,8 +53,6 @@ Hwch::RandomTest::RandomTest(Hwch::Interface& interface)
       mWirelessDockingMode(false),
       mNumNormalLayersCreated(0),
       mNumPanelFitterLayersCreated(0),
-      mNumProtectedSessionsStarted(0),
-      mNumProtectedLayersCreated(0),
       mNumSkipLayersCreated(0),
       mNumSuspends(0),
       mNumFencePolicySelections(0),

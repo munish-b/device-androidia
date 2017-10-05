@@ -61,20 +61,6 @@ bool Hwch::ReplayHWCLRunner::AddLayers(Hwch::Frame& frame, uint32_t display,
     HWCLOGI_IF(REPLAY_HWCL_DEBUG, "Replay input: %s", line.c_str());
     mStats.parsed_layer_count++;
 
-#ifdef HWCVAL_BUILD_PAVP
-    // Increment the number of encrypted layers (if this is a protected layer)
-    int32_t session = 0, instance = 0;
-    if (mParser->ParseEncrypted(line, session, instance)) {
-      if (mReplayNoProtected) {
-        HWCLOGW(
-            "Saw protected layer in replay, but protected content is "
-            "disabled!");
-      }
-
-      ++mStats.encrypted_layer_count;
-    }
-#endif
-
     bool is_skip_layer = mParser->IsHwclLayerSkip(line);
     if (is_skip_layer) {
       mStats.skip_layer_count++;
@@ -321,19 +307,15 @@ void Hwch::ReplayHWCLRunner::PrintStatistics(void) {
       "HWC log replay complete. Statistics are as follows:\n"
       "\t%d 'onSet Entry' statements parsed (all displays)\n"
       "\t%d layers parsed (including framebuffer targets)\n"
-      "\t%d encrypted layers parsed\n"
       "\t%d skip layers parsed\n"
-      "\t%d frames sent to the HWC (%d to start protected session)\n"
-      "\t%d layers sent to HWC (%d to start protected session)\n"
+      "\t%d frames sent to the HWC \n"
+      "\t%d layers sent to HWC \n"
       "\t%d layers tracked across geometry changes\n"
       "\t%d layers allocated due to buffer tracking misses\n"
       "\t%d hot plug events detected (%d connects - %d disconnects)\n"
       "\t%d blanking events detected (%d blanks - %d unblanks)\n",
       mStats.parsed_onset_count, mStats.parsed_layer_count,
-      mStats.encrypted_layer_count, mStats.skip_layer_count,
-      mStats.hwc_frame_count,
-      mStats.processed_layer_count,
-      mStats.allocation_count, mStats.hotplug_count,
+      mStats.skip_layer_count, mStats.hwc_frame_count, mStats.allocation_count,
       mStats.hotplug_connects_count, mStats.hotplug_disconnects_count,
       mStats.blanking_count, mStats.blanking_blank_count,
       mStats.blanking_unblank_count);

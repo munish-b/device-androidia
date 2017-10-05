@@ -104,7 +104,6 @@ HwcTestCrtc::HwcTestCrtc(uint32_t crtcId, uint32_t width, uint32_t height,
       mDRRS(false),
       mMaxUnblankingLatency(HWCVAL_MAX_UNBLANKING_LATENCY_DEFAULT_US *
                             HWCVAL_US_TO_NS),
-      mProtectedLayerRemoved(false),
       mVideoRate(0.0) {
   memset(mPanelFitterModeCount, 0, sizeof(mPanelFitterModeCount));
 
@@ -969,21 +968,11 @@ void HwcTestCrtc::ConsistencyChecks(Hwcval::LayerList* ll, uint32_t hwcFrame) {
       } else if (pTransform && pTransform->GetBuf() == buf) {
         if (pTransform->IsFromSfComp()) {
           HWCLOGW(
-              "D%d P%d layer %d %s %s was composed by SF, will be black, "
-              "protected session/instance %s",
+              "D%d P%d layer %d %s %s was composed by SF, will be black",
               GetSfSrcDisplayIx(), GetDisplayIx(), i, buf->IdStr(strbuf));
         } else if (pcValidity == ValidityType::Invalid) {
-          logTransformPriority =
-              HWCERROR(eCheckInvProtDisp,
-                       "Display %d layer %d %s  was displayed, but should "
-                       "not be as session/instance is invalid",
-                       GetDisplayIx(), i, buf->IdStr(strbuf));
+         //Removed protected content check
         } else {
-          HWCLOGW(
-              "D%d P%d layer %d %s was displayed, protected "
-              "session/instance %s",
-              GetSfSrcDisplayIx(), GetDisplayIx(), i, buf->IdStr(strbuf),
-              DrmShimBuffer::ValidityStr(pcValidity));
         }
 
         // We have consumed the transform.
@@ -999,11 +988,7 @@ void HwcTestCrtc::ConsistencyChecks(Hwcval::LayerList* ll, uint32_t hwcFrame) {
                                                              this);
 
           if (croppedLayerTransform.IsDfIntersecting(mWidth, mHeight)) {
-            logTransformPriority = HWCERROR(eCheckBadProtRenderBlack,
-                                            "D%d P%d Layer %d %s was omitted, "
-                                            "not rendered as a black layer",
-                                            GetSfSrcDisplayIx(), GetDisplayIx(),
-                                            i, buf->IdStr(strbuf));
+            //removed protected content check
           } else {
             HWCLOGD_COND(eLogCroppedTransform,
                          "D%d Layer %d NOT VISIBLE on physical display %d",

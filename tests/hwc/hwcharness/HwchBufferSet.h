@@ -55,13 +55,6 @@ class BufferSet : public android::RefBase {
   uint32_t mUsage;
   uint64_t mLastTimestamp;
 
-  // Protection State
-  bool mEncrypted;
-#ifdef HWCVAL_BUILD_PAVP
-  uint32_t mSessionId;
-  uint32_t mInstance;
-#endif
-
   FencedBuffer* mFencedB;  // current buffer
   android::Vector<FencedBuffer> mBuffers;
 
@@ -92,10 +85,6 @@ class BufferSet : public android::RefBase {
 
   uint32_t GetWidth();
   uint32_t GetHeight();
-
-  void SetProtectionState(bool encrypted);
-  void SetProtectionState(bool encrypted, uint32_t sessionId,
-                          uint32_t instance);
 
   // Number of buffers so far created
   static uint32_t GetBufferCount();

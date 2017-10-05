@@ -41,19 +41,12 @@ Hwch::ReplayParser::ReplayParser()
       hotplug_connected_regex(hotplug_connected_string),
       hotplug_disconnected_regex(hotplug_disconnected_string),
       blank_regex(blank_string),
-      unblank_regex(unblank_string),
-      encrypted_layer_regex(encrypted_layer_string),
-      protected_enable_regex(protected_enable_string),
-      protected_disable_session_regex(protected_disable_session_string),
-      protected_disable_all_regex(protected_disable_all_string) {
+      unblank_regex(unblank_string) {
   // Check that the regex compilation was successful
   if (!hwcl_onset_regex.ok() || !hwcl_onset_1533_regex.ok() ||
       !hwcl_layer_regex_hdr.ok() || !hwcl_layer_1533_regex_hdr.ok() ||
       !hwcl_layer_regex_vbr.ok() || !hwcl_layer_regex_trl.ok() ||
-      !ds_display_regex.ok() || !ds_layer_regex.ok() ||
-      !encrypted_layer_regex.ok() || !protected_enable_regex.ok() ||
-      !protected_disable_session_regex.ok() ||
-      !protected_disable_all_regex.ok()) {
+      !ds_display_regex.ok() || !ds_layer_regex.ok()) {
     HWCERROR(eCheckInternalError, "Fatal error compiling regular expressions");
     mRegexCompilationSuccess = false;
   } else {
@@ -229,38 +222,6 @@ bool Hwch::ReplayParser::ParseBlanking(const std::string& line, bool& blank,
   return false;
 }
 
-bool Hwch::ReplayParser::ParseEncrypted(const std::string& line,
-                                        int32_t& session, int32_t& instance) {
-  if (RE2::PartialMatch(line, encrypted_layer_regex, &session, &instance)) {
-    return true;
-  }
-
-  return false;
-}
-
-bool Hwch::ReplayParser::ParseProtectedEnable(const std::string& line,
-                                              int32_t& session,
-                                              int32_t& instance) {
-  if (RE2::PartialMatch(line, protected_enable_regex, &session, &instance)) {
-    return true;
-  }
-
-  return false;
-}
-
-bool Hwch::ReplayParser::ParseProtectedDisableSession(const std::string& line,
-                                                      int32_t& session) {
-  if (RE2::PartialMatch(line, protected_disable_session_regex, &session)) {
-    return true;
-  }
-
-  return false;
-}
-
-bool Hwch::ReplayParser::ParseProtectedDisableAll(const std::string& line) {
-  return RE2::PartialMatch(line, protected_disable_all_regex);
-}
-
 bool Hwch::ReplayParser::ParseHwclOnSet(const std::string& line, int32_t& secs,
                                         int32_t& msecs, int32_t& nsecs,
                                         int32_t& frame, int32_t& disp,
@@ -426,12 +387,6 @@ bool Hwch::ReplayParser::ParseHwclLayer(const std::string& line,
                  "colour space string is malformed: %s",
                  line.c_str());
       return false;
-    }
-
-    // Should the layer be encrypted?
-    int32_t session = 0, instance = 0;
-    if (ParseEncrypted(line, session, instance)) {
-      layer.SetEncrypted(Hwch::Layer::eEncrypted);
     }
 
     layer.SetBlending(blend_val);
@@ -653,23 +608,6 @@ bool Hwch::ReplayParser::RunParserUnitTests() {
 
       "17786s 902ms HardwareManager::onBlank Display 0 Unblank SURFACE_FLINGER"
 
-      // Encrypted layers and patterns
-      "  0 FB 0x7f6e3f7e91a0: 0:0 60 BL:FF NV12Y 1920x1200    0.0,   "
-      "0.0,1920.0,1200.0    "
-      "0,   0,1920,1200 -1 -1 V:   0,   0,1920,1200 U:00004900 Hi:0 Fl:0 OP V "
-      "ENCRYPT(S:0, I:1) OV",
-
-      "  1 RT 0x7f6e3f7e9330:47:0 31 BL:FF 422i  1920x1200    0.0,   "
-      "0.0,1920.0,1200.0    "
-      "0,   0,1920,1200 -1 -3 V:   0,   0,1920,1200 U:00000a00 Hi:0 Fl:0 OP V "
-      "ENCRYPT(S:0, I:1) CO VppComposer",
-
-      "Hwc service enable protected sessionID:1 instanceID:96",
-
-      "Hwc service disable protected sessionID:1",
-
-      "Hwc service disable all protected sessions",
-
       // Legacy (15.33) Skip Layer Support
       "     5 FB 0x0: 0:0 BL:FF ???      0x0       0,   0,   0,   0->   0, "
       "983,1920,1200 -1 -1 "
@@ -691,10 +629,7 @@ bool Hwch::ReplayParser::RunParserUnitTests() {
         !ParseDSLayer(tests[i], test_layer) &&
         !ParseHotPlug(tests[i], connected) &&
         !ParseBlanking(tests[i], blank, disp) &&
-        !ParseEncrypted(tests[i], session, instance) &&
-        !ParseProtectedEnable(tests[i], session, instance) &&
-        !ParseProtectedDisableSession(tests[i], session) &&
-        !ParseProtectedDisableAll(tests[i]) && !IsHwclLayerSkip(tests[i])) {
+        !IsHwclLayerSkip(tests[i])) {
       std::printf("Regular expression match failed for: %s\n", tests[i]);
       ++num_failed;
     }

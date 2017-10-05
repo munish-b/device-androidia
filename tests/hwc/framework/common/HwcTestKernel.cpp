@@ -2064,11 +2064,6 @@ void HwcTestKernel::ValidateOptimizationMode(Hwcval::LayerList* ll) {
         // statement can be removed.
         if (numDisplays == 1 && mCrtcByDisplayIx[0] &&
             mCrtcByDisplayIx[0]->IsDisplayEnabled()) {
-          if (mCrtcByDisplayIx[0]->IsProtectedLayerRemoved()) {
-            HWCLOGV_COND(eLogVideo,
-                         "HWC replaced protected layer with black: skipping "
-                         "low DDR check");
-          } else {
             expectLowDDR = (ll->GetVideoFlags().mFullScreenVideo == eTrue);
             expectNormalDDR = (ll->GetVideoFlags().mFullScreenVideo == eFalse);
             HWCLOGV_COND(eLogVideo,
@@ -2076,7 +2071,6 @@ void HwcTestKernel::ValidateOptimizationMode(Hwcval::LayerList* ll) {
                          "expectNormalDDR=%d expectLowDDR=%d",
                          TriStateStr(ll->GetVideoFlags().mFullScreenVideo),
                          expectNormalDDR, expectLowDDR);
-          }
         } else {
           HWCLOGV_COND(eLogVideo,
                        "ValidateOptimizationMode: auto: %d displays active, "

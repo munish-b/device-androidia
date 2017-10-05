@@ -82,12 +82,9 @@ namespace Hwcval {
 typedef hwc_buffer_details_t buffer_details_t;
 }
 
-void LogProtection(int priority, buffer_handle_t handle, const char* desc);
-
 class DrmShimPlane;
 class DrmShimBuffer;
 class HwcTestBufferObject;
-class HwcTestProtectionChecker;
 
 typedef android::Vector<DrmShimTransform> DrmShimTransformVector;
 typedef android::SortedVector<DrmShimTransform> DrmShimSortedTransformVector;
@@ -129,7 +126,6 @@ class DrmShimBuffer : public android::RefBase {
 #endif
 
   char mStrFormat[5];  // Buffer format as a string
-  bool mReallyProtected;
   bool mTransparentFromHarness;
 
   FbIdVector mFbIds;
@@ -154,11 +150,6 @@ class DrmShimBuffer : public android::RefBase {
 
   // Total comparison mismatches so far
   static uint32_t mCompMismatchCount;
-
-  // Is the composition target from protected buffers
-  enum ShouldBeProtectedType { eProtDontCare, eProtYes, eProtNo };
-
-  ShouldBeProtectedType mShouldBeProtected;
 
   // How many times has the buffer appeared sequentially in the layer list?
   uint32_t mAppearanceCount;
@@ -264,24 +255,10 @@ class DrmShimBuffer : public android::RefBase {
   // (may not be same as our cached copy).
   int GetCurrentGlobalId();
 
-  bool HasMediaDetailsEncrypted();
-  void SetShouldBeProtected(bool shouldBeProtected);
-  bool IsProtectionCorrect();
-  bool IsReallyProtected();
-  void SetReallyProtected(bool prot);
-  uint32_t GetPavpSessionId();
-  uint32_t GetPavpInstance();
   uint32_t GetAuxOffset();
   uint32_t GetAuxPitch();
 
-  // Do we have valid session and instance id?
-  Hwcval::ValidityType IsProtectionValid(HwcTestProtectionChecker& protChecker,
-                                         uint32_t hwcFrame);
-  Hwcval::ValidityType ProtectedContentValidity(
-      HwcTestProtectionChecker& protChecker, uint32_t hwcFrame);
   static const char* ValidityStr(Hwcval::ValidityType valid);
-  const char* EncryptionStr(char* strbuf, size_t len = HWCVAL_DEFAULT_STRLEN);
-  const char* IdProtStr(char* strbuf, size_t len = HWCVAL_DEFAULT_STRLEN);
 
   uint32_t GetFormat() const;
   uint32_t GetDrmFormat();

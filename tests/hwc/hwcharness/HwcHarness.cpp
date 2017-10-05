@@ -165,7 +165,6 @@ HwcTestRunner::HwcTestRunner(Hwch::Interface& interface)
       mReplayMatch(0),
       mReplayFileName(NULL),
       mReplayNoTiming(false),
-      mReplayNoProtected(false),
       mReplayTest(false),
       mWatchdogFps(10.0),
       mWatchdog(this),
@@ -219,8 +218,6 @@ int HwcTestRunner::getargs(int argc, char** argv) {
           "display frame coordinates\n\n"
           "\t-replay_no_timing         Run without inter-frame spacing i.e. "
           "send frames to the HWC as fast as possible\n"
-          "\t-replay_no_protected      Disable protected content support in "
-          "the replay\n"
           "\t-replay_alpha=n           Sets an alpha value for all replay "
           "layers\n"
           "\t-replay_test              Runs the parser unit-tests and prints "
@@ -494,7 +491,6 @@ int HwcTestRunner::getargs(int argc, char** argv) {
   mAllTests = (GetParam("all") != 0);
 
   mReplayNoTiming = (GetParam("replay_no_timing") != 0);
-  mReplayNoProtected = (GetParam("replay_no_protected") != 0);
   mReplayTest = (GetParam("replay_test") != 0);
 
   // Minimal logging in stdout (let's not confuse those developers).
