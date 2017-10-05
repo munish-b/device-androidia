@@ -22,16 +22,13 @@
 #include <utils/KeyedVector.h>
 // NOTE: HwcTestDefs.h sets defines which are used in the HWC and DRM stack.
 // -> to be included before any other HWC or DRM header file.
-#ifdef HWCVAL_ENABLE_GRALLOC1
-#include <hardware/gralloc1.h>
-#endif
-#include <hardware/gralloc.h>
+
+#include "hwcbuffer.h"
 #include "HwcTestDefs.h"
-#include <ui/GraphicBuffer.h>
 #include "hardware/hwcomposer_defs.h"
 #include "HwcTestUtil.h"
 #include "DrmShimTransform.h"
-
+#include "public/nativebufferhandler.h"
 #if INTEL_UFO_GRALLOC_HAVE_PRIME
 #define NAME_OR_PRIME prime
 #define BUFIDSTR "prime"
@@ -42,20 +39,6 @@
 
 #define GRALLOC_DRM_GET_FORMAT 1
 #define GRALLOC_DRM_GET_DIMENSIONS 2
-
-class GrallocInterface {
- public:
-  GrallocInterface();
-  hw_module_t* gralloc;
-  uint16_t gralloc_version;
-#ifdef HWCVAL_ENABLE_GRALLOC1
-  gralloc1_device_t* gralloc1_dvc;
-  GRALLOC1_PFN_LOCK_FLEX pfn_lockflex;
-  GRALLOC1_PFN_GET_FORMAT pfn_getFormat;
-  GRALLOC1_PFN_GET_DIMENSIONS pfn_getDimensions;
-  GRALLOC1_PFN_GET_STRIDE pfn_getStride;
-#endif
-};
 
 typedef struct hwc_buffer_details {
   uint32_t width;
@@ -72,7 +55,6 @@ typedef struct hwc_buffer_details {
   int allocHeight;
   int allocOffsetX;
   int allocOffsetY;
-  int getBufferInfo(buffer_handle_t handle);
   static int getBufferHandles(buffer_handle_t handle, uint32_t *handles);
 } hwc_buffer_details_t;
 
@@ -105,7 +87,7 @@ class DrmShimBuffer : public android::RefBase {
   typedef android::KeyedVector<uint32_t, FbIdData> FbIdVector;
 
  protected:
-  buffer_handle_t mHandle;         // Buffer handle
+  HWCNativeHandle mHandle;         // Buffer handle
   HwcTestBufferObjectVector mBos;  // All open buffer objects
 
   int64_t mDsId;  // ADF device-specific Id
@@ -140,10 +122,10 @@ class DrmShimBuffer : public android::RefBase {
   Hwcval::FrameNums mLastOnSetFrame;
 
   // Shadow buffer for reference composition
-  android::sp<android::GraphicBuffer> mRef;
+  HWCNativeHandle mRefBuf;
 
   // Local copy of graphic buffer (only when needed for comparison)
-  android::sp<android::GraphicBuffer> mBufCpy;
+  HWCNativeHandle mBufCpy;
 
   // Flag to indicate comparison is needed
   int32_t mToBeCompared;
@@ -168,7 +150,7 @@ class DrmShimBuffer : public android::RefBase {
                                  unsigned char* refData);
 
  public:
-  DrmShimBuffer(buffer_handle_t handle, Hwcval::BufferSourceType bufferSource =
+  DrmShimBuffer(HWCNativeHandle handle, Hwcval::BufferSourceType bufferSource =
                                             Hwcval::BufferSourceType::Input);
   ~DrmShimBuffer();
 
@@ -177,8 +159,8 @@ class DrmShimBuffer : public android::RefBase {
 
   void FreeBufCopies();
 
-  buffer_handle_t GetHandle() const;
-  DrmShimBuffer* SetHandle(buffer_handle_t handle);
+  HWCNativeHandle GetHandle() const;
+  DrmShimBuffer* SetHandle(HWCNativeHandle handle);
 
   bool IsOpen();
   uint32_t GetOpenCount();
@@ -296,14 +278,14 @@ class DrmShimBuffer : public android::RefBase {
 
   /// Composition reference buffer handling
   /// Set reference to the reference buffer
-  void SetRef(android::sp<android::GraphicBuffer>& refBuf);
+  void SetRef(HWCNativeHandle& refBuf);
   void SetToBeCompared(bool toBeCompared = true);
   bool IsToBeCompared();
   bool IsToBeComparedOnce();
 
   /// Set copy of buffer for comparison purposes
-  void SetBufCopy(android::sp<android::GraphicBuffer>& buf);
-  android::sp<android::GraphicBuffer> GetBufCopy();
+  void SetBufCopy(HWCNativeHandle& buf);
+  HWCNativeHandle GetBufCopy();
   bool HasBufCopy();
 
   /// Appearance counting (number of times sequentially in the layer list)
@@ -313,9 +295,7 @@ class DrmShimBuffer : public android::RefBase {
 
   /// Is content of the buffer all nulls?
   bool IsBufferTransparent(const hwc_rect_t& rect);
-  static bool IsBufferTransparent(struct gralloc_module_t* gralloc,
-                                  Hwcval::buffer_details_t& bi,
-                                  buffer_handle_t handle,
+  static bool IsBufferTransparent(HWCNativeHandle handle,
                                   const hwc_rect_t& rect);
 
   /// Compare buffer copy with copy of buffer from reference composition

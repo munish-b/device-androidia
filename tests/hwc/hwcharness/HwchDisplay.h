@@ -79,7 +79,7 @@ class Display {
   ~Display();
 
   // Initialise, and set display index
-  void Init(uint32_t ix, Hwch::System* system);
+  void Init(hwcomposer::NativeBufferHandler *bufferHandler, uint32_t ix, Hwch::System* system);
 
   struct Attributes {
     uint32_t vsyncPeriod;
@@ -130,7 +130,7 @@ class Display {
   void CreateExternalBufferSet(void);
 
   // Returns the next handle in the buffer set.
-  buffer_handle_t GetNextExternalBuffer(void);
+  HWCNativeHandle GetNextExternalBuffer(void);
 
   // Display mode control
   typedef HwcsDisplayModeInfo Mode;
@@ -172,6 +172,7 @@ class Display {
   BufferFormatConfigManager* mFmtCfgMgr;
 
   std::vector<Mode> mModes;
+  hwcomposer::NativeBufferHandler *bufHandler;
 };
 };
 

@@ -19,7 +19,7 @@
 #include "HwchSystem.h"
 #include "HwchPngImage.h"
 
-#include <ui/GraphicBuffer.h>
+#include "os/android/platformdefines.h"
 
 #include "HwcTestState.h"
 #include "HwcTestUtil.h"
@@ -279,19 +279,19 @@ Hwch::SolidColourPtn::SolidColourPtn(uint32_t colour) {
 Hwch::SolidColourPtn::~SolidColourPtn() {
 }
 
-int Hwch::SolidColourPtn::Fill(android::sp<android::GraphicBuffer> buf,
+int Hwch::SolidColourPtn::Fill(HWCNativeHandle buf,
                                const hwc_rect_t& rect, uint32_t& bufferParam) {
   HWCVAL_UNUSED(bufferParam);
 
   void* data = 0;
   unsigned char* chromaStart = 0;
 
-  android::PixelFormat format = buf->getPixelFormat();
+  android::PixelFormat format = buf->buffer_->getPixelFormat();
   mPixel = SPixelWord(mColour, format);
-  uint32_t left = max(0, min((int)buf->getWidth(), rect.left));
-  uint32_t top = max(0, min((int)buf->getHeight(), rect.top));
-  uint32_t right = max(0, min((int)buf->getWidth(), rect.right));
-  uint32_t bottom = max(0, min((int)buf->getHeight(), rect.bottom));
+  uint32_t left = max(0, min((int)buf->buffer_->getWidth(), rect.left));
+  uint32_t top = max(0, min((int)buf->buffer_->getHeight(), rect.top));
+  uint32_t right = max(0, min((int)buf->buffer_->getWidth(), rect.right));
+  uint32_t bottom = max(0, min((int)buf->buffer_->getHeight(), rect.bottom));
   uint32_t height = bottom - top;
   uint32_t width = right - left;
   uint32_t err = 0;
@@ -299,11 +299,11 @@ int Hwch::SolidColourPtn::Fill(android::sp<android::GraphicBuffer> buf,
   uint32_t cstride = 0;
 
   // Fill gralloc buffer
-  err = buf->lock(GRALLOC_USAGE_SW_WRITE_OFTEN, &data);
-  stride = buf->getStride();
+  err = buf->buffer_->lock(GRALLOC_USAGE_SW_WRITE_OFTEN, &data);
+  stride = buf->buffer_->getStride();
 
   HWCLOGD_IF(BUFFER_DEBUG, "FillBuffer: stride=%d\n", stride);
-  HWCLOGD_IF(BUFFER_DEBUG, "FillBuffer: height=%d\n", buf->getHeight());
+  HWCLOGD_IF(BUFFER_DEBUG, "FillBuffer: height=%d\n", buf->buffer_->getHeight());
   HWCLOGD_IF(BUFFER_DEBUG, "FillBuffer: fillValue=0x%.8x\n", mPixel);
 
   if (!err && data) {
@@ -330,7 +330,7 @@ int Hwch::SolidColourPtn::Fill(android::sp<android::GraphicBuffer> buf,
 
       lineStart += stride * mPixel.mBytesPerPixel;
     }
-    buf->unlock();
+    buf->buffer_->unlock();
   } else {
     HWCERROR(eCheckInternalError, "Error locking GraphicBuffer to fill %08x\n",
              mPixel);
@@ -438,7 +438,7 @@ void Hwch::HorizontalLinePtn::FillChromaVLineYV12(unsigned char* chromaData,
   }
 }
 
-int Hwch::HorizontalLinePtn::Fill(android::sp<android::GraphicBuffer> buf,
+int Hwch::HorizontalLinePtn::Fill(HWCNativeHandle buf,
                                   const hwc_rect_t& rect,
                                   uint32_t& bufferParam) {
   void* data = 0;
@@ -446,10 +446,10 @@ int Hwch::HorizontalLinePtn::Fill(android::sp<android::GraphicBuffer> buf,
   unsigned char* ustart = 0;
   unsigned char* vstart = 0;
 
-  uint32_t left = max(0, min((int)buf->getWidth(), rect.left));
-  uint32_t top = max(0, min((int)buf->getHeight(), rect.top));
-  uint32_t right = max(0, min((int)buf->getWidth(), rect.right));
-  uint32_t bottom = max(0, min((int)buf->getHeight(), rect.bottom));
+  uint32_t left = max(0, min((int)buf->buffer_->getWidth(), rect.left));
+  uint32_t top = max(0, min((int)buf->buffer_->getHeight(), rect.top));
+  uint32_t right = max(0, min((int)buf->buffer_->getWidth(), rect.right));
+  uint32_t bottom = max(0, min((int)buf->buffer_->getHeight(), rect.bottom));
   uint32_t height = bottom - top;
   uint32_t width = right - left;
   uint32_t err = 0;
@@ -459,14 +459,14 @@ int Hwch::HorizontalLinePtn::Fill(android::sp<android::GraphicBuffer> buf,
 
   if ((height == 0) || (width == 0)) {
     HWCLOGD_COND(eLogHarness, "HorizontalLinePtn::Fill aborted %p %dx%d",
-                 buf->handle, width, height);
+                 buf->handle_, width, height);
     return 0;
   }
 
   // Fill gralloc buffer
-  android::PixelFormat format = buf->getPixelFormat();
+  android::PixelFormat format = buf->buffer_->getPixelFormat();
   if ((format == HAL_PIXEL_FORMAT_YV12)) {
-    err = buf->lockYCbCr(GRALLOC_USAGE_SW_WRITE_OFTEN, &ycbcr);
+    err = buf->buffer_->lockYCbCr(GRALLOC_USAGE_SW_WRITE_OFTEN, &ycbcr);
     data = ycbcr.y;
     chromaStart = (unsigned char*)ycbcr.cb;
     ustart = (unsigned char*)ycbcr.cb;
@@ -477,10 +477,10 @@ int Hwch::HorizontalLinePtn::Fill(android::sp<android::GraphicBuffer> buf,
                  "Starting %s fill, handle %p %dx%d, ustart=%p, vstart=%p, "
                  "stride=%d, cstride=%d",
                  (format == HAL_PIXEL_FORMAT_YV12) ? "YV12" : "NV12",
-                 buf->handle, width, height, ustart, vstart, stride, cstride);
+                 buf->handle_, width, height, ustart, vstart, stride, cstride);
   } else {
-    err = buf->lock(GRALLOC_USAGE_SW_WRITE_OFTEN, &data);
-    stride = buf->getStride();
+    err = buf->buffer_->lock(GRALLOC_USAGE_SW_WRITE_OFTEN, &data);
+    stride = buf->buffer_->getStride();
   }
 
   if (err || (data == 0)) {
@@ -552,7 +552,7 @@ int Hwch::HorizontalLinePtn::Fill(android::sp<android::GraphicBuffer> buf,
     }
   }
 
-  buf->unlock();
+  buf->buffer_->unlock();
   bufferParam = mLine;
 
   return 0;
@@ -593,28 +593,28 @@ void Hwch::PngPtn::FillLineFromImage(unsigned char* data, uint32_t row,
   memcpy(ptr, rowData, width * mFgPixel.mBytesPerPixel);
 }
 
-int Hwch::PngPtn::Fill(android::sp<android::GraphicBuffer> buf,
+int Hwch::PngPtn::Fill(HWCNativeHandle buf,
                        const hwc_rect_t& rect, uint32_t& bufferParam) {
   ALOG_ASSERT(mRowPointers);
   void* data = 0;
 
-  uint32_t left = max(0, min((int)buf->getWidth(), rect.left));
-  uint32_t top = max(0, min((int)buf->getHeight(), rect.top));
-  uint32_t right = max(0, min((int)buf->getWidth(), rect.right));
-  uint32_t bottom = max(0, min((int)buf->getHeight(), rect.bottom));
+  uint32_t left = max(0, min((int)buf->buffer_->getWidth(), rect.left));
+  uint32_t top = max(0, min((int)buf->buffer_->getHeight(), rect.top));
+  uint32_t right = max(0, min((int)buf->buffer_->getWidth(), rect.right));
+  uint32_t bottom = max(0, min((int)buf->buffer_->getHeight(), rect.bottom));
   uint32_t height = bottom - top;
   uint32_t width = right - left;
 
   // Fill gralloc buffer
-  uint32_t err = buf->lock(GRALLOC_USAGE_SW_WRITE_OFTEN, &data);
+  uint32_t err = buf->buffer_->lock(GRALLOC_USAGE_SW_WRITE_OFTEN, &data);
 
   if (err || (data == 0)) {
     HWCERROR(eCheckInternalError, "Gralloc lock failed with err = %d", err);
     return 1;
   }
 
-  uint32_t stride = buf->getStride();
-  android::PixelFormat format = buf->getPixelFormat();
+  uint32_t stride = buf->buffer_->getStride();
+  android::PixelFormat format = buf->buffer_->getPixelFormat();
 
   mFgPixel = SPixelWord(mFgColour, format);
 
@@ -647,7 +647,7 @@ int Hwch::PngPtn::Fill(android::sp<android::GraphicBuffer> buf,
     }
   }
 
-  buf->unlock();
+  buf->buffer_->unlock();
   bufferParam = mLine;
 
   return 0;

@@ -19,7 +19,7 @@
 
 #include <utils/Vector.h>
 #include <utils/RefBase.h>
-#include <ui/GraphicBuffer.h>
+#include "os/android/platformdefines.h"
 #include <hardware/hwcomposer2.h>
 
 #include "HwchDefs.h"
@@ -48,7 +48,7 @@ class HorizontalLineGlPtn : public GlPattern {
   HorizontalLineGlPtn(float updateFreq, uint32_t fgColour, uint32_t bgColour);
   virtual ~HorizontalLineGlPtn();
 
-  virtual int Fill(android::sp<android::GraphicBuffer> buf,
+  virtual int Fill(HWCNativeHandle buf,
                    const hwc_rect_t& rect, uint32_t& bufferParam);
   virtual void Advance();
 
@@ -66,7 +66,7 @@ class MatrixGlPtn : public HorizontalLineGlPtn {
               uint32_t bgColour);
   virtual ~MatrixGlPtn();
 
-  virtual int Fill(android::sp<android::GraphicBuffer> buf,
+  virtual int Fill(HWCNativeHandle buf,
                    const hwc_rect_t& rect, uint32_t& bufferParam);
 
  protected:
@@ -86,7 +86,7 @@ class PngGlPtn : public GlPattern {
   // Connect to an image, we get ownership
   void Set(android::sp<Hwch::PngImage> spImage);
 
-  virtual int Fill(android::sp<android::GraphicBuffer> buf,
+  virtual int Fill(HWCNativeHandle buf,
                    const hwc_rect_t& rect, uint32_t& bufferParam);
   virtual void Advance();
 
@@ -114,7 +114,7 @@ class ClearGlPtn : public GlPattern {
   ClearGlPtn(float updateFreq, uint32_t fgColour, uint32_t bgColour);
   virtual ~ClearGlPtn();
 
-  virtual int Fill(android::sp<android::GraphicBuffer> buf,
+  virtual int Fill(HWCNativeHandle buf,
                    const hwc_rect_t& rect, uint32_t& bufferParam);
   virtual void Advance();
   virtual bool IsAllTransparent();

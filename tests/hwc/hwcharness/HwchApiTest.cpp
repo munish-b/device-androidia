@@ -308,7 +308,7 @@ Hwch::Layer* Hwch::ApiTest::CreatePFLayerInternal(const char* name,
   HWCLOGV_COND(eLogHarness, "New buffer format 0x%x %s %dx%d", format,
                FormatToStr(format), bufferWidth, bufferHeight);
 
-  Layer* layer = new Layer(name, bufferWidth, bufferHeight, format);
+  Layer* layer = new Layer(mInterface.bufHandler, name, bufferWidth, bufferHeight, format);
 
   layer->SetTransform(transform);
 
@@ -368,7 +368,7 @@ Hwch::Layer* Hwch::ApiTest::CreateLayer(const char* name) {
   HWCLOGV_COND(eLogHarness, "New buffer format 0x%x %s %dx%d", format,
                FormatToStr(format), width, height);
 
-  Layer* layer = new Layer(name, width, height, format);
+  Layer* layer = new Layer(mInterface.bufHandler, name, width, height, format);
   SetLayerCrop(layer, format, width, height);
   SetLayerDisplayFrame(layer);
   SetLayerBlending(layer);
@@ -427,7 +427,7 @@ Hwch::Layer* Hwch::ApiTest::CreateOverlayLayer(const char* name,
                format, FormatToStr(format), colour);
 
   Layer* layer =
-      new Layer(name, inLayer->GetWidth(), inLayer->GetHeight(), format);
+      new Layer(mInterface.bufHandler, name, inLayer->GetWidth(), inLayer->GetHeight(), format);
   layer->SetCrop(inLayer->GetCrop());
   layer->SetLogicalDisplayFrame(inLayer->GetLogicalDisplayFrame());
   layer->SetBlending(HWC_BLENDING_PREMULT);

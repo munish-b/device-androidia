@@ -108,7 +108,7 @@ void Hwcval::HwcvalLayerToHwc1(const char *str, uint32_t ix,
           (double)sourceCropf.right, (double)sourceCropf.bottom,
           displayFrame.left, displayFrame.top, displayFrame.right,
           displayFrame.bottom, in.GetPlaneAlpha());
-  out.handle = in.GetHandle();
+  out.gralloc_handle = in.GetHandle();
   out.sourceCropf = sourceCropf;
   out.displayFrame = displayFrame;
   out.transform = in.GetTransformId();

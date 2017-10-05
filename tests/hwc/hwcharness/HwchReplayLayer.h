@@ -54,9 +54,9 @@ class ReplayLayer : public Layer, public android::RefBase {
    *
    * @details Calls the parent class constructor.
    */
-  ReplayLayer(const char* name, Coord<int32_t> width, Coord<int32_t> height,
+  ReplayLayer(hwcomposer::NativeBufferHandler *bufHandler, const char* name, Coord<int32_t> width, Coord<int32_t> height,
               uint32_t format = HAL_PIXEL_FORMAT_RGBA_8888, uint32_t bufs = 1)
-      : Layer(name, width, height, format, bufs){};
+      : Layer(bufHandler, name, width, height, format, bufs){};
 
   /** Copy constructor (required for Dup). */
   ReplayLayer(const ReplayLayer& rhs)

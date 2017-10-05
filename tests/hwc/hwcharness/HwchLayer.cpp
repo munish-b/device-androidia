@@ -23,7 +23,7 @@
 #include "HwcTestLog.h"
 #include "HwcTestState.h"
 #include "HwcTestUtil.h"
-#include <ui/GraphicBuffer.h>
+#include "os/android/platformdefines.h"
 #include <graphics.h>
 #include <DrmShimBuffer.h>
 
@@ -146,7 +146,7 @@ Hwch::Layer::Layer()
   IncLayerCount();
 }
 
-Hwch::Layer::Layer(const char* name, Hwch::Coord<int32_t> width,
+Hwch::Layer::Layer(hwcomposer::NativeBufferHandler *bufferHandler, const char* name, Hwch::Coord<int32_t> width,
                    Hwch::Coord<int32_t> height, uint32_t pixelFormat,
                    int32_t numBuffers, uint32_t usage)
     : mCompType(HWC2_COMPOSITION_CLIENT),
@@ -188,12 +188,13 @@ Hwch::Layer::Layer(const char* name, Hwch::Coord<int32_t> width,
   HWCLOGI("Constructing layer %s %dx%d pixelFormat=%d numBuffers=%d usage=0x%x",
           mName.string(), mWidth.mValue, mHeight.mValue, mFormat, numBuffers,
           usage);
+  bufHandler = bufferHandler;
   memset(mClonedLayers, 0, sizeof(mClonedLayers));
 
   IncLayerCount();
 }
 
-Hwch::Layer::Layer(const Layer& rhs, bool clone)
+Hwch::Layer::Layer(hwcomposer::NativeBufferHandler *bufferHandler, const Layer& rhs, bool clone)
     : mCompType(HWC2_COMPOSITION_CLIENT),
       mCurrentCompType(HWC2_COMPOSITION_CLIENT),
       mHints(rhs.mHints),
@@ -230,6 +231,7 @@ Hwch::Layer::Layer(const Layer& rhs, bool clone)
 
 {
   memset(mClonedLayers, 0, sizeof(mClonedLayers));
+  bufHandler = bufferHandler;
   IncLayerCount();
 }
 
@@ -446,9 +448,9 @@ hwc_rect_t* Hwch::Layer::AssignVisibleRegions(hwc_rect_t* visibleRegions,
   return vr_rects;
 }
 
-buffer_handle_t Hwch::Layer::Send() {
+HWCNativeHandle Hwch::Layer::Send() {
   // The handle from the record file is now the key
-  buffer_handle_t handle;
+  HWCNativeHandle handle;
   HWCLOGV_COND(eLogHarness, "Sending layer %s @%p", mName.string(), this);
 
   bool patternNeedsUpdate = mPattern.get() && mPattern->FrameNeedsUpdate();
@@ -471,12 +473,12 @@ buffer_handle_t Hwch::Layer::Send() {
     mPattern->Advance();
 
     if (!mSystem.IsFillDisabled()) {
-      android::sp<android::GraphicBuffer> buf = mBufs->Get();
+      HWCNativeHandle buf = mBufs->Get();
 
-      if (buf.get()) {
+      if (buf->buffer_ != NULL) {
         // Update the Render Compression resolve state in Gralloc
         UpdateRCResolve();
-        mPattern->Fill(buf, Rect(0, 0, buf->getWidth(), buf->getHeight()),
+        mPattern->Fill(buf, Rect(0, 0, buf->buffer_->getWidth(), buf->buffer_->getHeight()),
                        mBufs->GetInstanceParam());
       } else {
         HWCLOGW("Layer %s current buffer is null so no fill", mName.string());
@@ -940,7 +942,7 @@ void Hwch::Layer::CalculateRects(Display& display) {
       usage |= GRALLOC_USAGE_SW_WRITE_MASK;
     }
 
-    mBufs = new BufferSet(width, height, mFormat, mNumBuffers, usage);
+    mBufs = new BufferSet(bufHandler, width, height, mFormat, mNumBuffers, usage);
     // mSystem.ResetTile();
     if (mBufs->GetHandle() == 0) {
       HWCERROR(eCheckTestBufferAlloc, "Failed to create buffers for layer %s",

@@ -24,7 +24,7 @@
 
 #include <utils/Vector.h>
 #include <utils/RefBase.h>
-#include <ui/GraphicBuffer.h>
+#include "os/android/platformdefines.h"
 #include <hardware/hwcomposer2.h>
 
 #include "HwchPattern.h"
@@ -107,7 +107,7 @@ class Layer {
   Coord<int32_t> mWidth;   // buffer width
   Coord<int32_t> mHeight;  // buffer height
   uint32_t mUsage;
-  buffer_handle_t handle;
+  HWCNativeHandle gralloc_handle;
   hwc2_layer_t hwc2_layer;
   // Forced tiling options
   enum {
@@ -179,13 +179,13 @@ class Layer {
   // Constructors and destructors
   Layer();
 
-  Layer(const char* name, Coord<int32_t> width, Coord<int32_t> height,
+  Layer(hwcomposer::NativeBufferHandler *bufferHandler, const char* name, Coord<int32_t> width, Coord<int32_t> height,
         uint32_t pixelFormat = HAL_PIXEL_FORMAT_RGBA_8888,
         int32_t numBuffers = -1,
         uint32_t usage = GRALLOC_USAGE_HW_COMPOSER | GRALLOC_USAGE_HW_TEXTURE |
                          GRALLOC_USAGE_HW_RENDER);
 
-  Layer(const Layer& rhs, bool clone = true);
+  Layer(hwcomposer::NativeBufferHandler *bufferHandler, const Layer& rhs, bool clone = true);
 
   virtual ~Layer();
 
@@ -270,7 +270,7 @@ class Layer {
   // handle);
   hwc_rect_t* AssignVisibleRegions(hwc_rect_t* visibleRegions,
                                    uint32_t& visibleRegionCount);
-  virtual buffer_handle_t Send();
+  virtual HWCNativeHandle Send();
 
   void SetCompositionType(uint32_t compType);
   void PostFrame(uint32_t compType, int releaseFenceFd);
@@ -304,6 +304,7 @@ class Layer {
   static const char* CompressionTypeStr(CompressionType ct);
   static const char* AuxBufferStateStr(int state);
 
+  hwcomposer::NativeBufferHandler *bufHandler;
  private:
   void UpdateRCResolve();
 };

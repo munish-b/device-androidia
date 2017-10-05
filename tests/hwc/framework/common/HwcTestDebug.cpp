@@ -58,7 +58,7 @@ uint32_t driverBufferOffset =
 uint32_t boOffset =
     MEMBER_OFFSET(Hack::intel::ufo::gralloc::Driver::Buffer, mBo);
 
-int lockCCS(gralloc_module_t* pGralloc, buffer_handle_t handle, int offset,
+int lockCCS(gralloc_module_t* pGralloc, HWCNativeHandle handle, int offset,
             void** vaddr) {
   HWCVAL_UNUSED(pGralloc);
   pGralloc->registerBuffer(pGralloc, handle);
@@ -123,7 +123,7 @@ int lockCCS(gralloc_module_t* pGralloc, buffer_handle_t handle, int offset,
   return 0;
 }
 
-int unlockCCS(gralloc_module_t* pGralloc, buffer_handle_t handle) {
+int unlockCCS(gralloc_module_t* pGralloc, HWCNativeHandle handle) {
   HWCVAL_UNUSED(pGralloc);
 
   Hack::intel::ufo::gralloc::Module* pModule =
@@ -235,7 +235,7 @@ static bool MakeDirectory(const char* directory) {
 
   return true;
 }
-
+#if 0
 bool HwcTestCanDumpBuffer(Hwcval::buffer_details_t& bufferInfo) {
   switch (bufferInfo.format) {
     case HAL_PIXEL_FORMAT_RGBA_8888:
@@ -255,24 +255,16 @@ bool HwcTestCanDumpBuffer(Hwcval::buffer_details_t& bufferInfo) {
       return false;
   }
 }
-
+#endif
 bool HwcTestDumpGrallocBufferToDisk(const char* pchFilename, uint32_t num,
-                                    buffer_handle_t grallocHandle,
+                                    HWCNativeHandle grallocHandle,
                                     uint32_t outputDumpMask) {
   hw_module_t const* module;
 
-  int err = hw_get_module(GRALLOC_HARDWARE_MODULE_ID, &module);
-  ALOG_ASSERT(!err);
-
-  struct gralloc_module_t* pGralloc = (struct gralloc_module_t*)module;
-
-  Hwcval::buffer_details_t bufferInfo;
-  DrmShimBuffer::GetBufferInfo(grallocHandle, &bufferInfo);
-
   uint8_t* pBufferPixels = 0;
 
-  pGralloc->lock(pGralloc, grallocHandle, GRALLOC_USAGE_SW_READ_MASK, 0, 0,
-                 bufferInfo.width, bufferInfo.height, (void**)&pBufferPixels);
+  grallocHandle->buffer_->lock(GRALLOC_USAGE_SW_READ_MASK,
+                 (void**)&pBufferPixels);
 
   if (!pBufferPixels) {
     HWCLOGE("Failed to lock buffer %p", grallocHandle);
@@ -280,16 +272,15 @@ bool HwcTestDumpGrallocBufferToDisk(const char* pchFilename, uint32_t num,
   }
 
   bool bRet = HwcTestDumpMemBufferToDisk(pchFilename, num, grallocHandle,
-                                         bufferInfo, bufferInfo.pitch,
                                          outputDumpMask, pBufferPixels);
 
-  pGralloc->unlock(pGralloc, grallocHandle);
+  grallocHandle->buffer_->unlock();
 
   return bRet;
 }
 
 bool HwcTestDumpAuxBufferToDisk(const char* pchFilename, uint32_t num,
-                                buffer_handle_t grallocHandle) {
+                                HWCNativeHandle grallocHandle) {
 #if INTEL_UFO_GRALLOC_HAVE_BUFFER_DETAILS_1 && \
     UFO_GRALLOC_ENABLE_AUX_ALLOCATIONS
   bool bRet = true;
@@ -417,18 +408,18 @@ bool HwcTestDumpAuxBufferToDisk(const char* pchFilename, uint32_t num,
 
 bool HwcTestDumpMemBufferToDisk(const char* pchFilename, uint32_t num,
                                 const void* handle,
-                                Hwcval::buffer_details_t& bufferInfo,
-                                uint32_t stride, uint32_t outputDumpMask,
+                                uint32_t outputDumpMask,
                                 uint8_t* pData) {
   bool bRet = true;
+#if 0
   uint32_t size = bufferInfo.size;
-  const uint32_t width = bufferInfo.width;
-  const uint32_t height = bufferInfo.height;
+  const uint32_t width = ;//bufferInfo.width;
+  const uint32_t height =;// bufferInfo.height;
   const uint32_t pitch = stride;
 
   if (!HwcTestCanDumpBuffer(bufferInfo)) {
     HWCLOGW("Can't dump format 0x%x %s to %s", bufferInfo.format,
-            FormatToStr(bufferInfo.format), pchFilename);
+            FormatToStr(format), pchFilename);
     return false;
   }
 
@@ -684,6 +675,6 @@ bool HwcTestDumpMemBufferToDisk(const char* pchFilename, uint32_t num,
       bRet = false;
     }
   }
-
+#endif
   return bRet;
 }

@@ -88,7 +88,7 @@ class EXPORT_API HwcTestKernel {
   uint32_t mActiveDisplays;
 
   // gralloc buffer tracking by gralloc handle
-  android::DefaultKeyedVector<buffer_handle_t, android::sp<DrmShimBuffer> >
+  android::DefaultKeyedVector<HWCNativeHandle, android::sp<DrmShimBuffer> >
       mBuffers;
 
   // buffer tracking by buffer "name" (this is actually the global handle of the
@@ -116,7 +116,7 @@ class EXPORT_API HwcTestKernel {
   // Index of first video layer, per display
   int mVideoLayerIndex[HWCVAL_MAX_CRTCS];
   uint32_t mDisplayVideoCount[HWCVAL_MAX_CRTCS];
-  buffer_handle_t mVideoHandle[HWCVAL_MAX_CRTCS];
+  HWCNativeHandle mVideoHandle[HWCVAL_MAX_CRTCS];
   TriState mDisplayFullScreenVideo[HWCVAL_MAX_CRTCS];
   bool mActiveDisplay[HWCVAL_MAX_CRTCS];
 
@@ -214,7 +214,7 @@ class EXPORT_API HwcTestKernel {
   //
   // Key: Handles of snapshot buffers
   // Value: frame number at which the snapshot expires.
-  android::KeyedVector<buffer_handle_t, uint32_t> mSnapshots;
+  android::KeyedVector<HWCNativeHandle, uint32_t> mSnapshots;
 
   // Expiry of all snapshots. Tells us we will stay in Extended Mode.
   uint32_t mRotationStartFrame;
@@ -254,10 +254,10 @@ class EXPORT_API HwcTestKernel {
 
   /// Implements checks for Widi buffers
   EXPORT_API android::sp<DrmShimBuffer> lookupDrmShimBuffer(
-      buffer_handle_t handle);
+      HWCNativeHandle handle);
   EXPORT_API void checkWidiBuffer(HwcTestCrtc* crtc, Hwcval::LayerList* ll,
-                                  buffer_handle_t handle);
-  EXPORT_API void checkWidiBuffer(buffer_handle_t handle);
+                                  HWCNativeHandle handle);
+  EXPORT_API void checkWidiBuffer(HWCNativeHandle handle);
 
   EXPORT_API uint32_t GetWidiLastFrame() {
     return mWidiLastFrame;
@@ -455,8 +455,8 @@ class EXPORT_API HwcTestKernel {
   virtual bool IsDDRFreqSupported() = 0;
 
   /// Set snapshot handle and lifetime
-  void SetSnapshot(buffer_handle_t snapshotHandle, uint32_t keepCount);
-  bool IsSnapshot(buffer_handle_t handle, uint32_t hwcFrame);
+  void SetSnapshot(HWCNativeHandle snapshotHandle, uint32_t keepCount);
+  bool IsSnapshot(HWCNativeHandle handle, uint32_t hwcFrame);
   bool IsRotationInProgress(uint32_t hwcFrame);
 
   // Set frame number per display
@@ -465,7 +465,7 @@ class EXPORT_API HwcTestKernel {
 
   /// Note in the buffer list that HWC has been asked to draw one
   android::sp<DrmShimBuffer> RecordBufferState(
-      buffer_handle_t handle, Hwcval::BufferSourceType bufferSource,
+      HWCNativeHandle handle, Hwcval::BufferSourceType bufferSource,
       char* notes);
 
   /// Validate layer display frame is inside Framebuffer target

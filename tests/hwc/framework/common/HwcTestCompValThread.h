@@ -24,6 +24,8 @@
 #include "HwcTestDebug.h"
 
 #include <hardware/hwcomposer_defs.h>
+#include "os/android/platformdefines.h"
+#include "public/nativebufferhandler.h"
 #include "HwcvalContent.h"
 
 class HwcTestCompValThread : public android::Thread {
@@ -47,7 +49,7 @@ class HwcTestCompValThread : public android::Thread {
   void TakeTransformedCopy(const hwcval_layer_t* layer,
                            android::sp<DrmShimBuffer> buf, uint32_t width,
                            uint32_t height);
-  android::sp<android::GraphicBuffer> CopyBuf(android::sp<DrmShimBuffer> buf);
+  HWCNativeHandle CopyBuf(android::sp<DrmShimBuffer> buf);
 
  private:
   // Thread functions
@@ -93,6 +95,7 @@ class HwcTestCompValThread : public android::Thread {
 
   // The reference composition engine
   HwcTestReferenceComposer mComposer;
+  hwcomposer::NativeBufferHandler *bufferHandler;
 };
 
 #endif  // __HwcTestCompValThread_h__

@@ -193,11 +193,11 @@ EXPORT_API void Hwcval::Hwc2::CheckPresentDisplayEnter(hwcval_display_contents_t
               ++skipLayerCount;
             }
 
-            if (layer->handle == 0) {
+            if (layer->gralloc_handle == 0) {
               buf = 0;
             } else {
               buf = mTestKernel->RecordBufferState(
-                  layer->handle, Hwcval::BufferSourceType::Input, notes);
+                  layer->gralloc_handle, Hwcval::BufferSourceType::Input, notes);
 
               if ((layer->flags & HWC_SKIP_LAYER) == 0) {
                 mTestKernel->ValidateHwcDisplayFrame(layer->displayFrame,
@@ -213,18 +213,18 @@ EXPORT_API void Hwcval::Hwc2::CheckPresentDisplayEnter(hwcval_display_contents_t
             break;
           }
           case HWC2_COMPOSITION_DEVICE: {
-            if (layer->handle == 0) {
+            if (layer->gralloc_handle == 0) {
               buf = 0;
             } else if ((layer->flags & HWC_SKIP_LAYER) == 0) {
               bufferType = "Overlay";
               mTestKernel->ValidateHwcDisplayFrame(layer->displayFrame, fbtRect,
                                                    displayIx, i);
               buf = mTestKernel->RecordBufferState(
-                  layer->handle, Hwcval::BufferSourceType::Input, notes);
+                  layer->gralloc_handle, Hwcval::BufferSourceType::Input, notes);
             } else {
               bufferType = "Overlay (SKIP)";
               buf = mTestKernel->RecordBufferState(
-                  layer->handle, Hwcval::BufferSourceType::Input, notes);
+                  layer->gralloc_handle, Hwcval::BufferSourceType::Input, notes);
               DrmShimTransform transform(buf, i, layer);
               framebuffersComposedForThisTarget.add(transform);
             }
@@ -489,8 +489,6 @@ void Hwcval::Hwc2::CheckPresentDisplayExit(hwcval_display_contents_t* displays, 
         qFrame = llq.GetFrontFN();
 
         if (qFrame == mHwcFrame) {
-          mTestKernel->checkWidiBuffer(crtc, ll, ll->GetOutbuf());
-          crtc->Checks(ll, mTestKernel, mHwcFrame);
         } else {
           HWCLOGD_COND(eLogWidi,
                        "Skipping virtual display validation. Last HWC frame:%d "

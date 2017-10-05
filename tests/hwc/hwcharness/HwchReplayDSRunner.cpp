@@ -70,7 +70,7 @@ bool Hwch::ReplayDSRunner::AddLayers(Hwch::Frame& frame, int32_t display,
 
     // Default settings - ParseDSLayer will overwrite these (if specified)
     if (!layer) {
-      layer = new ReplayLayer("Replay", 0, 0, HAL_PIXEL_FORMAT_RGBA_8888, 3);
+      layer = new ReplayLayer(mInterface.bufHandler, "Replay", 0, 0, HAL_PIXEL_FORMAT_RGBA_8888, 3);
       layer->SetPattern(mSystem.GetPatternMgr().CreateHorizontalLinePtn(
           layer->GetFormat(), 0.0, rand(), rand()));
     }

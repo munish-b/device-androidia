@@ -96,47 +96,38 @@ bool HwcTestCompValThread::Compose(android::sp<DrmShimBuffer> buf,
 
   // Replace the original dest buffer in the layer list with one of our own
   // Get size of target so we can allocate one the same
-  Hwcval::buffer_details_t bi;
 
-  if (dest.GetHandle()) {
-    // If we have a handle, get buffer info
-    HWCCHECK(eCheckGrallocDetails);
-    if (DrmShimBuffer::GetBufferInfo(dest.GetHandle(), &bi)) {
-      HWCERROR(eCheckGrallocDetails,
-               "HwcTestCompValThread::Compose Failed to get gralloc buffer "
-               "info of target");
-      ClearLocked(mBuf);
-      return false;
-    }
-  } else {
+  if (!dest.GetHandle()) {
     // If we have no handle, then don't attempt to compose
     ClearLocked(mBuf);
     return true;
   }
 
-  bi.usage = GRALLOC_USAGE_PRIVATE_1 | GRALLOC_USAGE_HW_COMPOSER |
-             GRALLOC_USAGE_HW_RENDER |
-             GRALLOC_USAGE_SW_READ_OFTEN;  // Encourage use of linear buffers -
-                                           // it will speed the comparison
-
   HWCLOGV(
       "HwcTestCompValThread::Compose allocating buffer display %dx%d format %x "
       "usage %x",
-      bi.width, bi.height, bi.format, bi.usage);
-  android::sp<android::GraphicBuffer> grallocBuf =
-      new android::GraphicBuffer(bi.width, bi.height, bi.format, bi.usage);
+  dest.GetHandle()->buffer_->getWidth(), 
+  dest.GetHandle()->buffer_->getHeight(),
+  dest.GetHandle()->buffer_->getPixelFormat());
+
+  HWCNativeHandle grallocBuf;
+  bufferHandler->CreateBuffer(dest.GetHandle()->buffer_->getWidth(), 
+  dest.GetHandle()->buffer_->getHeight(), 
+  dest.GetHandle()->buffer_->getPixelFormat(), &grallocBuf);
 
   // Copy the destination layer but give it an orphaned DrmShimBuffer so we can
   // use the handle we want.
   HwcvalLayerToHwc1("HwcTestCompValThread::Compose: dest", 0, mDest, dest,
                     pRect, rectsRemaining);
-  mDest.handle = grallocBuf->handle;
+  mDest.gralloc_handle = grallocBuf;
 
-  if (mDest.handle == 0) {
+  if (mDest.gralloc_handle == 0) {
     HWCERROR(eCheckTestBufferAlloc,
              "HwcTestCompValThread::Compose: Failed to allocate buffer %dx%d "
              "format %d usage %d",
-             bi.width, bi.height, bi.format, bi.usage);
+              dest.GetHandle()->buffer_->getWidth(), 
+              dest.GetHandle()->buffer_->getHeight(),
+              dest.GetHandle()->buffer_->getPixelFormat());
     SkipComp(mBuf);
     ClearLocked(mBuf);
     return false;
@@ -146,7 +137,7 @@ bool HwcTestCompValThread::Compose(android::sp<DrmShimBuffer> buf,
   android::status_t st =
       mComposer.Compose(numSources, valSources, &mDest, true);
   HWCLOGV("HwcTestCompValThread::Compose, about to CpyRef buf@%p handle %p %s",
-          mBuf.get(), mDest.handle, mBuf->GetHwcFrameStr(strbuf));
+          mBuf.get(), mDest.gralloc_handle, mBuf->GetHwcFrameStr(strbuf));
   mUseAlpha = (mDest.blending != HWC_BLENDING_NONE);
 
   if (st == 0) {
@@ -155,7 +146,7 @@ bool HwcTestCompValThread::Compose(android::sp<DrmShimBuffer> buf,
     HWCLOGW(
         "HwcTestCompValThread::Compose Reference composition failed to CpyRef "
         "buf@%p handle %p %s",
-        mBuf.get(), mDest.handle, mBuf->GetHwcFrameStr(strbuf));
+        mBuf.get(), mDest.gralloc_handle, mBuf->GetHwcFrameStr(strbuf));
     mBuf = 0;
   }
 
@@ -220,7 +211,7 @@ void HwcTestCompValThread::Compare(android::sp<DrmShimBuffer> buf) {
 
   // Take a copy of the "real" composition so we can compare it with the
   // reference.
-  android::sp<android::GraphicBuffer> bufCopy =
+  HWCNativeHandle bufCopy =
       mComposer.CopyBuf(mBufToCompare->GetHandle());
   mBufToCompare->SetBufCopy(bufCopy);
 
@@ -310,9 +301,9 @@ void HwcTestCompValThread::DoCompare() {
   } else {
     HWCLOGV("HwcTestCompValThread about to proceed with comparison");
     android::sp<DrmShimBuffer> buf = mBufToCompare;
-    android::sp<android::GraphicBuffer> bufCopy = buf->GetBufCopy();
+    HWCNativeHandle bufCopy = buf->GetBufCopy();
 
-    if (bufCopy.get()) {
+    if (bufCopy) {
       buf->CompareWithRef(mUseAlpha, &mRectToCompare);
 
       if (buf->IsFbt()) {
@@ -365,7 +356,7 @@ void HwcTestCompValThread::TakeCopy(android::sp<DrmShimBuffer> buf) {
     char strbuf[HWCVAL_DEFAULT_STRLEN];
     HWCLOGD("Taking copy (for transparency detection) of %s",
             buf->IdStr(strbuf));
-    android::sp<android::GraphicBuffer> bufCopy = CopyBuf(buf);
+    HWCNativeHandle bufCopy = CopyBuf(buf);
     buf->SetBufCopy(bufCopy);
   }
 }
@@ -378,20 +369,16 @@ void HwcTestCompValThread::TakeTransformedCopy(const hwcval_layer_t* layer,
   ATRACE_CALL();
 
   // Get destination graphic buffer
-  android::sp<android::GraphicBuffer> spDestBuffer = new android::GraphicBuffer(
-      width, height, buf->GetFormat(),
-      buf->GetUsage() | GRALLOC_USAGE_SW_READ_OFTEN);  // Encourage use of
-                                                       // linear buffers - it
-                                                       // will speed the
-                                                       // comparison
-
+  HWCNativeHandle spDestBuffer;
+  bufferHandler->CreateBuffer(width, height, buf->GetFormat(), &spDestBuffer);
+  
   HWCLOGD("TakeTransformedCopy: %s", buf->IdStr(strbuf));
   hwcval_layer_t srcLayer = *layer;
   srcLayer.compositionType = HWC2_COMPOSITION_CLIENT;
   srcLayer.blending = HWC_BLENDING_NONE;
 
   hwcval_layer_t tgtLayer;
-  tgtLayer.handle = spDestBuffer->handle;
+  tgtLayer.gralloc_handle = spDestBuffer;
   tgtLayer.compositionType = HWC2_COMPOSITION_CLIENT;
   tgtLayer.hints = 0;
   tgtLayer.flags = 0;
@@ -416,7 +403,7 @@ void HwcTestCompValThread::TakeTransformedCopy(const hwcval_layer_t* layer,
   buf->SetBufCopy(spDestBuffer);
 }
 
-android::sp<android::GraphicBuffer> HwcTestCompValThread::CopyBuf(
+HWCNativeHandle HwcTestCompValThread::CopyBuf(
     android::sp<DrmShimBuffer> buf) {
   return mComposer.CopyBuf(buf->GetHandle());
 }

@@ -41,6 +41,7 @@ namespace Hwch {
 class Interface {
  public:
   Interface();
+  hwcomposer::NativeBufferHandler *bufHandler;
   int Initialise(void);
   void LoadHwcModule();
   int RegisterProcs(void);

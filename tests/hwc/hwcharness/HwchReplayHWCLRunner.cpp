@@ -105,7 +105,7 @@ bool Hwch::ReplayHWCLRunner::AddLayers(Hwch::Frame& frame, uint32_t display,
         } else if (!layer.IsAClone()) {
           // Parse the layer so that we can access its data fields
           android::sp<Hwch::ReplayLayer> test_layer =
-              new Hwch::ReplayLayer("Replay", 0, 0);
+              new Hwch::ReplayLayer(mInterface.bufHandler, "Replay", 0, 0);
           mParser->ParseHwclLayer(line, *test_layer);
 
           // All of the matching algorithms require the buffer width/height
@@ -233,7 +233,7 @@ bool Hwch::ReplayHWCLRunner::AddLayers(Hwch::Frame& frame, uint32_t display,
             handle, display, layer_cache.size(), prev_layer_cache.size(), key,
             layer_cache.indexOfKey(key));
 
-        new_or_cloned_layer = new Hwch::ReplayLayer("Replay", 0, 0);
+        new_or_cloned_layer = new Hwch::ReplayLayer(mInterface.bufHandler, "Replay", 0, 0);
         mParser->ParseHwclLayer(line, *new_or_cloned_layer);
 
         if (is_skip_layer) {

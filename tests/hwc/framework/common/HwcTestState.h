@@ -40,6 +40,7 @@ extern "C" {
 #include "HwcTestLog.h"
 #include "HwcTestDisplaySpoof.h"
 #include "HwcvalStall.h"
+#include "public/nativebufferhandler.h"
 
 class HwcShimService;
 class HwcShimInitializer;
@@ -235,7 +236,7 @@ class HwcTestState {
   int64_t mMaxUnblankingLatency;
 
   // Transparent layer notified from harness
-  buffer_handle_t mFutureTransparentLayer;
+  HWCNativeHandle mFutureTransparentLayer;
 
  public:
   // Accessors to get and set the device type (BYT/CHT/BXT)
@@ -406,8 +407,8 @@ class HwcTestState {
 
   // Notification from harness that a layer in the next OnSet will be
   // transparent
-  void SetFutureTransparentLayer(buffer_handle_t handle);
-  buffer_handle_t GetFutureTransparentLayer();
+  void SetFutureTransparentLayer(HWCNativeHandle handle);
+  HWCNativeHandle GetFutureTransparentLayer();
 
   // Tell the validation the rate we are (trying to) produce video at.
   // This can easily be broken by loading the system heavily or simply by

@@ -513,11 +513,11 @@ bool HwcTestState::IsAutoExtMode() {
 }
 
 // Notification from harness that a layer in the next OnSet will be transparent
-void HwcTestState::SetFutureTransparentLayer(buffer_handle_t handle) {
+void HwcTestState::SetFutureTransparentLayer(HWCNativeHandle handle) {
   mFutureTransparentLayer = handle;
 }
 
-buffer_handle_t HwcTestState::GetFutureTransparentLayer() {
+HWCNativeHandle HwcTestState::GetFutureTransparentLayer() {
   return mFutureTransparentLayer;
 }
 

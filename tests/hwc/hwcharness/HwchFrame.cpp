@@ -23,7 +23,7 @@
 #include "HwcTestLog.h"
 #include "HwcTestState.h"
 #include "HwcTestUtil.h"
-#include <ui/GraphicBuffer.h>
+#include "os/android/platformdefines.h"
 #include "HwcTestUtil.h"  // for sync headers
 #include "HwchLayers.h"
 
@@ -38,6 +38,8 @@ Hwch::Frame::Frame(Hwch::Interface& interface)
       mInterface(interface),
       mSystem(Hwch::System::getInstance()) {
   mTimelineThread = mSystem.GetTimelineThread();
+  interface.bufHandler = mSystem.bufferHandler;
+  sRefCmp.setBufferHandler(mSystem.bufferHandler);
   Clear();
   RotateTo(eRotateNone);
 }
@@ -71,7 +73,7 @@ Hwch::Frame::Frame(const Hwch::Frame& rhs)
 
     for (uint32_t j = 0; j < rhs.mLayers[i].size(); ++j) {
       Hwch::Layer* srcLayer = rhs.mLayers[i][j];
-      Hwch::Layer* newLayer = new Hwch::Layer(*srcLayer, false);
+      Hwch::Layer* newLayer = new Hwch::Layer(mInterface.bufHandler, *srcLayer, false);
       newLayer->mFrame = this;
 
       mLayers[i].add(newLayer);
@@ -457,7 +459,7 @@ void Hwch::Frame::RotationAnimation(uint32_t disp) {
   // Add a fullscreen RGBA:L layer to model the snapshot layer.
   // Set this to 50% translucent so that we can see whats behind.
   Display& display = mSystem.GetDisplay(disp);
-  Hwch::RGBALayer snapshot(display.GetLogicalWidth(),
+  Hwch::RGBALayer snapshot(mSystem.bufferHandler, display.GetLogicalWidth(),
                            display.GetLogicalHeight(), 0.0, eBlack,
                            Alpha(eBlack, 128));
   frameCopy.Add(snapshot);
@@ -518,7 +520,7 @@ void Hwch::Frame::RotationAnimation(uint32_t disp) {
   // snapshot layer.
   for (uint32_t i = 0; i < MAX_DISPLAYS; ++i) {
     for (uint32_t j = 0; j < mLayers[i].size(); ++j) {
-      Hwch::Layer* skipLayer = new Hwch::Layer(*mLayers[i][j], false);
+      Hwch::Layer* skipLayer = new Hwch::Layer(mInterface.bufHandler, *mLayers[i][j], false);
       ALOG_ASSERT(skipLayer);
 
       // The skip layer has no pattern or buffer set
@@ -721,9 +723,8 @@ int Hwch::Frame::Send() {
 #endif
           hwc2_layer_t outLayer;
           mInterface.CreateLayer(disp, &outLayer);
-          dc->hwLayers[i].handle = layer->handle = layer->Send();
-
-          mInterface.setLayerBuffer(disp, outLayer, layer->handle, -1);
+          dc->hwLayers[i].gralloc_handle = layer->gralloc_handle = layer->Send();
+          mInterface.setLayerBuffer(disp, outLayer, layer->gralloc_handle->handle_, -1);
           mInterface.setLayerCompositionType(disp, outLayer,
                                              layer->mCurrentCompType);
           dc->hwLayers[i].compositionType = layer->compositionType = layer->mCurrentCompType;
@@ -768,8 +769,8 @@ int Hwch::Frame::Send() {
         mInterface.setLayerDisplayFrame(disp, targetLayer,
                                         target.mDisplayFrame);
         mInterface.setLayerPlaneAlpha(disp, targetLayer, target.mPlaneAlpha);
-        dc->hwLayers[numLayers].handle = target.handle = target.Send();
-        mInterface.setLayerBuffer(disp, targetLayer, target.handle, -1);
+        dc->hwLayers[numLayers].gralloc_handle = target.gralloc_handle = target.Send();
+        mInterface.setLayerBuffer(disp, targetLayer, target.gralloc_handle->handle_, -1);
 
         hwc_region_t targetregion;
         targetregion.rects =
@@ -863,13 +864,13 @@ int Hwch::Frame::Send() {
             // Yes - so do the simulated composition
             // dc->hwLayers[numLayers].handle =
             // targetLayer.mBufs->GetNextBuffer();
-            android::sp<android::GraphicBuffer> buf = targetLayer.mBufs->Get();
+            HWCNativeHandle buf = targetLayer.mBufs->Get();
 
             // Initialize the background of the buffer
             // we could economize by skipping this if any of the (other) layers
             // is full screen
-            uint32_t width = buf->getWidth();
-            uint32_t height = buf->getHeight();
+            uint32_t width = buf->buffer_->getWidth();
+            uint32_t height = buf->buffer_->getHeight();
 
             HWCLOGD_COND(eLogHarness, "Filling FBT %dx%d", width, height);
             // targetLayer.mBufs->WaitReleaseFence(mSystem.GetFenceTimeout(),

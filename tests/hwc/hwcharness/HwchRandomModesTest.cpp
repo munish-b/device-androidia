@@ -76,12 +76,12 @@ int Hwch::RandomModesTest::RunScenario() {
   Hwch::Frame frame(mInterface);
 
   android::Vector<Hwch::Layer*> layers;
-  layers.add(new Hwch::WallpaperLayer);
-  layers.add(new Hwch::StatusBarLayer);
+  layers.add(new Hwch::WallpaperLayer(mInterface.bufHandler));
+  layers.add(new Hwch::StatusBarLayer(mInterface.bufHandler));
   uint32_t videoLayerIx = layers.size();
-  mVideoLayer = new Hwch::NV12VideoLayer;
+  mVideoLayer = new Hwch::NV12VideoLayer(mInterface.bufHandler);
   layers.add(mVideoLayer);
-  layers.add(new Hwch::MenuLayer);
+  layers.add(new Hwch::MenuLayer(mInterface.bufHandler));
 
   Choice layerChoice(1, (1 << layers.size()) - 1, "layerChoice");
 

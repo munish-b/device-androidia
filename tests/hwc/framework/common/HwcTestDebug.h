@@ -24,16 +24,15 @@
 enum { DUMP_BUFFER_TO_RAW = (1 << 0), DUMP_BUFFER_TO_TGA = (1 << 1) };
 
 bool HwcTestDumpGrallocBufferToDisk(const char* pchFilename, uint32_t num,
-                                    buffer_handle_t grallocHandle,
+                                    HWCNativeHandle grallocHandle,
                                     uint32_t outputDumpMask);
 
 bool HwcTestDumpAuxBufferToDisk(const char* pchFilename, uint32_t num,
-                                buffer_handle_t grallocHandle);
+                                HWCNativeHandle grallocHandle);
 
 bool HwcTestDumpMemBufferToDisk(const char* pchFilename, uint32_t num,
                                 const void* handle,
-                                Hwcval::buffer_details_t& bufferInfo,
-                                uint32_t stride, uint32_t outputDumpMask,
+                                uint32_t outputDumpMask,
                                 uint8_t* pData);
 
 #if HWCVAL_LOCK_DEBUG || defined(HWCVAL_LOCK_TRACE)

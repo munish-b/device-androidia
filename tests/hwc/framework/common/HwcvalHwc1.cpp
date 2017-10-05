@@ -78,18 +78,12 @@ EXPORT_API void Hwcval::Hwc1::CheckOnPrepareEntry(
       // Every layer apart from the Framebuffer target
       for (uint32_t i = 0; i < disp->numHwLayers - 1; ++i) {
         const hwcval_layer_t* layer = disp->hwLayers + i;
-        buffer_handle_t handle = layer->handle;
+        HWCNativeHandle handle = layer->gralloc_handle;
 
         if (handle) {
-          hwc_buffer_media_details_t md;
-
-          md.magic = sizeof(hwc_buffer_media_details_t);
-          if (1 /*mTestKernel->GetGralloc().queryMediaDetails(handle, &md) != 0*/) {
-            HWCLOGW("CheckOnPrepareEntry: queryMediaDetails Failed %p", handle);
-
-          } else {
-              mLayerValidity[displayIx].editItemAt(i) = ValidityType::Valid;
-          }
+            mLayerValidity[displayIx].editItemAt(i) = ValidityType::Valid;
+        } else {
+            HWCLOGW("CheckOnPrepareEntry: gralloc handle expected but found NULL`");
         }
       }
     }
@@ -237,11 +231,11 @@ EXPORT_API void Hwcval::Hwc1::CheckSetEnter(
               ++skipLayerCount;
             }
 
-            if (layer->handle == 0) {
+            if (layer->gralloc_handle == 0) {
               buf = 0;
             } else {
               buf = mTestKernel->RecordBufferState(
-                  layer->handle, Hwcval::BufferSourceType::Input, notes);
+                  layer->gralloc_handle, Hwcval::BufferSourceType::Input, notes);
 
               if ((layer->flags & HWC_SKIP_LAYER) == 0) {
                 mTestKernel->ValidateHwcDisplayFrame(layer->displayFrame,
@@ -256,51 +250,19 @@ EXPORT_API void Hwcval::Hwc1::CheckSetEnter(
 
             break;
           }
-#if 0 
-                    case HWC2_COMPOSITION_DEVICE:
-                    {
-                        bufferType = "FramebufferTarget";
-
-                        if (layer->handle == 0)
-                        {
-                            buf = 0;
-                        }
-                        else
-                        {
-                            buf = mTestKernel->RecordBufferState(layer->handle, Hwcval::BufferSourceType::SfComp, notes);
-
-                            // We don't want to stimulate copying of the FBT
-                            buf->ResetAppearanceCount();
-                            buf->SetFbtDisplay(displayIx);
-
-                            // This works because the FBT is always last in the layer list.
-                            // Don't reset the contents of the FBT if all its constituents have been marked as OVERLAY
-                            // in the prepare as the previous FBT contents will remain.
-                            if (sfCompositionRequired)
-                            {
-                                buf->SetAllCombinedFrom(framebuffersComposedForThisTarget);
-                                mTestKernel->IncSfCompositionCount();
-                            }
-                            // The following code block was once necessary to fix a SEGV, but currently causes a bug
-                            // when running the tests on BXT. Leave it here in case we need it again.
-                        }
-
-                        break;
-                    }
-#endif
           case HWC2_COMPOSITION_DEVICE: {
-            if (layer->handle == 0) {
+            if (layer->gralloc_handle == 0) {
               buf = 0;
             } else if ((layer->flags & HWC_SKIP_LAYER) == 0) {
               bufferType = "Overlay";
               mTestKernel->ValidateHwcDisplayFrame(layer->displayFrame, fbtRect,
                                                    displayIx, i);
               buf = mTestKernel->RecordBufferState(
-                  layer->handle, Hwcval::BufferSourceType::Input, notes);
+                  layer->gralloc_handle, Hwcval::BufferSourceType::Input, notes);
             } else {
               bufferType = "Overlay (SKIP)";
               buf = mTestKernel->RecordBufferState(
-                  layer->handle, Hwcval::BufferSourceType::Input, notes);
+                  layer->gralloc_handle, Hwcval::BufferSourceType::Input, notes);
               DrmShimTransform transform(buf, i, layer);
               framebuffersComposedForThisTarget.add(transform);
             }
@@ -317,11 +279,6 @@ EXPORT_API void Hwcval::Hwc1::CheckSetEnter(
         }
 
         Hwcval::Hwc1Layer valLayer(layer, buf);
-
-        // Flag the Widi Visualisation layer
-        if (layer->handle == mState->GetWidiVisualisationHandle()) {
-          valLayer.SetWidiVisualisationLayer(true);
-        }
 
         // Get validity at OnPrepare
         Hwcval::ValidityType validAtOnPrepare = mLayerValidity[displayIx][i];
@@ -573,10 +530,7 @@ void Hwcval::Hwc1::CheckSetExit(size_t numDisplays,
 
         qFrame = llq.GetFrontFN();
 
-        if (qFrame == mHwcFrame) {
-          mTestKernel->checkWidiBuffer(crtc, ll, ll->GetOutbuf());
-          crtc->Checks(ll, mTestKernel, mHwcFrame);
-        } else {
+        if (qFrame != mHwcFrame) {
           HWCLOGD_COND(eLogWidi,
                        "Skipping virtual display validation. Last HWC frame:%d "
                        "current frame:%d",

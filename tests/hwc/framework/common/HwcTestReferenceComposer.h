@@ -31,11 +31,12 @@
 
 #include <utils/Errors.h>
 #include <utils/StrongPointer.h>
-#include <ui/GraphicBuffer.h>
 
 #include "Hwcval.h"
 #include <hardware/hwcomposer_defs.h>
 #include "common/utils/hwcutils.h"
+#include "os/android/platformdefines.h"
+#include "public/nativebufferhandler.h"
 #include "DrmShimBuffer.h"
 #include "HwcTestDefs.h"
 
@@ -50,9 +51,10 @@ class HwcTestReferenceComposer {
                                     hwcval_layer_t *target, bool waitForFences);
 
   // Make a duplicate of a gralloc buffer
-  android::sp<android::GraphicBuffer> CopyBuf(buffer_handle_t handle);
+  HWCNativeHandle CopyBuf(HWCNativeHandle handle);
 
   bool mErrorOccurred;  // Set if any GL error occurred during the composition
+  void setBufferHandler(hwcomposer::NativeBufferHandler *bufferHandler){bufferHandler_ = bufferHandler;}
 
  private:
   typedef enum {
@@ -66,7 +68,6 @@ class HwcTestReferenceComposer {
   bool lazyCreate();
   inline bool isCreated() const;
   void destroy();
-
   android::status_t beginFrame(uint32_t numSources,
                                const hwcval_layer_t *source,
                                const hwcval_layer_t *target);
@@ -80,7 +81,7 @@ class HwcTestReferenceComposer {
   void setTexture(const hwcval_layer_t *layer, uint32_t texturingUnit,
                   bool *pEGLImageCreated, bool *pTextureCreated,
                   bool *pTextureSet,
-                  android::sp<android::GraphicBuffer> *pGraphicBuffer,
+                  HWCNativeHandle *pGraphicBuffer,
                   EGLImageKHR *pEGLImage, GLuint *pTextureId, int filter);
 
   android::status_t bindTexture(GLuint texturingUnit, GLuint textureId);
@@ -255,7 +256,7 @@ class HwcTestReferenceComposer {
     CRendererProgram *m_current;
   };
 
-  buffer_handle_t mTargetHandle;
+  HWCNativeHandle mTargetHandle;
   uint32_t m_remainingConstructorAttempts;
 
   EGLDisplay m_display;  /// Current display id (EGL_NO_DISPLAY if not yet
@@ -285,7 +286,7 @@ class HwcTestReferenceComposer {
   bool m_destTextureSet;
   uint32_t m_destWidth;
   uint32_t m_destHeight;
-  android::sp<android::GraphicBuffer> m_destGraphicBuffer;
+  HWCNativeHandle m_destGraphicBuffer;
   EGLImageKHR m_destEGLImage;
   GLuint m_destTextureId;
   bool m_destTextureAttachedToFBO;
@@ -296,7 +297,7 @@ class HwcTestReferenceComposer {
   uint32_t m_sourceEGLImagesCreated;
   uint32_t m_sourceTexturesCreated;
   uint32_t m_sourceTexturesSet;
-  android::sp<android::GraphicBuffer> *m_sourceGraphicBuffers;
+  HWCNativeHandle *m_sourceGraphicBuffers;
   EGLImageKHR *m_sourceEGLImages;
   GLuint *m_sourceTextureIds;
   uint32_t m_maxSourceLayers;
@@ -309,6 +310,7 @@ class HwcTestReferenceComposer {
 
   bool IsLayerNV12(const hwcval_layer_t *pDest);
   bool HasAlpha(const hwcval_layer_t *pSrc);
+  hwcomposer::NativeBufferHandler *bufferHandler_;
 };
 
 #endif  // __HwcTestReferenceComposer_h__

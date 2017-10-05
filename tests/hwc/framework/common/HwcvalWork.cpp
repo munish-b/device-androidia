@@ -111,7 +111,7 @@ void Hwcval::Work::PrimeItem::Process() {
 Hwcval::Work::Queue::Queue() : EventQueue("Hwcval::Work::Queue") {
 }
 
-Hwcval::Work::BufferFreeItem::BufferFreeItem(buffer_handle_t handle)
+Hwcval::Work::BufferFreeItem::BufferFreeItem(HWCNativeHandle handle)
     : Item(0), mHandle(handle) {
 }
 

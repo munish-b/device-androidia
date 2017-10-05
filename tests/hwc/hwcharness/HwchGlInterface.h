@@ -20,7 +20,7 @@
 #include <utils/String8.h>
 #include <unistd.h>
 
-#include <ui/GraphicBuffer.h>
+#include "os/android/platformdefines.h"
 #include <hardware/hwcomposer2.h>
 
 #include <errno.h>
@@ -137,7 +137,7 @@ class GlTargetPlatform {
   bool Initialize();
   bool Terminate(void);
   bool InitEGl(uint32_t screenWidth, uint32_t screenHeight);
-  bool InitTarget(android::sp<android::GraphicBuffer> buf);
+  bool InitTarget(HWCNativeHandle buf);
   bool ReleaseTarget();
   void Clear(float r, float g, float b, float a, int x = -1, int y = -1,
              int w = -1, int h = -1);
@@ -225,7 +225,7 @@ class GlInterface {
     return (m_initComplete);
   }
 
-  bool InitTarget(android::sp<android::GraphicBuffer> buf) {
+  bool InitTarget(HWCNativeHandle buf) {
     return (m_aGlTargetPlatform.InitTarget(buf));
   }
 

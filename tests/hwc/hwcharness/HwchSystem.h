@@ -139,7 +139,7 @@ class System {
 
   static System& getInstance();
   void die();
-
+ hwcomposer::NativeBufferHandler *bufferHandler;
  private:
   class HwcOptionState {
    public:

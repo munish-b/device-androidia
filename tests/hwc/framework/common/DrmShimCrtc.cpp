@@ -198,7 +198,6 @@ uint32_t DrmShimCrtc::SetDisplayEnter(bool suspended) {
 void DrmShimCrtc::StopSetDisplayWatchdog() {
   mSetDisplayWatchdog.Stop();
 }
-
 // When Drm SetDisplay is used, the main plane must always have a valid buffer
 // on it even when it is turned off.
 // This means that we must put a blanking buffer on the main plane in these
@@ -212,6 +211,7 @@ uint32_t DrmShimCrtc::GetBlankingFb(
     /*::intel::ufo::gralloc::GrallocClient& gralloc,*/ DrmModeAddFB2Func
         addFb2Func,
     int fd) {
+#if 0
   if (mBlankingFb == 0) {
     // Allocate a blanking buffer
     // This is for nuclear spoof
@@ -252,9 +252,9 @@ uint32_t DrmShimCrtc::GetBlankingFb(
 
   ALOG_ASSERT(mBlankingFb);
 
+#endif
   return mBlankingFb;
 }
-
 const char* DrmShimCrtc::ReportSetDisplayPower(char* strbuf, uint32_t len) {
   uint32_t n = snprintf(strbuf, len, "Enter(");
   if (n >= len)

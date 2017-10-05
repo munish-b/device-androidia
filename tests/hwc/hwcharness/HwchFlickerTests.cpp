@@ -31,10 +31,10 @@ int Hwch::Flicker1Test::RunScenario() {
   Hwch::Frame frame(mInterface);
 
   // 16-bit layer
-  Hwch::GameFullScreenLayer game(MaxRel(0), MaxRel(0));
+  Hwch::GameFullScreenLayer game(mInterface.bufHandler, MaxRel(0), MaxRel(0));
 
   // 32-bit layer
-  Hwch::RGBALayer rgba(MaxRel(0), MaxRel(0));
+  Hwch::RGBALayer rgba(mInterface.bufHandler, MaxRel(0), MaxRel(0));
 
   for (uint32_t i = 0; i < 20; ++i) {
     frame.Add(game);
@@ -63,11 +63,11 @@ int Hwch::Flicker2Test::RunScenario() {
   Hwch::Frame frame(mInterface);
 
   // 16-bit layer
-  Hwch::GameFullScreenLayer game(MaxRel(0), MaxRel(0));
+  Hwch::GameFullScreenLayer game(mInterface.bufHandler, MaxRel(0), MaxRel(0));
 
   // 32-bit layers
-  Hwch::NavigationBarLayer nav;
-  Hwch::StatusBarLayer status;
+  Hwch::NavigationBarLayer nav(mInterface.bufHandler);
+  Hwch::StatusBarLayer status(mInterface.bufHandler) ;
 
   for (uint32_t i = 0; i < 20; ++i) {
     frame.Add(game);
@@ -98,7 +98,7 @@ Hwch::Flicker3Test::Flicker3Test(Hwch::Interface& interface)
 int Hwch::Flicker3Test::RunScenario() {
   Hwch::Frame frame(mInterface);
 
-  Hwch::GameFullScreenLayer game(MaxRel(0), MaxRel(0));
+  Hwch::GameFullScreenLayer game(mInterface.bufHandler, MaxRel(0), MaxRel(0));
   frame.Add(game);
 
   for (uint32_t i = 0; i < 20; ++i) {

@@ -41,16 +41,15 @@ bool Hwch::BufferAllocator::threadLoop() {
   while (!exitPending()) {
     {
       // Create buffers continually on the thread
-      android::sp<android::GraphicBuffer> buf = new android::GraphicBuffer(
-          32, 32, HAL_PIXEL_FORMAT_RGBA_8888, GRALLOC_USAGE_HW_FB |
-                                                  GRALLOC_USAGE_HW_COMPOSER |
-                                                  GRALLOC_USAGE_HW_RENDER);
+      HWCNativeHandle bufHandle;
+      system.bufferHandler->CreateBuffer(
+          32, 32, HAL_PIXEL_FORMAT_RGBA_8888, &bufHandle);
 
       // ALlow 50% to go out of scope immediately.
       // The rest go on to the buffer destroyer thread, until it is 50% full.
       if ((++ctr & 1) == 0) {
         if (bd.Size() < (bd.MaxSize() / 2)) {
-          bd.Push(buf);
+          bd.Push(bufHandle);
         }
       }
     }
@@ -82,14 +81,14 @@ int Hwch::BufferStressTest::RunScenario() {
   int32_t screenWidth = mSystem.GetDisplay(0).GetWidth();
   // int32_t screenHeight = mSystem.GetDisplay(0).GetHeight();
 
-  Hwch::WallpaperLayer layer1;
+  Hwch::WallpaperLayer layer1(mInterface.bufHandler);
   frame.Add(layer1);
 
   uint32_t testIterations = GetIntParam("test_iterations", 10);
 
   for (uint32_t i = 0; i < testIterations; ++i) {
     for (int j = 100; j < screenWidth; j += 32) {
-      Hwch::NV12VideoLayer video(200, j);
+      Hwch::NV12VideoLayer video(mInterface.bufHandler, 200, j);
       video.SetLogicalDisplayFrame(LogDisplayRect(50, 200, j, 500));
       frame.Add(video);
       frame.Send();
