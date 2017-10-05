@@ -248,7 +248,7 @@ int Hwch::Interface::GetDisplayAttributes(uint32_t disp) {
       }
     }
 
-    if ((display.GetWidth() == 0) && (display.GetHeight() == 0)) {
+    if ((display.GetWidth() <= 1) && (display.GetHeight() <= 1)) {
       display.SetConnected(false);
     } else {
       display.SetConnected(true);
