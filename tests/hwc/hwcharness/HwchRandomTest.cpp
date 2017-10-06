@@ -274,6 +274,8 @@ void Hwch::RandomTest::ChooseScreenDisable(Hwch::Frame& frame) {
 }
 
 void Hwch::RandomTest::RandomEvent() {
+// TODO implement simulate hotplug in real HWC
+#if 0
   if (mHotPlugChooser.IsEnabled()) {
     // Note -
     // for repeatability, decisions we take should be dependent only on the
@@ -331,7 +333,7 @@ void Hwch::RandomTest::RandomEvent() {
       ++mNumModeChanges;
     }
   }
-
+#endif
   if (mVideoOptimizationModeChooser.IsEnabled()) {
     if (mVideoOptimizationModeChooser.Get() == 0) {
       Display::VideoOptimizationMode videoOptimizationMode =
@@ -356,12 +358,13 @@ void Hwch::RandomTest::Tidyup() {
   mSystem.GetKernelEventGenerator().ClearContinuous();
   mSystem.GetKernelEventGenerator().Flush();
   mSystem.GetEventGenerator().Flush();
-
+// TODO implement simulate hotplug in real HWC
+#if 0
   if (!mPlugged) {
     SimulateHotPlug(true);
     sleep(2);
   }
-
+#endif
   if (GetParam("nohup")) {
     Hwch::Frame endFrame(mInterface);
     Hwch::PngImage image("End.png");
