@@ -18,6 +18,7 @@
 #define HWCVAL_H
 #include <hardware/hardware.h>
 #include <hardware/hwcomposer2.h>
+#include "public/nativebufferhandler.h"
 
 enum {
   /*
@@ -36,7 +37,7 @@ typedef struct hwcval_layer {
     hwc_color_t backgroundColor;
     struct {
       union {
-        buffer_handle_t handle;
+        HWCNativeHandle gralloc_handle;
         const native_handle_t *sidebandStream;
       };
       uint32_t transform;
@@ -61,7 +62,7 @@ typedef struct hwcval_display_contents {
   /* These fields are used for virtual displays when the h/w composer
    * version is at least HWC_DEVICE_VERSION_1_3. */
   struct {
-    buffer_handle_t outbuf;
+    HWCNativeHandle outbuf;
   };
   size_t numHwLayers;
   hwcval_layer_t hwLayers[10];

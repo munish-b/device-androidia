@@ -412,7 +412,7 @@ bool Hwcval::LogParser::ParseBufferNotifications(pid_t pid, int64_t timestamp,
   uintptr_t h = atoptrinc(p);
 
   if (h != 0) {
-    buffer_handle_t handle = (buffer_handle_t)h;
+    HWCNativeHandle handle = (HWCNativeHandle)h;
 
     HWCLOGD_COND(eLogParse, "PARSED MATCHED %s Freeing %p", str, handle);
     mTestKernel->GetWorkQueue().Push(new Hwcval::Work::BufferFreeItem(handle));
@@ -566,7 +566,7 @@ bool Hwcval::LogParser::ParseRotationInProgress(pid_t pid, int64_t timestamp,
   if (h == 0)
     return false;
 
-  buffer_handle_t handle = (buffer_handle_t)h;
+  HWCNativeHandle handle = (HWCNativeHandle)h;
   HWCLOGD_COND(eLogParse,
                "PARSED MATCHED: Rotation in progress FrameKeepCnt %d handle %p",
                f, handle);

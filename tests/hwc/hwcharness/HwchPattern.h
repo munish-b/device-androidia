@@ -19,7 +19,7 @@
 
 #include <utils/Vector.h>
 #include <utils/RefBase.h>
-#include <ui/GraphicBuffer.h>
+#include "os/android/platformdefines.h"
 #include <hardware/hwcomposer2.h>
 
 #include "HwchDefs.h"
@@ -75,7 +75,7 @@ class Pattern : public android::RefBase {
   virtual void Init();
 
   // Called each frame when FrameNeedsUpdate() returns true
-  virtual int Fill(android::sp<android::GraphicBuffer> buf,
+  virtual int Fill(HWCNativeHandle buf,
                    const hwc_rect_t& rect, uint32_t& bufferParam) = 0;
 
   // Can be overriden to give non-uniform update period
@@ -114,7 +114,7 @@ class SolidColourPtn : public Pattern {
   SolidColourPtn(uint32_t colour);
   virtual ~SolidColourPtn();
 
-  virtual int Fill(android::sp<android::GraphicBuffer> buf,
+  virtual int Fill(HWCNativeHandle buf,
                    const hwc_rect_t& rect, uint32_t& bufferParam);
   virtual bool IsAllTransparent();
 
@@ -137,7 +137,7 @@ class HorizontalLinePtn : public Pattern {
   HorizontalLinePtn(float updateFreq, uint32_t fgColour, uint32_t bgColour);
   virtual ~HorizontalLinePtn();
 
-  virtual int Fill(android::sp<android::GraphicBuffer> buf,
+  virtual int Fill(HWCNativeHandle buf,
                    const hwc_rect_t& rect, uint32_t& bufferParam);
   virtual void Advance();
 
@@ -174,7 +174,7 @@ class PngPtn : public HorizontalLinePtn {
   void Set(android::sp<Hwch::PngImage> spImage);
   virtual ~PngPtn();
 
-  virtual int Fill(android::sp<android::GraphicBuffer> buf,
+  virtual int Fill(HWCNativeHandle buf,
                    const hwc_rect_t& rect, uint32_t& bufferParam);
 
  private:

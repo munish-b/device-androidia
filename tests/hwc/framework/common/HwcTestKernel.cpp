@@ -320,7 +320,7 @@ void HwcTestKernel::DetermineFullScreenVideo(uint32_t displayIx, uint32_t i,
     uint32_t ctr = mState->TestImageDump(mFN[displayIx]);
 
     if (ctr > 0) {
-      buffer_handle_t handle = buf->GetHandle();
+      HWCNativeHandle handle = buf->GetHandle();
       HwcTestDumpGrallocBufferToDisk("main", ctr, handle, DUMP_BUFFER_TO_TGA);
       HwcTestDumpAuxBufferToDisk("aux", ctr, handle);
     }
@@ -409,7 +409,7 @@ void HwcTestKernel::ValidateHwcDisplayFrame(const hwc_rect_t& layerDf,
 
 // Function to lookup a DrmShimBuffer from the gralloc handle.
 android::sp<DrmShimBuffer> HwcTestKernel::lookupDrmShimBuffer(
-    buffer_handle_t handle) {
+    HWCNativeHandle handle) {
   ssize_t ix = mBuffers.indexOfKey(handle);
   if (ix < 0) {
     HWCLOGD_COND(eLogBuffer, "Could not find DrmShimBuffer for handle " PRIi64,
@@ -417,68 +417,6 @@ android::sp<DrmShimBuffer> HwcTestKernel::lookupDrmShimBuffer(
   }
 
   return (ix >= 0) ? mBuffers[ix] : NULL;
-}
-
-// Main entry point for the Widi checks.
-void HwcTestKernel::checkWidiBuffer(HwcTestCrtc* crtc, Hwcval::LayerList* ll,
-                                    buffer_handle_t handle) {
-  // Check arguments and process if this is a Widi buffer
-  if (crtc && ll) {
-    // Retrieve the DrmShimBuffer associated with this buffer handle
-    char notes[HWCVAL_DEFAULT_STRLEN];
-    char strbuf[HWCVAL_DEFAULT_STRLEN];
-    notes[0] = '\0';
-    android::sp<DrmShimBuffer> buf = lookupDrmShimBuffer(handle);
-    HWCLOGD_COND(eLogBuffer, "Widi buffer %s %s", buf->IdStr(strbuf), notes);
-
-    // Signal that this frame was drawn to the screen to prevent
-    // it being classified as a dropped frame rather than an error.
-    crtc->IncDrawCount();
-
-    DrmShimPlane* plane = crtc->GetPlane(0);
-    if (plane != NULL) {
-      // Update the plane
-      plane->SetBuf(buf);
-      plane->SetSourceCrop(0, 0, buf->GetWidth(), buf->GetHeight());
-      plane->SetDisplayFrame(0, 0, buf->GetWidth(), buf->GetHeight());
-      plane->GetTransform().SetBlend(BlendingType::HWCVAL_PASSTHROUGH, false,
-                                     1.0);
-    } else {
-      HWCLOGW("CRTC has NULL plane!");
-    }
-  }
-}
-
-// Overload for checking when only the handle is available (i.e. in the Widi
-// shim)
-void HwcTestKernel::checkWidiBuffer(buffer_handle_t handle) {
-  // Lookup the crtc and get the display contents
-  HwcTestCrtc* crtc = mCrtcByDisplayIx[eDisplayIxVirtual];
-
-  PushThreadState ts("checkWidiBuffer (locking)");
-  HWCVAL_LOCK(_l, mMutex);
-  SetThreadState("checkWidiBuffer (locked)");
-  mWorkQueue.Process();
-
-  uint32_t d = mWirelessDockingIsActive ? eDisplayIxFixed : eDisplayIxVirtual;
-
-  uint32_t hwcFrame = mLLQ[d].GetBackFN();
-  Hwcval::LayerList* ll = mLLQ[d].GetFrame(hwcFrame, false);
-
-  HWCLOGD("checkWidiBuffer CRTC %d frame:%d ll=%p handle=%p", crtc->GetCrtcId(),
-          hwcFrame, ll, handle);
-
-  // Check the buffer
-  if (crtc && ll && handle) {
-    // For Wireless Docking mode, we allow 2 frames between state transitions
-    if (mWirelessDockingFramesToWait) {
-      --mWirelessDockingFramesToWait;
-      return;
-    }
-
-    checkWidiBuffer(crtc, ll, handle);
-    crtc->Checks(ll, this, mFN[d]);
-  }
 }
 
 void HwcTestKernel::NotifyPageFlipHandlerExit(HwcTestCrtc* crtc,
@@ -1389,7 +1327,7 @@ void HwcTestKernel::ValidateBo(android::sp<HwcTestBufferObject> bo,
 // The caller indicates the source of the buffer so we can distinguish between
 // SF inputs, composition and other cases.
 android::sp<DrmShimBuffer> HwcTestKernel::RecordBufferState(
-    buffer_handle_t handle, Hwcval::BufferSourceType bufferSource,
+    HWCNativeHandle handle, Hwcval::BufferSourceType bufferSource,
     char* notes) {
   ATRACE_CALL();
   mWorkQueue.Process();
@@ -1400,23 +1338,13 @@ android::sp<DrmShimBuffer> HwcTestKernel::RecordBufferState(
   android::sp<DrmShimBuffer> buf;
   android::sp<DrmShimBuffer> existingBuf;
   char strbuf[HWCVAL_DEFAULT_STRLEN];
-
-  // Obtain gralloc buffer details
-  Hwcval::buffer_details_t bi;
+#if 0
 
   HWCLOGD_COND(eLogBuffer, "HwcTestKernel::RecordBufferState Enter handle %p",
-               handle);
+               handle->handle_);
   // info needed at various points in this function.
   isOnSet = ((bufferSource == Hwcval::BufferSourceType::Input) ||
              (bufferSource == Hwcval::BufferSourceType::SfComp));
-
-  HWCCHECK(eCheckGrallocDetails);
-  if (DrmShimBuffer::GetBufferInfo(handle, &bi)) {
-    HWCERROR(eCheckGrallocDetails,
-             "HwcTestKernel::RecordBufferState Error obtaining gralloc details "
-             "handle %p",
-             handle);
-  }
 
 #if INTEL_UFO_GRALLOC_HAVE_PRIME
   uint32_t boHandle;
@@ -1704,6 +1632,7 @@ android::sp<DrmShimBuffer> HwcTestKernel::RecordBufferState(
                "HwcTestKernel::RecordBufferState Exit buf@%p handle %p",
                buf.get(), handle);
 
+#endif
   return buf;
 }
 
@@ -2139,7 +2068,7 @@ void HwcTestKernel::CompleteWidiDisable() {
 }
 
 // Record the "snapshot" buffer used in rotation animation.
-void HwcTestKernel::SetSnapshot(buffer_handle_t handle, uint32_t keepCount) {
+void HwcTestKernel::SetSnapshot(HWCNativeHandle handle, uint32_t keepCount) {
   HWCVAL_UNUSED(keepCount);
 
   // Global snapshot expiry
@@ -2172,7 +2101,7 @@ bool HwcTestKernel::IsRotationInProgress(uint32_t hwcFrame) {
 }
 
 // Is this buffer the snapshot for rotation animation?
-bool HwcTestKernel::IsSnapshot(buffer_handle_t handle, uint32_t hwcFrame) {
+bool HwcTestKernel::IsSnapshot(HWCNativeHandle handle, uint32_t hwcFrame) {
   if (mSnapshots.size() > 0) {
     ssize_t ix = mSnapshots.indexOfKey(handle);
     if (ix >= 0) {

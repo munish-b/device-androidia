@@ -107,10 +107,10 @@ class PrimeItem : public Item {
 
 class BufferFreeItem : public Item {
  public:
-  buffer_handle_t mHandle;
+  HWCNativeHandle mHandle;
 
  public:
-  BufferFreeItem(buffer_handle_t handle);
+  BufferFreeItem(HWCNativeHandle handle);
   virtual ~BufferFreeItem();
   virtual void Process();
 };

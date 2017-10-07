@@ -13,9 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 #include "graphics.h"
-
 #include "DrmShimBuffer.h"
 #include "BufferObject.h"
 #include <cutils/log.h>
@@ -27,7 +25,6 @@
 
 #include "drm_fourcc.h"
 #include "SSIMUtils.h"
-#include "cros_gralloc/cros_gralloc_handle.h"
 #include <math.h>
 #include <utils/Atomic.h>
 
@@ -36,7 +33,6 @@ using namespace Hwcval;
 uint32_t DrmShimBuffer::mCount = 0;
 uint32_t DrmShimBuffer::mCompMismatchCount = 0;
 static int sNumBufCopies = 0;
-GrallocInterface gralloc_interface;
 
 static void InitBufferInfo(Hwcval::buffer_details_t* details) {
   // Default all buffer info state
@@ -64,124 +60,18 @@ static void InitBufferInfo(Hwcval::buffer_details_t* details) {
 #endif
 }
 
-GrallocInterface::GrallocInterface() {
-  hw_device_t* device;
-  int ret = -1;
-  ret =
-      hw_get_module(GRALLOC_HARDWARE_MODULE_ID, (const hw_module_t**)&gralloc);
-  if (ret) {
-    ALOGE("Failed to get gralloc module");
-    return;
-  }
-
-  gralloc_version = gralloc->module_api_version;
-  ALOGE("gralloc version in use: %d", gralloc_version);
-#ifdef HWCVAL_ENABLE_GRALLOC1
-  if (gralloc_version == HARDWARE_MODULE_API_VERSION(1, 0)) {
-    ret = gralloc->methods->open(gralloc, GRALLOC_HARDWARE_MODULE_ID, &device);
-    if (ret) {
-      ALOGE("Failed to open hw_device device");
-      return;
-    } else {
-      gralloc1_dvc = (gralloc1_device_t*)device;
-
-      pfn_getFormat = (GRALLOC1_PFN_GET_FORMAT)gralloc1_dvc->getFunction(
-          gralloc1_dvc, GRALLOC1_FUNCTION_GET_FORMAT);
-
-      pfn_getDimensions =
-          (GRALLOC1_PFN_GET_DIMENSIONS)gralloc1_dvc->getFunction(
-              gralloc1_dvc, GRALLOC1_FUNCTION_GET_DIMENSIONS);
-
-      pfn_getStride =
-          (GRALLOC1_PFN_GET_STRIDE)gralloc1_dvc->getFunction(
-              gralloc1_dvc, GRALLOC1_FUNCTION_GET_STRIDE);
-    }
-  }
-#endif
-}
-
 int hwc_buffer_details::getBufferHandles(buffer_handle_t handle, uint32_t *handles) {
-  ALOGE("handle BufferInfo %llu", handle);
   int ret = -1;
-  if (gralloc_interface.gralloc_version == HARDWARE_MODULE_API_VERSION(1, 0)) {
-   struct cros_gralloc_handle *hnd = (struct cros_gralloc_handle *)handle;
-   for (size_t plane = 0; plane < DRV_MAX_PLANES; plane++)
-              handles[plane] = hnd->fds[plane];
-  }
-  return 0;
-}
-
-int hwc_buffer_details::getBufferInfo(buffer_handle_t handle) {
-  ALOGE("handle BufferInfo %llu", handle);
-  int ret = -1;
-#ifdef HWCVAL_ENABLE_GRALLOC1
-  if (gralloc_interface.gralloc_version == HARDWARE_MODULE_API_VERSION(1, 0)) {
-    if (!gralloc_interface.pfn_getDimensions) {
-      ALOGE("Gralloc does not support getDimension");
-      return -1;
-    }
-    ret = gralloc_interface.pfn_getDimensions(gralloc_interface.gralloc1_dvc,
-                                              handle, &width, &height);
-    if (ret) {
-      ALOGE("gralloc->getDimension failed: %d", ret);
-      return -1;
-    }
-
-    if (!gralloc_interface.pfn_getStride) {
-      ALOGE("Gralloc does not support getStride");
-      return -1;
-    }
-    ret = gralloc_interface.pfn_getStride(gralloc_interface.gralloc1_dvc,
-                                              handle, &pitch);
-    if (ret) {
-      ALOGE("gralloc->getiStride failed: %d", ret);
-      return -1;
-    }
-
-    if (!gralloc_interface.pfn_getFormat) {
-      ALOGE("Gralloc does not support getFormat");
-      return -1;
-    }
-    ret = gralloc_interface.pfn_getFormat(gralloc_interface.gralloc1_dvc,
-                                          handle, &format);
-    if (ret) {
-      ALOGE("gralloc->getFormat failed: %d", ret);
-      return -1;
-    }
-  } else {
-#endif
-    gralloc_module_t* gralloc0;
-    gralloc0 = reinterpret_cast<gralloc_module_t*>(gralloc_interface.gralloc);
-
-    if (!gralloc0->perform) {
-      ALOGE("gralloc->perform not supported");
-      return -1;
-    }
-    ret = gralloc0->perform(gralloc0, GRALLOC_DRM_GET_FORMAT, handle, &format);
-    if (ret) {
-      ALOGE("gralloc->perform failed with error: %d", ret);
-      return -1;
-    }
-    ret = gralloc0->perform(gralloc0, GRALLOC_DRM_GET_DIMENSIONS, handle,
-                            &width, &height);
-    if (ret) {
-      ALOGE("gralloc->perform failed with error: %d", ret);
-      return -1;
-    }
-#ifdef HWCVAL_ENABLE_GRALLOC1
-  }
+#if 0
+  HwcBuffer bo;
+  for (size_t plane = 0; plane < DRV_MAX_PLANES; plane++)
+             handles[plane] = bo.gem_handles[plane];
 #endif
   return 0;
-}
-
-int DrmShimBuffer::GetBufferInfo(buffer_handle_t handle,
-                                 Hwcval::buffer_details_t* details) {
-  InitBufferInfo(details);
-  return details->getBufferInfo(handle);
 }
 
 // Usual constructor, when we recognise a new buffer passed into OnSet
-DrmShimBuffer::DrmShimBuffer(buffer_handle_t handle,
+DrmShimBuffer::DrmShimBuffer(HWCNativeHandle handle,
                              Hwcval::BufferSourceType bufferSource)
     : mHandle(handle),
       mDsId(0),
@@ -224,20 +114,20 @@ DrmShimBuffer::~DrmShimBuffer() {
 }
 
 void DrmShimBuffer::FreeBufCopies() {
-  if (mBufCpy.get()) {
+  if (mBufCpy) {
     --sNumBufCopies;
   }
-
+  /*munsih FIX_ME free buffer*/
   mBufCpy = 0;
-  mRef = 0;
+  mRefBuf = 0;
 }
 
-buffer_handle_t DrmShimBuffer::GetHandle() const {
+HWCNativeHandle DrmShimBuffer::GetHandle() const {
   return mHandle;
 }
 
 // To be used with care - i.e. only when not already in the handle index.
-DrmShimBuffer* DrmShimBuffer::SetHandle(buffer_handle_t handle) {
+DrmShimBuffer* DrmShimBuffer::SetHandle(HWCNativeHandle handle) {
   mHandle = handle;
   UpdateMediaDetails();
   UpdateResolveDetails();
@@ -563,7 +453,7 @@ bool DrmShimBuffer::UpdateDetails() {
   char strbuf[HWCVAL_DEFAULT_STRLEN];
 
   if (mHandle) {
-    if (GetBufferInfo(mHandle, &bi)) {
+    if (bi.width) {
       HWCLOGW(
           "DrmShimBuffer::UpdateDetails can't update info for buf@%p handle %p",
           this, mHandle);
@@ -597,7 +487,7 @@ int DrmShimBuffer::GetCurrentGlobalId() {
   Hwcval::buffer_details_t bi;
 
   if (mHandle) {
-    if (GetBufferInfo(mHandle, &bi)) {
+    if (bi.width) {
       HWCLOGW("DrmShimBuffer::UpdateDetails can't update " BUFIDSTR
               " for buf@%p handle %p",
               this, mHandle);
@@ -845,21 +735,20 @@ bool DrmShimBuffer::IsToBeCompared() {
 
 // Set local copy of the buffer contents
 // so we can do comparisons after the original buffer has been deallocated
-void DrmShimBuffer::SetBufCopy(android::sp<android::GraphicBuffer>& buf) {
-  if ((mBufCpy.get() == 0) && buf.get()) {
+void DrmShimBuffer::SetBufCopy(HWCNativeHandle& buf) {
+  if ((mBufCpy == 0) && buf) {
     ++sNumBufCopies;
     if (sNumBufCopies > 10) {
       HWCLOGI("%d copies of buffers stored for transparency filter detection",
               sNumBufCopies);
     }
-  } else if (mBufCpy.get() && (buf.get() == 0)) {
+  } else if (mBufCpy && (buf == 0)) {
     --sNumBufCopies;
   }
-
   mBufCpy = buf;
 }
 
-android::sp<android::GraphicBuffer> DrmShimBuffer::GetBufCopy() {
+HWCNativeHandle  DrmShimBuffer::GetBufCopy() {
   return mBufCpy;
 }
 
@@ -880,8 +769,8 @@ uint32_t DrmShimBuffer::GetAppearanceCount() {
   return mAppearanceCount;
 }
 
-void DrmShimBuffer::SetRef(android::sp<android::GraphicBuffer>& buf) {
-  mRef = buf;
+void DrmShimBuffer::SetRef(HWCNativeHandle& buf) {
+  mRefBuf = buf;
 }
 
 uint32_t DrmShimBuffer::GetBpp() {
@@ -1085,13 +974,6 @@ bool DrmShimBuffer::IsBufferTransparent(const hwc_rect_t& rect) {
       rect.left, rect.top, rect.right, rect.bottom);
 
   if (mBufferContent == BufferContentType::ContentNotTested) {
-    hw_module_t const* module;
-
-    int err = hw_get_module(GRALLOC_HARDWARE_MODULE_ID, &module);
-    ALOG_ASSERT(!err);
-
-    struct gralloc_module_t* pGralloc = (struct gralloc_module_t*)module;
-    ALOG_ASSERT(pGralloc);
 
     if (HasBufCopy()) {
       // We MUST query the buffer copy for details rather than just using
@@ -1099,19 +981,17 @@ bool DrmShimBuffer::IsBufferTransparent(const hwc_rect_t& rect) {
       // because it will have a different pitch to the original buffer seeing as
       // we have
       // requested a copy in linear memory.
-      Hwcval::buffer_details_t bi;
 
-      HWCCHECK(eCheckGrallocDetails);
-      if (GetBufferInfo(mBufCpy->handle, &bi)) {
+      if (mBufCpy) {
         HWCERROR(eCheckGrallocDetails,
                  "DrmShimBuffer::IsBufferTransparent can't get info for buf@%p "
                  "handle %p copy %p",
-                 this, mHandle, mBufCpy->handle);
+                 this, mHandle, mBufCpy->handle_);
 
         return false;
       }
 
-      mBufferContent = IsBufferTransparent(pGralloc, bi, mBufCpy->handle, rect)
+      mBufferContent = IsBufferTransparent(mBufCpy,rect)
                            ? BufferContentType::ContentNull
                            : BufferContentType::ContentNotNull;
     } else {
@@ -1129,12 +1009,10 @@ bool DrmShimBuffer::IsBufferTransparent(const hwc_rect_t& rect) {
 
   return (mBufferContent == BufferContentType::ContentNull);
 }
-
+#if 0
 // Static function to read a buffer and find out if it is empty within a certain
 // rectangle.
 bool DrmShimBuffer::IsBufferTransparent(struct gralloc_module_t* gralloc,
-                                        Hwcval::buffer_details_t& bi,
-                                        buffer_handle_t handle,
                                         const hwc_rect_t& rect) {
   if ((bi.height < rect.bottom) || (bi.width < rect.right)) {
     HWCLOGD("video (%d, %d, %d, %d) overlay %dx%d", rect.left, rect.top,
@@ -1205,7 +1083,7 @@ bool DrmShimBuffer::IsBufferTransparent(struct gralloc_module_t* gralloc,
   gralloc->unlock(gralloc, handle);
   return ret;
 }
-
+#endif
 void DrmShimBuffer::SetTransparentFromHarness() {
   mTransparentFromHarness = true;
 }
@@ -1264,9 +1142,9 @@ void DrmShimBuffer::ReportCompositionMismatch(
   // If we haven't already made too many files, dump the SF and reference data
   // to TGA files so we can examine them later
   if ((mCompMismatchCount * 2) < MAX_SF_MISMATCH_DUMP_FILES) {
-    HwcTestDumpGrallocBufferToDisk("real", mCompMismatchCount, mBufCpy->handle,
+    HwcTestDumpGrallocBufferToDisk("real", mCompMismatchCount, mBufCpy,
                                    DUMP_BUFFER_TO_TGA);
-    HwcTestDumpGrallocBufferToDisk("ref", mCompMismatchCount, mRef->handle,
+    HwcTestDumpGrallocBufferToDisk("ref", mCompMismatchCount, mRefBuf,
                                    DUMP_BUFFER_TO_TGA);
   }
 }
@@ -1276,33 +1154,31 @@ void DrmShimBuffer::ReportCompositionMismatch(
 bool DrmShimBuffer::CompareWithRef(bool useAlpha, hwc_rect_t* rectToCompare) {
   char strbuf[HWCVAL_DEFAULT_STRLEN];
 
-  if (mRef.get() == 0) {
+  if (mRefBuf == 0) {
     HWCERROR(eCheckInternalError, "CompareWithRef: %s NO REF!!", IdStr(strbuf));
     return false;
   } else {
     HWCLOGD("CompareWithRef: %s mem@%p compared with ref handle %p",
-            IdStr(strbuf), mRef->handle);
+            IdStr(strbuf), mRefBuf->handle_);
   }
 
   Hwcval::buffer_details_t cpyBi;
-  GetBufferInfo(mBufCpy->handle, &cpyBi);
   Hwcval::buffer_details_t refBi;
-  GetBufferInfo(mRef->handle, &refBi);
 
   unsigned char* cpyData;
   unsigned char* refData;
-  uint32_t ret = mBufCpy->lock(GRALLOC_USAGE_SW_READ_MASK, (void**)&cpyData);
+  uint32_t ret = mBufCpy->buffer_->lock(GRALLOC_USAGE_SW_READ_MASK, (void**)&cpyData);
 
   if (ret || (cpyData == 0)) {
     HWCLOGW("CompareWithRef: Failed to lock cpy buffer");
     return false;
   }
 
-  ret = mRef->lock(GRALLOC_USAGE_SW_READ_MASK, (void**)&refData);
+  ret = mRefBuf->buffer_->lock(GRALLOC_USAGE_SW_READ_MASK, (void**)&refData);
 
   if (ret || (refData == 0)) {
     HWCLOGW("CompareWithRef: Failed to lock ref buffer");
-    mBufCpy->unlock();
+    mBufCpy->buffer_->unlock();
     return false;
   }
 
@@ -1423,8 +1299,8 @@ bool DrmShimBuffer::CompareWithRef(bool useAlpha, hwc_rect_t* rectToCompare) {
   // This matches the potential error in ReportCompositionMismatch()
   HWCCHECK(IsFbt() ? eCheckSfCompMatchesRef : eCheckHwcCompMatchesRef);
 
-  mBufCpy->unlock();
-  mRef->unlock();
+  mBufCpy->buffer_->unlock();
+  mRefBuf->buffer_->unlock();
 
   FreeBufCopies();
 
@@ -1432,7 +1308,7 @@ bool DrmShimBuffer::CompareWithRef(bool useAlpha, hwc_rect_t* rectToCompare) {
 }
 
 bool DrmShimBuffer::HasRef() {
-  return (mRef.get() != 0);
+  return (mRefBuf != 0);
 }
 
 

@@ -54,7 +54,8 @@ LOCAL_SRC_FILES:=\
     HwchWatchdogThread.cpp \
     HwchAsyncEventGenerator.cpp \
     HwchInputGenerator.cpp \
-    HwchRange.cpp
+    HwchRange.cpp \
+    ../../../../../os/android/gralloc1bufferhandler.cpp
 
 LOCAL_SRC_FILES += ../../../../../common/utils/hwcutils.cpp
 

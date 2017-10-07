@@ -119,7 +119,7 @@ bool LayerList::IsVideo() {
   return false;
 }
 
-buffer_handle_t ValLayer::GetHandle() const {
+HWCNativeHandle ValLayer::GetHandle() const {
   if (mBuf.get()) {
     return mBuf->GetHandle();
   } else {

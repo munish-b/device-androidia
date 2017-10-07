@@ -37,7 +37,7 @@
 #define COMPOSITION_DEBUG 0
 
 using namespace android;
-
+extern int fd;
 static HwcTestReferenceComposer *spRefCmp = 0;
 
 bool HwcTestReferenceComposer::verifyContextCreated() {
@@ -1012,37 +1012,18 @@ bool HwcTestReferenceComposer::attachToFBO(GLuint textureId) {
 void HwcTestReferenceComposer::setTexture(
     const hwcval_layer_t *layer, uint32_t texturingUnit, bool *pEGLImageCreated,
     bool *pTextureCreated, bool *pTextureSet,
-    android::sp<android::GraphicBuffer> *pGraphicBuffer, EGLImageKHR *pEGLImage,
+    HWCNativeHandle *pGraphicBuffer, EGLImageKHR *pEGLImage,
     GLuint *pTextureId, int filter) {
   // Nothing is successfull, unless something different is later stated
   *pEGLImageCreated = false;
   *pTextureCreated = false;
   *pTextureSet = false;
 
-  Hwcval::buffer_details_t bi;
-
-  if (layer->handle) {
-    // If we have a handle, make sure the BufferInfo is updated
-    HWCCHECK(eCheckGrallocDetails);
-    if (DrmShimBuffer::GetBufferInfo(layer->handle, &bi)) {
-      HWCERROR(eCheckGrallocDetails,
-               "Failed to get gralloc buffer info in reference composer");
-    }
-  }
-#if ANDROID_VERSION > 711
-  *pGraphicBuffer = new android::GraphicBuffer(
-      bi.width, bi.height, bi.format, 1, bi.usage, bi.pitch,
-      const_cast<native_handle *>(layer->handle), false);
-#else
-  *pGraphicBuffer = new android::GraphicBuffer(
-      bi.width, bi.height, bi.format, bi.usage, bi.pitch,
-      const_cast<native_handle *>(layer->handle), false);
-#endif
-  ALOGE("buffer = %p  width = %u height = %u",
-        (*pGraphicBuffer)->getNativeBuffer(), bi.width, bi.height, bi.format);
+  bufferHandler_->CopyHandle(layer->gralloc_handle, pGraphicBuffer);
+  
   *pEGLImage = eglCreateImageKHR(
       m_display, EGL_NO_CONTEXT, EGL_NATIVE_BUFFER_ANDROID,
-      EGLClientBuffer((*pGraphicBuffer)->getNativeBuffer()), 0);
+      EGLClientBuffer((*pGraphicBuffer)->buffer_->getNativeBuffer()), 0);
   if (getEGLError("eglCreateImageKHR")) {
     HWCERROR(
         eCheckGlFail,
@@ -1133,15 +1114,11 @@ status_t HwcTestReferenceComposer::bindTexture(GLuint texturingUnit,
 static void setupVBOData(GLfloat *vboData, uint32_t stride, uint32_t destWidth,
                          uint32_t destHeight, const hwcval_layer_t *layer) {
   // First get input buffer size
-  Hwcval::buffer_details_t bi;
 
-  if (layer->handle) {
+  if (!layer->gralloc_handle) {
     // If we have a handle, make sure the BufferInfo is updated
-    HWCCHECK(eCheckGrallocDetails);
-    if (DrmShimBuffer::GetBufferInfo(layer->handle, &bi)) {
-      HWCERROR(eCheckGrallocDetails,
-               "Failed to get gralloc buffer info in reference composer");
-    }
+    HWCERROR(eCheckGrallocDetails,
+               "gralloc handle is null in reference composer");
   }
 
   GLfloat destCenterX = 0.5f * destWidth;
@@ -1201,8 +1178,8 @@ static void setupVBOData(GLfloat *vboData, uint32_t stride, uint32_t destWidth,
   const GLfloat insidenessBottom = 1.0;  //(bottom - top)  * primHeightRec;
 
   // Use the insideness for calculating the texture coordinates
-  GLfloat sourceWidthRec = 1.f / (GLfloat)bi.width;
-  GLfloat sourceHeightRec = 1.f / (GLfloat)bi.height;
+  GLfloat sourceWidthRec = 1.f / (GLfloat)layer->gralloc_handle->buffer_->getWidth();
+  GLfloat sourceHeightRec = 1.f / (GLfloat)layer->gralloc_handle->buffer_->getHeight();
 
   GLfloat sourceLeft = ((GLfloat)layer->sourceCropf.left) * sourceWidthRec;
   GLfloat sourceTop = ((GLfloat)layer->sourceCropf.top) * sourceHeightRec;
@@ -1285,13 +1262,13 @@ status_t HwcTestReferenceComposer::beginFrame(uint32_t numSources,
 #if CREATEDESTROY_ONCE
   static bool firstTime = true;
 #endif
-  mTargetHandle = target->handle;
+  mTargetHandle = target->gralloc_handle;
   ALOG_ASSERT(mTargetHandle);
 
   uint32_t numSourcesToCompose = 0;
   for (uint32_t i = 0; i < numSources; ++i) {
     if ((source[i].compositionType == HWC2_COMPOSITION_CLIENT) &&
-        (source[i].handle != 0)) {
+        (source[i].gralloc_handle != 0)) {
       ++numSourcesToCompose;
     }
   }
@@ -1334,7 +1311,7 @@ status_t HwcTestReferenceComposer::beginFrame(uint32_t numSources,
   m_destIsNV12 = IsLayerNV12(target);
   HWCLOGD_COND(eLogGl,
                "HwcTestReferenceComposer::BeginFrame target %p is %sNV12",
-               target->handle, (m_destIsNV12 ? "" : "NOT "));
+               target->gralloc_handle, (m_destIsNV12 ? "" : "NOT "));
 
   if (m_destTextureSet) {
     m_destTextureAttachedToFBO = attachToFBO(m_destTextureId);
@@ -1348,7 +1325,7 @@ status_t HwcTestReferenceComposer::beginFrame(uint32_t numSources,
 
   for (uint32_t i = 0; i < numSources; ++i) {
     if ((source[i].compositionType == HWC2_COMPOSITION_CLIENT) &&
-        (source[i].handle != 0)) {
+        (source[i].gralloc_handle != 0)) {
       bool sourceEGLImageCreated = false;
       bool sourceTextureCreated = false;
       bool sourceTextureSet = false;
@@ -1524,7 +1501,6 @@ status_t HwcTestReferenceComposer::Compose(uint32_t numSources,
 
   // Save the GL context
   GLContextSaver contextSaver(this);
-
   result = beginFrame(numSources, source, target);
 
   if (result == OK) {
@@ -1550,7 +1526,7 @@ status_t HwcTestReferenceComposer::Compose(uint32_t numSources,
     hwcval_layer_t &srcLayer = source[index];
 
     if ((srcLayer.compositionType == HWC2_COMPOSITION_CLIENT) &&
-        (srcLayer.handle != 0)) {
+        (srcLayer.gralloc_handle != 0)) {
       // Wait for any acquire fence
       if (waitForFences && (srcLayer.acquireFence > 0)) {
         if (hwcomposer::HWCPoll(srcLayer.acquireFence, HWCVAL_SYNC_WAIT_100MS) < 0) {
@@ -1587,9 +1563,7 @@ void HwcTestReferenceComposer::bindAVbo() {
 
 bool HwcTestReferenceComposer::reallocSourceLayers(uint32_t maxSourceLayers) {
   bool result;
-
-  m_sourceGraphicBuffers =
-      new android::sp<android::GraphicBuffer>[maxSourceLayers];
+  m_sourceGraphicBuffers = new HWCNativeHandle[ maxSourceLayers ];
   m_sourceEGLImages = new EGLImageKHR[maxSourceLayers];
   m_sourceTextureIds = new GLuint[maxSourceLayers];
 
@@ -1615,31 +1589,20 @@ void HwcTestReferenceComposer::freeSourceLayers() {
   m_maxSourceLayers = 0;
 }
 
-android::sp<android::GraphicBuffer> HwcTestReferenceComposer::CopyBuf(
-    buffer_handle_t handle) {
-  Hwcval::buffer_details_t bi;
-
-  if (handle) {
-    // If we have a handle, make sure the BufferInfo is updated
-    HWCCHECK(eCheckGrallocDetails);
-    if (DrmShimBuffer::GetBufferInfo(handle, &bi)) {
-      HWCERROR(eCheckGrallocDetails,
-               "Failed to get gralloc buffer info in CopyBuf");
-      return 0;
-    }
-  } else {
+HWCNativeHandle HwcTestReferenceComposer::CopyBuf(HWCNativeHandle handle) {
+  if (!handle) {
     return 0;
   }
-
+  HwcBuffer bo;
   // Get destination graphic buffer
-  android::sp<android::GraphicBuffer> spDestBuffer = new android::GraphicBuffer(
-      bi.width, bi.height, bi.format,
-      bi.usage | GRALLOC_USAGE_SW_READ_OFTEN);  // Encourage use of linear
-                                                // buffers - it will speed the
-                                                // comparison
-
+  HWCNativeHandle spDestBuffer;
+  bufferHandler_->ImportBuffer(handle,&bo);
+  ALOGE("buffer = %p  width = %u height = %u",
+        bo.width, bo.height, bo.format);
+  bufferHandler_->CreateBuffer(bo.width, bo.height, bo.format, &spDestBuffer);
+ 
   hwcval_layer_t srcLayer;
-  srcLayer.handle = handle;
+  srcLayer.gralloc_handle = handle;
   srcLayer.compositionType = HWC2_COMPOSITION_CLIENT;
   srcLayer.hints = 0;
   srcLayer.flags = 0;
@@ -1647,12 +1610,12 @@ android::sp<android::GraphicBuffer> HwcTestReferenceComposer::CopyBuf(
   srcLayer.blending = HWC_BLENDING_PREMULT;
   srcLayer.sourceCropf.left = 0.0;
   srcLayer.sourceCropf.top = 0.0;
-  srcLayer.sourceCropf.right = bi.width;
-  srcLayer.sourceCropf.bottom = bi.height;
+  srcLayer.sourceCropf.right = bo.width;
+  srcLayer.sourceCropf.bottom = bo.height;
   srcLayer.displayFrame.left = 0;
   srcLayer.displayFrame.top = 0;
-  srcLayer.displayFrame.right = bi.width;
-  srcLayer.displayFrame.bottom = bi.height;
+  srcLayer.displayFrame.right = bo.width;
+  srcLayer.displayFrame.bottom = bo.height;
   srcLayer.visibleRegionScreen.numRects = 1;
   srcLayer.visibleRegionScreen.rects = &srcLayer.displayFrame;
   srcLayer.acquireFence = -1;
@@ -1660,7 +1623,7 @@ android::sp<android::GraphicBuffer> HwcTestReferenceComposer::CopyBuf(
   srcLayer.planeAlpha = 255;
 
   hwcval_layer_t tgtLayer = srcLayer;
-  tgtLayer.handle = spDestBuffer->handle;
+  tgtLayer.gralloc_handle = spDestBuffer;
 
   if (Compose(1, &srcLayer, &tgtLayer, false) == OK) {
     return spDestBuffer;
@@ -1671,37 +1634,21 @@ android::sp<android::GraphicBuffer> HwcTestReferenceComposer::CopyBuf(
 }
 
 bool HwcTestReferenceComposer::IsLayerNV12(const hwcval_layer_t *pDest) {
-  Hwcval::buffer_details_t bi;
 
-  if (pDest->handle) {
-    // If we have a handle, make sure the BufferInfo is updated
-    HWCCHECK(eCheckGrallocDetails);
-    if (DrmShimBuffer::GetBufferInfo(pDest->handle, &bi)) {
-      HWCERROR(eCheckGrallocDetails,
-               "Failed to get gralloc buffer info in reference composer");
-    }
-  } else {
+  if (pDest->gralloc_handle) {
     // No handle
     return false;
   }
 
-  return (IsNV12(bi.format));
+  return (IsNV12(pDest->gralloc_handle->buffer_->getPixelFormat()));
 }
 
 bool HwcTestReferenceComposer::HasAlpha(const hwcval_layer_t *pSrc) {
-  Hwcval::buffer_details_t bi;
 
-  if (pSrc->handle) {
-    // If we have a handle, make sure the BufferInfo is updated
-    HWCCHECK(eCheckGrallocDetails);
-    if (DrmShimBuffer::GetBufferInfo(pSrc->handle, &bi)) {
-      HWCERROR(eCheckGrallocDetails,
-               "Failed to get gralloc buffer info in reference composer");
-    }
-  } else {
+  if (pSrc->gralloc_handle) {
     // No handle
     return false;
   }
 
-  return (::HasAlpha(bi.format));
+  return (::HasAlpha(pSrc->gralloc_handle->buffer_->getPixelFormat()));
 }

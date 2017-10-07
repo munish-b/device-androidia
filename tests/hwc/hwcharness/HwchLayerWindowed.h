@@ -17,7 +17,7 @@
 #ifndef __HwchLayerWindowed_h__
 #define __HwchLayerWindowed_h__
 
-#include <ui/GraphicBuffer.h>
+#include "os/android/platformdefines.h"
 #include <utils/RefBase.h>
 
 #include "HwchCoord.h"

@@ -114,7 +114,7 @@ int Hwch::Interface::RegisterProcs(void) {
 }
 
 int Hwch::Interface::GetDisplayAttributes() {
-  for (int disp = 0; disp < MAX_DISPLAYS; ++disp) {
+  for (int disp = 0; disp < 2; ++disp) {
     GetDisplayAttributes(disp);
   }
   return android::NO_ERROR;

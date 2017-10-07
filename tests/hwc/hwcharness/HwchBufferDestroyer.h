@@ -24,7 +24,7 @@
 
 namespace Hwch {
 class BufferDestroyer
-    : public EventThread<android::sp<android::GraphicBuffer>, 256> {
+    : public EventThread<HWCNativeHandle, 256> {
  public:
   BufferDestroyer();
   virtual ~BufferDestroyer();

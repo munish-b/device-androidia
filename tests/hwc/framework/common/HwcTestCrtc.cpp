@@ -814,7 +814,7 @@ void HwcTestCrtc::ConsistencyChecks(Hwcval::LayerList* ll, uint32_t hwcFrame) {
       continue;
     }
 
-    buffer_handle_t handle = buf->GetHandle();
+    HWCNativeHandle handle = buf->GetHandle();
 
     HWCLOGV_COND(
         eLogCombinedTransform,
@@ -1225,7 +1225,7 @@ void HwcTestCrtc::ConsistencyChecks(Hwcval::LayerList* ll, uint32_t hwcFrame) {
     }
 
     android::sp<DrmShimBuffer> buf = transform.GetBuf();
-    buffer_handle_t handle = buf->GetHandle();
+    HWCNativeHandle handle = buf->GetHandle();
 
     if (buf->IsFbt()) {
       // HWCCHECK is in HwcTestKernel::CheckSetEnter

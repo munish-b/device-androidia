@@ -51,7 +51,8 @@ Hwch::Display::~Display() {
   }
 }
 
-void Hwch::Display::Init(uint32_t ix, Hwch::System* system) {
+void Hwch::Display::Init(hwcomposer::NativeBufferHandler *bufferHandler, uint32_t ix, Hwch::System* system) {
+  bufHandler = bufferHandler;
   mDisplayIx = ix;
   mFmtCfgMgr = &system->GetBufferFormatConfigManager();
 }
@@ -185,7 +186,7 @@ void Hwch::Display::CreateFramebufferTarget() {
       delete mFramebufferTarget;
     }
 
-    mFramebufferTarget = new Hwch::Layer(
+    mFramebufferTarget = new Hwch::Layer(bufHandler,
         "FramebufferTarget", mAttributes.width, mAttributes.height,
         HAL_PIXEL_FORMAT_RGBA_8888, HWCH_FBT_NUM_BUFFERS,
         GRALLOC_USAGE_HW_FB | GRALLOC_USAGE_HW_COMPOSER |
@@ -203,7 +204,7 @@ void Hwch::Display::CreateFramebufferTarget() {
     // Explicitly create the buffer set here since FRAMEBUFFERTARGETs don't go
     // through the
     // CalculateDisplayFrame method
-    mFramebufferTarget->mBufs = new BufferSet(
+    mFramebufferTarget->mBufs = new BufferSet( bufHandler,
         mAttributes.width, mAttributes.height, HAL_PIXEL_FORMAT_RGBA_8888,
         HWCH_FBT_NUM_BUFFERS, GRALLOC_USAGE_HW_FB | GRALLOC_USAGE_HW_COMPOSER |
                                   GRALLOC_USAGE_HW_RENDER);
@@ -317,15 +318,15 @@ void Hwch::Display::CreateExternalBufferSet(void) {
     ALOG_ASSERT(Hwch::System::getInstance().GetVirtualDisplayWidth());
     ALOG_ASSERT(Hwch::System::getInstance().GetVirtualDisplayHeight());
     mExternalBufferSet =
-        new BufferSet(Hwch::System::getInstance().GetVirtualDisplayWidth(),
+        new BufferSet(bufHandler, Hwch::System::getInstance().GetVirtualDisplayWidth(),
                       Hwch::System::getInstance().GetVirtualDisplayHeight(),
                       HAL_PIXEL_FORMAT_RGBA_8888, HWCH_VIRTUAL_NUM_BUFFERS);
   }
 }
 
 // Returns the next buffer in the external (Virtual display) output buffer set.
-buffer_handle_t Hwch::Display::GetNextExternalBuffer(void) {
-  buffer_handle_t ret = NULL;
+HWCNativeHandle Hwch::Display::GetNextExternalBuffer(void) {
+  HWCNativeHandle ret = NULL;
 
   // Create the Virtual Display buffer set, if not created already
   CreateExternalBufferSet();

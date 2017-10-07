@@ -25,7 +25,7 @@
 #include "HwcTestState.h"
 #include "HwcTestUtil.h"
 
-#include <ui/GraphicBuffer.h>
+#include "os/android/platformdefines.h"
 
 #include "HwchGlInterface.h"
 #include "HwchPngImage.h"
@@ -309,19 +309,19 @@ bool GlTargetPlatform::InitEGl(uint32_t screenWidth, uint32_t screenHeight) {
   return (rv);
 }
 
-bool GlTargetPlatform::InitTarget(android::sp<android::GraphicBuffer> buf) {
+bool GlTargetPlatform::InitTarget(HWCNativeHandle buf) {
   bool rv = false;
   EGLClientBuffer clientBufferAddress = NULL;
   HWCLOGD_COND(eLogGl, "Init Target - Entry");
 
-  m_surfaceWidth = m_tW = buf->getWidth();
-  m_surfaceHeight = m_tH = buf->getHeight();
+  m_surfaceWidth = m_tW = buf->buffer_->getWidth();
+  m_surfaceHeight = m_tH = buf->buffer_->getHeight();
 
   glViewport(0, 0, m_surfaceWidth, m_surfaceHeight);
 
-  clientBufferAddress = buf->getNativeBuffer();
+  clientBufferAddress = buf->buffer_->getNativeBuffer();
   if (clientBufferAddress) {
-    android::PixelFormat tgtFormat = buf->format;
+    android::PixelFormat tgtFormat = buf->buffer_->format;
 
     HWCLOGD_COND(eLogGl, "surfacebuffer pixel fmt = %d", tgtFormat);
 

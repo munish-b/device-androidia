@@ -365,7 +365,7 @@ void Hwch::RandomTest::Tidyup() {
   if (GetParam("nohup")) {
     Hwch::Frame endFrame(mInterface);
     Hwch::PngImage image("End.png");
-    Hwch::PngLayer pngLayer(image);
+    Hwch::PngLayer pngLayer(mInterface.bufHandler, image);
     Hwch::Display& display = Hwch::System::getInstance().GetDisplay(0);
     uint32_t displayWidth = display.GetLogicalWidth();
     uint32_t displayHeight = display.GetLogicalHeight();

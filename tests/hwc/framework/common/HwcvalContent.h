@@ -21,6 +21,7 @@
 #include <vector>
 #include "HwcvalEnums.h"
 #include "HwcTestUtil.h"
+#include "public/nativebufferhandler.h"
 
 class DrmShimBuffer;
 
@@ -164,7 +165,7 @@ class ValLayer {
 
   android::sp<DrmShimBuffer> GetBuf() const;
   void SetBuf(android::sp<DrmShimBuffer> buf);
-  buffer_handle_t GetHandle() const;
+  HWCNativeHandle GetHandle() const;
   CompositionType GetCompositionType() const;
   uint32_t GetTransformId() const;
   void SetTransformId(uint32_t transformId);
@@ -307,7 +308,7 @@ class LayerList {
   /* outbuf is the buffer that receives the composed image for
   * virtual displays.
   */
-  buffer_handle_t mOutbuf;
+  HWCNativeHandle mOutbuf;
 
   /* File descriptor for a fence that will signal when outbuf is
    * ready to be written.
@@ -342,7 +343,7 @@ class LayerList {
 
   int GetRetireFence();
   void SetRetireFence(int fence);
-  buffer_handle_t GetOutbuf();
+  HWCNativeHandle GetOutbuf();
 
   void SetVideoFlags(VideoFlags videoFlags);
   VideoFlags GetVideoFlags();
@@ -364,7 +365,7 @@ inline void LayerList::SetRetireFence(int fence) {
   mRetireFenceFd = fence;
 }
 
-inline buffer_handle_t LayerList::GetOutbuf() {
+inline HWCNativeHandle LayerList::GetOutbuf() {
   return mOutbuf;
 }
 

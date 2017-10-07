@@ -19,7 +19,7 @@
 #include "HwchSystem.h"
 #include "HwchPngImage.h"
 
-#include <ui/GraphicBuffer.h>
+#include "os/android/platformdefines.h"
 
 #include "HwcTestState.h"
 #include "HwcTestUtil.h"
@@ -52,19 +52,19 @@ Hwch::HorizontalLineGlPtn::HorizontalLineGlPtn(float mUpdateFreq,
 Hwch::HorizontalLineGlPtn::~HorizontalLineGlPtn() {
 }
 
-int Hwch::HorizontalLineGlPtn::Fill(android::sp<android::GraphicBuffer> buf,
+int Hwch::HorizontalLineGlPtn::Fill(HWCNativeHandle buf,
                                     const hwc_rect_t& rect,
                                     uint32_t& bufferParam) {
-  uint32_t left = max(0, min((int)buf->getWidth(), rect.left));
-  uint32_t top = max(0, min((int)buf->getHeight(), rect.top));
-  uint32_t right = max(0, min((int)buf->getWidth(), rect.right));
-  uint32_t bottom = max(0, min((int)buf->getHeight(), rect.bottom));
+  uint32_t left = max(0, min((int)buf->buffer_->getWidth(), rect.left));
+  uint32_t top = max(0, min((int)buf->buffer_->getHeight(), rect.top));
+  uint32_t right = max(0, min((int)buf->buffer_->getWidth(), rect.right));
+  uint32_t bottom = max(0, min((int)buf->buffer_->getHeight(), rect.bottom));
   uint32_t height = bottom - top;
   uint32_t width = right - left;
 
   if ((height == 0) || (width == 0)) {
     HWCLOGD_COND(eLogHarness, "HorizontalLineGlPtn::Fill aborted %p %dx%d",
-                 buf->handle, width, height);
+                 buf->handle_, width, height);
     return 0;
   }
 
@@ -72,10 +72,10 @@ int Hwch::HorizontalLineGlPtn::Fill(android::sp<android::GraphicBuffer> buf,
     mLine = 0;
   }
 
-  android::PixelFormat format = buf->getPixelFormat();
+  android::PixelFormat format = buf->buffer_->getPixelFormat();
   HWCLOGV_COND(eLogHarness,
                "HorizontalLineGlPtn: %s fill, handle %p %dx%d, mLine=%d",
-               FormatToStr(format), buf->handle, width, height, mLine);
+               FormatToStr(format), buf->handle_, width, height, mLine);
 
   if (mGlInterface.InitTarget(buf)) {
     mGlInterface.StartFrame();
@@ -115,17 +115,17 @@ Hwch::MatrixGlPtn::MatrixGlPtn(float updateFreq, uint32_t fgColour,
 Hwch::MatrixGlPtn::~MatrixGlPtn() {
 }
 
-int Hwch::MatrixGlPtn::Fill(android::sp<android::GraphicBuffer> buf,
+int Hwch::MatrixGlPtn::Fill(HWCNativeHandle buf,
                             const hwc_rect_t& rect, uint32_t& bufferParam) {
-  uint32_t left = max(0, min((int)buf->getWidth(), rect.left));
-  uint32_t top = max(0, min((int)buf->getHeight(), rect.top));
-  uint32_t right = max(0, min((int)buf->getWidth(), rect.right));
-  uint32_t bottom = max(0, min((int)buf->getHeight(), rect.bottom));
+  uint32_t left = max(0, min((int)buf->buffer_->getWidth(), rect.left));
+  uint32_t top = max(0, min((int)buf->buffer_->getHeight(), rect.top));
+  uint32_t right = max(0, min((int)buf->buffer_->getWidth(), rect.right));
+  uint32_t bottom = max(0, min((int)buf->buffer_->getHeight(), rect.bottom));
   uint32_t height = bottom - top;
   uint32_t width = right - left;
 
   if ((height == 0) || (width == 0)) {
-    HWCLOGD_COND(eLogHarness, "MatrixGlPtn::Fill aborted %p %dx%d", buf->handle,
+    HWCLOGD_COND(eLogHarness, "MatrixGlPtn::Fill aborted %p %dx%d", buf->handle_,
                  width, height);
     return 0;
   }
@@ -134,11 +134,11 @@ int Hwch::MatrixGlPtn::Fill(android::sp<android::GraphicBuffer> buf,
     mLine = 0;
   }
 
-  android::PixelFormat format = buf->getPixelFormat();
+  android::PixelFormat format = buf->buffer_->getPixelFormat();
   HWCLOGV_COND(
       eLogHarness,
       "MatrixGlPtn: %s fill, handle %p %dx%d, mLine=%d, (%d, %d, %d, %d)",
-      FormatToStr(format), buf->handle, width, height, mLine, left, top, right,
+      FormatToStr(format), buf->handle_, width, height, mLine, left, top, right,
       bottom);
 
   if (mGlInterface.InitTarget(buf)) {
@@ -213,17 +213,17 @@ void Hwch::PngGlPtn::Set(android::sp<Hwch::PngImage> spImage) {
   Set(*spImage);
 }
 
-int Hwch::PngGlPtn::Fill(android::sp<android::GraphicBuffer> buf,
+int Hwch::PngGlPtn::Fill(HWCNativeHandle buf,
                          const hwc_rect_t& rect, uint32_t& bufferParam) {
-  uint32_t left = max(0, min((int)buf->getWidth(), rect.left));
-  uint32_t top = max(0, min((int)buf->getHeight(), rect.top));
-  uint32_t right = max(0, min((int)buf->getWidth(), rect.right));
-  uint32_t bottom = max(0, min((int)buf->getHeight(), rect.bottom));
+  uint32_t left = max(0, min((int)buf->buffer_->getWidth(), rect.left));
+  uint32_t top = max(0, min((int)buf->buffer_->getHeight(), rect.top));
+  uint32_t right = max(0, min((int)buf->buffer_->getWidth(), rect.right));
+  uint32_t bottom = max(0, min((int)buf->buffer_->getHeight(), rect.bottom));
   uint32_t height = bottom - top;
   uint32_t width = right - left;
 
   if ((height == 0) || (width == 0)) {
-    HWCLOGD_COND(eLogHarness, "PngGlPtn::Fill aborted %p %dx%d", buf->handle,
+    HWCLOGD_COND(eLogHarness, "PngGlPtn::Fill aborted %p %dx%d", buf->handle_,
                  width, height);
     return 0;
   }
@@ -275,19 +275,19 @@ Hwch::ClearGlPtn::ClearGlPtn(float mUpdateFreq, uint32_t fgColour,
 Hwch::ClearGlPtn::~ClearGlPtn() {
 }
 
-int Hwch::ClearGlPtn::Fill(android::sp<android::GraphicBuffer> buf,
+int Hwch::ClearGlPtn::Fill(HWCNativeHandle buf,
                            const hwc_rect_t& rect, uint32_t& bufferParam) {
   HWCVAL_UNUSED(bufferParam);
 
-  uint32_t left = max(0, min((int)buf->getWidth(), rect.left));
-  uint32_t top = max(0, min((int)buf->getHeight(), rect.top));
-  uint32_t right = max(0, min((int)buf->getWidth(), rect.right));
-  uint32_t bottom = max(0, min((int)buf->getHeight(), rect.bottom));
+  uint32_t left = max(0, min((int)buf->buffer_->getWidth(), rect.left));
+  uint32_t top = max(0, min((int)buf->buffer_->getHeight(), rect.top));
+  uint32_t right = max(0, min((int)buf->buffer_->getWidth(), rect.right));
+  uint32_t bottom = max(0, min((int)buf->buffer_->getHeight(), rect.bottom));
   uint32_t height = bottom - top;
   uint32_t width = right - left;
 
   if ((height == 0) || (width == 0)) {
-    HWCLOGD_COND(eLogHarness, "ClearGlPtn::Fill aborted %p %dx%d", buf->handle,
+    HWCLOGD_COND(eLogHarness, "ClearGlPtn::Fill aborted %p %dx%d", buf->handle_,
                  width, height);
     return 0;
   }

@@ -17,7 +17,7 @@
 #include "HwchSystem.h"
 #include "HwchDefs.h"
 #include "HwchTimelineThread.h"
-#include <ui/GraphicBuffer.h>
+#include "os/android/platformdefines.h"
 #include "HwcTestLog.h"
 #include "HwcTestState.h"
 #include <dlfcn.h>
@@ -46,9 +46,20 @@ Hwch::System::System()
       mLinearOption("fblinear", *this),
       mXTileOption("fbxtile", *this),
       mYTileOption("fbytile", *this),
-      mWidi(false) {
+      mWidi(false),
+      bufferHandler(NULL) {
+
+  if(bufferHandler == NULL) {
+    int fd = open("/dev/dri/renderD128", O_RDWR);
+    if (fd == -1) {
+      ETRACE("Can't open dri file");
+      exit(-1);
+     }
+     bufferHandler = hwcomposer::NativeBufferHandler::CreateInstance(fd);
+  }
+
   for (uint32_t disp = 0; disp < MAX_DISPLAYS; ++disp) {
-    mDisplays[disp].Init(disp, this);
+    mDisplays[disp].Init(bufferHandler, disp, this);
   }
 
   mTimelineThread = new Hwch::TimelineThread();

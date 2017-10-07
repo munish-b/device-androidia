@@ -1588,16 +1588,16 @@ int DrmShimChecks::CheckSetDisplayEnter(drm_mode_set_display* drmDisp,
                 mCompVal->Compare(buf);
 
                 if (mState->TestTgtImageDump(mDrmFrameNo)) {
-                  android::sp<android::GraphicBuffer> cpyBuf =
+                  HWCNativeHandle cpyBuf =
                       mCompVal->CopyBuf(buf);
 
-                  if (cpyBuf.get()) {
+                  if (cpyBuf) {
                     HWCLOGI("Dumping tgt frame:%d D%d layer %d %s", mDrmFrameNo,
                             crtc->GetDisplayIx(), i, buf->IdStr(strbuf));
                     HwcTestDumpGrallocBufferToDisk(
                         "tgt",
                         (1000 * mDrmFrameNo + 100 * (crtc->GetDisplayIx()) + i),
-                        cpyBuf->handle, DUMP_BUFFER_TO_TGA);
+                        cpyBuf, DUMP_BUFFER_TO_TGA);
                   } else {
                     HWCLOGI("Failed to copy buffer %s for image dump",
                             buf->IdStr(strbuf));

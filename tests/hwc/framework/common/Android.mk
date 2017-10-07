@@ -80,6 +80,7 @@ LOCAL_SRC_FILES:=\
 
 LOCAL_SRC_FILES += HwcvalServiceManager.cpp
 LOCAL_SRC_FILES += ../../../../../../common/utils/hwcutils.cpp
+LOCAL_SRC_FILES += ../../../../../../os/android/gralloc1bufferhandler.cpp
 
 ifeq ($(BUILD_SHIM_HWCSERVICE),1)
     LOCAL_SRC_FILES += \
@@ -100,6 +101,7 @@ LOCAL_SHARED_LIBRARIES += \
     libGLESv1_CM \
     libGLESv2 \
     libEGL \
+    libdrm \
     liblog
 
 LOCAL_C_INCLUDES += \

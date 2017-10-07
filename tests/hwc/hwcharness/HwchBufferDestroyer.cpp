@@ -31,6 +31,7 @@ bool Hwch::BufferDestroyer::threadLoop() {
 
   while (true) {
     buffer_handle_t handle = 0;
+    Hwch::System& system = Hwch::System::getInstance();
     HWCLOGD("Size=%d", Size());
 
     HWCLOGD(
@@ -43,9 +44,9 @@ bool Hwch::BufferDestroyer::threadLoop() {
     HWCLOGD("Start destroying buffers, now %d in queue", Size());
 
     while (Size() > 0) {
-      android::sp<android::GraphicBuffer> buf;
-      if (ReadWait(buf)) {
-        handle = buf->handle;
+       HWCNativeHandle bufHandle;
+      if (ReadWait(bufHandle)) {
+       system.bufferHandler->ReleaseBuffer(bufHandle);
         HWCLOGD("Destroying buffer handle %p", handle);
       }
     }

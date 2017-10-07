@@ -28,10 +28,9 @@ extern "C" {  // shame
 #include <drm_fourcc.h>
 }  // extern "C"
 
-
 static uint32_t bufferCount = 0;
 
-Hwch::BufferSet::BufferSet(uint32_t width, uint32_t height, uint32_t format,
+Hwch::BufferSet::BufferSet(hwcomposer::NativeBufferHandler *bufHandler, uint32_t width, uint32_t height, uint32_t format,
                            int32_t numBuffers, uint32_t usage)
     : mCurrentBuffer(0),
       mNextBuffer(0),
@@ -47,14 +46,14 @@ Hwch::BufferSet::BufferSet(uint32_t width, uint32_t height, uint32_t format,
   } else {
     mNumBuffers = numBuffers;
   }
-
+  bufferHandler = bufHandler;
   HWCLOGV("BufferSet created @ %p, numBuffers=%d, usage=%x", this, mNumBuffers,
           usage);
   for (uint32_t i = 0; i < mNumBuffers; ++i) {
-    android::GraphicBuffer* buf =
-        new android::GraphicBuffer(width, height, format, usage);
+    HWCNativeHandle buf;
+    bufferHandler->CreateBuffer(width, height, format, &buf);
 
-    HWCLOGV("  Handle %p", buf->handle);
+    HWCLOGV("  Handle %p", buf);
     FencedBuffer fb(buf, -1);
     mBuffers.add(fb);
   }
@@ -94,7 +93,7 @@ Hwch::BufferSet::~BufferSet() {
     if (HwcTestState::getInstance()->IsOptionEnabled(
             eOptAsyncBufferDestruction)) {
       HWCLOGD("Defer destroying buffer handle %p until OnSet",
-              fencedB.mBuf->handle);
+              fencedB.mBuf->handle_);
       system.GetBufferDestroyer().Push(fencedB.mBuf);
     }
   }
@@ -122,9 +121,10 @@ bool Hwch::BufferSet::SetNextBufferInstance(uint32_t index) {
         "SetNextBufferInstance: new GraphicBuffer(%dx%d format %x usage %x",
         mWidth, mHeight, mFormat, mUsage);
 
-    android::GraphicBuffer* buf =
-        new android::GraphicBuffer(mWidth, mHeight, mFormat, mUsage);
-    if ((!buf) || (buf->handle == NULL)) {
+    HWCNativeHandle buf;
+    bufferHandler->CreateBuffer(mWidth, mHeight, mFormat, &buf);
+
+    if ((!buf) || (buf->handle_ == NULL)) {
       HWCERROR(eCheckAllocFail,
                "SetNextBufferInstance gralloc allocation failure");
       return false;
@@ -147,18 +147,18 @@ bool Hwch::BufferSet::SetNextBufferInstance(uint32_t index) {
   return true;
 }
 
-buffer_handle_t Hwch::BufferSet::GetNextBuffer() {
+HWCNativeHandle Hwch::BufferSet::GetNextBuffer() {
   mFencedB = &mBuffers.editItemAt(mNextBuffer);
   mCurrentBuffer = mNextBuffer;
   mNextBuffer = (mNextBuffer + 1) % mNumBuffers;
-  return mFencedB->mBuf->handle;
+  return mFencedB->mBuf;
 }
 
-buffer_handle_t Hwch::BufferSet::GetHandle() {
-  return mFencedB->mBuf->handle;
+HWCNativeHandle Hwch::BufferSet::GetHandle() {
+  return mFencedB->mBuf;
 }
 
-android::sp<android::GraphicBuffer> Hwch::BufferSet::Get() {
+HWCNativeHandle Hwch::BufferSet::Get() {
   return mFencedB->mBuf;
 }
 void Hwch::BufferSet::AdvanceTimestamp(uint64_t delta) {
@@ -185,14 +185,14 @@ void Hwch::BufferSet::SetReleaseFence(int fenceFd) {
       HWCLOGD_COND(eLogTimeline,
                    "BufferSet: handle %p merged release fences (no change of "
                    "buffer) %d=%d+%d",
-                   mFencedB->mBuf->handle, mergedFence,
+                   mFencedB->mBuf->handle_, mergedFence,
                    mFencedB->mReleaseFenceFd, fenceFd);
       CloseFence(mFencedB->mReleaseFenceFd);
       CloseFence(fenceFd);
       mFencedB->mReleaseFenceFd = mergedFence;
     } else {
       HWCLOGD_COND(eLogTimeline, "BufferSet: handle %p has release fence %d",
-                   mFencedB->mBuf->handle, fenceFd);
+                   mFencedB->mBuf->handle_, fenceFd);
       mFencedB->mReleaseFenceFd = fenceFd;
     }
   }

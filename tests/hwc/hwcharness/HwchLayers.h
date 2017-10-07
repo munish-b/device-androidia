@@ -26,7 +26,7 @@ class PngImage;
 
 class RGBALayer : public Layer {
  public:
-  RGBALayer(Coord<int32_t> w = MaxRel(0), Coord<int32_t> h = MaxRel(0),
+  RGBALayer(hwcomposer::NativeBufferHandler *bufferHandler, Coord<int32_t> w = MaxRel(0), Coord<int32_t> h = MaxRel(0),
             float updateFreq = 60.0, uint32_t fg = eWhite,
             uint32_t bg = eLightGrey, uint32_t matrix = 0);
 };
@@ -38,89 +38,89 @@ class SkipLayer : public Layer {
 
 class CameraLayer : public Layer {
  public:
-  CameraLayer();
+  CameraLayer(hwcomposer::NativeBufferHandler *bufferHandler);
 };
 
 class CameraUILayer : public Layer {
  public:
-  CameraUILayer();
+  CameraUILayer(hwcomposer::NativeBufferHandler *bufferHandler);
 };
 
 class NavigationBarLayer : public Layer {
  public:
-  NavigationBarLayer();
+  NavigationBarLayer(hwcomposer::NativeBufferHandler *bufferHandler);
 };
 
 class WallpaperLayer : public Layer {
  public:
-  WallpaperLayer();
+  WallpaperLayer(hwcomposer::NativeBufferHandler *bufferHandler);
 };
 
 class LauncherLayer : public Layer {
  public:
-  LauncherLayer();
+  LauncherLayer(hwcomposer::NativeBufferHandler *bufferHandler);
 };
 
 class StatusBarLayer : public Layer {
  public:
-  StatusBarLayer();
+  StatusBarLayer(hwcomposer::NativeBufferHandler *bufferHandler);
 };
 
 class DialogBoxLayer : public Layer {
  public:
-  DialogBoxLayer();
+  DialogBoxLayer(hwcomposer::NativeBufferHandler *bufferHandler);
 };
 
 class GalleryLayer : public Layer {
  public:
-  GalleryLayer();
+  GalleryLayer(hwcomposer::NativeBufferHandler *bufferHandler);
 };
 
 class GalleryUILayer : public Layer {
  public:
-  GalleryUILayer();
+  GalleryUILayer(hwcomposer::NativeBufferHandler *bufferHandler);
 };
 
 class MenuLayer : public Layer {
  public:
-  MenuLayer();
+  MenuLayer(hwcomposer::NativeBufferHandler *bufferHandler);
 };
 
 class GameFullScreenLayer : public Layer {
  public:
-  GameFullScreenLayer(Coord<int32_t> w = MaxRel(0),
+  GameFullScreenLayer(hwcomposer::NativeBufferHandler *bufferHandler, Coord<int32_t> w = MaxRel(0),
                       Coord<int32_t> h = MaxRel(-eNavigationBarHeight));
 };
 
 class AdvertLayer : public Layer {
  public:
-  AdvertLayer();
+  AdvertLayer(hwcomposer::NativeBufferHandler *bufferHandler);
 };
 
 class NotificationLayer : public Layer {
  public:
-  NotificationLayer();
+  NotificationLayer(hwcomposer::NativeBufferHandler *bufferHandler);
 };
 
 class NV12VideoLayer : public Layer {
  public:
-  NV12VideoLayer(uint32_t w = 0, uint32_t h = 0);
+  NV12VideoLayer(hwcomposer::NativeBufferHandler *bufferHandler, uint32_t w = 0, uint32_t h = 0);
 };
 
 class YV12VideoLayer : public Layer {
  public:
-  YV12VideoLayer(uint32_t w = 0, uint32_t h = 0);
+  YV12VideoLayer(hwcomposer::NativeBufferHandler *bufferHandler, uint32_t w = 0, uint32_t h = 0);
 };
 
 class TransparentFullScreenLayer : public Layer {
  public:
-  TransparentFullScreenLayer();
+  TransparentFullScreenLayer(hwcomposer::NativeBufferHandler *bufferHandler);
 };
 
 class PngLayer : public Layer {
  public:
-  PngLayer(){};
-  PngLayer(Hwch::PngImage& png, float updateFreq = 60.0,
+  PngLayer(hwcomposer::NativeBufferHandler *bufferHandler){};
+  PngLayer(hwcomposer::NativeBufferHandler *bufferHandler, Hwch::PngImage& png, float updateFreq = 60.0,
            uint32_t lineColour = eWhite);
 };
 }

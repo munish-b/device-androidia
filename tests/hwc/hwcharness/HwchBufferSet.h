@@ -25,9 +25,10 @@
 #include <utils/Vector.h>
 #include <utils/RefBase.h>
 #include <utils/String8.h>
-#include <ui/GraphicBuffer.h>
-#include <hardware/hwcomposer2.h>
 
+#include <hardware/hwcomposer2.h>
+#include "os/android/platformdefines.h"
+#include "public/nativebufferhandler.h"
 #include "HwchPattern.h"
 #include "HwchDefs.h"
 
@@ -35,11 +36,11 @@ namespace Hwch {
 class BufferSet : public android::RefBase {
  private:
   struct FencedBuffer {
-    android::sp<android::GraphicBuffer> mBuf;
+    HWCNativeHandle mBuf;
     int mReleaseFenceFd;
     uint32_t mParam;
 
-    FencedBuffer(android::GraphicBuffer* buf = 0, int fenceFd = -1)
+    FencedBuffer(HWCNativeHandle buf = 0, int fenceFd = -1)
         : mBuf(buf),
           mReleaseFenceFd(fenceFd),
           mParam(HWCH_BUFFERPARAM_UNDEFINED) {
@@ -62,16 +63,16 @@ class BufferSet : public android::RefBase {
   bool mBuffersFilledAtLeastOnce;
 
  public:
-  BufferSet(uint32_t width, uint32_t height, uint32_t format,
+  BufferSet(hwcomposer::NativeBufferHandler *bufHandler, uint32_t width, uint32_t height, uint32_t format,
             int32_t numBuffers = -1,
             uint32_t usage = GRALLOC_USAGE_HW_COMPOSER |
                              GRALLOC_USAGE_HW_TEXTURE |
                              GRALLOC_USAGE_HW_RENDER);
   ~BufferSet();
 
-  android::sp<android::GraphicBuffer> Get();
-  buffer_handle_t GetHandle();
-  buffer_handle_t GetNextBuffer();
+  HWCNativeHandle Get();
+  HWCNativeHandle GetHandle();
+  HWCNativeHandle GetNextBuffer();
   bool NeedsUpdating();
   bool BuffersFilledAtLeastOnce();
   uint32_t& GetInstanceParam();
@@ -88,6 +89,7 @@ class BufferSet : public android::RefBase {
 
   // Number of buffers so far created
   static uint32_t GetBufferCount();
+  hwcomposer::NativeBufferHandler *bufferHandler;
 };
 
 class BufferSetPtr : public android::sp<Hwch::BufferSet> {

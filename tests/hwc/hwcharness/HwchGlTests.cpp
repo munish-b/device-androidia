@@ -27,10 +27,10 @@
 #include "HwchGlInterface.h"
 
 // Image layer class
-Hwch::PngGlLayer::PngGlLayer(Hwch::PngImage& png, float updateFreq,
+Hwch::PngGlLayer::PngGlLayer(hwcomposer::NativeBufferHandler *bufHandler, Hwch::PngImage& png, float updateFreq,
                              uint32_t lineColour, uint32_t bgColour,
                              bool bIgnore)
-    : Hwch::Layer(png.GetName(), 0, 0, HAL_PIXEL_FORMAT_RGBA_8888) {
+    : Hwch::Layer(bufHandler, png.GetName(), 0, 0, HAL_PIXEL_FORMAT_RGBA_8888) {
   PngGlPtn* ptn = new PngGlPtn(updateFreq, lineColour, bgColour, bIgnore);
   ptn->Set(png);
 
@@ -61,10 +61,10 @@ int Hwch::GlBasicLineTest::RunScenario() {
   int32_t screenWidth = mSystem.GetDisplay(0).GetWidth();
   int32_t screenHeight = mSystem.GetDisplay(0).GetHeight();
 
-  Hwch::Layer layer1("Background", screenWidth, screenHeight);
+  Hwch::Layer layer1(mInterface.bufHandler, "Background", screenWidth, screenHeight);
   layer1.SetPattern(new Hwch::SolidColourPtn(eWhite));
 
-  Hwch::Layer layer2("GlLine", screenWidth, screenHeight);
+  Hwch::Layer layer2(mInterface.bufHandler, "GlLine", screenWidth, screenHeight);
   layer2.SetLogicalDisplayFrame(
       LogDisplayRect(0, 0, screenWidth, screenHeight));
   layer2.SetPattern(new Hwch::HorizontalLineGlPtn(10.0, eGreen, eBlue));
@@ -92,10 +92,10 @@ int Hwch::GlBasicClearTest::RunScenario() {
   int32_t screenWidth = mSystem.GetDisplay(0).GetWidth();
   int32_t screenHeight = mSystem.GetDisplay(0).GetHeight();
 
-  Hwch::Layer layer1("Background", screenWidth, screenHeight);
+  Hwch::Layer layer1(mInterface.bufHandler, "Background", screenWidth, screenHeight);
   layer1.SetPattern(new Hwch::SolidColourPtn(eWhite));
 
-  Hwch::Layer layer2("GlClear", 600, 400);
+  Hwch::Layer layer2(mInterface.bufHandler, "GlClear", 600, 400);
   layer2.SetLogicalDisplayFrame(LogDisplayRect(10, 10, 200, 200));
   layer2.SetPattern(new Hwch::ClearGlPtn(10.0, eBlue, eGreen));
 
@@ -122,11 +122,11 @@ int Hwch::GlBasicTextureTest::RunScenario() {
   int32_t screenWidth = mSystem.GetDisplay(0).GetWidth();
   int32_t screenHeight = mSystem.GetDisplay(0).GetHeight();
 
-  Hwch::Layer layer1("Background", screenWidth, screenHeight);
+  Hwch::Layer layer1(mInterface.bufHandler, "Background", screenWidth, screenHeight);
   layer1.SetPattern(new Hwch::SolidColourPtn(eWhite));
 
   PngImage image("Spiderman.png");
-  Hwch::PngGlLayer layer2(image, 10.0, eGreen);
+  Hwch::PngGlLayer layer2(mInterface.bufHandler, image, 10.0, eGreen);
   layer2.SetLogicalDisplayFrame(LogDisplayRect(250, 10, 550, 350));
 
   frame.Add(layer1);
@@ -152,19 +152,19 @@ int Hwch::GlBasicCombo1Test::RunScenario() {
   int32_t screenWidth = mSystem.GetDisplay(0).GetWidth();
   int32_t screenHeight = mSystem.GetDisplay(0).GetHeight();
 
-  Hwch::Layer layer1("Background", screenWidth, screenHeight);
+  Hwch::Layer layer1(mInterface.bufHandler, "Background", screenWidth, screenHeight);
   layer1.SetPattern(new Hwch::SolidColourPtn(eWhite));
 
-  Hwch::Layer layer2("GlClear", 600, 400);
+  Hwch::Layer layer2(mInterface.bufHandler, "GlClear", 600, 400);
   layer2.SetLogicalDisplayFrame(LogDisplayRect(10, 10, 200, 200));
   layer2.SetPattern(new Hwch::ClearGlPtn(10.0, eBlue, eGreen));
 
-  Hwch::Layer layer3("GlLine", 600, 400);
+  Hwch::Layer layer3(mInterface.bufHandler, "GlLine", 600, 400);
   layer3.SetLogicalDisplayFrame(LogDisplayRect(10, 250, 110, 350));
   layer3.SetPattern(new Hwch::HorizontalLineGlPtn(10.0, eGreen, eBlue));
 
   PngImage image("Spiderman.png");
-  Hwch::PngGlLayer layer4(image, 10.0, eGreen);
+  Hwch::PngGlLayer layer4(mInterface.bufHandler, image, 10.0, eGreen);
   layer4.SetLogicalDisplayFrame(LogDisplayRect(250, 10, 550, 350));
 
   frame.Add(layer1);
@@ -192,25 +192,25 @@ int Hwch::GlBasicCombo2Test::RunScenario() {
   int32_t screenWidth = mSystem.GetDisplay(0).GetWidth();
   int32_t screenHeight = mSystem.GetDisplay(0).GetHeight();
 
-  Hwch::Layer layer1("Background", screenWidth, screenHeight);
+  Hwch::Layer layer1(mInterface.bufHandler, "Background", screenWidth, screenHeight);
   layer1.SetPattern(new Hwch::SolidColourPtn(eWhite));
 
   PngImage image("Spiderman.png");
-  Hwch::PngGlLayer layer2(image, 10.0, eGreen);
+  Hwch::PngGlLayer layer2(mInterface.bufHandler, image, 10.0, eGreen);
   layer2.SetLogicalDisplayFrame(
       LogDisplayRect(0, 0, screenWidth, screenHeight / 2));
 
-  Hwch::Layer layer3("GlClear", screenWidth, screenHeight);
+  Hwch::Layer layer3(mInterface.bufHandler, "GlClear", screenWidth, screenHeight);
   layer3.SetLogicalDisplayFrame(
       LogDisplayRect(screenWidth / 2, 0, screenWidth, screenHeight / 2));
   layer3.SetPattern(new Hwch::ClearGlPtn(10.0, eBlue, eGreen));
 
-  Hwch::Layer layer4("GlClear2", screenWidth, screenHeight);
+  Hwch::Layer layer4(mInterface.bufHandler, "GlClear2", screenWidth, screenHeight);
   layer4.SetLogicalDisplayFrame(
       LogDisplayRect(0, screenHeight / 2, screenWidth / 2, screenHeight));
   layer4.SetPattern(new Hwch::ClearGlPtn(10.0, eGreen, eBlue));
 
-  Hwch::Layer layer5("GlLine", screenWidth, screenHeight);
+  Hwch::Layer layer5(mInterface.bufHandler, "GlLine", screenWidth, screenHeight);
   layer5.SetLogicalDisplayFrame(LogDisplayRect(
       screenWidth / 2, screenHeight / 2, screenWidth, screenHeight));
   layer5.SetPattern(new Hwch::HorizontalLineGlPtn(10.0, eGreen, eBlue));
@@ -241,25 +241,25 @@ int Hwch::GlBasicCombo3Test::RunScenario() {
   int32_t screenWidth = mSystem.GetDisplay(0).GetWidth();
   int32_t screenHeight = mSystem.GetDisplay(0).GetHeight();
 
-  Hwch::Layer layer1("Background", screenWidth, screenHeight);
+  Hwch::Layer layer1(mInterface.bufHandler, "Background", screenWidth, screenHeight);
   layer1.SetPattern(new Hwch::SolidColourPtn(eWhite));
 
-  Hwch::Layer layer2("Glline", screenWidth, screenHeight);
+  Hwch::Layer layer2(mInterface.bufHandler, "Glline", screenWidth, screenHeight);
   layer2.SetLogicalDisplayFrame(
       LogDisplayRect(0, 0, screenWidth, screenHeight / 2));
   layer2.SetPattern(new Hwch::HorizontalLineGlPtn(10.0, eRed, eBlue));
 
-  Hwch::Layer layer3("GlClear", screenWidth, screenHeight);
+  Hwch::Layer layer3(mInterface.bufHandler, "GlClear", screenWidth, screenHeight);
   layer3.SetLogicalDisplayFrame(
       LogDisplayRect(screenWidth / 2, 0, screenWidth, screenHeight / 2));
   layer3.SetPattern(new Hwch::ClearGlPtn(10.0, eBlue, eGreen));
 
-  Hwch::Layer layer4("GlClear2", screenWidth, screenHeight);
+  Hwch::Layer layer4(mInterface.bufHandler, "GlClear2", screenWidth, screenHeight);
   layer4.SetLogicalDisplayFrame(
       LogDisplayRect(0, screenHeight / 2, screenWidth / 2, screenHeight));
   layer4.SetPattern(new Hwch::ClearGlPtn(10.0, eGreen, eBlue));
 
-  Hwch::Layer layer5("GlLine", screenWidth, screenHeight);
+  Hwch::Layer layer5(mInterface.bufHandler, "GlLine", screenWidth, screenHeight);
   layer5.SetLogicalDisplayFrame(LogDisplayRect(
       screenWidth / 2, screenHeight / 2, screenWidth, screenHeight));
   layer5.SetPattern(new Hwch::HorizontalLineGlPtn(10.0, eGreen, eBlue));
@@ -294,11 +294,11 @@ int Hwch::GlBasicPixelDiscardTest::RunScenario() {
   int32_t screenWidth = mSystem.GetDisplay(0).GetWidth();
   int32_t screenHeight = mSystem.GetDisplay(0).GetHeight();
 
-  Hwch::Layer layer1("Background", screenWidth, screenHeight);
+  Hwch::Layer layer1(mInterface.bufHandler, "Background", screenWidth, screenHeight);
   layer1.SetPattern(new Hwch::SolidColourPtn(eWhite));
 
   PngImage image("Spiderman.png");
-  Hwch::PngGlLayer layer2(image, 10.0, eGreen, 0xE02D28FF, true);
+  Hwch::PngGlLayer layer2(mInterface.bufHandler, image, 10.0, eGreen, 0xE02D28FF, true);
   layer2.SetLogicalDisplayFrame(
       LogDisplayRect(0, 0, screenWidth, screenHeight));
 
@@ -325,25 +325,25 @@ int Hwch::GlBasicViewportTest::RunScenario() {
   int32_t screenWidth = mSystem.GetDisplay(0).GetWidth();
   int32_t screenHeight = mSystem.GetDisplay(0).GetHeight();
 
-  Hwch::Layer layer1("Background", screenWidth, screenHeight);
+  Hwch::Layer layer1(mInterface.bufHandler, "Background", screenWidth, screenHeight);
   layer1.SetPattern(new Hwch::SolidColourPtn(eWhite));
 
   PngImage image("Spiderman.png");
-  Hwch::PngGlLayer layer2(image, 10.0, eGreen);
+  Hwch::PngGlLayer layer2(mInterface.bufHandler, image, 10.0, eGreen);
   layer2.SetLogicalDisplayFrame(
       LogDisplayRect(0, 0, screenWidth, screenHeight / 2));
 
-  Hwch::Layer layer3("GlClear", screenWidth, screenHeight);
+  Hwch::Layer layer3(mInterface.bufHandler, "GlClear", screenWidth, screenHeight);
   layer3.SetLogicalDisplayFrame(
       LogDisplayRect(screenWidth / 2, 0, screenWidth, screenHeight / 2));
   layer3.SetPattern(new Hwch::ClearGlPtn(10.0, eBlue, eGreen));
 
-  Hwch::Layer layer4("GlClear2", screenWidth, screenHeight);
+  Hwch::Layer layer4(mInterface.bufHandler, "GlClear2", screenWidth, screenHeight);
   layer4.SetLogicalDisplayFrame(
       LogDisplayRect(0, screenHeight / 2, screenWidth / 2, screenHeight));
   layer4.SetPattern(new Hwch::ClearGlPtn(10.0, eGreen, eBlue));
 
-  Hwch::Layer layer5("GlLine", screenWidth, screenHeight);
+  Hwch::Layer layer5(mInterface.bufHandler, "GlLine", screenWidth, screenHeight);
   layer5.SetLogicalDisplayFrame(LogDisplayRect(
       screenWidth / 2, screenHeight / 2, screenWidth, screenHeight));
   layer5.SetPattern(new Hwch::HorizontalLineGlPtn(10.0, eGreen, eBlue));
@@ -376,10 +376,10 @@ int Hwch::GlBasicMovingLineTest::RunScenario() {
   int32_t screenWidth = mSystem.GetDisplay(0).GetWidth();
   int32_t screenHeight = mSystem.GetDisplay(0).GetHeight();
 
-  Hwch::Layer layer1("Background", screenWidth, screenHeight);
+  Hwch::Layer layer1(mInterface.bufHandler, "Background", screenWidth, screenHeight);
   layer1.SetPattern(new Hwch::SolidColourPtn(eWhite));
 
-  Hwch::Layer layer("aLayer", screenWidth, screenHeight);
+  Hwch::Layer layer(mInterface.bufHandler, "aLayer", screenWidth, screenHeight);
   layer.SetLogicalDisplayFrame(LogDisplayRect(0, 0, screenWidth, screenHeight));
   layer.SetPattern(new Hwch::HorizontalLineGlPtn(50.0, eRed, eBlue));
 
@@ -406,11 +406,11 @@ int Hwch::GlBasicPixelDiscardNOPTest::RunScenario() {
   int32_t screenWidth = mSystem.GetDisplay(0).GetWidth();
   int32_t screenHeight = mSystem.GetDisplay(0).GetHeight();
 
-  Hwch::Layer layer1("Background", screenWidth, screenHeight);
+  Hwch::Layer layer1(mInterface.bufHandler, "Background", screenWidth, screenHeight);
   layer1.SetPattern(new Hwch::SolidColourPtn(eWhite));
 
   PngImage image("Spiderman.png");
-  Hwch::PngGlLayer layer2(image, 10.0, eGreen, 0xE02D28FF, true);
+  Hwch::PngGlLayer layer2(mInterface.bufHandler, image, 10.0, eGreen, 0xE02D28FF, true);
   layer2.SetLogicalDisplayFrame(
       LogDisplayRect(0, 0, screenWidth, screenHeight));
 
