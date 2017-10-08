@@ -976,9 +976,11 @@ int Hwch::ApiTest::RunScenario() {
 void Hwch::ApiTest::ReportStatistics() {
   uint32_t numHotUnplugs;
   uint32_t numEsdRecoveryEvents;
+// TODO implement simulate hotplug in real HWC
+#if 0
   mSystem.GetKernelEventGenerator().GetCounts(numHotUnplugs,
                                               numEsdRecoveryEvents);
-
+#endif
   printf("Layers created:    normal:  %6d Panel Fitter optimized:     %6d\n",
          mNumNormalLayersCreated, mNumPanelFitterLayersCreated);
 
@@ -998,12 +1000,6 @@ void Hwch::ApiTest::ReportStatistics() {
       mNumSuspends, mNumModeChanges, mNumVideoOptimizationModeChanges);
   printf("Hot unplugs:                %6d Esd recovery events:        %6d\n",
          numHotUnplugs, numEsdRecoveryEvents);
-
-  // Only print the Wireless Docking statistics if enabled
-  if (mWirelessDockingChooser.IsEnabled()) {
-    printf("Wireless docking entries:   %6d Wireless docking exits:     %6d\n",
-           mNumWirelessDockingEntries, mNumWirelessDockingExits);
-  }
 
   printf("\n");
 }
