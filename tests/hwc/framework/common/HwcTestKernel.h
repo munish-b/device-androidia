@@ -162,9 +162,6 @@ class EXPORT_API HwcTestKernel {
   uint32_t mCompLayerIx;
   Hwcval::LayerList mCompSources;
 
-  // List of composers whose activities we care about
-  static const char* mComposerFilter;
-
   /// Gralloc
   struct gralloc_module_t* mGrallocModule;
 

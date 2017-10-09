@@ -47,7 +47,6 @@
 
 using namespace Hwcval;
 
-const char* HwcTestKernel::mComposerFilter = ":PartitionedComposer:GlComposer:";
 DrmShimCallbackBase* drmShimCallback = 0;
 
 static HwcTestReferenceComposer sRefCmp;
