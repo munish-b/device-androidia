@@ -30,10 +30,6 @@ uninstall_shims()
         then
             val_move $1/libdrm.real.so $1/libdrm.so
         fi
-        if [ -e $1/libivp.real.so ]
-        then
-            val_move $1/libivp.real.so $1/libivp.so
-        fi
         if [ -e $1/hw/hwcomposer.real.so ]
         then
             val_move $1/hw/hwcomposer.real.so $1/hw/hwcomposer.$TARGETSHIM.so

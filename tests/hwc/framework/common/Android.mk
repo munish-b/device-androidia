@@ -110,7 +110,6 @@ LOCAL_C_INCLUDES += \
     $(LOCAL_PATH) \
     $(LOCAL_PATH)/../drm_shim/ \
     $(VAL_HWC_LIB_DRM_PATHS) \
-    $(VAL_HWC_LIB_IVP_PATHS) \
     $(VAL_HWC_HARDWARE_COMPOSER_PATH)/os/android/libhwcservice \
     $(VAL_HWC_HARDWARE_COMPOSER_PATH)/../libdrm/intel \
     $(VAL_HWC_TOP)/intel \

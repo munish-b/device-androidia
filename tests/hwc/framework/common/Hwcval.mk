@@ -9,16 +9,6 @@ ifeq ($(VAL_HWC_LIB_DRM_PATHS),)
     endif
 endif
 
-# Determine the iVP include path
-ifeq ($(VAL_HWC_LIB_IVP_PATHS),y)
-    ifeq (,$(wildcard $(ANDROID_PRODUCT_OUT)/obj/SHARED_LIBRARIES/libivp_intermediates/export_includes ))
-        $(error libivp must be build first)
-    else
-        awk_command_ivp=awk '{print $$2}' $(ANDROID_PRODUCT_OUT)/obj/SHARED_LIBRARIES/libivp_intermediates/export_includes
-        VAL_HWC_LIB_IVP_PATHS=$(shell $(awk_command_ivp))
-    endif
-endif
-
 ifeq ($(VAL_HWC_HARDWARE_COMPOSER_PATH),)
     ifeq (,$(wildcard $(ANDROID_PRODUCT_OUT)/obj/SHARED_LIBRARIES/libhwcservice_intermediates/export_includes))
         $(error HWC service must be built first)
