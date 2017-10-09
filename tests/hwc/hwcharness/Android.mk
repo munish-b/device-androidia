@@ -66,21 +66,6 @@ endif
 LOCAL_SRC_FILES += HwchGlTests.cpp
    
 LOCAL_C_INCLUDES += $(VAL_HWC_TOP)/intel 
-ifeq ($(BUILD_PAVP),1)
-    ifeq ($(VAL_HWC_HAVE_UFO), 1)
-        LOCAL_C_INCLUDES += hardware/intel/ufo/ufo/Source/Android/cp/libpavp/src \
-                            hardware/intel/ufo/ufo/Source/Android/core/coreu/include \
-                            hardware/intel/ufo/ufo/Source/Android/core/coreu/src/libcoreu/libcoreuservice/pavp/include \
-                            hardware/intel/ufo/ufo/Source/Android/include \
-                            hardware/intel/ufo/ufo/Source/inc/common \
-                            hardware/intel/ufo/ufo/Source/GmmLib/inc
-    else
-        LOCAL_C_INCLUDES += $(LOCAL_PATH)/PAVP
-    endif
-
-    LOCAL_SHARED_LIBRARIES += libpavp
-    LOCAL_SHARED_LIBRARIES += libcoreuinterface libcoreuservice
-endif
 LOCAL_SHARED_LIBRARIES += \
     libbinder \
     libdrm \

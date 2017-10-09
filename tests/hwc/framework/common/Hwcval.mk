@@ -91,15 +91,8 @@ LOCAL_C_INCLUDES += $(ANDROID_BUILD_TOP)/external/minigbm/cros_gralloc
 BUILD_SHIM_HWCSERVICE := 0
 BUILD_HWCSERVICE_API := 1
 
-# Not currently building PAVP
-BUILD_PAVP := 0
-
 ifneq ($(shell grep -r drm_i915_disp_screen_control ${VAL_HWC_LIB_DRM_PATHS}),)
     LOCAL_CFLAGS += -DBUILD_I915_DISP_SCREEN_CONTROL
-endif
-
-ifeq ($(BUILD_PAVP),1)
-    LOCAL_CFLAGS += -DHWCVAL_BUILD_PAVP
 endif
 
 ifeq (X$(HWCVAL_NO_FRAME_CONTROL),X)
