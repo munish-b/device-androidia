@@ -249,28 +249,15 @@ function get_binary_file_lists()
 
     HWC_BINARY_FILES="
         lib/libhwcservice.so
-        bin/hwclogviewer
-        lib/hw/hwcomposer.$TARGETSHIM.mcg.so
         lib/hw/hwcomposer.$TARGETSHIM.so
-        lib/hw/hwcomposer.$TARGETSHIM.user.so
     "
 
     ADDITIONAL_BINARY_FILES="
-        bin/coreu
-        lib/libcoreuclient.so
-        lib/libcoreuinterface.so
-        lib/libcoreuservice.so
         lib/libdrm.so
-        lib/libivp.so
     "
 
     HWCVAL_BINARY_FILES="
-        lib/libvalhwccommon.so
-        lib/libvalhwc_drmshim.so
-        lib/libvalhwc_ivpshim.so
-        lib/valhwc_composershim.so
         bin/valhwcharness
-        bin/valhwc_kmsgReader
         bin/valhwc_util
         bin/valhwc_camera_test
         bin/valhwc_crc_test
@@ -288,22 +275,15 @@ function get_binary_file_lists()
 
     HWC_BINARY_FILES="$HWC_BINARY_FILES
         lib64/libhwcservice.so
-        lib64/hw/hwcomposer.$TARGETSHIM.mcg.so
         lib64/hw/hwcomposer.$TARGETSHIM.so
-        lib64/hw/hwcomposer.$TARGETSHIM.user.so
     "
     HWCVAL_BINARY_FILES="$HWCVAL_BINARY_FILES
         lib64/libvalhwccommon.so
         lib64/libvalhwc_drmshim.so
-        lib64/libvalhwc_ivpshim.so
         lib64/valhwc_composershim.so
     "
 
     ADDITIONAL_BINARY_FILES="$ADDITIONAL_BINARY_FILES
-        lib64/libcoreuclient.so
-        lib64/libcoreuinterface.so
-        lib64/libcoreuservice.so
         lib64/libdrm.so
-        lib64/libivp.so
     "
 }
