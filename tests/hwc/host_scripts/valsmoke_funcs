@@ -141,17 +141,6 @@ runner_init()
         JENKINS_HOST="http://localhost:8080"
     fi
 
-    if [ $RUN_prot -eq 1 ]
-    then
-        if [[ $TARGET_DEVICE == *bxt* ]]
-        then
-            PROT="-protected_percent=50 -skip_ivp"
-        else
-            PROT="-protected_percent=50"
-        fi
-        AVOID_PROT=""
-    fi
-
     # Work out what checks to disable
     if [[ "$UPSTREAM_BUILD_NUMBER" != "" ]]
     then
@@ -185,16 +174,14 @@ runner_init()
     if [[ $TARGET_DEVICE == *byt* ]]
     then
         echo "valsmoke Enter BYT target overrides"
-        # Disable error that we get when iVP clears the encryption flags on the target buffer, since there is no fix on BYT.
-        export HWCVAL_LOG_SETWARNING="$HWCVAL_LOG_SETWARNING eCheckPavpConsistent"
 
-        API_TEST_OPTIONS="-min_display_frame_size=16 -skip_ivp"
+        API_TEST_OPTIONS="-min_display_frame_size=16 "
         API_TEST_OPTIONS_2="$API_TEST_OPTIONS"
     elif [[ $TARGET_DEVICE == *bxt* ]]
     then
         echo "valsmoke Enter BXT target overrides"
-        export HWCVAL_LOG_ENABLE="$HWCVAL_LOG_ENABLE eLogVBlank eOptFakePavpSession"
-        API_TEST_OPTIONS="-min_display_frame_size=64 -crop_alignment=1 -min_ivp_scale=0.2 -max_ivp_scale=5.0"
+        export HWCVAL_LOG_ENABLE="$HWCVAL_LOG_ENABLE eLogVBlank "
+        API_TEST_OPTIONS="-min_display_frame_size=64 -crop_alignment=1 "
         API_TEST_OPTIONS="$API_TEST_OPTIONS -min_NV12_crop_size=128 -min_NV12_display_frame_size=128 -NV12_crop_alignment=2 -NV12_display_frame_alignment=2"
         API_TEST_OPTIONS="$API_TEST_OPTIONS -min_YUY2_crop_size=128 -min_YUY2_display_frame_size=128 -YUY2_crop_alignment=2 -YUY2_display_frame_alignment=2"
         API_TEST_OPTIONS_2="$API_TEST_OPTIONS"
@@ -202,17 +189,14 @@ runner_init()
         echo "valsmoke Enter CHT target overrides"
         # CHT
         # iVP may hang if small crops or display frames are used with 422 buffers.
-        API_TEST_OPTIONS="-min_display_frame_size=16 -min_NV12_display_frame_size=32 -min_YUY2_display_frame_size=32 -min_YUY2_crop_size=4 -max_ivp_scale=5.0"
+        API_TEST_OPTIONS="-min_display_frame_size=16 -min_NV12_display_frame_size=32 -min_YUY2_display_frame_size=32 -min_YUY2_crop_size=4 "
 
         # hwc-next build
         # Enable MDS using service calls to control it
         # TODO: Find a way to detect this automatically (more difficult than you would think).
         export HWCVAL_LOG_ENABLE="$HWCVAL_LOG_ENABLE eOptNewMds"
-        API_TEST_OPTIONS_2="$API_TEST_OPTIONS -skip_ivp"
+        API_TEST_OPTIONS_2="$API_TEST_OPTIONS "
 
-        # Disable error that we get when iVP clears the encryption flags on the target buffer, since this still sometimes happens
-        # even after iVP fixes
-        export HWCVAL_LOG_SETWARNING="$HWCVAL_LOG_SETWARNING eCheckPavpConsistent"
 
     fi
 
@@ -369,7 +353,7 @@ run_main_testset()
         #valhwch -logname=main_proxydisplay -t RandomModes -screen_disable_period=100  -hot_plug_period=40 -mode_change_period=100 \
         #   $COMMON_SUFFIX |& vallogadd $TMPFILE
 
-        valhwch -logname=main_comp -t TransparencyComposition -val_hwc_composition -no_val_hwc -no_val_ivp \
+        valhwch -logname=main_comp -t TransparencyComposition -val_hwc_composition -no_val_hwc \
             $COMMON_SUFFIX |& vallogadd $TMPFILE
 
         # Aggressive buffer manager test: reduce number of buffer queue buffers to 3 to expose buffer exhaution cases
@@ -397,7 +381,6 @@ run_main_testset()
         then
             valhwch -logname=main_prot \
                 -no_hdmi \
-                -skip_ivp \
                 $COMMON_SUFFIX |& vallogadd $TMPFILE
         fi
 
@@ -433,7 +416,7 @@ run_main_testset()
         #valhwch -logname=main_proxydisplay -t RandomModes -screen_disable_period=100  -hot_plug_period=40 -mode_change_period=100 \
         #   $COMMON_SUFFIX |& vallogadd $TMPFILE
 
-        valhwch -logname=main_comp -t TransparencyComposition -val_hwc_composition -no_val_hwc -no_val_ivp \
+        valhwch -logname=main_comp -t TransparencyComposition -val_hwc_composition -no_val_hwc \
             $COMMON_SUFFIX |& vallogadd $TMPFILE
 
         # Aggressive buffer manager test: reduce number of buffer queue buffers to 3 to expose buffer exhaution cases
@@ -445,8 +428,7 @@ run_main_testset()
 
         # Test the two stage fallback composer
         valhwch -t Api -logname=main_twostagefbcomp -max_frames_per_iteration=10 -test_iterations=100 \
-            -skip_ivp -protected_percent=50 -render_compression=Hint \
-            -no_NV12 -no_invalid_pavp \
+            -no_NV12 \
             $API_TEST_OPTIONS \
             $COMMON_SUFFIX |& vallogadd $TMPFILE
     else
@@ -467,7 +449,7 @@ run_main_testset()
             -test_iterations=10 \
             $COMMON_SUFFIX |& vallogadd $TMPFILE
 
-        valhwch -logname=main_comp -t TransparencyComposition -val_hwc_composition -no_val_hwc -no_val_ivp \
+        valhwch -logname=main_comp -t TransparencyComposition -val_hwc_composition -no_val_hwc \
             $COMMON_SUFFIX |& vallogadd $TMPFILE
 
         # Aggressive buffer manager test: reduce number of buffer queue buffers to 3 to expose buffer exhaution cases
@@ -499,7 +481,7 @@ run_main_testset()
 #
 run_weekly_testset()
 {
-    valhwch -logname=weekly_api1 -t Api -test_iterations=200 -panel_fitter -hot_plug_period=30 -val_hwc_composition -no_val_hwc -no_val_ivp \
+    valhwch -logname=weekly_api1 -t Api -test_iterations=200 -panel_fitter -hot_plug_period=30 -val_hwc_composition -no_val_hwc \
         $API_TEST_OPTIONS $COMMON_SUFFIX |& vallogadd $TMPFILE
 }
 

@@ -73,6 +73,7 @@ kmsg_proc=$!
 
 if [[ "$hwclog_option" != "none" ]]
 then
+    #TODO Renable once the hwclogviewer is enabled in REAL HWC
     #hwclogviewer $hwclog_option > hwclog_hwch.log &
     hwclog_proc=$!
 else

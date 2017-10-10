@@ -127,20 +127,13 @@ fi
 # Disable SELinux
 setenforce 0
 
-stop coreu
 stop media
 
 sync
 sync
 sync
 
-start coreu
 start media
-
-if [ `ps | grep -c coreu` -eq 0 ]
-then
-    sleep 3
-fi
 
 # Re-enable SELinux
 setenforce 1
