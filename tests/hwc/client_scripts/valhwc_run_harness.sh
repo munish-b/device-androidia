@@ -68,12 +68,12 @@ logcat -c
 # Restart log file capture
 logcat $logcat_option logcat_hwch.log &
 logcat_proc=$!
-$SCRIPT_DIR/valhwc_kmsgReader.sh -ftrace > kmsg_hwch.log &
+#$SCRIPT_DIR/valhwc_kmsgReader.sh -ftrace > kmsg_hwch.log &
 kmsg_proc=$!
 
 if [[ "$hwclog_option" != "none" ]]
 then
-    hwclogviewer $hwclog_option > hwclog_hwch.log &
+    #hwclogviewer $hwclog_option > hwclog_hwch.log &
     hwclog_proc=$!
 else
     hwclog_proc=""

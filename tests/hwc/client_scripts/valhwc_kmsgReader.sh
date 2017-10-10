@@ -34,4 +34,4 @@ else
     echo 0 > tracing_on
 fi
 
-valhwc_kmsgReader $*
+#valhwc_kmsgReader $*
