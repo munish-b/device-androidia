@@ -64,8 +64,6 @@ fi
 uninstall_shims /vendor/lib
 
 # drm shim removed -> restart coreu
-stop coreu
 stop media
-start coreu
 start media
 

@@ -247,6 +247,7 @@ function get_binary_file_lists()
         define_target
     fi
 
+    #TODO Add bin/hwclogviewer once hwclogviewer is enabled
     HWC_BINARY_FILES="
         lib/libhwcservice.so
         lib/hw/hwcomposer.$TARGETSHIM.so

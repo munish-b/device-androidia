@@ -84,10 +84,8 @@ then
     if [[ ${BASH_ARGV[0]} == "revert" ]]
     then
         move_file /vendor/lib/libdrm.real.so /vendor/lib/libdrm.so
-        move_file /vendor/lib/libivp.real.so /vendor/lib/libivp.so
 
         move_file /vendor/lib64/libdrm.real.so /vendor/lib64/libdrm.so
-        move_file /vendor/lib64/libivp.real.so /vendor/lib64/libivp.so
 
     fi
 fi

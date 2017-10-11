@@ -38,14 +38,6 @@ then
 else
   echo "symbols libdrm.so is already shim"
 fi
-ivp_is_shim=`grep -c ivpshim $SYMLIBDIR/libivp.so`
-if [ $ivp_is_shim -eq 0 ]
-then
-  echo "Copying symbols libivp.so to libivp.real.so"
-  cp $SYMLIBDIR/libivp.so $SYMLIBDIR/libivp.real.so
-else
-  echo "symbols libivp.so is already shim"
-fi
 
 hwc_is_shim=`grep -c valhwc_composershim $SYMLIBDIR/hw/hwcomposer.$TARGETSHIM.so`
 
@@ -58,7 +50,6 @@ else
 fi
 
 cp $SYMLIBDIR/libvalhwc_drmshim.so $SYMLIBDIR/libdrm.so
-cp $SYMLIBDIR/libvalhwc_ivpshim.so $SYMLIBDIR/libivp.so
 cp $SYMLIBDIR/valhwc_composershim.so $SYMLIBDIR/hw/hwcomposer.$TARGETSHIM.so
 
 # Set target run configuration
@@ -71,7 +62,6 @@ gdbclient valhwcharness 5039
 
 echo "Uninstalling symbol shims"
 cp $SYMLIBDIR/libdrm.real.so $SYMLIBDIR/libdrm.so
-cp $SYMLIBDIR/libivp.real.so $SYMLIBDIR/libivp.so
 cp $SYMLIBDIR/hw/hwcomposer.real.so $SYMLIBDIR/hw/hwcomposer.$TARGETSHIM.so
 
 $ADB pull ${HWCVAL_TARGET_DIR}/hwclog_hwch.log $CLIENT_LOGS >& /dev/null

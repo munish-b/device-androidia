@@ -1864,7 +1864,7 @@ int HwcShim::OnGetDisplayAttributes(int disp, uint32_t config,
   return ret;
 }
 
-// FROM ivpg_hwc.cpp
+// FROM iahwc2.cpp
 /*
  * Every hardware module must have a data structure named HAL_MODULE_INFO_SYM
  * and the fields of this data structure must begin with hw_module_t
@@ -1876,13 +1876,13 @@ static struct hw_module_methods_t methods = {.open = HwcShim::HookOpen};
 #pragma GCC visibility push(default)
 hwc_module_t HAL_MODULE_INFO_SYM = {
     .common = {.tag = HARDWARE_MODULE_TAG,
-               .module_api_version = HWC_MODULE_API_VERSION_0_1,
+               .module_api_version = HARDWARE_MODULE_API_VERSION(2, 0),
                .hal_api_version = HARDWARE_HAL_API_VERSION,
                .id = HWC_HARDWARE_MODULE_ID,
-               .name = "VPG HWComposer",
-               .author = "Intel Corporation",
+               .name = "IA-Hardware-Composer",
+               .author = "The Android Open Source Project",
                .methods = &methods,
                .dso = NULL,
                .reserved = {0}}};
 
-// END FROM ivpg_hwc.cpp
+// END FROM iahwc2.cpp
