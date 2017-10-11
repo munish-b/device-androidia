@@ -974,7 +974,7 @@ int HwcShim::OnValidateDisplay(hwc2_device_t *device, hwc2_display_t display,
                                uint32_t *outNumRequests) {
   int ret = -1;
   StartCallTime();
-  mHwc2->CheckValidateDisplayEntry();
+  mHwc2->CheckValidateDisplayEntry(display);
   HWC2_PFN_VALIDATE_DISPLAY pfnValidateDisplay =
       reinterpret_cast<HWC2_PFN_VALIDATE_DISPLAY>(
           hwc_composer_device->getFunction(hwc_composer_device,

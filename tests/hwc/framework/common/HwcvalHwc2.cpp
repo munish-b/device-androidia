@@ -32,24 +32,23 @@ using namespace Hwcval;
 
 /// Constructor
 Hwcval::Hwc2::Hwc2()
-    : mState(HwcTestState::getInstance()), mHwcFrame((uint32_t)-1) {
+    : mState(HwcTestState::getInstance()){
+  memset(mHwcFrame,0,sizeof(mHwcFrame));
   mTestKernel = mState->GetTestKernel();
 }
 
-EXPORT_API void Hwcval::Hwc2::CheckValidateDisplayEntry() {
+EXPORT_API void Hwcval::Hwc2::CheckValidateDisplayEntry(hwc2_display_t display) {
   // TODO Adding numDisplays as local var, enumerate correctly in future
-  uint32_t numDisplays = 3;
   // HWC frame number
-  ++mHwcFrame;
+  ++mHwcFrame[display];
+  ALOGE("display = %d FrameCount = %d",display, mHwcFrame[display]);
   bool divergeFrameNumbers = mState->IsOptionEnabled(eOptDivergeFrameNumbers);
 
-  for (uint32_t displayIx = 0; displayIx < numDisplays; ++displayIx) {
-    if (!divergeFrameNumbers) {
-      mTestKernel->AdvanceFrame(displayIx, mHwcFrame);
-    }
-    if (divergeFrameNumbers) {
-      mTestKernel->AdvanceFrame(displayIx);
-    }
+  if (!divergeFrameNumbers) {
+    mTestKernel->AdvanceFrame(display, mHwcFrame[display] - 1);
+  }
+  if (divergeFrameNumbers) {
+    mTestKernel->AdvanceFrame(display);
   }
 }
 
@@ -64,11 +63,10 @@ EXPORT_API void Hwcval::Hwc2::CheckValidateDisplayExit() {
 EXPORT_API void Hwcval::Hwc2::CheckPresentDisplayEnter(hwcval_display_contents_t* displays, hwc2_display_t display) {
 // Dump memory usage, if enabled
   DumpMemoryUsage();
-  int numDisplays = 1;
   ALOGE("%p layers = %d",displays,displays->numHwLayers);
-  Hwcval::PushThreadState ts("CheckSetEnter (locking)");
+  Hwcval::PushThreadState ts("CheckPresentDisplayEnter (locking)");
   HWCVAL_LOCK(_l, mTestKernel->GetMutex());
-  Hwcval::SetThreadState("CheckSetEnter (locked)");
+  Hwcval::SetThreadState("CheckPresentDisplayEnter (locked)");
 
   // Process any pending events.
   // This should always be the first thing we do after placing the lock.
@@ -77,25 +75,22 @@ EXPORT_API void Hwcval::Hwc2::CheckPresentDisplayEnter(hwcval_display_contents_t
   // Create a copy of the layer lists for each display in internal form.
   // Later on we will push this to the LLQ.
   memset(mContent, 0, sizeof(mContent));
-  for (uint32_t d = 0; d < numDisplays; ++d) {
+ // for (uint32_t d = 0; d < numDisplays; ++d) {
     const hwcval_display_contents_t* disp = displays;
 
     if (disp) {
       Hwcval::LayerList* ll = new Hwcval::Hwc1LayerList(disp);
-      mContent[d] = ll;
+      mContent[display] = ll;
     } else {
-      mContent[d] = 0;
+      mContent[display] = 0;
     }
-  }
+ // }
 
   // The idea of the buffer monitor enable was to be able to turn off the
   // majority of the validation for specific performance tests.
   // This has not been used in anger and would not work.
   // TODO: Fix or remove buffer monitor enable.
   if (mState->IsBufferMonitorEnabled()) {
-    if (numDisplays == 0) {
-      return;
-    }
 
     // This loop has the following purposes:
     // 1. Record the state of each of the input buffers. That means that we
@@ -127,28 +122,15 @@ EXPORT_API void Hwcval::Hwc2::CheckPresentDisplayEnter(hwcval_display_contents_t
     bool allScreenVideo = true;  // assumption that all screens have video on
                                  // top layer until we know otherwise
 
-    for (uint32_t displayIx = 0; displayIx < numDisplays; ++displayIx) {
-      Hwcval::LogDisplay& ld = mTestKernel->GetLogDisplay(displayIx);
-      const hwcval_display_contents_t* disp = displays;
-      mTestKernel->VideoInit(displayIx);
+      Hwcval::LogDisplay& ld = mTestKernel->GetLogDisplay(display);
+      mTestKernel->VideoInit(display);
 
-      if (disp == 0) {
-        if (displayIx == 0) {
-          HWCLOGW("Set has null display[0]");
-        }
 
-        mTestKernel->SetActiveDisplay(displayIx, false);
-
-        // Ignore null HDMI or WiDi displays
-        continue;
-      }
-
-      mTestKernel->SetActiveDisplay(displayIx, true);
-  ALOGE("%p layers = %d",disp,disp->numHwLayers);
+      mTestKernel->SetActiveDisplay(display, true);
 
       HWCLOGD(
-          "HwcTestKernel::CheckSetEnter - Display %d has %u layers (frame:%d)",
-          displayIx, disp->numHwLayers, mHwcFrame);
+          "HwcTestKernel::CheckPresentDisplayEnter - Display %d has %u layers (frame:%d)",
+          display, disp->numHwLayers, mHwcFrame[display]);
 
       DrmShimTransformVector framebuffersComposedForThisTarget;
       bool sfCompositionRequired = false;
@@ -158,7 +140,7 @@ EXPORT_API void Hwcval::Hwc2::CheckPresentDisplayEnter(hwcval_display_contents_t
         // No content on this screen, so definitely no video
         HWCLOGV_COND(eLogVideo,
                      "No content on screen %d, so definitely no video",
-                     displayIx);
+                     display);
         allScreenVideo = false;
       }
 
@@ -166,15 +148,13 @@ EXPORT_API void Hwcval::Hwc2::CheckPresentDisplayEnter(hwcval_display_contents_t
       ALOG_ASSERT(fbtLayer->compositionType == HWC2_COMPOSITION_DEVICE);
 
       const hwc_rect_t& fbtRect = fbtLayer->displayFrame;
-      if (displayIx < numDisplays) {
-        if (fbtRect.right != ld.GetWidth() ||
-            fbtRect.bottom != ld.GetHeight() || fbtRect.left != 0 ||
-            fbtRect.top != 0) {
-          HWCERROR(eCheckLayerOnScreen,
-                   "D%d FBT (%d, %d, %d, %d) but display size %dx%d", displayIx,
-                   fbtRect.left, fbtRect.top, fbtRect.right, fbtRect.bottom,
-                   ld.GetWidth(), ld.GetHeight());
-        }
+      if (fbtRect.right != ld.GetWidth() ||
+          fbtRect.bottom != ld.GetHeight() || fbtRect.left != 0 ||
+          fbtRect.top != 0) {
+        HWCERROR(eCheckLayerOnScreen,
+                 "D%d FBT (%d, %d, %d, %d) but display size %dx%d", display,
+                 fbtRect.left, fbtRect.top, fbtRect.right, fbtRect.bottom,
+                 ld.GetWidth(), ld.GetHeight());
       }
 
       for (uint32_t i = 0; i < disp->numHwLayers; ++i) {
@@ -201,7 +181,7 @@ EXPORT_API void Hwcval::Hwc2::CheckPresentDisplayEnter(hwcval_display_contents_t
 
               if ((layer->flags & HWC_SKIP_LAYER) == 0) {
                 mTestKernel->ValidateHwcDisplayFrame(layer->displayFrame,
-                                                     fbtRect, displayIx, i);
+                                                     fbtRect, display, i);
                 DrmShimTransform transform(buf, i, layer);
                 framebuffersComposedForThisTarget.add(transform);
 
@@ -218,7 +198,7 @@ EXPORT_API void Hwcval::Hwc2::CheckPresentDisplayEnter(hwcval_display_contents_t
             } else if ((layer->flags & HWC_SKIP_LAYER) == 0) {
               bufferType = "Overlay";
               mTestKernel->ValidateHwcDisplayFrame(layer->displayFrame, fbtRect,
-                                                   displayIx, i);
+                                                   display, i);
               buf = mTestKernel->RecordBufferState(
                   layer->gralloc_handle, Hwcval::BufferSourceType::Input, notes);
             } else {
@@ -243,7 +223,7 @@ EXPORT_API void Hwcval::Hwc2::CheckPresentDisplayEnter(hwcval_display_contents_t
 
         Hwcval::Hwc1Layer valLayer(layer, buf);
         // Work out if we are full screen video on each display
-        mTestKernel->DetermineFullScreenVideo(displayIx, i, valLayer, notes);
+        mTestKernel->DetermineFullScreenVideo(display, i, valLayer, notes);
 
         // Skip layers will be subject to the skip layer usage check
         HWCCHECK_ADD(eCheckSkipLayerUsage, skipLayerCount);
@@ -256,9 +236,8 @@ EXPORT_API void Hwcval::Hwc2::CheckPresentDisplayEnter(hwcval_display_contents_t
         }
 
         // Add the layer to our internal layer list copy
-        mContent[displayIx]->Add(valLayer);
+        mContent[display]->Add(valLayer);
       }
-    }
 
     // Work out combined video state flags, by looking at the current state of
     // all displays
@@ -270,19 +249,21 @@ EXPORT_API void Hwcval::Hwc2::CheckPresentDisplayEnter(hwcval_display_contents_t
     // that mean
     // it could end up with us thinking it is in the wrong mode?)
     for (uint32_t d = 0; d < HWCVAL_MAX_CRTCS; ++d) {
-      Hwcval::LayerList* ll = mContent[d];
+      Hwcval::LayerList* ll = NULL;
+      if(d == display)
+        Hwcval::LayerList* ll = mContent[display];
 
       if (ll) {
         HWCLOGV_COND(eLogVideo,
                      "Frame:%d: Content@%p: Setting video flags for D%d",
-                     mHwcFrame, ll, d);
+                     mHwcFrame[display], ll, d);
         ll->SetVideoFlags(videoFlags);
-        ll->GetVideoFlags().Log("CheckSetEnter", d, mHwcFrame);
+        ll->GetVideoFlags().Log("CheckPresentDisplayEnter", d, mHwcFrame[display]);
 
-        HWCLOGV_COND(eLogWidi, "Pushing SF%d frame:%d %s", d, mHwcFrame,
+        HWCLOGV_COND(eLogWidi, "Pushing SF%d frame:%d %s", d, mHwcFrame[display],
                      (d == 2) ? "virtual display" : "");
         mTestKernel->GetLLQ(d)
-            .Push(ll, mHwcFrame);  // FIX: frame number needs to be per-display
+            .Push(ll, mHwcFrame[display]);  // FIX: frame number needs to be per-display
       }
     }
 
@@ -324,8 +305,7 @@ EXPORT_API void Hwcval::Hwc2::CheckPresentDisplayEnter(hwcval_display_contents_t
 }
 
 void Hwcval::Hwc2::CheckPresentDisplayExit(hwcval_display_contents_t* displays, hwc2_display_t display, int32_t *outPresentFence) {
-  HWCLOGI("CheckSetExit frame:%d", mHwcFrame);
-  int numDisplays = 1;
+  HWCLOGI("CheckSetExit frame:%d", mHwcFrame[display]);
   PushThreadState ts("CheckSetExit");
 
   // Clear the future transparent layer notification from the harness
@@ -336,67 +316,44 @@ void Hwcval::Hwc2::CheckPresentDisplayExit(hwcval_display_contents_t* displays, 
   // We may need to add a flag so users of this variable know if it has changed
   // recently
   // so they don't validate too harshly.
-  for (uint32_t d = 0; d < numDisplays; ++d) {
-    HwcTestCrtc* crtc = mTestKernel->GetHwcTestCrtcByDisplayIx(d);
-    hwcval_display_contents_t* disp = displays + d;
+    HwcTestCrtc* crtc = mTestKernel->GetHwcTestCrtcByDisplayIx(display);
+    ALOGE("crtc = %p",crtc);
+    hwcval_display_contents_t* disp = displays;
 
     if (crtc && disp && crtc->IsDisplayEnabled()) {
       ++mActiveDisplays;
+    ALOGE("mActiveDisplays = %d",mActiveDisplays);
     }
-  }
 
   mTestKernel->SetActiveDisplays(mActiveDisplays);
 
-  if ((numDisplays > 0) && displays) {
+  if ( displays) {
     int retireFence[HWCVAL_MAX_CRTCS];
 
-    for (uint32_t d = 0; d < numDisplays; ++d) {
-      retireFence[d] = -1;
-    }
+      retireFence[display] = -1;
 
     // Sort the retire fences back to the original displays. This is because the
     // HWC
     // will move the retire fence index from the secondary display to D0 in
     // extended mode.
-    for (uint32_t d = 0; d < numDisplays; ++d) {
-      hwcval_display_contents_t* disp = displays + d;
+      hwcval_display_contents_t* disp = displays;
 
       // If no display, continue
-      if (!disp) {
-        continue;
-      }
       ALOGE("*outPresentFence%d ",*outPresentFence);
       int rf = *outPresentFence;
 
-      // There should be a retire fence on the primary display - check.
-      if (d == 0) {
-       // HWCCHECK(eCheckNoRetireFenceOnPrimary);
-        if (rf < 0) {
-         // HWCERROR(eCheckNoRetireFenceOnPrimary,
-           //        "D0 has retire fence=%d frame:%d", rf, mHwcFrame);
-        }
-      }
-
-      // If not found retire fence
-      if (rf <= 0) {
-       // continue;
-      }
-
       // Assign the fence, no longer worry about original display.
-      retireFence[d] = rf;
-    }
+      retireFence[display] = rf;
 
-    for (uint32_t d = 0; d < numDisplays; ++d) {
-      hwcval_display_contents_t* disp = displays + d;
-      Hwcval::LayerListQueue& llq = mTestKernel->GetLLQ(d);
+      Hwcval::LayerListQueue& llq = mTestKernel->GetLLQ(display);
 
       if (disp && llq.BackNeedsValidating()) {
         Hwcval::LayerList* ll = llq.GetBack();
-        int hwcFence = retireFence[d];
+        int hwcFence = retireFence[display];
         HWCCHECK(eCheckFenceNonZero);
         if (hwcFence == 0) {
           HWCERROR(eCheckFenceNonZero,
-                   "Zero retire fence detected on display %d", d);
+                   "Zero retire fence detected on display %d", display);
         }
 
         if (hwcFence >= 0) {
@@ -413,23 +370,23 @@ void Hwcval::Hwc2::CheckPresentDisplayExit(hwcval_display_contents_t* displays, 
           HWCCHECK(eCheckFenceAllocation);
           if (rf <= 0) {
             HWCERROR((rf == 0) ? eCheckFenceNonZero : eCheckFenceAllocation,
-                     "Fence dup failed. Display %d: Dup of %d was %d.", d,
+                     "Fence dup failed. Display %d: Dup of %d was %d.", display,
                      hwcFence, rf);
 
-            HWCLOGD("Display %d: Dup of %d was %d, trying again", d, hwcFence,
+            HWCLOGD("Display %d: Dup of %d was %d, trying again", display, hwcFence,
                     rf);
             rf = dup(hwcFence);
           }
 
           if (rf < 0) {
-            HWCLOGD("Display %d: Failed to dup retire fence %d", d, hwcFence);
+            HWCLOGD("Display %d: Failed to dup retire fence %d", display, hwcFence);
           }
 
           ll->SetRetireFence(rf);
-          HwcTestCrtc* crtc = mTestKernel->GetHwcTestCrtcByDisplayIx(d);
+          HwcTestCrtc* crtc = mTestKernel->GetHwcTestCrtcByDisplayIx(display);
 
           if (crtc == 0) {
-            HWCLOGW("CheckSetExit: Display %d: No CRTC known", d);
+            HWCLOGW("CheckSetExit: Display %d: No CRTC known", display);
           } else {
             crtc->NotifyRetireFence(rf);
           }
@@ -440,24 +397,23 @@ void Hwcval::Hwc2::CheckPresentDisplayExit(hwcval_display_contents_t* displays, 
         // HWCLOGI_COND(eLogFence, "  -- Display %d retire fence %d dup
         // %d", d, disp->retireFenceFd, ll->GetRetireFence());
       }
-    }
 
     if ((mTestKernel->GetHwcTestCrtcByDisplayIx(0, true) == 0) &&
-        (mHwcFrame == 100)) {
+        (mHwcFrame[display] == 100)) {
       HWCERROR(eCheckInternalError, "No D0 defined within first 100 frames.");
     }
   }
 
   if (mState->IsBufferMonitorEnabled()) {
-    if ((numDisplays > 2) && (mTestKernel->IsWidiDisabled())) {
+    if ((mTestKernel->IsWidiDisabled())) {
       // Check frames on Virtual displays.
       //
       // Note that
       // physical displays (e.g. the panel and HDMI) are validated in the
       // page flip handler so we only need to check Virtual display frames
       // here (Widi frames are validated in the Widi shim).
-      HWCLOGD_COND(eLogDrm, "Asynch DRM, numDisplays=%d, checks on display %d",
-                   numDisplays, eDisplayIxVirtual);
+      HWCLOGD_COND(eLogDrm, "Asynch DRM, displays=%d, checks on display %d",
+                  displays, eDisplayIxVirtual);
 
       HwcTestCrtc* crtc =
           mTestKernel->GetHwcTestCrtcByDisplayIx(eDisplayIxVirtual);
@@ -471,34 +427,34 @@ void Hwcval::Hwc2::CheckPresentDisplayExit(hwcval_display_contents_t* displays, 
 
       if (crtc && ll && ll->GetOutbuf()) {
         uint32_t qFrame = llq.GetFrontFN();
-        if (qFrame <= mHwcFrame) {
+        if (qFrame <= mHwcFrame[display]) {
           HWCLOGD_COND(eLogWidi, "Checking Virtual Display frame:%d",
-                       mHwcFrame);
+                       mHwcFrame[display]);
           uint32_t startFrame = llq.GetFrontFN();
-          if (startFrame < mHwcFrame) {
+          if (startFrame < mHwcFrame[display]) {
             HWCLOGD_COND(eLogWidi, "Discarding virtual display frames:%d-%d",
-                         startFrame, mHwcFrame - 1);
+                         startFrame, mHwcFrame[display] - 1);
           }
 
           // Pop all virtual display frames up to the current one
-          for (qFrame = llq.GetFrontFN(); qFrame <= mHwcFrame; ++qFrame) {
+          for (qFrame = llq.GetFrontFN(); qFrame <= mHwcFrame[display]; ++qFrame) {
             ll = llq.GetFrame(qFrame, true);
           }
         }
 
         qFrame = llq.GetFrontFN();
 
-        if (qFrame == mHwcFrame) {
+        if (qFrame == mHwcFrame[display]) {
         } else {
           HWCLOGD_COND(eLogWidi,
                        "Skipping virtual display validation. Last HWC frame:%d "
                        "current frame:%d",
-                       llq.GetBackFN(), mHwcFrame);
+                       llq.GetBackFN(), mHwcFrame[display]);
         }
       } else {
         HWCLOGD_COND(eLogWidi,
                      "SF2 frame:%d is NOT virtual display (no outbuf)",
-                     mHwcFrame);
+                     mHwcFrame[display]);
       }
     }
   }
@@ -509,8 +465,8 @@ void Hwcval::Hwc2::CheckPresentDisplayExit(hwcval_display_contents_t* displays, 
   if (ll) {
     HWCLOGV_COND(eLogVideo,
                  "Frame:%d Validating optimization mode for D%d (content@%p)",
-                 mHwcFrame, eDisplayIxFixed, ll);
-    ll->GetVideoFlags().Log("CheckSetExit", eDisplayIxFixed, mHwcFrame);
+                 mHwcFrame[display], eDisplayIxFixed, ll);
+    ll->GetVideoFlags().Log("CheckSetExit", eDisplayIxFixed, mHwcFrame[display]);
     mTestKernel->ValidateOptimizationMode(ll);
   }
 

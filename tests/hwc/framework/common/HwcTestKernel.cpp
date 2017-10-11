@@ -111,16 +111,20 @@ HwcTestKernel::HwcTestKernel()
   HWCLOGD("Initialising CRTC for the Widi display");
 
   HwcTestCrtc* virtCrtc = new HwcTestCrtc(HWCVAL_VD_CRTC_ID, 0, 0, 0, 0);
+  HwcTestCrtc* disp0Crtc = new HwcTestCrtc(0, 0, 0, 0, 0);
   DrmShimPlane* mainPlane = new DrmShimPlane(HWCVAL_VD_CRTC_ID, virtCrtc);
   mainPlane->SetPlaneIndex(0);
   virtCrtc->AddPlane(mainPlane);
+  disp0Crtc->AddPlane(mainPlane);
   mCrtcByDisplayIx[eDisplayIxVirtual] = virtCrtc;
+  mCrtcByDisplayIx[eDisplayIxFixed] = disp0Crtc;
   mPersistentCrtcByDisplayIx[eDisplayIxVirtual] = virtCrtc;
+  mPersistentCrtcByDisplayIx[eDisplayIxFixed] = disp0Crtc;
   virtCrtc->SetDisplayIx(eDisplayIxVirtual);
+  disp0Crtc->SetDisplayIx(eDisplayIxFixed);
   virtCrtc->SetDimensions(mState->GetWirelessCrtcWidth(),
                           mState->GetWirelessCrtcHeight(), 0,
                           mState->GetWirelessCrtcRefresh());
-
   // Start composition validation thread
   mCompVal = new HwcTestCompValThread();
 

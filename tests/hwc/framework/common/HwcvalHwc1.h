@@ -40,7 +40,7 @@ class EXPORT_API Hwc1 {
   Hwcval::LayerList* mContent[HWCVAL_MAX_CRTCS];
 
   // OnSet sequence number for validation
-  uint32_t mHwcFrame;
+  uint32_t mHwcFrame[3];
 
   // Number of displays with content in OnSet
   uint32_t mActiveDisplays;

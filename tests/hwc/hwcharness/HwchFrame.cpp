@@ -807,8 +807,10 @@ int Hwch::Frame::Send() {
       }
 
       for (uint32_t disp = 0; disp < numDisplays; ++disp) {
-         uint32_t outNumTypes = 0, outNumRequests = 0;
-         mInterface.ValidateDisplay(disp, &outNumTypes, &outNumRequests);
+        if (connected[disp]) {
+          uint32_t outNumTypes = 0, outNumRequests = 0;
+          mInterface.ValidateDisplay(disp, &outNumTypes, &outNumRequests);
+        }
       }
 
       // Populate the FRAMEBUFFER_TARGETs
