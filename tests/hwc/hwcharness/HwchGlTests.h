@@ -23,7 +23,7 @@ namespace Hwch {
 class PngGlLayer : public Layer {
  public:
   PngGlLayer(){};
-  PngGlLayer(hwcomposer::NativeBufferHandler *bufHandler, Hwch::PngImage& png, float updateFreq = 60.0,
+  PngGlLayer(Hwch::PngImage& png, float updateFreq = 60.0,
              uint32_t lineColour = eWhite, uint32_t bgColour = 0,
              bool bIgnore = false);
 };

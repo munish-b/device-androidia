@@ -40,8 +40,8 @@ int Hwch::VideoModesTest::RunScenario() {
 
   uint32_t modeCount = display->GetModes();
 
-  Hwch::NV12VideoLayer video(mInterface.bufHandler);
-  Hwch::WallpaperLayer wallpaper(mInterface.bufHandler);
+  Hwch::NV12VideoLayer video;
+  Hwch::WallpaperLayer wallpaper;
 
   // Set the video update frequency
   video.GetPattern().SetUpdateFreq(50);

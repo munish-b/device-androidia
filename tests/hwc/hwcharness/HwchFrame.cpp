@@ -73,7 +73,7 @@ Hwch::Frame::Frame(const Hwch::Frame& rhs)
 
     for (uint32_t j = 0; j < rhs.mLayers[i].size(); ++j) {
       Hwch::Layer* srcLayer = rhs.mLayers[i][j];
-      Hwch::Layer* newLayer = new Hwch::Layer(mInterface.bufHandler, *srcLayer, false);
+      Hwch::Layer* newLayer = new Hwch::Layer(*srcLayer, false);
       newLayer->mFrame = this;
 
       mLayers[i].add(newLayer);
@@ -459,7 +459,7 @@ void Hwch::Frame::RotationAnimation(uint32_t disp) {
   // Add a fullscreen RGBA:L layer to model the snapshot layer.
   // Set this to 50% translucent so that we can see whats behind.
   Display& display = mSystem.GetDisplay(disp);
-  Hwch::RGBALayer snapshot(mSystem.bufferHandler, display.GetLogicalWidth(),
+  Hwch::RGBALayer snapshot(display.GetLogicalWidth(),
                            display.GetLogicalHeight(), 0.0, eBlack,
                            Alpha(eBlack, 128));
   frameCopy.Add(snapshot);
@@ -520,7 +520,7 @@ void Hwch::Frame::RotationAnimation(uint32_t disp) {
   // snapshot layer.
   for (uint32_t i = 0; i < MAX_DISPLAYS; ++i) {
     for (uint32_t j = 0; j < mLayers[i].size(); ++j) {
-      Hwch::Layer* skipLayer = new Hwch::Layer(mInterface.bufHandler, *mLayers[i][j], false);
+      Hwch::Layer* skipLayer = new Hwch::Layer(*mLayers[i][j], false);
       ALOG_ASSERT(skipLayer);
 
       // The skip layer has no pattern or buffer set

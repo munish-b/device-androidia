@@ -40,7 +40,7 @@ Hwch::Layer* Hwch::DirectPlanesTest::CreateLayer(uint32_t d) {
   uint32_t fg = mColourChoice.Get();
   uint32_t bg = mColourChoice.Get();
   HWCLOGV_COND(eLogHarness, "Colours %d %d", fg, bg);
-  Hwch::Layer* layer = new RGBALayer(mInterface.bufHandler, MaxRel(0), MaxRel(0), 1.0,
+  Hwch::Layer* layer = new RGBALayer(MaxRel(0), MaxRel(0), 1.0,
                                      mColourChoice.Get(), mColourChoice.Get());
   HWCLOGV_COND(eLogHarness, "RGBALayer created");
   SetLayerCropDf(layer, d);

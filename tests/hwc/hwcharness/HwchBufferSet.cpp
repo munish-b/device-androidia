@@ -30,7 +30,7 @@ extern "C" {  // shame
 
 static uint32_t bufferCount = 0;
 
-Hwch::BufferSet::BufferSet(hwcomposer::NativeBufferHandler *bufHandler, uint32_t width, uint32_t height, uint32_t format,
+Hwch::BufferSet::BufferSet(uint32_t width, uint32_t height, uint32_t format,
                            int32_t numBuffers, uint32_t usage)
     : mCurrentBuffer(0),
       mNextBuffer(0),
@@ -46,11 +46,11 @@ Hwch::BufferSet::BufferSet(hwcomposer::NativeBufferHandler *bufHandler, uint32_t
   } else {
     mNumBuffers = numBuffers;
   }
-  bufferHandler = bufHandler;
   HWCLOGV("BufferSet created @ %p, numBuffers=%d, usage=%x", this, mNumBuffers,
           usage);
   for (uint32_t i = 0; i < mNumBuffers; ++i) {
     HWCNativeHandle buf;
+    hwcomposer::NativeBufferHandler *bufferHandler = Hwch::System::getInstance().bufferHandler;
     bufferHandler->CreateBuffer(width, height, format, &buf);
 
     HWCLOGV("  Handle %p", buf);
@@ -122,6 +122,7 @@ bool Hwch::BufferSet::SetNextBufferInstance(uint32_t index) {
         mWidth, mHeight, mFormat, mUsage);
 
     HWCNativeHandle buf;
+    hwcomposer::NativeBufferHandler *bufferHandler = Hwch::System::getInstance().bufferHandler;
     bufferHandler->CreateBuffer(mWidth, mHeight, mFormat, &buf);
 
     if ((!buf) || (buf->handle_ == NULL)) {

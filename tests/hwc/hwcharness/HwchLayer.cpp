@@ -146,7 +146,7 @@ Hwch::Layer::Layer()
   IncLayerCount();
 }
 
-Hwch::Layer::Layer(hwcomposer::NativeBufferHandler *bufferHandler, const char* name, Hwch::Coord<int32_t> width,
+Hwch::Layer::Layer(const char* name, Hwch::Coord<int32_t> width,
                    Hwch::Coord<int32_t> height, uint32_t pixelFormat,
                    int32_t numBuffers, uint32_t usage)
     : mCompType(HWC2_COMPOSITION_CLIENT),
@@ -188,13 +188,12 @@ Hwch::Layer::Layer(hwcomposer::NativeBufferHandler *bufferHandler, const char* n
   HWCLOGI("Constructing layer %s %dx%d pixelFormat=%d numBuffers=%d usage=0x%x",
           mName.string(), mWidth.mValue, mHeight.mValue, mFormat, numBuffers,
           usage);
-  bufHandler = bufferHandler;
   memset(mClonedLayers, 0, sizeof(mClonedLayers));
 
   IncLayerCount();
 }
 
-Hwch::Layer::Layer(hwcomposer::NativeBufferHandler *bufferHandler, const Layer& rhs, bool clone)
+Hwch::Layer::Layer(const Layer& rhs, bool clone)
     : mCompType(HWC2_COMPOSITION_CLIENT),
       mCurrentCompType(HWC2_COMPOSITION_CLIENT),
       mHints(rhs.mHints),
@@ -231,7 +230,6 @@ Hwch::Layer::Layer(hwcomposer::NativeBufferHandler *bufferHandler, const Layer& 
 
 {
   memset(mClonedLayers, 0, sizeof(mClonedLayers));
-  bufHandler = bufferHandler;
   IncLayerCount();
 }
 
@@ -942,7 +940,7 @@ void Hwch::Layer::CalculateRects(Display& display) {
       usage |= GRALLOC_USAGE_SW_WRITE_MASK;
     }
 
-    mBufs = new BufferSet(bufHandler, width, height, mFormat, mNumBuffers, usage);
+    mBufs = new BufferSet(width, height, mFormat, mNumBuffers, usage);
     // mSystem.ResetTile();
     if (mBufs->GetHandle() == 0) {
       HWCERROR(eCheckTestBufferAlloc, "Failed to create buffers for layer %s",

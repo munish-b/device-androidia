@@ -63,7 +63,7 @@ class BufferSet : public android::RefBase {
   bool mBuffersFilledAtLeastOnce;
 
  public:
-  BufferSet(hwcomposer::NativeBufferHandler *bufHandler, uint32_t width, uint32_t height, uint32_t format,
+  BufferSet(uint32_t width, uint32_t height, uint32_t format,
             int32_t numBuffers = -1,
             uint32_t usage = GRALLOC_USAGE_HW_COMPOSER |
                              GRALLOC_USAGE_HW_TEXTURE |
@@ -89,7 +89,6 @@ class BufferSet : public android::RefBase {
 
   // Number of buffers so far created
   static uint32_t GetBufferCount();
-  hwcomposer::NativeBufferHandler *bufferHandler;
 };
 
 class BufferSetPtr : public android::sp<Hwch::BufferSet> {

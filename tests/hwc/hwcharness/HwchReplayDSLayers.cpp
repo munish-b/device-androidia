@@ -19,44 +19,44 @@
 #include "HwchSystem.h"
 
 Hwch::ReplayDSLayerVideoPlayer::ReplayDSLayerVideoPlayer()
-    : Hwch::ReplayLayer(bufHandler, "VideoPlayer", 0, 0, HAL_PIXEL_FORMAT_RGBA_8888, 3) {
+    : Hwch::ReplayLayer("VideoPlayer", 0, 0, HAL_PIXEL_FORMAT_RGBA_8888, 3) {
   SetPattern(Hwch::GetPatternMgr().CreateHorizontalLinePtn(
       mFormat, 60.0, Hwch::eBlack, Hwch::eLightGreen));
 }
 
 Hwch::ReplayDSLayerApplication::ReplayDSLayerApplication()
-    : Hwch::ReplayLayer(bufHandler, "Application", 0, 0, HAL_PIXEL_FORMAT_RGBA_8888, 3) {
+    : Hwch::ReplayLayer("Application", 0, 0, HAL_PIXEL_FORMAT_RGBA_8888, 3) {
   SetPattern(Hwch::GetPatternMgr().CreateHorizontalLinePtn(
       mFormat, 60.0, Hwch::eBlack, Hwch::eLightBlue));
 }
 
 Hwch::ReplayDSLayerTransparent::ReplayDSLayerTransparent()
-    : Hwch::ReplayLayer(bufHandler, "Transparent", 0, 0, HAL_PIXEL_FORMAT_RGBA_8888, 3) {
+    : Hwch::ReplayLayer("Transparent", 0, 0, HAL_PIXEL_FORMAT_RGBA_8888, 3) {
   SetPattern(Hwch::GetPatternMgr().CreateHorizontalLinePtn(
       mFormat, 60.0, Hwch::eBlack, Alpha(Hwch::eWhite, 1)));
 }
 
 Hwch::ReplayDSLayerSemiTransparent::ReplayDSLayerSemiTransparent()
-    : Hwch::ReplayLayer(bufHandler, "SemiTransparent", 0, 0, HAL_PIXEL_FORMAT_RGBA_8888,
+    : Hwch::ReplayLayer("SemiTransparent", 0, 0, HAL_PIXEL_FORMAT_RGBA_8888,
                         3) {
   SetPattern(Hwch::GetPatternMgr().CreateHorizontalLinePtn(
       mFormat, 60.0, Hwch::eBlack, Alpha(Hwch::eWhite, 128)));
 }
 
 Hwch::ReplayDSLayerStatusBar::ReplayDSLayerStatusBar()
-    : Hwch::ReplayLayer(bufHandler, "StatusBar", 0, 0, HAL_PIXEL_FORMAT_RGBA_8888, 3) {
+    : Hwch::ReplayLayer("StatusBar", 0, 0, HAL_PIXEL_FORMAT_RGBA_8888, 3) {
   SetPattern(Hwch::GetPatternMgr().CreateHorizontalLinePtn(
       mFormat, 60.0, Hwch::eBlack, Hwch::eLightPurple));
 }
 
 Hwch::ReplayDSLayerNavigationBar::ReplayDSLayerNavigationBar()
-    : Hwch::ReplayLayer(bufHandler, "NavigationBar", 0, 0, HAL_PIXEL_FORMAT_RGBA_8888, 3) {
+    : Hwch::ReplayLayer("NavigationBar", 0, 0, HAL_PIXEL_FORMAT_RGBA_8888, 3) {
   SetPattern(Hwch::GetPatternMgr().CreateHorizontalLinePtn(
       mFormat, 60.0, Hwch::eBlack, Hwch::eBlue));
 }
 
 Hwch::ReplayDSLayerDialogBox::ReplayDSLayerDialogBox()
-    : Hwch::ReplayLayer(bufHandler, "DialogBox", 0, 0, HAL_PIXEL_FORMAT_RGBA_8888, 3) {
+    : Hwch::ReplayLayer("DialogBox", 0, 0, HAL_PIXEL_FORMAT_RGBA_8888, 3) {
   SetPattern(Hwch::GetPatternMgr().CreateHorizontalLinePtn(
       mFormat, 60.0, Hwch::eBlack, Hwch::eLightRed));
 }

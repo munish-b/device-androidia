@@ -32,9 +32,9 @@ int Hwch::BasicTest::RunScenario() {
   int32_t screenWidth = mSystem.GetDisplay(0).GetWidth();
   int32_t screenHeight = mSystem.GetDisplay(0).GetHeight();
 
-  Hwch::Layer layer1(mInterface.bufHandler, "data", screenWidth, screenHeight);
+  Hwch::Layer layer1("data", screenWidth, screenHeight);
   layer1.SetPattern(new Hwch::SolidColourPtn(eRed));
-  Hwch::Layer layer2(mInterface.bufHandler, "Foreground Rectangle", 600, 400);
+  Hwch::Layer layer2("Foreground Rectangle", 600, 400);
   layer2.SetLogicalDisplayFrame(LogDisplayRect(300, 200, 900, 600));
   layer2.SetPattern(new Hwch::HorizontalLinePtn(10.0, eGreen, eBlue));
 
@@ -53,9 +53,9 @@ Hwch::CameraTest::CameraTest(Hwch::Interface& interface)
 int Hwch::CameraTest::RunScenario() {
   Hwch::Frame frame(mInterface);
 
-  Hwch::CameraLayer layer1(mInterface.bufHandler);
-  Hwch::CameraUILayer layer2(mInterface.bufHandler);
-  Hwch::NavigationBarLayer layer3(mInterface.bufHandler);
+  Hwch::CameraLayer layer1;
+  Hwch::CameraUILayer layer2;
+  Hwch::NavigationBarLayer layer3;
 
   frame.Add(layer1);
   frame.Add(layer2);
@@ -73,11 +73,11 @@ Hwch::DialogTest::DialogTest(Hwch::Interface& interface)
 int Hwch::DialogTest::RunScenario() {
   Hwch::Frame frame(mInterface);
 
-  Hwch::WallpaperLayer layer1(mInterface.bufHandler);
-  Hwch::LauncherLayer layer2(mInterface.bufHandler);
-  Hwch::NavigationBarLayer layer3(mInterface.bufHandler);
-  Hwch::StatusBarLayer layer4(mInterface.bufHandler);
-  Hwch::DialogBoxLayer layer5(mInterface.bufHandler);
+  Hwch::WallpaperLayer layer1;
+  Hwch::LauncherLayer layer2;
+  Hwch::NavigationBarLayer layer3;
+  Hwch::StatusBarLayer layer4;
+  Hwch::DialogBoxLayer layer5;
 
   frame.Add(layer1);
   frame.Add(layer2);
@@ -97,10 +97,10 @@ Hwch::GalleryTest::GalleryTest(Hwch::Interface& interface)
 int Hwch::GalleryTest::RunScenario() {
   Hwch::Frame frame(mInterface);
 
-  Hwch::GalleryLayer layer1(mInterface.bufHandler);
-  Hwch::GalleryUILayer layer2(mInterface.bufHandler);
-  Hwch::NavigationBarLayer layer3(mInterface.bufHandler);
-  Hwch::MenuLayer layer4(mInterface.bufHandler);
+  Hwch::GalleryLayer layer1;
+  Hwch::GalleryUILayer layer2;
+  Hwch::NavigationBarLayer layer3;
+  Hwch::MenuLayer layer4;
 
   frame.Add(layer1);
   frame.Add(layer2);
@@ -118,9 +118,9 @@ Hwch::GameTest::GameTest(Hwch::Interface& interface) : Hwch::Test(interface) {
 int Hwch::GameTest::RunScenario() {
   Hwch::Frame frame(mInterface);
 
-  Hwch::GameFullScreenLayer layer1(mInterface.bufHandler);
-  Hwch::NavigationBarLayer layer2(mInterface.bufHandler);
-  Hwch::AdvertLayer layer3(mInterface.bufHandler);
+  Hwch::GameFullScreenLayer layer1;
+  Hwch::NavigationBarLayer layer2;
+  Hwch::AdvertLayer layer3;
 
   frame.Add(layer1);
   frame.Add(layer2);
@@ -137,10 +137,10 @@ Hwch::HomeTest::HomeTest(Hwch::Interface& interface) : Hwch::Test(interface) {
 int Hwch::HomeTest::RunScenario() {
   Hwch::Frame frame(mInterface);
 
-  Hwch::WallpaperLayer layer1(mInterface.bufHandler);
-  Hwch::LauncherLayer layer2(mInterface.bufHandler);
-  Hwch::NavigationBarLayer layer3(mInterface.bufHandler);
-  Hwch::StatusBarLayer layer4(mInterface.bufHandler);
+  Hwch::WallpaperLayer layer1;
+  Hwch::LauncherLayer layer2;
+  Hwch::NavigationBarLayer layer3;
+  Hwch::StatusBarLayer layer4;
 
   frame.Add(layer1);
   frame.Add(layer2);
@@ -159,11 +159,11 @@ Hwch::NotificationTest::NotificationTest(Hwch::Interface& interface)
 int Hwch::NotificationTest::RunScenario() {
   Hwch::Frame frame(mInterface);
 
-  Hwch::WallpaperLayer layer1(mInterface.bufHandler);
-  Hwch::LauncherLayer layer2(mInterface.bufHandler);
-  Hwch::NavigationBarLayer layer3(mInterface.bufHandler);
-  Hwch::StatusBarLayer layer4(mInterface.bufHandler);
-  Hwch::NotificationLayer layer5(mInterface.bufHandler);
+  Hwch::WallpaperLayer layer1;
+  Hwch::LauncherLayer layer2;
+  Hwch::NavigationBarLayer layer3;
+  Hwch::StatusBarLayer layer4;
+  Hwch::NotificationLayer layer5;
 
   frame.Add(layer1);
   frame.Add(layer2);
@@ -183,7 +183,7 @@ Hwch::NV12FullVideoTest::NV12FullVideoTest(Hwch::Interface& interface)
 int Hwch::NV12FullVideoTest::RunScenario() {
   Hwch::Frame frame(mInterface);
 
-  Hwch::NV12VideoLayer layer1(mInterface.bufHandler);
+  Hwch::NV12VideoLayer layer1;
 
   frame.Add(layer1);
   frame.Send();
@@ -214,15 +214,15 @@ int Hwch::NV12FullVideo2Test::RunScenario() {
   Hwch::Frame frame(mInterface);
   UpdateInputState(true, false);
 
-  Hwch::NV12VideoLayer layer1(mInterface.bufHandler);
+  Hwch::NV12VideoLayer layer1;
 
   frame.Add(layer1);
-  Hwch::NavigationBarLayer layer2(mInterface.bufHandler);
+  Hwch::NavigationBarLayer layer2;
   frame.Add(layer2);
   frame.Send();
 
   {
-    TransparentFullScreenLayer transparent(mInterface.bufHandler);
+    TransparentFullScreenLayer transparent;
     frame.Add(transparent);
     frame.Send(60);
 
@@ -303,10 +303,10 @@ int Hwch::RotationAnimationTest::RunScenario() {
   uint32_t numFramesToSend = GetIntParam("num_frames_to_send", 30);
 
   Hwch::Frame frame(mInterface);
-  Hwch::NV12VideoLayer videoLayer(mInterface.bufHandler);
-  Hwch::StatusBarLayer statusBarLayer(mInterface.bufHandler);
-  Hwch::NavigationBarLayer navBarLayer(mInterface.bufHandler);
-  Hwch::WallpaperLayer wallpaper(mInterface.bufHandler);
+  Hwch::NV12VideoLayer videoLayer;
+  Hwch::StatusBarLayer statusBarLayer;
+  Hwch::NavigationBarLayer navBarLayer;
+  Hwch::WallpaperLayer wallpaper;
 
   // Send a single RGBA frame. This is a WA to prevent DRM from hanging on BYT.
   frame.Clear();
@@ -339,8 +339,8 @@ int Hwch::RotationAnimationTest::RunScenario() {
   // Do some rotations in presentation mode
   frame.Clear();
 
-  Hwch::WallpaperLayer presWallpaper(mInterface.bufHandler);
-  Hwch::DialogBoxLayer presDialogBox(mInterface.bufHandler);
+  Hwch::WallpaperLayer presWallpaper;
+  Hwch::DialogBoxLayer presDialogBox;
 
   frame.Add(videoLayer, 0);
   frame.Add(statusBarLayer, 0);
@@ -362,15 +362,15 @@ Hwch::NV12PartVideoTest::NV12PartVideoTest(Hwch::Interface& interface)
 int Hwch::NV12PartVideoTest::RunScenario() {
   Hwch::Frame frame(mInterface);
 
-  Hwch::WallpaperLayer layer1(mInterface.bufHandler);
-  Hwch::LauncherLayer layer2(mInterface.bufHandler);
-  Hwch::NV12VideoLayer layer3(mInterface.bufHandler);
+  Hwch::WallpaperLayer layer1;
+  Hwch::LauncherLayer layer2;
+  Hwch::NV12VideoLayer layer3;
   layer3.SetLogicalDisplayFrame(
       LogDisplayRect(MaxRel(-779), 260, MaxRel(-20),
                      260 + 460));  // Scale the video into a popout window
-  Hwch::StatusBarLayer layer4(mInterface.bufHandler);
-  Hwch::NavigationBarLayer layer5(mInterface.bufHandler);
-  TransparentFullScreenLayer transparent(mInterface.bufHandler);
+  Hwch::StatusBarLayer layer4;
+  Hwch::NavigationBarLayer layer5;
+  TransparentFullScreenLayer transparent;
 
   frame.Add(layer1);
   frame.Add(layer2);
@@ -451,9 +451,9 @@ int Hwch::NV12PartVideo2Test::RunScenario() {
 
   // Declare a frame and some layers
   Hwch::Frame frame(mInterface);
-  Hwch::NV12VideoLayer NV12Layer(mInterface.bufHandler, layerWidth, layerHeight);
-  Hwch::StatusBarLayer statusBarLayer(mInterface.bufHandler);
-  Hwch::NavigationBarLayer navBarLayer(mInterface.bufHandler);
+  Hwch::NV12VideoLayer NV12Layer(layerWidth, layerHeight);
+  Hwch::StatusBarLayer statusBarLayer;
+  Hwch::NavigationBarLayer navBarLayer;
 
   // Perform test for all 4 rotations
   for (uint32_t r = 0; r < 4; ++r) {
@@ -465,7 +465,7 @@ int Hwch::NV12PartVideo2Test::RunScenario() {
     }
 
     // Test with wallpaper
-    Hwch::WallpaperLayer wallpaper(mInterface.bufHandler);
+    Hwch::WallpaperLayer wallpaper;
 
     frame.Clear();
     frame.Add(wallpaper);
@@ -530,7 +530,7 @@ int Hwch::NetflixScaledTest::RunScenario() {
   uint32_t screen_width = mSystem.GetDisplay(0).GetWidth();
 
   Hwch::Frame frame(mInterface);
-  Hwch::NV12VideoLayer layer(mInterface.bufHandler, screen_width, screen_height);
+  Hwch::NV12VideoLayer layer(screen_width, screen_height);
   frame.Add(layer);
 
   // Scale forwards (i.e. simulate favourable network conditions)
@@ -604,7 +604,7 @@ int Hwch::NetflixSteppedTest::RunScenario() {
   // matches what Netflix actually does, and update if necessary.
   // TODO: Loop through all 4 screen orientations.
 
-  Hwch::NV12VideoLayer layer(mInterface.bufHandler, fullWidth, fullHeight);
+  Hwch::NV12VideoLayer layer(fullWidth, fullHeight);
   frame.Add(layer);
 
   uint32_t screenWidth = d0.GetLogicalWidth();
@@ -660,14 +660,14 @@ int Hwch::MovieStudioTest::RunScenario() {
   int32_t screenheight = mSystem.GetDisplay(0).GetHeight();
 
   // Movie Studio in Portrait mode.
-  Hwch::YV12VideoLayer layer1(mInterface.bufHandler, 1920, 1080);
+  Hwch::YV12VideoLayer layer1(1920, 1080);
   layer1.SetTransform(eTransformRot270);
 
   layer1.SetLogicalDisplayFrame(
       LogDisplayRect(145, 27, min(790, screenheight), MaxRel(-27)));
   layer1.SetBlending(HWC_BLENDING_NONE);
 
-  Hwch::RGBALayer layer2(mInterface.bufHandler, MaxRel(0), MaxRel(-eNavigationBarHeight), 1.0, ePurple,
+  Hwch::RGBALayer layer2(MaxRel(0), MaxRel(-eNavigationBarHeight), 1.0, ePurple,
                          Alpha(eWhite, 16));
   layer2.SetTransform(eTransformRot270);
   layer2.SetCrop(
@@ -675,14 +675,14 @@ int Hwch::MovieStudioTest::RunScenario() {
   layer2.SetLogicalDisplayFrame(
       LogDisplayRect(38, 0, MaxRel(-eNavigationBarHeight), MaxRel(0)));
 
-  Hwch::RGBALayer layer3(mInterface.bufHandler, 38, MaxRel(0), 1.0, eRed, Alpha(eDarkGrey, 16));
+  Hwch::RGBALayer layer3(38, MaxRel(0), 1.0, eRed, Alpha(eDarkGrey, 16));
   layer3.SetLogicalDisplayFrame(LogDisplayRect(0, 0, 38, MaxRel(0)));
 
   // This is the Nav bar. But I'm not using the NavigationBarLayer because we
   // are in portrait mode and it seems that
   // Android populates the buffer without using a rotation in the layer.
   // This is not what we would do if we flag a rotation on the whole display.
-  Hwch::RGBALayer layer4(mInterface.bufHandler, 72, MaxRel(0), 1.0, eBlue, Alpha(eDarkGreen, 16));
+  Hwch::RGBALayer layer4(72, MaxRel(0), 1.0, eBlue, Alpha(eDarkGreen, 16));
   layer4.SetLogicalDisplayFrame(
       LogDisplayRect(MaxRel(-eNavigationBarHeight), 0, MaxRel(0), MaxRel(0)));
 
@@ -691,7 +691,7 @@ int Hwch::MovieStudioTest::RunScenario() {
   frame.Add(layer3, 0);
   frame.Add(layer4, 0);
 
-  Hwch::NV12VideoLayer hdmi1(mInterface.bufHandler, 1920, 1088);
+  Hwch::NV12VideoLayer hdmi1(1920, 1088);
   hdmi1.SetCrop(Hwch::LogCropRect(0, 0, 1920, 1080));
 
 // Calculate the y values for the video on HDMI to ensure it will fit on any
@@ -720,7 +720,7 @@ int Hwch::MovieStudioTest::RunScenario() {
   hdmi1.SetLogicalDisplayFrame(
       LogDisplayRect(0, videoTop, MaxRel(0), videoTop + videoHeight));
   hdmi1.SetBlending(HWC_BLENDING_NONE);
-  Hwch::RGBALayer hdmi2(mInterface.bufHandler, MaxRel(0), MaxRel(0), eDarkGreen, Alpha(eBlue, 32));
+  Hwch::RGBALayer hdmi2(MaxRel(0), MaxRel(0), eDarkGreen, Alpha(eBlue, 32));
   hdmi2.SetLogicalDisplayFrame(LogDisplayRect(0, 0, MaxRel(0), MaxRel(0)));
 
   if (mSystem.GetDisplay(1).IsConnected()) {
@@ -804,14 +804,14 @@ int Hwch::PanelFitterTest::RunScenario() {
   LogDisplayRect ldr(x, y, x + dfWidth, y + dfHeight);
 
   {
-    Hwch::WallpaperLayer layer1(mInterface.bufHandler);
-    Hwch::LauncherLayer layer2(mInterface.bufHandler);
-    Hwch::NV12VideoLayer layer3(mInterface.bufHandler, videoWidth, videoHeight);
+    Hwch::WallpaperLayer layer1;
+    Hwch::LauncherLayer layer2;
+    Hwch::NV12VideoLayer layer3(videoWidth, videoHeight);
 
     // Note: scaling must be 66%-150% for panel fitter to be enabled
     layer3.SetLogicalDisplayFrame(ldr);  // Scale the video
-    Hwch::StatusBarLayer layer4(mInterface.bufHandler);
-    Hwch::NavigationBarLayer layer5(mInterface.bufHandler);
+    Hwch::StatusBarLayer layer4;
+    Hwch::NavigationBarLayer layer5;
 
     // frame.Add(layer1);
     // frame.Add(layer2);
@@ -828,21 +828,21 @@ int Hwch::PanelFitterTest::RunScenario() {
   }
 
   // Scale factor too large, panel fitter won't be used
-  Hwch::NV12VideoLayer smallVideo(mInterface.bufHandler, 1200, 600);
+  Hwch::NV12VideoLayer smallVideo(1200, 600);
   smallVideo.SetLogicalDisplayFrame(ldr);
   frame.Add(smallVideo);
   frame.Send(100);
   frame.Remove(smallVideo);
 
   // should use panel fitter
-  Hwch::NV12VideoLayer quiteBigVideo(mInterface.bufHandler, 2400, 1600);
+  Hwch::NV12VideoLayer quiteBigVideo(2400, 1600);
   quiteBigVideo.SetLogicalDisplayFrame(ldr);
   frame.Add(quiteBigVideo);
   frame.Send(100);
   frame.Remove(quiteBigVideo);
 
   // should not use panel fitter
-  Hwch::NV12VideoLayer veryBigVideo(mInterface.bufHandler, 3000, 2000);
+  Hwch::NV12VideoLayer veryBigVideo(3000, 2000);
   veryBigVideo.SetLogicalDisplayFrame(ldr);
   frame.Add(veryBigVideo);
   frame.Send(100);
@@ -859,7 +859,7 @@ int Hwch::FlipRotTest::RunScenario() {
   Hwch::Frame frame(mInterface);
   frame.SetHwcAcquireDelay(GetTimeParamUs("delay"));
 
-  Hwch::CameraLayer layer1(mInterface.bufHandler);
+  Hwch::CameraLayer layer1;
   frame.Add(layer1);
   frame.Send(30);
 
@@ -884,7 +884,7 @@ int Hwch::FlipRotTest::RunScenario() {
     frame.Send(30);
   }
 
-  Hwch::CameraUILayer layer2(mInterface.bufHandler);
+  Hwch::CameraUILayer layer2;
   HWCLOGI("Adding Camera UI");
   frame.Add(layer2);
 
@@ -933,12 +933,12 @@ int Hwch::SmokeTest::RunScenario() {
     useSuspendResume = true;
   }
 
-  Hwch::WallpaperLayer layer1(mInterface.bufHandler);
-  Hwch::LauncherLayer layer2(mInterface.bufHandler);
-  Hwch::NV12VideoLayer layer3(mInterface.bufHandler);
+  Hwch::WallpaperLayer layer1;
+  Hwch::LauncherLayer layer2;
+  Hwch::NV12VideoLayer layer3;
   layer3.SetHwcAcquireDelay(delay);
-  Hwch::StatusBarLayer layer4(mInterface.bufHandler);
-  Hwch::NavigationBarLayer layer5(mInterface.bufHandler);
+  Hwch::StatusBarLayer layer4;
+  Hwch::NavigationBarLayer layer5;
 
   frame.Add(layer1);
   frame.Send(10);
@@ -963,15 +963,15 @@ int Hwch::SmokeTest::RunScenario() {
 
   {
     NOT_BRIEF(printf("Menu added to screen\n");)
-    Hwch::MenuLayer layer6(mInterface.bufHandler);
+    Hwch::MenuLayer layer6;
     frame.Add(layer6);
     frame.Send(10);
     NOT_BRIEF(printf("Menu removed from screen\n");)
   }
   frame.Send(10);
 
-  Hwch::GalleryLayer layer7(mInterface.bufHandler);
-  Hwch::GalleryUILayer layer8(mInterface.bufHandler);
+  Hwch::GalleryLayer layer7;
+  Hwch::GalleryUILayer layer8;
   frame.Add(layer7);
   frame.Add(layer8);
   NOT_BRIEF(printf("Gallery & GalleryUI added\n");)
@@ -981,7 +981,7 @@ int Hwch::SmokeTest::RunScenario() {
   layer8.SendToBack();
   frame.Send(10);
 
-  Hwch::NotificationLayer layer9(mInterface.bufHandler);
+  Hwch::NotificationLayer layer9;
   frame.Add(layer9);
   frame.Send(10);
 
@@ -992,7 +992,7 @@ int Hwch::SmokeTest::RunScenario() {
     Blank(false, useSuspendResume);
   }
 
-  Hwch::DialogBoxLayer layer10(mInterface.bufHandler);
+  Hwch::DialogBoxLayer layer10;
   frame.Add(layer10);
   frame.Send(10);
 
@@ -1009,9 +1009,9 @@ int Hwch::SmokeTest::RunScenario() {
     frame.Send(30);
   }
 
-  Hwch::CameraLayer layer11(mInterface.bufHandler);
+  Hwch::CameraLayer layer11;
   frame.Add(layer11);
-  Hwch::CameraUILayer layer12(mInterface.bufHandler);
+  Hwch::CameraUILayer layer12;
   frame.Add(layer12);
   frame.Send(30);
 
@@ -1049,12 +1049,12 @@ int Hwch::PartCompTest::RunScenario() {
   Hwch::Frame frame(mInterface);
   int delay = GetTimeParamUs("delay");
 
-  Hwch::WallpaperLayer layer1(mInterface.bufHandler);
-  Hwch::LauncherLayer layer2(mInterface.bufHandler);
-  Hwch::NV12VideoLayer layer3(mInterface.bufHandler);
+  Hwch::WallpaperLayer layer1;
+  Hwch::LauncherLayer layer2;
+  Hwch::NV12VideoLayer layer3;
   layer3.SetHwcAcquireDelay(delay);
-  Hwch::StatusBarLayer layer4(mInterface.bufHandler);
-  Hwch::NavigationBarLayer layer5(mInterface.bufHandler);
+  Hwch::StatusBarLayer layer4;
+  Hwch::NavigationBarLayer layer5;
 
   frame.Add(layer1);
   frame.Add(layer2);
@@ -1069,16 +1069,16 @@ int Hwch::PartCompTest::RunScenario() {
   frame.Add(layer4);
   frame.Add(layer5);
 
-  Hwch::GalleryLayer layer7(mInterface.bufHandler);
-  Hwch::GalleryUILayer layer8(mInterface.bufHandler);
+  Hwch::GalleryLayer layer7;
+  Hwch::GalleryUILayer layer8;
   frame.Add(layer7);
   frame.Add(layer8);
   layer8.SendToBack();
 
-  Hwch::NotificationLayer layer9(mInterface.bufHandler);
+  Hwch::NotificationLayer layer9;
   frame.Add(layer9);
 
-  Hwch::DialogBoxLayer layer10(mInterface.bufHandler);
+  Hwch::DialogBoxLayer layer10;
   frame.Add(layer10);
 
   layer3.SendToFront();
@@ -1104,7 +1104,7 @@ int Hwch::PngTest::RunScenario() {
     return 1;
   }
 
-  Hwch::PngLayer layer1(mInterface.bufHandler, image, 60.0, eRed);
+  Hwch::PngLayer layer1(image, 60.0, eRed);
 
   layer1.SetLogicalDisplayFrame(LogDisplayRect(0, 0, MaxRel(0), MaxRel(0)));
   frame.Add(layer1);
@@ -1154,7 +1154,7 @@ int Hwch::TransparencyCompositionTest::RunScenario() {
   for (int i = 0; i < NUM_LAYERS; i++) {
     int random_freq = (rand() % 60) + 1;  // random frequency in the range 0-60
 
-    layer[i] = new Hwch::PngLayer(mInterface.bufHandler, image, random_freq, eRed);
+    layer[i] = new Hwch::PngLayer(image, random_freq, eRed);
 
     // Decide the size of the display I want on the screen (= rectangle)
     // it must be a random number between 25% and 100% of the screen
@@ -1220,9 +1220,9 @@ int Hwch::SkipTest::RunScenario() {
   Hwch::Frame frame(mInterface);
 
   Hwch::SkipLayer skip1;
-  Hwch::StatusBarLayer status(mInterface.bufHandler);
-  Hwch::NavigationBarLayer nav(mInterface.bufHandler);
-  Hwch::NV12VideoLayer video(mInterface.bufHandler);
+  Hwch::StatusBarLayer status;
+  Hwch::NavigationBarLayer nav;
+  Hwch::NV12VideoLayer video;
 
   frame.Add(skip1);
   frame.Add(status);
@@ -1265,7 +1265,7 @@ int Hwch::PanelFitterStressTest::RunScenario() {
 
   uint32_t topMargin = 10;
 
-  Hwch::RGBALayer layer1(mInterface.bufHandler, screenWidth, screenHeight + topMargin, 60.0, eRed,
+  Hwch::RGBALayer layer1(screenWidth, screenHeight + topMargin, 60.0, eRed,
                          eGreen, ePurple);
   layer1.SetLogicalDisplayFrame(
       LogDisplayRect(0, 0, screenWidth, screenHeight));
@@ -1313,8 +1313,8 @@ Hwch::SmallDfTest::SmallDfTest(Hwch::Interface& interface)
 int Hwch::SmallDfTest::RunScenario() {
   Hwch::Frame frame(mInterface);
 
-  Hwch::WallpaperLayer wallpaper(mInterface.bufHandler);
-  Hwch::CameraLayer camera(mInterface.bufHandler);
+  Hwch::WallpaperLayer wallpaper;
+  Hwch::CameraLayer camera;
   camera.SetCrop(LogCropRect(0, 0, 5, 492));
   camera.SetLogicalDisplayFrame(LogDisplayRect(0, 0, 1200, 4));
   camera.SetTransform(eTransformFlipV);
@@ -1335,17 +1335,17 @@ int Hwch::RenderCompressionTest::RunScenario() {
   // An attempt to repro VAH-287
   Hwch::Frame frame(mInterface);
 
-  Hwch::WallpaperLayer wallpaper(mInterface.bufHandler);
+  Hwch::WallpaperLayer wallpaper;
   wallpaper.SetFormat(HAL_PIXEL_FORMAT_RGBX_8888);
   wallpaper.SetCompression(Layer::eCompressionRC);
-  Hwch::LauncherLayer launcher(mInterface.bufHandler);
+  Hwch::LauncherLayer launcher;
   launcher.SetCompression(Layer::eCompressionRC);
   Hwch::SkipLayer skip;
   skip.SetBlending(HWC_BLENDING_PREMULT);
   skip.SetCrop(LogCropRect(-0.2, -0.2, -0.8, -0.8));
   skip.SetPlaneAlpha(0x99);
 
-  RGBALayer fg(mInterface.bufHandler, 1920, 100, 10.0, eDarkBlue, eYellow);
+  RGBALayer fg(1920, 100, 10.0, eDarkBlue, eYellow);
   fg.SetCompression(Layer::eCompressionRC);
 
   frame.Add(wallpaper);

@@ -186,7 +186,7 @@ void Hwch::Display::CreateFramebufferTarget() {
       delete mFramebufferTarget;
     }
 
-    mFramebufferTarget = new Hwch::Layer(bufHandler,
+    mFramebufferTarget = new Hwch::Layer(
         "FramebufferTarget", mAttributes.width, mAttributes.height,
         HAL_PIXEL_FORMAT_RGBA_8888, HWCH_FBT_NUM_BUFFERS,
         GRALLOC_USAGE_HW_FB | GRALLOC_USAGE_HW_COMPOSER |
@@ -204,7 +204,7 @@ void Hwch::Display::CreateFramebufferTarget() {
     // Explicitly create the buffer set here since FRAMEBUFFERTARGETs don't go
     // through the
     // CalculateDisplayFrame method
-    mFramebufferTarget->mBufs = new BufferSet( bufHandler,
+    mFramebufferTarget->mBufs = new BufferSet(
         mAttributes.width, mAttributes.height, HAL_PIXEL_FORMAT_RGBA_8888,
         HWCH_FBT_NUM_BUFFERS, GRALLOC_USAGE_HW_FB | GRALLOC_USAGE_HW_COMPOSER |
                                   GRALLOC_USAGE_HW_RENDER);
@@ -318,7 +318,7 @@ void Hwch::Display::CreateExternalBufferSet(void) {
     ALOG_ASSERT(Hwch::System::getInstance().GetVirtualDisplayWidth());
     ALOG_ASSERT(Hwch::System::getInstance().GetVirtualDisplayHeight());
     mExternalBufferSet =
-        new BufferSet(bufHandler, Hwch::System::getInstance().GetVirtualDisplayWidth(),
+        new BufferSet(Hwch::System::getInstance().GetVirtualDisplayWidth(),
                       Hwch::System::getInstance().GetVirtualDisplayHeight(),
                       HAL_PIXEL_FORMAT_RGBA_8888, HWCH_VIRTUAL_NUM_BUFFERS);
   }

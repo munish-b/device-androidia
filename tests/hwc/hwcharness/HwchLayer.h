@@ -179,13 +179,13 @@ class Layer {
   // Constructors and destructors
   Layer();
 
-  Layer(hwcomposer::NativeBufferHandler *bufferHandler, const char* name, Coord<int32_t> width, Coord<int32_t> height,
+  Layer(const char* name, Coord<int32_t> width, Coord<int32_t> height,
         uint32_t pixelFormat = HAL_PIXEL_FORMAT_RGBA_8888,
         int32_t numBuffers = -1,
         uint32_t usage = GRALLOC_USAGE_HW_COMPOSER | GRALLOC_USAGE_HW_TEXTURE |
                          GRALLOC_USAGE_HW_RENDER);
 
-  Layer(hwcomposer::NativeBufferHandler *bufferHandler, const Layer& rhs, bool clone = true);
+  Layer(const Layer& rhs, bool clone = true);
 
   virtual ~Layer();
 

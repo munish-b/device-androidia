@@ -81,14 +81,14 @@ int Hwch::BufferStressTest::RunScenario() {
   int32_t screenWidth = mSystem.GetDisplay(0).GetWidth();
   // int32_t screenHeight = mSystem.GetDisplay(0).GetHeight();
 
-  Hwch::WallpaperLayer layer1(mInterface.bufHandler);
+  Hwch::WallpaperLayer layer1;
   frame.Add(layer1);
 
   uint32_t testIterations = GetIntParam("test_iterations", 10);
 
   for (uint32_t i = 0; i < testIterations; ++i) {
     for (int j = 100; j < screenWidth; j += 32) {
-      Hwch::NV12VideoLayer video(mInterface.bufHandler, 200, j);
+      Hwch::NV12VideoLayer video(200, j);
       video.SetLogicalDisplayFrame(LogDisplayRect(50, 200, j, 500));
       frame.Add(video);
       frame.Send();

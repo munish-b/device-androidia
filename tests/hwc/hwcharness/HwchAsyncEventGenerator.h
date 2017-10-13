@@ -18,7 +18,7 @@
 #define __HwchAsyncEventGenerator_h__
 
 #include "EventMultiThread.h"
-#include "os/android/platformdefines.h"
+#include <ui/GraphicBuffer.h>
 #include <utils/StrongPointer.h>
 #include "HwchDefs.h"
 #include "HwchDisplay.h"
