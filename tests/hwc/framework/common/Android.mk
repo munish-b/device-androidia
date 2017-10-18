@@ -112,6 +112,7 @@ LOCAL_C_INCLUDES += \
     $(VAL_HWC_LIB_DRM_PATHS) \
     $(VAL_HWC_HARDWARE_COMPOSER_PATH)/os/android/libhwcservice \
     $(VAL_HWC_HARDWARE_COMPOSER_PATH)/../libdrm/intel \
+    $(VAL_HWC_HARDWARE_COMPOSER_PATH)/../libdrm \
     $(VAL_HWC_TOP)/intel \
     $(VAL_HWC_TOP)/hwcharness \
     $(VAL_HWC_HARDWARE_COMPOSER_PATH)/common/utils/val \

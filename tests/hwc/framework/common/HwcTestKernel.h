@@ -24,7 +24,6 @@
 #include <utils/SortedVector.h>
 #include <utils/KeyedVector.h>
 #include <utils/Mutex.h>
-#include <ui/GraphicBuffer.h>
 
 #include "HwcTestCrtc.h"
 #include "DrmShimPlane.h"

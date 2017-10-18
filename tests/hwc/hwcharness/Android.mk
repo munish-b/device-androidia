@@ -65,7 +65,10 @@ endif
 
 LOCAL_SRC_FILES += HwchGlTests.cpp
    
-LOCAL_C_INCLUDES += $(VAL_HWC_TOP)/intel 
+LOCAL_C_INCLUDES += $(VAL_HWC_TOP)/intel
+LOCAL_C_INCLUDES += system/libhidl/transport/token/1.0/utils/include
+LOCAL_C_INCLUDES += system/libhidl/base/include
+
 LOCAL_SHARED_LIBRARIES += \
     libbinder \
     libdrm \
@@ -81,7 +84,8 @@ LOCAL_SHARED_LIBRARIES += \
     libEGL \
     libGLESv2 \
     libpng \
-    liblog
+    liblog \
+    android.hardware.graphics.bufferqueue@1.0
 
 ifneq ($(HWCVAL_RESOURCE_LEAK_CHECKING),)
 LOCAL_SHARED_LIBRARIES += \

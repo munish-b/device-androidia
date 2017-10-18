@@ -31,8 +31,8 @@ LOCAL_C_INCLUDES += \
     $(VAL_HWC_TOP)/hwcharness \
     $(VAL_HWC_HARDWARE_COMPOSER_PATH)/../libdrm/intel/ \
     $(VAL_HWC_HARDWARE_COMPOSER_PATH)/os/android/libhwcservice \
-    $(VAL_HWC_HARDWARE_COMPOSER_PATH)/common/utils/val
-
+    $(VAL_HWC_HARDWARE_COMPOSER_PATH)/common/utils/val \
+    frameworks/native/libs/arect/include
 
 LOCAL_SHARED_LIBRARIES += \
     libdrm \
