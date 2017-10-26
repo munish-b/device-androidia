@@ -1,14 +1,4 @@
 
-# Determine the DRM include path
-ifeq ($(VAL_HWC_LIB_DRM_PATHS),)
-    ifeq (,$(wildcard $(ANDROID_PRODUCT_OUT)/obj/SHARED_LIBRARIES/libdrm_intermediates/export_includes ))
-        $(error libdrm must be build first)
-    else
-        awk_command_drm=awk '{print $$2}' $(ANDROID_PRODUCT_OUT)/obj/SHARED_LIBRARIES/libdrm_intermediates/export_includes
-        VAL_HWC_LIB_DRM_PATHS=$(shell $(awk_command_drm))
-    endif
-endif
-
 ifeq ($(VAL_HWC_HARDWARE_COMPOSER_PATH),)
     ifeq (,$(wildcard $(ANDROID_PRODUCT_OUT)/obj/SHARED_LIBRARIES/libhwcservice_intermediates/export_includes))
         $(error HWC service must be built first)
@@ -68,6 +58,7 @@ endif
 
 LOCAL_C_INCLUDES += $(VAL_HWC_HARDWARE_COMPOSER_PATH)
 LOCAL_C_INCLUDES += $(VAL_HWC_HARDWARE_COMPOSER_PATH)/../libdrm
+LOCAL_C_INCLUDES += $(VAL_HWC_HARDWARE_COMPOSER_PATH)/../libdrm/include/drm
 LOCAL_C_INCLUDES += $(VAL_HWC_HARDWARE_COMPOSER_PATH)/../libdrm/intel
 LOCAL_C_INCLUDES += $(VAL_HWC_HARDWARE_COMPOSER_PATH)/common/utils
 LOCAL_C_INCLUDES += $(VAL_HWC_HARDWARE_COMPOSER_PATH)/val
@@ -82,10 +73,6 @@ LOCAL_C_INCLUDES += external/minigbm/cros_gralloc
 
 BUILD_SHIM_HWCSERVICE := 0
 BUILD_HWCSERVICE_API := 1
-
-ifneq ($(shell grep -r drm_i915_disp_screen_control ${VAL_HWC_LIB_DRM_PATHS}),)
-    LOCAL_CFLAGS += -DBUILD_I915_DISP_SCREEN_CONTROL
-endif
 
 ifeq (X$(HWCVAL_NO_FRAME_CONTROL),X)
     LOCAL_CFLAGS += -DHWCVAL_FRAME_CONTROL=1
@@ -117,9 +104,6 @@ endif
 #LOCAL_CFLAGS += -O0
 
 LOCAL_CFLAGS += -DANDROID_VERSION=$(major)$(minor)$(rev)
-
-LOCAL_C_INCLUDES += $(VAL_HWC_LIB_DRM_PATHS)
-
 
 # M_Dessert+ - condition
 ifeq ($(shell test $(major) -lt 6; echo $$?), 0)
